@@ -42,17 +42,16 @@ const RoomsList = () => {
     };
 
     return (
-        <div className="p-6">
+        <div className="w-a p-6">
             {/* Search và Create */}
             <div className="flex items-center justify-between mb-6">
                 <div className='relative w-1/3 mx-auto'>
                     <input
-                        className=" border w-full border-gray-300 rounded-lg  focus:outline-none focus:ring focus:ring-blue-300"
+                        className="border w-full border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
                         type="text"
                         placeholder="  Search..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-
                     />
                     <Icon className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500" name="search" />
                 </div>
@@ -64,78 +63,58 @@ const RoomsList = () => {
                 </button>
             </div>
 
-            {/* Table */}
-            <div className="overflow-x-auto">
-                <table className="w-full table-auto border-collapse border border-gray-300 shadow-md">
-                    <thead>
-                        <tr className="bg-gray-100 text-balance">
-                            {/* <th className="border border-gray-300 px-4 py-2">ID</th> */}
-                            <th className="border border-gray-300 px-4 py-2">Image</th>
-                            <th className="border border-gray-300 px-4 py-2">Title</th>
-                            <th className="border border-gray-300 px-4 py-2">Description</th>
-                            <th className="border border-gray-300 px-4 py-2">Location Detail</th>
-                            {/* <th className="border border-gray-300 px-4 py-2">Acreage</th>
-                            <th className="border border-gray-300 px-4 py-2">Furniture</th> */}
-                            <th className="border border-gray-300 px-4 py-2">Bathroom</th>
-                            <th className="border border-gray-300 px-4 py-2">Bedroom</th>
-                            <th className="border border-gray-300 px-4 py-2">Garret</th>
-                            <th className="border border-gray-300 px-4 py-2">Price</th>
-                            <th className="border border-gray-300 px-4 py-2">Category Room</th>
-                            <th className="border border-gray-300 px-4 py-2">Building Name</th>
-                            <th className="border border-gray-300 px-4 py-2">Note</th>
-                            <th className="border border-gray-300 px-4 py-2">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {rooms.map((room, index) => (
-                            <tr
-                                key={room.roomId}
-                                className={`text-balance ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
-                                    } hover:bg-gray-100`}
+            {/* Card List */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {rooms.map((room) => (
+                    <div key={room.roomId} className="border border-gray-300 rounded-lg shadow-md p-4 bg-white">
+                        <img
+                            src={room.image}
+                            alt={room.title}
+                            className="w-full h-40 object-cover rounded-md mb-4"
+                        />
+                        <h3 className="text-lg font-semibold mb-2">{room.title}</h3>
+                        <p className="text-sm text-gray-600 mb-2">{room.description}</p>
+                        <p className="text-sm text-gray-600 mb-2">
+                            <strong>Location:</strong> {room.locationDetail}
+                        </p>
+                        <p className="text-sm text-gray-600 mb-2">
+                            <strong>Bathroom:</strong> {room.numberOfBathroom}
+                        </p>
+                        <p className="text-sm text-gray-600 mb-2">
+                            <strong>Bedroom:</strong> {room.numberOfBedroom}
+                        </p>
+                        <p className="text-sm text-gray-600 mb-2">
+                            <strong>Garret:</strong> {room.garret ? 'Yes' : 'No'}
+                        </p>
+                        <p className="text-sm text-gray-600 mb-2">
+                            <strong>Price:</strong> {room.price.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}
+                        </p>
+                        <p className="text-sm text-gray-600 mb-2">
+                            <strong>Category:</strong> {room.categoryName}
+                        </p>
+                        <p className="text-sm text-gray-600 mb-4">
+                            <strong>Building:</strong> {room.buildingName}
+                        </p>
+                        <div className="flex justify-between">
+                            <button
+                                className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-400 transition duration-200"
+                                onClick={() => navigate(`/Rooms/${room.roomId}`)}
                             >
-                                <td className="border border-gray-300 px-4 py-2">
-                                    <img
-                                        src={room.image}
-                                        alt={room.title}
-                                        className="w-20 h-20 object-cover rounded-md"
-                                    />
-                                </td>
-                                <td className="border border-gray-300 px-4 py-2">{room.title}</td>
-                                <td className="border border-gray-300 px-4 py-2">{room.description}</td>
-                                <td className="border border-gray-300 px-4 py-2">{room.locationDetail}</td>
-                                {/* <td className="border border-gray-300 px-4 py-2">{room.acreage}</td>
-                                <td className="border border-gray-300 px-4 py-2">{room.furniture}</td> */}
-                                <td className="border border-gray-300 px-4 py-2">{room.numberOfBathroom}</td>
-                                <td className="border border-gray-300 px-4 py-2">{room.numberOfBedroom}</td>
-                                <td className="border border-gray-300 px-4 py-2">
-                                    {room.garret ? 'Yes' : 'No'}
-                                </td>
-                                <td className="border border-gray-300 px-4 py-2">{room.price.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}</td>
-                                <td className="border border-gray-300 px-4 py-2">{room.categoryName}</td>
-                                <td className="border border-gray-300 px-4 py-2">{room.buildingName}</td>
-                                <td className="border border-gray-300 px-4 py-2">{room.note}</td>
-
-                                <td className="border border-gray-300 px-4 py-2 space-x-2">
-                                    <button
-                                        className="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-400 transition duration-200"
-                                        onClick={() => navigate(`/Rooms/${room.roomId}`)}
-                                    >
-                                        <Icon name="edit" />
-                                    </button>
-                                    <button
-                                        className="bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-400 transition duration-200"
-                                        onClick={() => handleDelete(room.roomId)}
-                                    >
-                                        <Icon name="trash" />
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+                                <Icon name="edit" /> Edit
+                            </button>
+                            <button
+                                className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-400 transition duration-200"
+                                onClick={() => handleDelete(room.roomId)}
+                            >
+                                <Icon name="trash" /> Delete
+                            </button>
+                        </div>
+                    </div>
+                ))}
             </div>
         </div>
     );
+
 };
 
 export default RoomsList;
