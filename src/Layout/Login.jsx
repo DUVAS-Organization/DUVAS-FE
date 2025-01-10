@@ -3,6 +3,7 @@ import React, { useState } from "react";
 const LoginPage = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [errorMessage, setErrorMessage] = useState(""); // To store any error message
 
     const handleEmailChange = (event) => {
         setEmail(event.target.value);
@@ -12,15 +13,51 @@ const LoginPage = () => {
         setPassword(event.target.value);
     };
 
-    const handleSubmit = (event) => {
+    const handleSubmit = async (event) => {
         event.preventDefault();
-        console.log("Submitting form with email:", email, "and password:", password);
+
+        // API URL
+        const loginApiUrl = "http://localhost:5221/api/auth/login-google"; // Replace with your actual API URL
+
+        // Create the payload to send to the API
+        const payload = {
+            email: email,
+            password: password,
+        };
+
+        try {
+            // Make the POST request to login
+            const response = await fetch(loginApiUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(payload),
+            });
+
+            if (!response.ok) {
+                throw new Error("Invalid email or password.");
+            }
+
+            // Extract the token from the response
+            const data = await response.json();
+            const token = data.token;
+
+            if (token) {
+                // Store the token in localStorage or any other secure storage
+                localStorage.setItem("authToken", token);
+                console.log("Logged in successfully!");
+                // Redirect user to a new page or home
+                window.location.href = "/dashboard"; // Replace with your desired route
+            }
+        } catch (error) {
+            setErrorMessage(error.message);
+        }
     };
 
     return (
         <div className="flex items-center justify-center my-5 bg-gray-100">
             <div className="flex flex-col md:flex-row bg-white rounded-lg shadow-md w-full max-w-4xl">
-                {/* Cột bên trái */}
                 <div className="relative w-full md:w-1/2">
                     <img
                         src="https://batdongsan.com.vn/sellernet/static/media/cover.800e56db.png"
@@ -35,13 +72,12 @@ const LoginPage = () => {
                         />
                     </div>
                     <div className="hidden md:flex flex-col items-center justify-center">
-                        <h2 className="text-center absolute text-lg font-semibold mt-4 " >
+                        <h2 className="text-center absolute text-lg font-semibold mt-4">
                             Tìm nhà đất dễ dàng
                         </h2>
                     </div>
                 </div>
 
-                {/* Cột bên phải */}
                 <div className="p-6 w-full md:w-1/2">
                     <h3 className="text-base font-semibold text-gray-800">Xin chào bạn</h3>
                     <div className="mb-4">
@@ -83,6 +119,11 @@ const LoginPage = () => {
                                 onChange={handlePasswordChange}
                             />
                         </div>
+
+                        {errorMessage && (
+                            <div className="text-red-500 text-sm mb-4">{errorMessage}</div>
+                        )}
+
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center">
                                 <input
@@ -124,6 +165,7 @@ const LoginPage = () => {
                             Đăng nhập với Google
                         </button>
                     </div>
+
                     <div className="text-center mt-4 text-sm">
                         <p>Bằng việc tiếp tục, bạn đồng ý với
                             <a href="#" className="text-red-500 hover:text-red-400"> Điều khoản sử dụng </a>
