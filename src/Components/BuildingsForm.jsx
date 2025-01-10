@@ -1,21 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import BuildingService from '../Services/BuildingService';
 import { useNavigate, useParams } from 'react-router-dom';
+import UserService from '../Services/UserService'
 import Swal from 'sweetalert2';
 
 const BuildingsForm = () => {
-    const [building, setBuilding] = useState({ buildingName: '', location: '', verify: false });
+    const [building, setBuilding] = useState({ buildingName: '', userId: 1, location: '', verify: false });
     const { buildingId } = useParams();
     const navigate = useNavigate();
-
+    const [users, setUsers] = useState([]);
     useEffect(() => {
-        // Lấy danh sách Categories
+        UserService.getUsers()
+            .then((data) => setUsers(data))
+            .catch((error) => console.error('Error fetching Users:', error));
 
         if (buildingId) {
             BuildingService.getBuildingById(buildingId)
                 .then(data => {
                     setBuilding({
                         buildingName: data.buildingName || '',
+                        userId: data.userId || 1,
                         location: data.location || 0,
                         verify: data.verify || false,
                     });
@@ -29,6 +33,7 @@ const BuildingsForm = () => {
         const BuildingData = {
             buildingId: buildingId,
             buildingName: building.buildingName,
+            userId: building.userId || 1,
             location: building.location,
             verify: building.verify,
         };
@@ -72,7 +77,23 @@ const BuildingsForm = () => {
                 {buildingId ? 'Edit Building' : 'Create Building'}
             </h1>
             <form onSubmit={handleSubmit} className="space-y-4">
-
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        UserName
+                    </label>
+                    <select
+                        value={building.userId}
+                        onChange={(e) => setBuilding({ ...building, userId: parseInt(e.target.value) })}
+                        className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    >
+                        <option value="" disabled>Choose One...</option>
+                        {users.map((user) => (
+                            <option key={user.userId} value={user.userId}>
+                                {user.userName}
+                            </option>
+                        ))}
+                    </select>
+                </div>
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                         Building Name
@@ -100,7 +121,7 @@ const BuildingsForm = () => {
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Garret</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Verify</label>
                     <div className="flex items-center">
                         <label className="mr-4">
                             <input

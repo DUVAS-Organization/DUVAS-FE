@@ -42,10 +42,10 @@ const RoomsList = () => {
     };
 
     return (
-        <div className="w-a p-6">
+        <div className="p-6">
             {/* Search và Create */}
             <div className="flex items-center justify-between mb-6">
-                <div className='relative w-1/3 mx-auto'>
+                <div className="relative w-1/3 mx-auto">
                     <input
                         className="border w-full border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
                         type="text"
@@ -64,38 +64,42 @@ const RoomsList = () => {
             </div>
 
             {/* Card List */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-3/4 mx-44">
                 {rooms.map((room) => (
-                    <div key={room.roomId} className="border border-gray-300 rounded-lg shadow-md p-4 bg-white">
+                    <div key={room.roomId} className="border border-gray-300 rounded-lg shadow-md bg-white flex flex-col max-h-[450px]">
                         <img
                             src={room.image}
                             alt={room.title}
                             className="w-full h-40 object-cover rounded-md mb-4"
                         />
-                        <h3 className="text-lg font-semibold mb-2">{room.title}</h3>
-                        <p className="text-sm text-gray-600 mb-2">{room.description}</p>
-                        <p className="text-sm text-gray-600 mb-2">
-                            <strong>Location:</strong> {room.locationDetail}
-                        </p>
-                        <p className="text-sm text-gray-600 mb-2">
-                            <strong>Bathroom:</strong> {room.numberOfBathroom}
-                        </p>
-                        <p className="text-sm text-gray-600 mb-2">
-                            <strong>Bedroom:</strong> {room.numberOfBedroom}
-                        </p>
-                        <p className="text-sm text-gray-600 mb-2">
-                            <strong>Garret:</strong> {room.garret ? 'Yes' : 'No'}
-                        </p>
-                        <p className="text-sm text-gray-600 mb-2">
-                            <strong>Price:</strong> {room.price.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}
-                        </p>
-                        <p className="text-sm text-gray-600 mb-2">
-                            <strong>Category:</strong> {room.categoryName}
-                        </p>
-                        <p className="text-sm text-gray-600 mb-4">
-                            <strong>Building:</strong> {room.buildingName}
-                        </p>
-                        <div className="flex justify-between">
+                        <div className="flex flex-col flex-grow p-4 overflow-y-scroll">
+                            <h3 className="text-lg font-semibold mb-2">{room.title}</h3>
+                            <p className="text-sm text-gray-600 mb-2">{room.description}</p>
+                            <p className="text-sm text-gray-600 mb-2">
+                                <strong>Location:</strong> {room.locationDetail}
+                            </p>
+                            <p className="text-sm text-gray-600 mb-2">
+                                <strong>Bathroom:</strong> {room.numberOfBathroom}
+                            </p>
+                            <p className="text-sm text-gray-600 mb-2">
+                                <strong>Bedroom:</strong> {room.numberOfBedroom}
+                            </p>
+                            <p className="text-sm text-gray-600 mb-2">
+                                <strong>Garret:</strong> {room.garret ? 'Yes' : 'No'}
+                            </p>
+                            <p className="text-sm text-gray-600 mb-2">
+                                <strong>Price:</strong> {room.price.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}
+                            </p>
+                            <p className="text-sm text-gray-600 mb-2">
+                                <strong>Category:</strong> {room.categoryName}
+                            </p>
+                            <p className="text-sm text-gray-600 mb-4">
+                                <strong>Building:</strong> {room.buildingName}
+                            </p>
+                        </div>
+
+                        {/* Fixed buttons */}
+                        <div className="flex justify-between px-4 py-2 border-t border-gray-300">
                             <button
                                 className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-400 transition duration-200"
                                 onClick={() => navigate(`/Rooms/${room.roomId}`)}
@@ -114,7 +118,6 @@ const RoomsList = () => {
             </div>
         </div>
     );
-
 };
 
 export default RoomsList;
