@@ -3,6 +3,7 @@ import RoomService from '../Services/RoomService';
 import { useNavigate, useParams } from 'react-router-dom';
 import CategoryRoomService from '../Services/CategoryRoomService';
 import BuildingService from '../Services/BuildingService';
+import UserService from '../Services/UserService'
 import Swal from 'sweetalert2';
 
 const RoomsForm = () => {
@@ -12,10 +13,12 @@ const RoomsForm = () => {
         acreage: 0, furniture: '', numberOfBathroom: 0,
         numberOfBedroom: 0, garret: false, price: 0,
         categoryRoomId: 1, image: null, note: '',
+        userId: 1,
     });
     const [categoryRooms, setCategoryRooms] = useState([]);
     const [buildings, setBuildings] = useState([]);
     const { roomId } = useParams();
+    const [users, setUsers] = useState([]);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -28,6 +31,11 @@ const RoomsForm = () => {
         BuildingService.getBuildings()
             .then((data) => setBuildings(data))
             .catch((error) => console.error('Error fetching Buildings:', error));
+
+        // Lấy danh sách Users
+        UserService.getUsers()
+            .then((data) => setUsers(data))
+            .catch((error) => console.error('Error fetching Users:', error));
 
         if (roomId) {
             RoomService.getRoomById(roomId)
@@ -48,6 +56,7 @@ const RoomsForm = () => {
                         categoryRoomId: data.categoryRoomId || 1,
                         image: data.image || '',
                         note: data.note || '',
+                        userId: data.userId || 1,
                     });
                 })
                 .catch(error => console.error('Error fetching Room:', error));
@@ -83,7 +92,8 @@ const RoomsForm = () => {
             categoryRoomId: room.categoryRoomId,
             image: room.image,
             note: room.note,
-            isPermission: room.isPermission
+            isPermission: room.isPermission,
+            userId: room.userId,
         };
 
         try {
@@ -145,7 +155,23 @@ const RoomsForm = () => {
                         className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                     />
                 </div>
-
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        UserName
+                    </label>
+                    <select
+                        value={room.userId}
+                        onChange={(e) => setRoom({ ...room, userId: parseInt(e.target.value) })}
+                        className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    >
+                        <option value="" disabled>Choose One...</option>
+                        {users.map((user) => (
+                            <option key={user.userId} value={user.userId}>
+                                {user.userName}
+                            </option>
+                        ))}
+                    </select>
+                </div>
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                         Building Name
