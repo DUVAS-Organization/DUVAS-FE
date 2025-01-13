@@ -1,3 +1,29 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.App {
+    text-align: center;
+}
+
+
+.custom-notification {
+    position: fixed;
+    top: 4rem;
+    right: 10px;
+    z-index: 1000;
+    max-width: 90vw;
+    /* Đảm bảo không vượt quá 90% chiều rộng màn hình */
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+/* Đối với màn hình nhỏ hơn (ví dụ: điện thoại) */
+@media (max-width: 768px) {
+    .custom-notification {
+        right: 5px;
+        left: 5px;
+        /* Đảm bảo nằm gọn trong màn hình */
+        max-width: calc(100vw - 10px);
+    }
+}
