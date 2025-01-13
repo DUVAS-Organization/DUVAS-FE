@@ -1,32 +1,27 @@
 import React, { useState } from "react";
 
 const LoginPage = () => {
-    const [email, setEmail] = useState("");
+    const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
-    const [errorMessage, setErrorMessage] = useState(""); // To store any error message
+    const [errorMessage, setErrorMessage] = useState("");
+    const [loading, setLoading] = useState(false);
 
-    const handleEmailChange = (event) => {
-        setEmail(event.target.value);
-    };
-
-    const handlePasswordChange = (event) => {
-        setPassword(event.target.value);
-    };
+    const handleUsernameChange = (event) => setUsername(event.target.value);
+    const handlePasswordChange = (event) => setPassword(event.target.value);
 
     const handleSubmit = async (event) => {
         event.preventDefault();
+        setLoading(true);
+        setErrorMessage("");
 
-        // API URL
-        const loginApiUrl = "http://localhost:5221/api/auth/login-google"; // Replace with your actual API URL
+        const loginApiUrl = "https://localhost:8000/api/Auth/login";
 
-        // Create the payload to send to the API
         const payload = {
-            email: email,
-            password: password,
+            username: username.trim(),
+            password: password.trim(),
         };
 
         try {
-            // Make the POST request to login
             const response = await fetch(loginApiUrl, {
                 method: "POST",
                 headers: {
@@ -36,33 +31,74 @@ const LoginPage = () => {
             });
 
             if (!response.ok) {
-                throw new Error("Invalid email or password.");
+                const errorData = await response.json();
+                throw new Error("Sai Tên đăng nhập hoặc Mật khẩu.");
             }
 
-            // Extract the token from the response
             const data = await response.json();
-            const token = data.token;
+            const token = data.message; // Lấy token từ message
 
             if (token) {
-                // Store the token in localStorage or any other secure storage
-                localStorage.setItem("authToken", token);
-                console.log("Logged in successfully!");
-                // Redirect user to a new page or home
-                window.location.href = "/dashboard"; // Replace with your desired route
+                localStorage.setItem("authToken", token); // Lưu token vào localStorage
+                console.log("Đăng nhập thành công!");
+                window.location.href = "/Rooms"; // Chuyển hướng sang trang Rooms
             }
         } catch (error) {
-            setErrorMessage(error.message);
+            setErrorMessage(error.message); // Hiển thị thông báo lỗi
+        } finally {
+            setLoading(false);
         }
+    };
+
+    // Đăng nhập với Google
+    const handleGoogleLogin = () => {
+        const googleLoginApiUrl = "https://localhost:8000/api/Auth/google";
+
+        // Điều hướng tới trang đăng nhập Google
+        window.location.href = googleLoginApiUrl;
+    };
+
+    const handleGoogleLoginSuccess = async (response) => {
+        const { credential } = response;
+        const tokenExchangeApiUrl = `https://localhost:8000/api/Auth/token-exchange?code=${credential}`;
+
+        try {
+            const res = await fetch(tokenExchangeApiUrl, {
+                method: "GET",
+            });
+
+            if (!res.ok) {
+                throw new Error("Lỗi khi đổi token từ Google.");
+            }
+
+            const data = await res.json();
+            const token = data.access_token; // Lấy token từ response
+
+            if (token) {
+                localStorage.setItem("authToken", token); // Lưu token vào localStorage
+                console.log("Đăng nhập Google thành công!");
+                window.location.href = "/Rooms"; // Chuyển hướng sang trang Rooms
+            }
+        } catch (error) {
+            console.error("Lỗi khi đăng nhập Google:", error);
+            setErrorMessage("Đăng nhập Google thất bại.");
+        }
+    };
+
+    const handleGoogleLoginFailure = (error) => {
+        console.error("Lỗi khi đăng nhập Google:", error);
+        setErrorMessage("Đăng nhập Google thất bại.");
     };
 
     return (
         <div className="flex items-center justify-center my-5 bg-gray-100">
             <div className="flex flex-col md:flex-row bg-white rounded-lg shadow-md w-full max-w-4xl">
+                {/* Bên trái: Hình ảnh */}
                 <div className="relative w-full md:w-1/2">
                     <img
                         src="https://batdongsan.com.vn/sellernet/static/media/cover.800e56db.png"
                         alt="Illustration"
-                        className="w-full h-auto "
+                        className="w-full h-auto"
                     />
                     <div className="absolute top-0 left-0 w-32 h-auto z-10">
                         <img
@@ -78,6 +114,7 @@ const LoginPage = () => {
                     </div>
                 </div>
 
+                {/* Bên phải: Form đăng nhập */}
                 <div className="p-6 w-full md:w-1/2">
                     <h3 className="text-base font-semibold text-gray-800">Xin chào bạn</h3>
                     <div className="mb-4">
@@ -87,22 +124,26 @@ const LoginPage = () => {
                     </div>
 
                     <form onSubmit={handleSubmit}>
+                        {/* Tên đăng nhập */}
                         <div className="mb-4">
                             <label
-                                htmlFor="email"
+                                htmlFor="username"
                                 className="block text-gray-700 text-sm font-bold mb-2"
                             >
-                                SĐT chính hoặc email
+                                Tên đăng nhập
                             </label>
                             <input
                                 type="text"
-                                id="email"
+                                id="username"
                                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                value={email}
-                                placeholder="SĐT chính hoặc email"
-                                onChange={handleEmailChange}
+                                value={username}
+                                placeholder="Nhập tên đăng nhập hoặc email"
+                                onChange={handleUsernameChange}
+                                required
                             />
                         </div>
+
+                        {/* Mật khẩu */}
                         <div className="mb-6">
                             <label
                                 htmlFor="password"
@@ -115,72 +156,49 @@ const LoginPage = () => {
                                 id="password"
                                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                                 value={password}
-                                placeholder="Mật khẩu"
+                                placeholder="Nhập mật khẩu"
                                 onChange={handlePasswordChange}
+                                required
                             />
                         </div>
 
+                        {/* Thông báo lỗi */}
                         {errorMessage && (
                             <div className="text-red-500 text-sm mb-4">{errorMessage}</div>
                         )}
 
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="flex items-center">
-                                <input
-                                    type="checkbox"
-                                    id="remember"
-                                    className="mr-2 leading-tight"
-                                />
-                                <label
-                                    htmlFor="remember"
-                                    className="text-sm text-gray-600"
-                                >
-                                    Nhớ tài khoản
-                                </label>
-                            </div>
-                            <a
-                                href="#"
-                                className="text-sm text-red-500 hover:text-red-400 font-medium"
-                            >
-                                Quên mật khẩu?
-                            </a>
-                        </div>
+                        {/* Nút đăng nhập */}
                         <button
                             type="submit"
                             className="bg-red-500 hover:bg-red-400 text-white font-bold py-2 px-4 rounded-md w-full"
+                            disabled={loading}
                         >
-                            Đăng nhập
+                            {loading ? "Đang xử lý..." : "Đăng Nhập"}
                         </button>
                     </form>
 
+                    {/* Đăng nhập Google */}
                     <div className="text-center mt-4">
                         <h3 className="text-gray-600">Hoặc</h3>
-
-                        <button className="flex w-full items-center justify-center bg-white-500 border-2 text-black font-medium py-2 px-4 rounded-md mt-2">
+                        <button
+                            onClick={handleGoogleLogin}
+                            className="flex w-full items-center justify-center bg-white border-2 text-black font-medium py-2 px-4 rounded-md mt-2"
+                        >
                             <img
                                 src="https://static-00.iconduck.com/assets.00/google-icon-256x256-67qgou6b.png"
                                 alt="Google Logo"
-                                className="mr-2 w-4 h-4 flex justify-end"
+                                className="mr-2 w-4 h-4"
                             />
                             Đăng nhập với Google
                         </button>
                     </div>
 
-                    <div className="text-center mt-4 text-sm">
-                        <p>Bằng việc tiếp tục, bạn đồng ý với
-                            <a href="#" className="text-red-500 hover:text-red-400"> Điều khoản sử dụng </a>
-                            ,
-                            <a href="#" className="text-red-500 hover:text-red-400">Chính sách bảo mật </a>
-                            ,
-                            <a href="#" className="text-red-500 hover:text-red-400">Quy chế </a>
-                            ,
-                            <a href="#" className="text-red-500 hover:text-red-400">Chính sách </a>
-                            của chúng tôi.</p>
-                    </div>
-
+                    {/* Link đăng ký */}
                     <div className="flex justify-center mt-20">
                         Chưa là thành viên?
-                        <a href="/Registers" className="text-red-500 hover:text-red-400 font-semibold mx-1"> Đăng ký </a>
+                        <a href="/Registers" className="text-red-500 hover:text-red-400 font-semibold mx-1">
+                            Đăng ký
+                        </a>
                         tại đây
                     </div>
                 </div>

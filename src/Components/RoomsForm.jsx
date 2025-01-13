@@ -43,7 +43,7 @@ const RoomsForm = () => {
                     console.log("API response:", data);
                     console.log("Room ID:", roomId);
                     setRoom({
-                        buildingId: data.buildingId || 0,
+                        buildingId: data.buildingId,
                         title: data.title || '',
                         description: data.description || '',
                         locationDetail: data.locationDetail || '',

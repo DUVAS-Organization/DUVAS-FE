@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import BuildingService from '../Services/BuildingService';
 import { useNavigate, useParams } from 'react-router-dom';
 import UserService from '../Services/UserService'
-import Swal from 'sweetalert2';
+import { showCustomNotification } from './Notification'
 
 const BuildingsForm = () => {
     const [building, setBuilding] = useState({ buildingName: '', userId: 1, location: '', verify: false });
@@ -19,7 +19,7 @@ const BuildingsForm = () => {
                 .then(data => {
                     setBuilding({
                         buildingName: data.buildingName || '',
-                        userId: data.userId || 1,
+                        userId: data.userId,
                         location: data.location || 0,
                         verify: data.verify || false,
                     });
@@ -30,44 +30,25 @@ const BuildingsForm = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const BuildingData = {
-            buildingId: buildingId,
-            buildingName: building.buildingName,
-            userId: building.userId || 1,
-            location: building.location,
-            verify: building.verify,
-        };
-
         try {
+            const BuildingData = {
+                buildingId: buildingId,
+                buildingName: building.buildingName,
+                userId: building.userId,
+                location: building.location,
+                verify: building.verify,
+            };
             if (buildingId) {
                 await BuildingService.updateBuilding(buildingId, BuildingData);
-                Swal.fire({
-                    title: 'Updated!',
-                    text: 'The Building has been Updated Successfully.',
-                    icon: 'success',
-                    timer: 2000,
-                    showConfirmButton: false,
-                });
+                showCustomNotification("success", "Chỉnh sửa thành công!");
             } else {
                 await BuildingService.addBuilding(BuildingData);
-                Swal.fire({
-                    title: 'Created!',
-                    text: 'The Building has been Created Successfully.',
-                    icon: 'success',
-                    timer: 2000,
-                    showConfirmButton: false,
-                });
+                showCustomNotification("success", "Tạo thành công!");
             }
             navigate('/');
         } catch (error) {
             console.error('Error in handleSubmit:', error);
-            Swal.fire({
-                title: 'Invalid Input',
-                text: 'Invalid Input.',
-                icon: 'error',
-                timer: 2000,
-                showConfirmButton: false,
-            });
+            showCustomNotification("error", "Vui lòng thử lại!");
         }
     };
 
