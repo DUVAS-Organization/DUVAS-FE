@@ -46,6 +46,9 @@ const Navbar = () => {
                                 <NavLink to="/Projects" className="text-gray-800 px-3 py-2 rounded-md text-base font-medium">
                                     Dự án
                                 </NavLink>
+                                <NavLink to="/ProfileUser" className="text-gray-800 px-3 py-2 rounded-md text-base font-medium">
+                                    ProfileUser
+                                </NavLink>
                             </div>
                         </div>
 
