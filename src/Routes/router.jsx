@@ -9,7 +9,7 @@ import Login from '../Layout/Auth/Login';
 import Registers from '../Layout/Auth/RegisterForm';
 import ForgotPasswords from '../Layout/Auth/ForgotPassword';
 import { useAuth } from '../Context/AuthProvider'; // Import useAuth
-
+import ProfileUser from '../Components/User/ProfileUser';
 const RoutesConfig = () => {
     const { user } = useAuth(); // Lấy thông tin người dùng từ AuthContext
 
@@ -21,6 +21,8 @@ const RoutesConfig = () => {
             <Route path="/Logins" element={<Login />} />
             <Route path="/Registers" element={<Registers />} />
             <Route path="/forgot-password" element={<ForgotPasswords />} />
+            <Route path="/ProfileUser" element={<ProfileUser />} />
+
 
             {/* Routes dành cho User */}
             <Route
