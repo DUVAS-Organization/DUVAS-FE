@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { FaEye, FaEyeSlash, FaEnvelope, FaKey, FaLock, FaLockOpen } from "react-icons/fa";
+import { FaEye, FaEyeSlash, FaEnvelope, FaKey, FaLock, FaLockOpen, FaArrowLeft } from "react-icons/fa";
+import { Link } from 'react-router-dom';
 
 const ForgotPasswords = () => {
     const [password, setPassword] = useState("");
@@ -15,6 +16,7 @@ const ForgotPasswords = () => {
     // States cho việc hiển thị mật khẩu riêng biệt cho từng ô input
     const [showPassword, setShowPassword] = useState(false);
     const [showRePassword, setShowRePassword] = useState(false);
+
 
     // Kiểm tra tính hợp lệ của email
     const handleEmailChange = (e) => {
@@ -151,6 +153,10 @@ const ForgotPasswords = () => {
                     {errorMessage && (
                         <div className="text-red-500 my-2">{errorMessage}</div>
                     )}
+                    <Link to="/Logins">
+                        <FaArrowLeft className="left-3 top-12 transform -translate-y-1/2 text-gray-500 text-xl cursor-pointer" />
+                    </Link>
+
                     <h3 className="text-base font-semibold text-gray-800">Quên mật khẩu?</h3>
                     <div className="mb-4">
                         <h2 className="text-2xl font-semibold text-gray-800">

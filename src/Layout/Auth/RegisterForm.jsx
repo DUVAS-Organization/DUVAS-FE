@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { FaEye, FaEyeSlash, FaEnvelope, FaKey, FaLock, FaLockOpen, FaUser, FaUserAlt, FaMapMarkerAlt, FaTransgender } from "react-icons/fa";
+import { Link } from 'react-router-dom';
 
 const RegisterForm = () => {
     const [userName, setUserName] = useState("");
@@ -225,9 +226,9 @@ const RegisterForm = () => {
                                 {/* Link đăng ký */}
                                 <div className="flex justify-center mt-20">
                                     Đã có tài khoản?
-                                    <a href="/Logins" className="text-red-500 hover:text-red-400 font-semibold mx-1">
+                                    <Link to="/Logins" className="text-red-500 hover:text-red-400 font-semibold mx-1">
                                         Đăng nhập
-                                    </a>
+                                    </Link>
                                     tại đây
                                 </div>
                             </div>

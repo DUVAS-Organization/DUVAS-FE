@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { FaEye, FaEyeSlash, FaEnvelope, FaKey, FaLock, FaLockOpen } from "react-icons/fa";
+import { Link } from 'react-router-dom';
 
 const LoginPage = () => {
     const [username, setUsername] = useState("");
@@ -166,9 +167,9 @@ const LoginPage = () => {
 
                         <div className="flex justify-end items-center mb-2">
                             <div>
-                                <a href="/forgot-password" className="text-red-500 hover:text-red-400">
+                                <Link to="/forgot-password" className="text-red-500 hover:text-red-400">
                                     Quên mật khẩu?
-                                </a>
+                                </Link>
                             </div>
                         </div>
 
@@ -207,13 +208,11 @@ const LoginPage = () => {
                     {/* Link đăng ký */}
                     <div className="flex justify-center mt-32">
                         Chưa là thành viên?
-                        <a href="/Registers" className="text-red-500 hover:text-red-400 font-semibold mx-1">
+                        <Link to="/Registers" className="text-red-500 hover:text-red-400 font-semibold mx-1">
                             Đăng ký
-                        </a>
+                        </Link>
                         tại đây
                     </div>
-
-
                 </div>
             </div>
         </div>
