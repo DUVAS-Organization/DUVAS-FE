@@ -50,15 +50,17 @@ export const AuthProvider = ({ children }) => {
       token
     };
     setUser(newUser); // Cập nhật user vào trạng thái
+
+    // Điều hướng dựa trên role của user
     if (newUser.role === 'User') {
-      navigate('/Rooms'); // Điều hướng đến trang dành cho User
+      navigate('/'); // Điều hướng đến trang dành cho User
     } else if (newUser.role === 'Admin') {
-      navigate('/Rooms/Creates"');
-    }
-    else {
-      navigate('/'); // Điều hướng đến trang chủ cho Admin
+      navigate('/Admin/Accounts'); // Điều hướng đến trang Admin
+    } else {
+      navigate('/'); // Điều hướng đến trang chủ cho người dùng không xác định
     }
   };
+
 
   const logout = async () => {
     localStorage.removeItem('authToken'); // Xóa token khi đăng xuất

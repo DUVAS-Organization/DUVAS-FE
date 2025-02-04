@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { FaEye, FaEyeSlash, FaEnvelope, FaKey, FaLock, FaLockOpen, FaArrowLeft } from "react-icons/fa";
 import { Link } from 'react-router-dom';
-
+import logo from '../Assets/Images/logo1.png'
 const ForgotPasswords = () => {
     const [password, setPassword] = useState("");
     const [rePassword, setRePassword] = useState("");
@@ -132,7 +132,7 @@ const ForgotPasswords = () => {
                     />
                     <div className="absolute top-0 left-0 w-32 h-auto z-10">
                         <img
-                            src="https://batdongsan.com.vn/sellernet/static/media/header-logo-sisu.4b76e0ce.svg"
+                            src={logo}
                             alt="Logo"
                             className="w-full h-auto ml-8 mt-5"
                         />
