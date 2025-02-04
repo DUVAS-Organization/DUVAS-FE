@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import Icon from '../Icon';
 import Swal from 'sweetalert2';
 import AccountsService from "../../Services/Admin/AccountServices";
-// import PostsService from "../../Services/Admin/PostsService";  // Giả sử có service cho bài đăng
-// import BuildingsService from "../../Services/Admin/BuildingsService"; // Giả sử có service cho tòa nhà
-// import RoomsService from "../../Services/Admin/RoomsService"; // Giả sử có service cho phòng
+// import PostsService from "../../Services/Admin/PostsService";  
+// import BuildingsService from "../../Services/Admin/BuildingsService"; 
+// import RoomsService from "../../Services/Admin/RoomsService"; 
 import { FiFilter } from 'react-icons/fi';
 import { FaLock, FaUnlock } from 'react-icons/fa';
 
@@ -55,24 +55,6 @@ const AccountList = () => {
         // RoomsService.getRooms(searchTerm)
         //     .then(data => setRoomCount(data.length))
         //     .catch(error => console.error('Error fetching Rooms:', error));
-    };
-
-    const handleDelete = (userId) => {
-        Swal.fire({
-            title: 'Notification',
-            text: 'Are you sure to Delete this Account?',
-            icon: 'error',
-            showCancelButton: true,
-            confirmButtonText: 'Yes',
-            cancelButtonText: 'No'
-        })
-            .then((result) => {
-                if (result.isConfirmed) {
-                    AccountsService.deleteAccount(userId)
-                        .then(() => fetchData())
-                        .catch(error => console.error('Error deleting Account:', error));
-                }
-            });
     };
 
     const handleStatusChange = (userId, currentStatus) => {
