@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { FaEye, FaEyeSlash, FaEnvelope, FaKey, FaLock, FaLockOpen } from "react-icons/fa";
 import { Link } from 'react-router-dom';
+import logo from '../Assets/Images/logo1.png'
+import { jwtDecode } from 'jwt-decode';
 
 const LoginPage = () => {
     const [username, setUsername] = useState("");
@@ -44,7 +46,16 @@ const LoginPage = () => {
             if (token) {
                 localStorage.setItem("authToken", token); // Lưu token vào localStorage
                 console.log("Đăng nhập thành công!");
-                window.location.href = "/"; // Chuyển hướng sang trang Rooms
+                // Giải mã token để kiểm tra role
+                const decodedToken = jwtDecode(token);
+                const userRole = decodedToken["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"];
+
+                // Điều hướng dựa trên role của user
+                if (userRole === 'Admin') {
+                    window.location.href = "/Admin/Accounts"; // Điều hướng đến trang Admin
+                } else {
+                    window.location.href = "/"; // Điều hướng đến trang dành cho User
+                }
             }
         } catch (error) {
             setErrorMessage(error.message); // Hiển thị thông báo lỗi
@@ -108,7 +119,7 @@ const LoginPage = () => {
                     />
                     <div className="absolute top-0 left-0 w-32 h-auto z-10">
                         <img
-                            src="https://batdongsan.com.vn/sellernet/static/media/header-logo-sisu.4b76e0ce.svg"
+                            src={logo}
                             alt="Logo"
                             className="w-full h-auto ml-8 mt-5"
                         />

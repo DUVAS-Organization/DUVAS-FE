@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useAuth } from '../Context/AuthProvider';
 import { NavLink } from 'react-router-dom';
-
+import Image_Logo from './Assets/Images/logo2.png'
+import Sidebar from './Sidebar';
 const Navbar = () => {
     const { user, logout, loading } = useAuth();
     const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -9,7 +10,9 @@ const Navbar = () => {
     if (loading) {
         return <div>Loading...</div>;
     }
-
+    if (user?.role === 'Admin') {
+        return <Sidebar />;
+    }
     const handleMouseEnter = () => {
         setDropdownOpen(true);
     };
@@ -30,9 +33,9 @@ const Navbar = () => {
                     <div className="flex-1 flex items-center justify-between">
                         <div className="flex-shrink-0">
                             <img
-                                src="https://staticfile.batdongsan.com.vn/images/logo/standard/black/logo_gray-5.png"
+                                src={Image_Logo}
                                 alt="DUVAS"
-                                className="max-w-[165px] h-auto"
+                                className="max-w-[110px] h-auto"
                             />
                         </div>
                         <div className="hidden sm:block sm:ml-6">

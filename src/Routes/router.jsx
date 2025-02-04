@@ -10,6 +10,8 @@ import Registers from '../Layout/Auth/RegisterForm';
 import ForgotPasswords from '../Layout/Auth/ForgotPassword';
 import { useAuth } from '../Context/AuthProvider'; // Import useAuth
 import ProfileUser from '../Components/User/ProfileUser';
+import AccountList from '../Components/Admin/AccountList'
+
 const RoutesConfig = () => {
     const { user } = useAuth(); // Lấy thông tin người dùng từ AuthContext
 
@@ -31,11 +33,11 @@ const RoutesConfig = () => {
             />
             <Route
                 path="/Buildings/Creates"
-                element={user && user.role === "Admin" ? <BuildingsForm /> : <Navigate to="/" />}
+                element={user && user.role === "User" ? <BuildingsForm /> : <Navigate to="/" />}
             />
             <Route
                 path="/Buildings/:buildingId"
-                element={user && user.role === "Admin" ? <BuildingsForm /> : <Navigate to="/" />}
+                element={user && user.role === "User" ? <BuildingsForm /> : <Navigate to="/" />}
             />
             <Route
                 path="/Rooms"
@@ -43,11 +45,17 @@ const RoutesConfig = () => {
             />
             <Route
                 path="/Rooms/Creates"
-                element={user && user.role === "Admin" ? <RoomsForm /> : <Navigate to="/" />}
+                element={user && user.role === "User" ? <RoomsForm /> : <Navigate to="/" />}
             />
             <Route
                 path="/Rooms/:roomId"
-                element={user && user.role === "Admin" ? <RoomsForm /> : <Navigate to="/" />}
+                element={user && user.role === "User" ? <RoomsForm /> : <Navigate to="/" />}
+            />
+
+            {/* Routes dành cho User */}
+            <Route
+                path="/Admin/Accounts"
+                element={user && user.role === "Admin" ? <AccountList /> : <Navigate to="/Logins" />}
             />
         </Routes>
     );
