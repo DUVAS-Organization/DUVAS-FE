@@ -10,7 +10,13 @@ import Registers from '../Layout/Auth/RegisterForm';
 import ForgotPasswords from '../Layout/Auth/ForgotPassword';
 import { useAuth } from '../Context/AuthProvider'; // Import useAuth
 import ProfileUser from '../Components/User/ProfileUser';
+
 import AccountList from '../Components/Admin/AccountList'
+import ServicePostList from '../Components/Admin/ServicePostList'
+import RoomList from '../Components/Admin/RoomList'
+import BuildingList from '../Components/Admin/BuildingList'
+import UpLandlord from '../Components/Admin/UpLandlord'
+import UpService from '../Components/Admin/UpService'
 
 const RoutesConfig = () => {
     const { user } = useAuth(); // Lấy thông tin người dùng từ AuthContext
@@ -56,6 +62,26 @@ const RoutesConfig = () => {
             <Route
                 path="/Admin/Accounts"
                 element={user && user.role === "Admin" ? <AccountList /> : <Navigate to="/Logins" />}
+            />
+            <Route
+                path="/Admin/ServicePosts"
+                element={user && user.role === "Admin" ? <ServicePostList /> : <Navigate to="/Logins" />}
+            />
+            <Route
+                path="/Admin/Rooms"
+                element={user && user.role === "Admin" ? <RoomList /> : <Navigate to="/Logins" />}
+            />
+            <Route
+                path="/Admin/Buildings"
+                element={user && user.role === "Admin" ? <BuildingList /> : <Navigate to="/Logins" />}
+            />
+            <Route
+                path="/Admin/Landlord"
+                element={user && user.role === "Admin" ? <UpLandlord /> : <Navigate to="/Logins" />}
+            />
+            <Route
+                path="/Admin/Service"
+                element={user && user.role === "Admin" ? <UpService /> : <Navigate to="/Logins" />}
             />
         </Routes>
     );
