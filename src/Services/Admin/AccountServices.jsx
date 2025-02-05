@@ -3,8 +3,9 @@ import axios from 'axios';
 const API_URL = 'https://localhost:8000/api/Users';
 
 const AccountsService = {
-    getAccounts: () =>
-        axios.get(API_URL).then((res) => res.data),
+
+    getAccounts: (searchTerm) =>
+        axios.get(`${API_URL}${searchTerm ? `?searchTerm=${searchTerm}` : ''}`).then((res) => res.data),
 
     getAccountById: (userId) =>
         axios.get(`${API_URL}/${userId}`).then((res) => res.data),

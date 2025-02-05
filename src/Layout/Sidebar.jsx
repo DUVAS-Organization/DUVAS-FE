@@ -48,7 +48,7 @@ const Sidebar = () => {
                     <NavLink
                         to="/Admin/Accounts"
                         className={({ isActive }) =>
-                            `block py-2 px-4 hover:bg-blue-400 rounded-lg ${isActive ? 'bg-blue-500 text-white' : ''}`
+                            `block py-2 px-4 hover:bg-blue-400 rounded-3xl ${isActive ? 'bg-blue-500 text-white' : ''}`
                         }
                     >
                         <FaUserCircle className="inline-block mr-2" />
@@ -57,9 +57,9 @@ const Sidebar = () => {
                 </li>
                 <li>
                     <NavLink
-                        to="/Admin/Posts"
+                        to="/Admin/ServicePosts"
                         className={({ isActive }) =>
-                            `block py-2 px-4 hover:bg-blue-400 rounded-lg ${isActive ? 'bg-blue-500 text-white' : ''}`
+                            `block py-2 px-4 hover:bg-blue-400 rounded-3xl ${isActive ? 'bg-blue-500 text-white' : ''}`
                         }
                     >
                         <FaFileAlt className="inline-block mr-2" />
@@ -70,7 +70,7 @@ const Sidebar = () => {
                     <NavLink
                         to="/Admin/Rooms"
                         className={({ isActive }) =>
-                            `block py-2 px-4 hover:bg-blue-400 rounded-lg ${isActive ? 'bg-blue-500 text-white' : ''}`
+                            `block py-2 px-4 hover:bg-blue-400 rounded-3xl ${isActive ? 'bg-blue-500 text-white' : ''}`
                         }
                     >
                         <FaHome className="inline-block mr-2" />
@@ -81,7 +81,7 @@ const Sidebar = () => {
                     <NavLink
                         to="/Admin/Buildings"
                         className={({ isActive }) =>
-                            `block py-2 px-4 hover:bg-blue-400 rounded-lg ${isActive ? 'bg-blue-500 text-white' : ''}`
+                            `block py-2 px-4 hover:bg-blue-400 rounded-3xl ${isActive ? 'bg-blue-500 text-white' : ''}`
                         }
                     >
                         <FaBuilding className="inline-block mr-2" />
@@ -90,7 +90,7 @@ const Sidebar = () => {
                 </li>
                 <li>
                     <div
-                        className="cursor-pointer block py-2 px-4 hover:bg-blue-400 rounded-lg relative"
+                        className="cursor-pointer block py-2 px-4 hover:bg-blue-400 rounded-3xl relative"
                         onClick={() => toggleDropdown('roleUpdate')}
                     >
                         <FaUserEdit className="inline-block mr-2" />
@@ -110,7 +110,7 @@ const Sidebar = () => {
                                 <NavLink
                                     to="/Admin/Landlord"
                                     className={({ isActive }) =>
-                                        `block py-2 px-4 hover:bg-blue-400 rounded-lg ${isActive ? 'bg-blue-500 text-white' : ''}`
+                                        `block py-2 px-4 hover:bg-blue-400 rounded-3xl ${isActive ? 'bg-blue-500 text-white' : ''}`
                                     }
                                 >
                                     LandLord
@@ -120,7 +120,7 @@ const Sidebar = () => {
                                 <NavLink
                                     to="/Admin/Service"
                                     className={({ isActive }) =>
-                                        `block py-2 px-4 hover:bg-blue-400 rounded-lg ${isActive ? 'bg-blue-500 text-white' : ''}`
+                                        `block py-2 px-4 hover:bg-blue-400 rounded-3xl ${isActive ? 'bg-blue-500 text-white' : ''}`
                                     }
                                 >
                                     Service
@@ -132,7 +132,7 @@ const Sidebar = () => {
 
                 <li>
                     <div
-                        className="cursor-pointer block py-2 px-4 hover:bg-blue-400 rounded-lg relative"
+                        className="cursor-pointer block py-2 px-4 hover:bg-blue-400 rounded-3xl relative"
                         onClick={() => toggleDropdown('orderProcessing')}
                     >
                         <FaClone className="inline-block mr-2" />
@@ -152,7 +152,7 @@ const Sidebar = () => {
                                 <NavLink
                                     to="/Admin/Reports"
                                     className={({ isActive }) =>
-                                        `block py-2 px-4 hover:bg-blue-400 rounded-lg ${isActive ? 'bg-blue-500 text-white' : ''}`
+                                        `block py-2 px-4 hover:bg-blue-400 rounded-3xl ${isActive ? 'bg-blue-500 text-white' : ''}`
                                     }
                                 >
                                     Đơn Tố Cáo
@@ -162,7 +162,7 @@ const Sidebar = () => {
                                 <NavLink
                                     to="/Admin/Withdraws"
                                     className={({ isActive }) =>
-                                        `block py-2 px-4 hover:bg-blue-400 rounded-lg ${isActive ? 'bg-blue-500 text-white' : ''}`
+                                        `block py-2 px-4 hover:bg-blue-400 rounded-3xl ${isActive ? 'bg-blue-500 text-white' : ''}`
                                     }
                                 >
                                     Rút tiền
@@ -174,7 +174,7 @@ const Sidebar = () => {
 
                 <li>
                     <div
-                        className="cursor-pointer block py-2 px-4 hover:bg-blue-400 rounded-lg relative"
+                        className="cursor-pointer block py-2 px-4 hover:bg-blue-400 rounded-3xl relative"
                         onClick={() => toggleDropdown('category')}
                     >
                         <MdOutlineCategory className="inline-block mr-2" />
@@ -194,7 +194,7 @@ const Sidebar = () => {
                                 <NavLink
                                     to="/Admin/CategoryServices"
                                     className={({ isActive }) =>
-                                        `block py-2 px-4 hover:bg-blue-400 rounded-lg ${isActive ? 'bg-blue-500 text-white' : ''}`
+                                        `block py-2 px-4 hover:bg-blue-400 rounded-3xl ${isActive ? 'bg-blue-500 text-white' : ''}`
                                     }
                                 >
                                     Loại Dịch Vụ
@@ -204,7 +204,7 @@ const Sidebar = () => {
                                 <NavLink
                                     to="/Admin/CategoryRooms"
                                     className={({ isActive }) =>
-                                        `block py-2 px-4 hover:bg-blue-400 rounded-lg ${isActive ? 'bg-blue-500 text-white' : ''}`
+                                        `block py-2 px-4 hover:bg-blue-400 rounded-3xl ${isActive ? 'bg-blue-500 text-white' : ''}`
                                     }
                                 >
                                     Loại Phòng
