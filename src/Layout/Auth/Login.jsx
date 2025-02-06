@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FaEye, FaEyeSlash, FaEnvelope, FaKey, FaLock, FaLockOpen } from "react-icons/fa";
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
+import { useAuth } from '../../Context/AuthProvider';
 import logo from '../Assets/Images/logo1.png'
 import { jwtDecode } from 'jwt-decode';
 
@@ -10,6 +11,8 @@ const LoginPage = () => {
     const [errorMessage, setErrorMessage] = useState("");
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+
+    const { login } = useAuth();
 
     const handleUsernameChange = (event) => setUsername(event.target.value);
     const handlePasswordChange = (event) => setPassword(event.target.value);
@@ -44,8 +47,7 @@ const LoginPage = () => {
             const token = data.message; // Lấy token từ message
 
             if (token) {
-                localStorage.setItem("authToken", token); // Lưu token vào localStorage
-                console.log("Đăng nhập thành công!");
+                localStorage.setItem("authToken", token);
                 // Giải mã token để kiểm tra role
                 const decodedToken = jwtDecode(token);
                 const userRole = decodedToken["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"];
@@ -88,9 +90,9 @@ const LoginPage = () => {
             const token = data.access_token; // Lấy token từ response
 
             if (token) {
-                localStorage.setItem("authToken", token); // Lưu token vào localStorage
-                console.log("Đăng nhập Google thành công!");
-                window.location.href = "/"; // Chuyển hướng sang trang Rooms
+                login(token)
+                // localStorage.setItem("authToken", token);
+                // window.location.href = "/"; // Chuyển hướn   g sang trang Rooms
             }
         } catch (error) {
             console.error("Lỗi khi đăng nhập Google:", error);
