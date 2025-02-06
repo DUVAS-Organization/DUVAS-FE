@@ -18,6 +18,16 @@ const UserService = {
     },
     deleteUser: (userId) =>
         axios.delete(`${API_URL}/${userId}`).then((res) => res.data),
+    getCurrentUser: () => {
+        // Ví dụ nếu bạn lưu user ID trong sessionStorage
+        const userId = sessionStorage.getItem('userId');
+        if (userId) {
+            return axios.get(`${API_URL}/${userId}`).then((res) => res.data);
+        } else {
+            // Hoặc trả về một giá trị mặc định hoặc lỗi nếu không có userId
+            return Promise.reject('No user logged in');
+        }
+    },
 };
 
 export default UserService;

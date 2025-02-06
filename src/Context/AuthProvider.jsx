@@ -23,8 +23,10 @@ export const AuthProvider = ({ children }) => {
           username: decodedToken["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"], // Trích xuất username từ token
           role: decodedToken["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"], // Trích xuất role từ token
           ProfilePicture: decodedToken["ProfilePicture"],
+          userId: decodedToken["UserId"], // Đảm bảo trích xuất UserId đúng
           token
         };
+
         setUser(newUser); // Lưu thông tin người dùng vào trạng thái
 
       } catch (error) {
@@ -47,8 +49,10 @@ export const AuthProvider = ({ children }) => {
       username: decodedToken["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"], // Trích xuất username từ token
       role: decodedToken["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"], // Trích xuất role từ token
       ProfilePicture: decodedToken["ProfilePicture"],
+      userId: decodedToken["UserId"], // Đảm bảo trích xuất UserId đúng
       token
     };
+
     setUser(newUser); // Cập nhật user vào trạng thái
 
     // Điều hướng dựa trên role của user

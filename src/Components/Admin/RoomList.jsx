@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, NavLink } from 'react-router-dom';
 import Icon from '../Icon';
 import RoomServices from "../../Services/Admin/RoomServices";
-import CategoryRoomServices from "../../Services/Admin/CategoryRoomServices";
+import CategoryRoomServices from "../../Services/Admin/CategoryRooms";
 import Counts from './Counts'
 import { FiFilter, FiPlus } from 'react-icons/fi';
 import { FaChevronDown, FaLock, FaUnlock } from "react-icons/fa";
