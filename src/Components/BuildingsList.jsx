@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import BuildingService from '../Services/BuildingService';
+import BuildingService from '../Services/User/BuildingService';
 import { useNavigate } from 'react-router-dom';
 import Icon from './Icon';
 import Swal from 'sweetalert2';

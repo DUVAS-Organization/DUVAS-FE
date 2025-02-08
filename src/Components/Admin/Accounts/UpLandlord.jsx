@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, NavLink } from 'react-router-dom';
-import Icon from '../Icon';
-import BuildingServices from "../../Services/Admin/BuildingServices";
-import Counts from './Counts'
+import Icon from '../../Icon';
+import AccountServices from "../../../Services/Admin/AccountServices";
+import Counts from '../Counts'
 import { FiFilter, FiPlus } from 'react-icons/fi';
 import { FaChevronDown, FaLock, FaUnlock } from "react-icons/fa";
 
-const BuildingList = () => {
-    const [buildings, setBuildings] = useState([]);
+const UpLandlord = () => {
+    const [accounts, setAccounts] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const navigate = useNavigate();
 
@@ -16,9 +16,9 @@ const BuildingList = () => {
     }, [searchTerm]);
 
     const fetchData = () => {
-        BuildingServices.getBuildings(searchTerm)
+        AccountServices.getAccounts(searchTerm)
             .then(data => {
-                setBuildings(data);
+                setAccounts(data);
             })
             .catch(error => console.error('Error fetching Account:', error));
 
@@ -26,29 +26,24 @@ const BuildingList = () => {
     const handleStatusChange = (userId, currentStatus) => {
         // Gọi API hoặc cập nhật trạng thái trong state
         const newStatus = !currentStatus; // Lật ngược trạng thái
-        BuildingServices.updateStatus(userId, newStatus)
+        AccountServices.updateStatus(userId, newStatus)
             .then(() => {
                 // Cập nhật lại dữ liệu hoặc làm gì đó sau khi thay đổi trạng thái thành công
                 fetchData(); // Cập nhật lại dữ liệu sau khi thay đổi
             })
             .catch(error => console.error('Error updating status:', error));
     };
-    const handleCreate = () => {
-        navigate('/Admin/Buildings/Creates');
-    };
 
     return (
         <div className="p-6">
-            <Counts />
-            <div className='font-bold text-6xl ml-3 my-8 text-blue-500 flex justify-between'>
-                <h1 >Tòa Nhà</h1>
-                <button
-                    onClick={handleCreate}
-                    className='flex mr-2 items-center text-white bg-blue-500 rounded-3xl h-11 px-2'>
-                    <FiPlus className="mr-2 text-xl" />
-                    <p className="font-semibold text-lg">Tạo Tòa Nhà</p>
-                </button>
+            <div className='max-w-7xl rounded-2xl mb-2'>
+                <div className='font-bold text-4xl ml-3 my-8 text-blue-600 flex justify-between'>
+                    <h1>Yêu cầu cập nhật Vai trò LandLord</h1>
+                </div>
+                <div className="border-t-2 border-black w-full mb-5"></div>
             </div>
+
+
             <div className="flex items-center mb-6">
                 <button className="border-2 border-gray-500 flex items-center p-2 rounded-xl">
                     <FiFilter className="mr-2 text-xl" />
@@ -71,32 +66,42 @@ const BuildingList = () => {
                     <thead>
                         <tr className="bg-gray-100">
                             <th className="py-2 px-4 text-left font-semibold text-black">#</th>
-                            <th className="py-2 px-4 text-left font-semibold text-black">Tên Tòa Nhà</th>
-                            <th className="py-2 px-4 text-left font-semibold text-black">Tên Chủ Sở Hữu</th>
-                            <th className="py-2 px-4 text-left font-semibold text-black">Địa Chỉ</th>
+                            <th className="py-2 px-4 text-left font-semibold text-black">Tên</th>
+                            <th className="py-2 px-4 text-left font-semibold text-black">Email</th>
+                            <th className="py-2 px-4 text-left font-semibold text-black">SĐT</th>
+                            <th className="py-2 px-4 text-left font-semibold text-black">Giấy tờ</th>
                             <th className="py-2 px-4 text-left font-semibold text-black">Trạng Thái</th>
-                            <th className="py-2 px-4 font-semibold text-black text-center">Xác Thực</th>
+                            <th className="py-2 px-4 text-center font-semibold text-black"></th>
+
                         </tr>
                     </thead>
                     <tbody>
-                        {buildings.length === 0 ? (
+                        {accounts.length === 0 ? (
                             <tr>
                                 <td colSpan="7" className="py-2 text-center text-gray-500">Không tìm thấy kết quả</td>
                             </tr>
                         ) : (
-                            buildings.map((building, index) => (
-                                <tr key={building.userId} className="hover:bg-gray-200 border-collapse border border-gray-300">
+                            accounts.map((account, index) => (
+                                <tr key={account.userId} className="hover:bg-gray-200 border-collapse border border-gray-300">
                                     <td className="py-2 px-4 text-gray-700 border-b">{index + 1}</td>
-                                    <td className="py-2 px-4 text-gray-700 border-b">{building.buildingName}</td>
-                                    <td className="py-2 px-4 text-gray-700 border-b">{building.name}</td>
-                                    <td className="py-2 px-4 text-gray-700 border-b">{building.location}</td>
+                                    <td className="py-2 px-4 text-gray-700 border-b">{account.name}</td>
+                                    <td className="py-2 px-4 text-gray-700 border-b">{account.gmail}</td>
+                                    <td className="py-2 px-4 text-gray-700 border-b">
+                                        {account.phone ? account.phone : "Trống"}
+                                    </td>
+
+                                    <td className="py-2 px-4 text-gray-700 border-b">
+                                        <NavLink to='/Admin/Landlord/Giayto' className="mr-4 text-blue-600 hover:text-red-500 underline">
+                                            Xem giấy tờ
+                                        </NavLink>
+                                    </td>
                                     <td className="py-2 px-4 text-gray-700 border-b">
                                         <button
-                                            onClick={() => handleStatusChange(building.userId, building.status)}
-                                            className={`px-4 py-2 rounded-3xl font-semibold text-white
-                                            ${building.status ? 'bg-green-500 hover:bg-green-400' : 'bg-red-500 hover:bg-red-400'}`}
+                                            onClick={() => handleStatusChange(account.userId, account.status)}
+                                            className={`px-4 py-2 rounded-3xl font-semibold 
+                                            ${account.status ? 'bg-green-500 text-white hover:bg-green-400' : 'bg-yellow-500 text-black hover:bg-yellow-400'}`}
                                         >
-                                            {building.status ? 'Active' : 'Inactive'}
+                                            {account.status ? 'Active' : 'Pending'}
                                         </button>
                                     </td>
                                     <td className="py-2 px-4 border-b text-blue-600 text-center underline underline-offset-2 ">
@@ -121,4 +126,4 @@ const BuildingList = () => {
     );
 };
 
-export default BuildingList;
+export default UpLandlord;

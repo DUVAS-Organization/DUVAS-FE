@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import BuildingService from '../Services/BuildingService';
+import BuildingService from '../Services/User/BuildingService';
 import { useNavigate, useParams } from 'react-router-dom';
-import UserService from '../Services/UserService'
+import UserService from '../Services/User/UserService'
 import { showCustomNotification } from './Notification'
 import { useAuth } from '../Context/AuthProvider';
 
