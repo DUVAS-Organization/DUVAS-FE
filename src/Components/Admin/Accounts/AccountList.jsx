@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Icon from '../Icon';
-import AccountsService from "../../Services/Admin/AccountServices";
-import Counts from './Counts'
+import Icon from '../../Icon';
+import AccountsService from "../../../Services/Admin/AccountServices";
+import Counts from '../Counts'
 
 import { FiFilter } from 'react-icons/fi';
 import { FaLock, FaUnlock } from 'react-icons/fa';

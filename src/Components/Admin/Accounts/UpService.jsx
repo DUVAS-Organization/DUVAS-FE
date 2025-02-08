@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, NavLink } from 'react-router-dom';
-import Icon from '../Icon';
-import AccountServices from "../../Services/Admin/AccountServices";
-import Counts from './Counts'
+import Icon from '../../Icon';
+import AccountServices from "../../../Services/Admin/AccountServices";
+import Counts from '../Counts'
 import { FiFilter, FiPlus } from 'react-icons/fi';
 import { FaChevronDown, FaLock, FaUnlock } from "react-icons/fa";
 
-const UpLandlord = () => {
+const UpService = () => {
     const [accounts, setAccounts] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const navigate = useNavigate();
@@ -38,7 +38,7 @@ const UpLandlord = () => {
         <div className="p-6">
             <div className='max-w-7xl rounded-2xl mb-2'>
                 <div className='font-bold text-4xl ml-3 my-8 text-blue-600 flex justify-between'>
-                    <h1>Yêu cầu cập nhật Vai trò LandLord</h1>
+                    <h1>Yêu cầu cập nhật Vai trò Service</h1>
                 </div>
                 <div className="border-t-2 border-black w-full mb-5"></div>
             </div>
@@ -91,7 +91,7 @@ const UpLandlord = () => {
                                     </td>
 
                                     <td className="py-2 px-4 text-gray-700 border-b">
-                                        <NavLink to='/Admin/Landlord/Giayto' className="mr-4 text-blue-600 hover:text-red-500 underline">
+                                        <NavLink to='/Admin/Service/Giayto' className="mr-4 text-blue-600 hover:text-red-500 underline">
                                             Xem giấy tờ
                                         </NavLink>
                                     </td>
@@ -126,4 +126,4 @@ const UpLandlord = () => {
     );
 };
 
-export default UpLandlord;
+export default UpService;

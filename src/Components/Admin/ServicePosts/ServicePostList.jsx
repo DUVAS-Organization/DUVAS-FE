@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, NavLink } from 'react-router-dom';
-import Icon from '../Icon';
-import RoomServices from "../../Services/Admin/RoomServices";
-import CategoryRoomServices from "../../Services/Admin/CategoryRooms";
-import Counts from './Counts'
+import Icon from '../../Icon';
+import ServicePost from "../../../Services/Admin/ServicePost";
+import CategoryServices from "../../../Services/Admin/CategoryServices";
+import Counts from '../Counts'
 import { FiFilter, FiPlus } from 'react-icons/fi';
-import { FaChevronDown, FaLock, FaUnlock } from "react-icons/fa";
+import { FaChevronDown } from "react-icons/fa";
 
-const RoomList = () => {
-    const [rooms, setRooms] = useState([]);
-    const [categoryRooms, setCategoryRooms] = useState([]);
+const ServicePostList = () => {
+    const [servicePosts, setServicePosts] = useState([]);
+    const [categoryServices, setCategoryServices] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const navigate = useNavigate();
@@ -20,44 +20,38 @@ const RoomList = () => {
 
     const fetchData = async () => {
         try {
-            // Gọi API lấy danh sách phòng
-            const roomsData = await RoomServices.getRooms(searchTerm);
-
+            const servicePostsData = await ServicePost.getServicePosts(searchTerm);
             // Lọc theo selectedCategory nếu có
-            const filteredRooms = selectedCategory
-                ? roomsData.filter(room => room.categoryName === selectedCategory)
-                : roomsData;
+            const filteredServicePosts = selectedCategory
+                ? servicePostsData.filter(servicePost => servicePost.categoryServiceName === selectedCategory)
+                : servicePostsData;
 
-            setRooms(filteredRooms);  // Cập nhật danh sách phòng
+            setServicePosts(filteredServicePosts);
 
-            // Gọi API lấy danh sách loại phòng
-            const categoryData = await CategoryRoomServices.getCategoryRooms();
-            setCategoryRooms(categoryData); // Đảm bảo lấy đúng danh sách loại phòng
+
+            const categoryData = await CategoryServices.getCategoryServices();
+            setCategoryServices(categoryData);
         } catch (error) {
             console.error('Error fetching data:', error);
         }
     };
-
-
-
     const handleCategoryChange = (event) => {
         setSelectedCategory(event.target.value);
     };
-
     const handleCreate = () => {
-        navigate('/Admin/Rooms/Creates');
+        navigate('/Admin/ServicePost/Creates');
     };
 
     return (
         <div className="p-6">
             <Counts />
             <div className='font-bold text-6xl ml-3 my-8 text-blue-500 flex justify-between'>
-                <h1 >Phòng</h1>
+                <h1 >Bài Đăng Dịch Vụ</h1>
                 <button
                     onClick={handleCreate}
                     className='flex mr-2 items-center text-white bg-blue-500 rounded-3xl h-11 px-2'>
                     <FiPlus className="mr-2 text-xl" />
-                    <p className="font-semibold text-lg">Tạo Phòng</p>
+                    <p className="font-semibold text-lg">Tạo Bài Đăng</p>
                 </button>
             </div>
             <div className="flex items-center mb-6">
@@ -65,21 +59,20 @@ const RoomList = () => {
                     <FiFilter className="mr-2 text-xl" />
                     <p className="font-bold text-xl">Name (A-Z)</p>
                 </button>
+
                 <select className="border-2 border-gray-500 flex items-center p-2 rounded-xl ml-8 font-bold text-xl"
                     value={selectedCategory}
                     onChange={handleCategoryChange}
                 >
                     <option className="text-lg font-medium" value="" disabled>
-                        Loại Phòng
+                        Loại Dịch Vụ
                     </option>
-                    {categoryRooms.map(categoryRoom => (
-                        <option key={categoryRoom.categoryRoomId} value={categoryRoom.categoryName}>
-                            {categoryRoom.categoryName}
+                    {categoryServices.map(categoryService => (
+                        <option key={categoryService.categoryServiceId} value={categoryService.categoryServiceName}>
+                            {categoryService.categoryServiceName}
                         </option>
                     ))}
                 </select>
-
-
                 <button className="border-2 border-gray-500 flex items-center p-2 rounded-xl ml-8"
                 >
                     <p className="font-bold text-xl">Giá</p>
@@ -102,47 +95,38 @@ const RoomList = () => {
                     <thead>
                         <tr className="bg-gray-100">
                             <th className="py-2 px-4 text-left font-semibold text-black">#</th>
+                            <th className="py-2 px-4 text-left font-semibold text-black">Tên</th>
                             <th className="py-2 px-4 text-left font-semibold text-black">Tiêu Đề</th>
-                            <th className="py-2 px-4 text-left font-semibold text-black">Loại Phòng</th>
                             <th className="py-2 px-4 text-left font-semibold text-black">Giá</th>
                             <th className="py-2 px-4 text-left font-semibold text-black">Địa Chỉ</th>
-                            <th className="py-2 px-4 text-left font-semibold text-black">Trạng Thái</th>
-                            <th className="py-2 px-4 text-left font-semibold text-black"></th>
+                            <th className="py-2 px-4 text-left font-semibold text-black">Mô Tả</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {rooms.length === 0 ? (
+                        {servicePosts.length === 0 ? (
                             <tr>
                                 <td colSpan="7" className="py-2 text-center text-gray-500">Không tìm thấy kết quả</td>
                             </tr>
                         ) : (
-                            rooms.map((room, index) => (
-                                <tr key={room.userId} className="hover:bg-gray-200 border-collapse border border-gray-300">
+                            servicePosts.map((servicePost, index) => (
+                                <tr
+                                    key={servicePost.userId}
+                                    className="hover:bg-gray-200 border-collapse border border-gray-300"
+                                >
                                     <td className="py-2 px-4 text-gray-700 border-b">{index + 1}</td>
-                                    <td className="py-2 px-4 text-gray-700 border-b">{room.title}</td>
-                                    <td className="py-2 px-4 text-gray-700 border-b">{room.categoryName}</td>
-                                    <td className="py-2 px-4 text-gray-700 border-b">{room.price}</td>
-                                    <td className="py-2 px-4 text-gray-700 border-b">{room.locationDetail}</td>
-                                    <td className="py-2 text-gray-700 border-b flex justify-around text-center">
-                                        {room.isPermission ? 'Trống' : 'Đã thuê'}
-                                        <button>
-                                            <FaLock className='mt-1' />
-                                        </button>
-                                    </td>
-                                    <td className="py-2 px-4 border-b text-blue-600 text-center underline underline-offset-2 hover:text-red-500">
-                                        <NavLink to='/Admin/Rooms/AcceptRooms'>
-                                            Xác Nhận
-                                        </NavLink>
-                                    </td>
+                                    <td className="py-2 px-4 text-gray-700 border-b">{servicePost.name}</td>
+                                    <td className="py-2 px-4 text-gray-700 border-b">{servicePost.title}</td>
+                                    <td className="py-2 px-4 text-gray-700 border-b">{servicePost.price}</td>
+                                    <td className="py-2 px-4 text-gray-700 border-b">{servicePost.location}</td>
+                                    <td className="py-2 px-4 text-gray-700 border-b">{servicePost.description}</td>
                                 </tr>
                             ))
                         )}
                     </tbody>
                 </table>
             </div>
-
         </div >
     );
 };
 
-export default RoomList;
+export default ServicePostList;

@@ -11,16 +11,18 @@ import ForgotPasswords from '../Layout/Auth/ForgotPassword';
 import { useAuth } from '../Context/AuthProvider'; // Import useAuth
 import ProfileUser from '../Components/User/ProfileUser';
 
-import AccountList from '../Components/Admin/AccountList'
-import ServicePostList from '../Components/Admin/ServicePostList'
-import RoomList from '../Components/Admin/RoomList'
-import BuildingList from '../Components/Admin/BuildingList'
-import BuildingForm from '../Components/Admin/Form/BuildingForm'
-import UpLandlord from '../Components/Admin/UpLandlord'
-import UpService from '../Components/Admin/UpService'
+import AccountList from '../Components/Admin/Accounts/AccountList'
+import ServicePostList from '../Components/Admin/ServicePosts/ServicePostList'
+import RoomList from '../Components/Admin/Rooms/RoomList'
+import RoomForm from '../Components/Admin/Rooms/RoomForm'
+import BuildingList from '../Components/Admin/Buildings/BuildingList'
+import BuildingForm from '../Components/Admin/Buildings/BuildingForm'
+import BuildingDetails from '../Components/Admin/Buildings/BuildingDetails'
+import UpLandlord from '../Components/Admin/Accounts/UpLandlord'
+import UpService from '../Components/Admin/Accounts/UpService'
 
-import CategoryServiceList from '../Components/Admin/CategoryServiceList'
-import CategoryRoomList from '../Components/Admin/CategoryRoomList';
+import CategoryServiceList from '../Components/Admin/Categories/CategoryServiceList'
+import CategoryRoomList from '../Components/Admin/Categories/CategoryRoomList';
 // import CategoryServiceForm from '../Components/Admin/CategoryServiceForm'
 
 const RoutesConfig = () => {
@@ -63,7 +65,8 @@ const RoutesConfig = () => {
                 element={user && user.role === "User" ? <RoomsForm /> : <Navigate to="/" />}
             />
 
-            {/* Routes dành cho User */}
+            {/* Routes dành cho Admin */}
+
             <Route
                 path="/Admin/Accounts"
                 element={user && user.role === "Admin" ? <AccountList /> : <Navigate to="/Logins" />}
@@ -77,6 +80,10 @@ const RoutesConfig = () => {
                 element={user && user.role === "Admin" ? <RoomList /> : <Navigate to="/Logins" />}
             />
             <Route
+                path="/Admin/Rooms/Creates"
+                element={user && user.role === "Admin" ? <RoomForm /> : <Navigate to="/Logins" />}
+            />
+            <Route
                 path="/Admin/Buildings"
                 element={user && user.role === "Admin" ? <BuildingList /> : <Navigate to="/Logins" />}
             />
@@ -88,7 +95,10 @@ const RoutesConfig = () => {
                 path="/Admin/Buildings/:buildingId"
                 element={user && user.role === "Admin" ? <BuildingForm /> : <Navigate to="/Logins" />}
             />
-
+            <Route
+                path="/Admin/Buildings/:buildingId"
+                element={user && user.role === "Admin" ? <BuildingDetails /> : <Navigate to="/Logins" />}
+            />
             <Route
                 path="/Admin/Landlord"
                 element={user && user.role === "Admin" ? <UpLandlord /> : <Navigate to="/Logins" />}

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import RoomService from '../Services/RoomService';
+import RoomService from '../Services/User/RoomService';
 import { useNavigate } from 'react-router-dom';
 import Icon from './Icon';
 import Swal from 'sweetalert2';
@@ -68,10 +68,21 @@ const RoomsList = () => {
                 {rooms.map((room) => (
                     <div key={room.roomId} className="border border-gray-300 rounded-lg shadow-md bg-white flex flex-col max-h-[450px]">
                         <img
-                            src={room.image}
+                            src={
+                                (() => {
+                                    try {
+                                        const images = JSON.parse(room.image);
+                                        return images.length > 0 ? images[0] : ""; // Nếu mảng không rỗng, lấy ảnh đầu tiên
+                                    } catch (error) {
+                                        // Nếu parse thất bại, có thể room.image đã là một chuỗi Base64 hay URL
+                                        return room.image;
+                                    }
+                                })()
+                            }
                             alt={room.title}
                             className="w-full h-40 object-cover rounded-md mb-4"
                         />
+
                         <div className="flex flex-col flex-grow p-4 overflow-y-scroll">
                             <h3 className="text-lg font-semibold mb-2">{room.title}</h3>
                             <p className="text-sm text-gray-600 mb-2">{room.description}</p>
