@@ -22,7 +22,10 @@ import UpLandlord from '../Components/Admin/Accounts/UpLandlord'
 import UpService from '../Components/Admin/Accounts/UpService'
 
 import CategoryServiceList from '../Components/Admin/Categories/CategoryServiceList'
+import CategoryServiceForm from '../Components/Admin/Categories/CategoryServiceForm';
 import CategoryRoomList from '../Components/Admin/Categories/CategoryRoomList';
+import CategoryRoomForm from '../Components/Admin/Categories/CategoryRoomForm';
+import RoomDetails from '../Components/Admin/Rooms/RoomDetails';
 // import CategoryServiceForm from '../Components/Admin/CategoryServiceForm'
 
 const RoutesConfig = () => {
@@ -66,15 +69,27 @@ const RoutesConfig = () => {
             />
 
             {/* Routes dành cho Admin */}
-
+            {/* Account */}
             <Route
                 path="/Admin/Accounts"
                 element={user && user.role === "Admin" ? <AccountList /> : <Navigate to="/Logins" />}
             />
             <Route
+                path="/Admin/Landlord"
+                element={user && user.role === "Admin" ? <UpLandlord /> : <Navigate to="/Logins" />}
+            />
+            <Route
+                path="/Admin/Service"
+                element={user && user.role === "Admin" ? <UpService /> : <Navigate to="/Logins" />}
+            />
+
+            {/* Service Posts */}
+            <Route
                 path="/Admin/ServicePosts"
                 element={user && user.role === "Admin" ? <ServicePostList /> : <Navigate to="/Logins" />}
             />
+
+            {/* Rooms */}
             <Route
                 path="/Admin/Rooms"
                 element={user && user.role === "Admin" ? <RoomList /> : <Navigate to="/Logins" />}
@@ -83,6 +98,16 @@ const RoutesConfig = () => {
                 path="/Admin/Rooms/Creates"
                 element={user && user.role === "Admin" ? <RoomForm /> : <Navigate to="/Logins" />}
             />
+            <Route
+                path="/Admin/Rooms/Details/:roomId"
+                element={user && user.role === "Admin" ? <RoomDetails /> : <Navigate to="/Logins" />}
+            />
+            <Route
+                path="/Admin/Rooms/Edit/:roomId"
+                element={user && user.role === "Admin" ? <RoomForm /> : <Navigate to="/Logins" />}
+            />
+
+            {/* Buildings */}
             <Route
                 path="/Admin/Buildings"
                 element={user && user.role === "Admin" ? <BuildingList /> : <Navigate to="/Logins" />}
@@ -96,29 +121,38 @@ const RoutesConfig = () => {
                 element={user && user.role === "Admin" ? <BuildingForm /> : <Navigate to="/Logins" />}
             />
             <Route
-                path="/Admin/Buildings/:buildingId"
+                path="/Admin/Buildings/Details/:buildingId"
                 element={user && user.role === "Admin" ? <BuildingDetails /> : <Navigate to="/Logins" />}
             />
             <Route
-                path="/Admin/Landlord"
-                element={user && user.role === "Admin" ? <UpLandlord /> : <Navigate to="/Logins" />}
+                path="/Admin/Rooms/Edit/:buildingId"
+                element={user && user.role === "Admin" ? <BuildingForm /> : <Navigate to="/Logins" />}
             />
-            <Route
-                path="/Admin/Service"
-                element={user && user.role === "Admin" ? <UpService /> : <Navigate to="/Logins" />}
-            />
+
+            {/* Categories */}
             <Route
                 path="/Admin/CategoryServices"
                 element={user && user.role === "Admin" ? <CategoryServiceList /> : <Navigate to="/Logins" />}
             />
-            {/* <Route
+            <Route
+                path="/Admin/CategoryServices/Creates"
+                element={user && user.role === "Admin" ? <CategoryServiceForm /> : <Navigate to="/Logins" />}
+            />
+            <Route
                 path="/Admin/CategoryServices/:categoryServiceId"
                 element={user && user.role === "Admin" ? <CategoryServiceForm /> : <Navigate to="/Logins" />}
-            /> */}
-
+            />
             <Route
                 path="/Admin/CategoryRooms"
                 element={user && user.role === "Admin" ? <CategoryRoomList /> : <Navigate to="/Logins" />}
+            />
+            <Route
+                path="/Admin/CategoryRooms/Creates"
+                element={user && user.role === "Admin" ? <CategoryRoomForm /> : <Navigate to="/Logins" />}
+            />
+            <Route
+                path="/Admin/CategoryRooms/:categoryRoomId"
+                element={user && user.role === "Admin" ? <CategoryRoomForm /> : <Navigate to="/Logins" />}
             />
         </Routes>
     );

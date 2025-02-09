@@ -96,7 +96,7 @@ const BuildingList = () => {
             <div className="flex items-center mb-6">
                 <button className="border-2 border-gray-500 flex items-center p-2 rounded-xl">
                     <FiFilter className="mr-2 text-xl" />
-                    <p className="font-bold text-xl">Name (A-Z)</p>
+                    <p className="font-bold text-xl">Tên (A-Z)</p>
                 </button>
                 <div className="relative w-1/3 mx-2 ml-auto">
                     <input

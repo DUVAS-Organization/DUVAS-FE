@@ -57,7 +57,7 @@ const ServicePostList = () => {
             <div className="flex items-center mb-6">
                 <button className="border-2 border-gray-500 flex items-center p-2 rounded-xl">
                     <FiFilter className="mr-2 text-xl" />
-                    <p className="font-bold text-xl">Name (A-Z)</p>
+                    <p className="font-bold text-xl">Tên (A-Z)</p>
                 </button>
 
                 <select className="border-2 border-gray-500 flex items-center p-2 rounded-xl ml-8 font-bold text-xl"

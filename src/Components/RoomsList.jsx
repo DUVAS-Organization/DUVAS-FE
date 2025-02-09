@@ -99,7 +99,7 @@ const RoomsList = () => {
                                 <strong>Garret:</strong> {room.garret ? 'Yes' : 'No'}
                             </p>
                             <p className="text-sm text-gray-600 mb-2">
-                                <strong>Price:</strong> {room.price.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}
+                                <strong>Price:</strong> {room.price.toLocaleString('vi-VN')} đ
                             </p>
                             <p className="text-sm text-gray-600 mb-2">
                                 <strong>Category:</strong> {room.categoryName}
