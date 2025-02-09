@@ -11,7 +11,7 @@ const RoomForm = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
     const [files, setFiles] = useState([]);
-
+    const [previewImage, setPreviewImage] = useState(null);
     useEffect(() => {
         if (roomId) {
             RoomServices.getRoomById(roomId)
@@ -23,6 +23,7 @@ const RoomForm = () => {
                         images = data.image ? [data.image] : [];
                     }
                     setRooms({
+                        roomId: data.roomId,
                         userId: data.userId || user.userId,
                         buildingId: data.buildingId,
                         title: data.title || '',
@@ -98,7 +99,7 @@ const RoomForm = () => {
             return;
         }
         try {
-            const roomData = {
+            let roomData = {
                 buildingId: room.buildingId,
                 title: room.title,
                 description: room.description,
@@ -115,11 +116,11 @@ const RoomForm = () => {
                 image: JSON.stringify(room.image)
             };
             console.log("Dữ liệu gửi đi:", roomData);
-            // files.forEach((file) => {
-            //     formData.append("image", file);
-            // });
 
             if (roomId) {
+                roomData = {
+                    ...roomData, roomId: room.roomId,
+                };
                 await RoomServices.updateRoom(roomId, roomData);
                 showCustomNotification("success", "Chỉnh sửa thành công!");
             } else {
@@ -325,7 +326,30 @@ const RoomForm = () => {
                         <p className="text-gray-500 text-sm mb-3 font-medium text-center mt-2">
                             Định dạng: JPEG, PNG, PDF, MP4 - Tối đa 20MB
                         </p>
-                        {files.length > 0 && (
+                        {room.image && room.image.length > 0 && (
+                            <div className="mt-3">
+                                <p className="font-semibold text-gray-700">File đã chọn:</p>
+                                <div className="grid grid-cols-3 gap-3 mt-2">
+                                    {room.image.map((img, index) => (
+                                        <div key={index} className="relative border p-2 rounded-lg shadow-sm">
+                                            <button
+                                                onClick={() => handleRemoveFile(index)}
+                                                className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
+                                            >
+                                                <FaTimes size={14} />
+                                            </button>
+                                            <img
+                                                src={img}
+                                                alt={`File ${index}`}
+                                                className="w-full h-20 object-cover rounded-md"
+                                                onClick={() => setPreviewImage(img)}
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                        {/* {files.length > 0 && (
                             <div className="mt-3">
                                 <p className="font-semibold text-gray-700">File đã chọn:</p>
                                 <div className="grid grid-cols-3 gap-3 mt-2">
@@ -350,7 +374,7 @@ const RoomForm = () => {
                                     ))}
                                 </div>
                             </div>
-                        )}
+                        )} */}
                     </div>
                 </div>
 
@@ -392,6 +416,20 @@ const RoomForm = () => {
 
                 </div>
             </form>
+            {/* Modal để phóng to ảnh */}
+            {previewImage && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
+                    onClick={() => setPreviewImage(null)}
+                >
+                    <img
+                        src={previewImage}
+                        alt="Enlarged Preview"
+                        className="max-w-[75%] max-h-[85%]"
+                    />
+                </div>
+            )}
+
         </div>
     );
 };
