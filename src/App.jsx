@@ -1,7 +1,7 @@
 // src/App.js
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Layout from './Layout/Layout';
+import Layout from './Components/Layout/Layout';
 import { Notifications } from "@mantine/notifications";
 import { AuthProvider } from './Context/AuthProvider';
 import { CometChatIncomingCall } from "@cometchat/chat-uikit-react";

@@ -6,24 +6,63 @@
     text-align: center;
 }
 
-
+/* Container Notifications: đảm bảo định vị đúng, không dùng padding cố định */
 .custom-notification {
     position: fixed;
-    top: 4rem;
+    top: 0;
     right: 10px;
     z-index: 1000;
     max-width: 90vw;
-    /* Đảm bảo không vượt quá 90% chiều rộng màn hình */
-    padding: 10px;
     box-sizing: border-box;
 }
 
-/* Đối với màn hình nhỏ hơn (ví dụ: điện thoại) */
+/* Styling từng notification bên trong container */
+.custom-notification .mantine-Notification-root {
+    padding: 10px 10px;
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Style cho tiêu đề của thông báo */
+.custom-notification .mantine-Notification-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0;
+    /* Nếu cần, bạn có thể thêm color tùy chỉnh, nhưng thường Mantine đã thiết lập sẵn */
+}
+
+/* Style cho phần mô tả (nội dung) */
+.custom-notification .mantine-Notification-description {
+    font-size: 14px;
+    margin: 0;
+}
+
+/* Style cho nút đóng thông báo */
+.custom-notification .mantine-Notification-closeButton {
+    width: 20px;
+    height: 20px;
+    font-size: 18px;
+    padding: 0;
+    margin: 0;
+    align-self: start;
+}
+
+/* Chỉnh sửa icon để hiển thị ngang với title */
+.custom-notification .mantine-Notification-icon {
+    align-self: flex-start;
+    margin-top: 4px;
+    /* Căn giữa theo chiều dọc */
+    /* Nếu có thuộc tính top, hãy loại bỏ nó để tránh đẩy icon xuống */
+}
+
+/* Responsive: điều chỉnh container cho màn hình nhỏ */
 @media (max-width: 768px) {
     .custom-notification {
         right: 5px;
         left: 5px;
-        /* Đảm bảo nằm gọn trong màn hình */
         max-width: calc(100vw - 10px);
     }
 }
