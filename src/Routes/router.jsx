@@ -1,31 +1,31 @@
 // src/routes/index.js
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import BuildingsList from '../Components/BuildingsList';
-import BuildingsForm from '../Components/BuildingsForm';
-import RoomsList from '../Components/RoomsList';
-import RoomsForm from '../Components/RoomsForm';
-import Login from '../Layout/Auth/Login';
-import Registers from '../Layout/Auth/RegisterForm';
-import ForgotPasswords from '../Layout/Auth/ForgotPassword';
+import BuildingsList from '../Pages/User/BuildingsList';
+import BuildingsForm from '../Pages/User/BuildingsForm';
+import RoomsList from '../Pages/User/RoomsList';
+import RoomsForm from '../Pages/User/RoomsForm';
+import Login from '../Components/Layout/Auth/Login';
+import Registers from '../Components/Layout/Auth/RegisterForm';
+import ForgotPasswords from '../Components/Layout/Auth/ForgotPassword';
 import { useAuth } from '../Context/AuthProvider'; // Import useAuth
-import ProfileUser from '../Components/User/ProfileUser';
+import ProfileUser from '../Pages/User/ProfileUser';
 
-import AccountList from '../Components/Admin/Accounts/AccountList'
-import ServicePostList from '../Components/Admin/ServicePosts/ServicePostList'
-import RoomList from '../Components/Admin/Rooms/RoomList'
-import RoomForm from '../Components/Admin/Rooms/RoomForm'
-import BuildingList from '../Components/Admin/Buildings/BuildingList'
-import BuildingForm from '../Components/Admin/Buildings/BuildingForm'
-import BuildingDetails from '../Components/Admin/Buildings/BuildingDetails'
-import UpLandlord from '../Components/Admin/Accounts/UpLandlord'
-import UpService from '../Components/Admin/Accounts/UpService'
+import AccountList from '../Pages/Admin/Accounts/AccountList'
+import ServicePostList from '../Pages/Admin/ServicePosts/ServicePostList'
+import RoomList from '../Pages/Admin/Rooms/RoomList'
+import RoomForm from '../Pages/Admin/Rooms/RoomForm'
+import BuildingList from '../Pages/Admin/Buildings/BuildingList'
+import BuildingForm from '../Pages/Admin/Buildings/BuildingForm'
+import BuildingDetails from '../Pages/Admin/Buildings/BuildingDetails'
+import UpLandlord from '../Pages/Admin/Accounts/UpLandlord'
+import UpService from '../Pages/Admin/Accounts/UpService'
 
-import CategoryServiceList from '../Components/Admin/Categories/CategoryServiceList'
-import CategoryServiceForm from '../Components/Admin/Categories/CategoryServiceForm';
-import CategoryRoomList from '../Components/Admin/Categories/CategoryRoomList';
-import CategoryRoomForm from '../Components/Admin/Categories/CategoryRoomForm';
-import RoomDetails from '../Components/Admin/Rooms/RoomDetails';
+import CategoryServiceList from '../Pages/Admin/Categories/CategoryServiceList'
+import CategoryServiceForm from '../Pages/Admin/Categories/CategoryServiceForm';
+import CategoryRoomList from '../Pages/Admin/Categories/CategoryRoomList';
+import CategoryRoomForm from '../Pages/Admin/Categories/CategoryRoomForm';
+import RoomDetails from '../Pages/Admin/Rooms/RoomDetails';
 // import CategoryServiceForm from '../Components/Admin/CategoryServiceForm'
 
 const RoutesConfig = () => {
