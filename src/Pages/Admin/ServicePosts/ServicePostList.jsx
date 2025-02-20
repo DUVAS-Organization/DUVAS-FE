@@ -41,7 +41,9 @@ const ServicePostList = () => {
     const handleCreate = () => {
         navigate('/Admin/ServicePost/Creates');
     };
-
+    const handleRowClick = (servicePostId) => {
+        navigate(`/Admin/ServicePost/Details/${servicePostId}`);
+    };
     return (
         <div className="p-6">
             <Counts />
@@ -111,12 +113,13 @@ const ServicePostList = () => {
                             servicePosts.map((servicePost, index) => (
                                 <tr
                                     key={servicePost.userId}
+                                    onClick={() => handleRowClick(servicePost.servicePostId)}
                                     className="hover:bg-gray-200 border-collapse border border-gray-300"
                                 >
                                     <td className="py-2 px-4 text-gray-700 border-b">{index + 1}</td>
                                     <td className="py-2 px-4 text-gray-700 border-b">{servicePost.name}</td>
                                     <td className="py-2 px-4 text-gray-700 border-b">{servicePost.title}</td>
-                                    <td className="py-2 px-4 text-gray-700 border-b">{servicePost.price}</td>
+                                    <td className="py-2 px-4 text-gray-700 border-b">{servicePost.price.toLocaleString('vi-VN')} đ</td>
                                     <td className="py-2 px-4 text-gray-700 border-b">{servicePost.location}</td>
                                     <td className="py-2 px-4 text-gray-700 border-b">{servicePost.description}</td>
                                 </tr>

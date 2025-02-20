@@ -9,7 +9,9 @@ import Login from '../Components/Layout/Auth/Login';
 import Registers from '../Components/Layout/Auth/RegisterForm';
 import ForgotPasswords from '../Components/Layout/Auth/ForgotPassword';
 import { useAuth } from '../Context/AuthProvider'; // Import useAuth
-import ProfileUser from '../Pages/User/ProfileUser';
+import Profile from '../Pages/User/Profile';
+
+import ServicePost from '../Pages/User/ServicePost';
 
 import AccountList from '../Pages/Admin/Accounts/AccountList'
 import ServicePostList from '../Pages/Admin/ServicePosts/ServicePostList'
@@ -26,6 +28,10 @@ import CategoryServiceForm from '../Pages/Admin/Categories/CategoryServiceForm';
 import CategoryRoomList from '../Pages/Admin/Categories/CategoryRoomList';
 import CategoryRoomForm from '../Pages/Admin/Categories/CategoryRoomForm';
 import RoomDetails from '../Pages/Admin/Rooms/RoomDetails';
+import ServicePostForm from '../Pages/Admin/ServicePosts/ServicePostForm';
+import ServicePostDetails from '../Pages/Admin/ServicePosts/ServicePostDetails';
+import Home from '../Pages/Home';
+import Overview from '../Pages/User/Overview';
 // import CategoryServiceForm from '../Components/Admin/CategoryServiceForm'
 
 const RoutesConfig = () => {
@@ -34,18 +40,22 @@ const RoutesConfig = () => {
     return (
         <Routes>
             {/* Routes dành cho tất cả người dùng (User hoặc Admin) */}
-            <Route path="/" element={<BuildingsList />} />
+            <Route path="/" element={<Home />} />
             <Route path="/Rooms" element={<RoomsList />} />
             <Route path="/Logins" element={<Login />} />
             <Route path="/Registers" element={<Registers />} />
             <Route path="/forgot-password" element={<ForgotPasswords />} />
-            <Route path="/ProfileUser" element={<ProfileUser />} />
+            <Route path="/Profile" element={<Profile />} />
 
 
             {/* Routes dành cho User */}
             <Route
                 path="/"
                 element={user && user.role === "User" ? <BuildingsList /> : <Navigate to="/" />}
+            />
+            <Route
+                path="/Overview"
+                element={user && user.role === "User" ? <Overview /> : <Navigate to="/" />}
             />
             <Route
                 path="/Buildings/Creates"
@@ -68,6 +78,12 @@ const RoutesConfig = () => {
                 element={user && user.role === "User" ? <RoomsForm /> : <Navigate to="/" />}
             />
 
+            <Route
+                path="/ServicePost/Creates"
+                element={user && user.role === "User" ? <ServicePostForm /> : <Navigate to="/Logins" />}
+            />
+
+
             {/* Routes dành cho Admin */}
             {/* Account */}
             <Route
@@ -87,6 +103,18 @@ const RoutesConfig = () => {
             <Route
                 path="/Admin/ServicePosts"
                 element={user && user.role === "Admin" ? <ServicePostList /> : <Navigate to="/Logins" />}
+            />
+            <Route
+                path="/Admin/ServicePost/Creates"
+                element={user && user.role === "Admin" ? <ServicePostForm /> : <Navigate to="/Logins" />}
+            />
+            <Route
+                path="/Admin/ServicePost/Details/:servicePostId"
+                element={user && user.role === "Admin" ? <ServicePostDetails /> : <Navigate to="/Logins" />}
+            />
+            <Route
+                path="/Admin/ServicePost/Edit/:servicePostId"
+                element={user && user.role === "Admin" ? <ServicePostForm /> : <Navigate to="/Logins" />}
             />
 
             {/* Rooms */}
@@ -125,7 +153,7 @@ const RoutesConfig = () => {
                 element={user && user.role === "Admin" ? <BuildingDetails /> : <Navigate to="/Logins" />}
             />
             <Route
-                path="/Admin/Rooms/Edit/:buildingId"
+                path="/Admin/Buildings/Edit/:buildingId"
                 element={user && user.role === "Admin" ? <BuildingForm /> : <Navigate to="/Logins" />}
             />
 

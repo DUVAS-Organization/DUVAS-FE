@@ -3,6 +3,9 @@ import { useAuth } from '../../Context/AuthProvider';
 import { NavLink } from 'react-router-dom';
 import Image_Logo from '../../Assets/Images/logo2.png'
 import Sidebar from './Sidebar';
+import { FaBook, FaUserTie, FaGlobe, FaLock, FaSignOutAlt } from 'react-icons/fa';
+import { FaHandHoldingDollar } from "react-icons/fa6";
+
 const Navbar = () => {
     const { user, logout, loading } = useAuth();
     const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -41,81 +44,120 @@ const Navbar = () => {
                         <div className="hidden sm:block sm:ml-6">
                             <div className="flex space-x-4">
                                 <NavLink to="/" className="text-gray-800 px-3 py-2 rounded-md text-base font-medium">
-                                    Buildings
+                                    Trang chủ
                                 </NavLink>
                                 <NavLink to="/Rooms" className="text-gray-800 px-3 py-2 rounded-md text-base font-medium">
-                                    Rooms
+                                    Nhà trọ cho thuê
                                 </NavLink>
                                 <NavLink to="/Projects" className="text-gray-800 px-3 py-2 rounded-md text-base font-medium">
-                                    Dự án
-                                </NavLink>
-                                <NavLink to="/ProfileUser" className="text-gray-800 px-3 py-2 rounded-md text-base font-medium">
-                                    ProfileUser
+                                    Tin tức
                                 </NavLink>
                             </div>
                         </div>
 
                         <div className="hidden sm:flex ml-auto space-x-4">
                             {user ? (
-                                <div
-                                    className="relative flex items-center"
-                                    onMouseEnter={handleMouseEnter}
-                                    onMouseLeave={handleMouseLeave}
-                                >
-                                    {/* Hiển thị ảnh đại diện hoặc chữ cái đầu */}
-                                    {user.ProfilePicture ? (
-                                        <img
-                                            src={user.ProfilePicture}
-                                            alt={`${user.username}'s Profile`}
-                                            className="w-8 h-8 rounded-full border border-gray-300 object-cover"
-                                        />
-                                    ) : (
-                                        <div className="w-8 h-8 rounded-full border border-gray-300 bg-gray-200 flex items-center justify-center">
-                                            <span className="text-gray-800 font-bold">
-                                                {getInitial(user.username)}
-                                            </span>
-                                        </div>
-                                    )}
-
-                                    {/* Hiển thị tên người dùng */}
-                                    <button
-                                        className="text-gray-800 px-3 py-2 rounded-md text-base font-medium flex items-center"
+                                <>
+                                    <div
+                                        className="relative flex items-center"
+                                        onMouseEnter={handleMouseEnter}
+                                        onMouseLeave={handleMouseLeave}
                                     >
-                                        {user.username}
-                                    </button>
-
-                                    {/* Dropdown menu */}
-                                    {dropdownOpen && (
-                                        <div className="absolute top-8 right-16 mt-2 w-64 bg-white shadow-lg rounded-md">
-                                            <div className="px-4 py-2 text-gray-800 text-base">
-                                                <NavLink
-                                                    to="/Profiles"
-                                                    className="block px-4 py-2 hover:bg-gray-100 text-gray-800 text-base whitespace-nowrap"
-                                                >
-                                                    Chỉnh Sửa thông tin cá nhân
-                                                </NavLink>
-                                                <button
-                                                    onClick={logout}
-                                                    className="block w-full px-4 py-2 hover:bg-gray-100 text-left text-gray-800 text-base whitespace-nowrap"
-                                                >
-                                                    Đăng Xuất
-                                                </button>
+                                        {/* Hiển thị ảnh đại diện hoặc chữ cái đầu */}
+                                        {user.ProfilePicture ? (
+                                            <img
+                                                src={user.ProfilePicture}
+                                                alt={`${user.username}'s Profile`}
+                                                className="w-8 h-8 rounded-full border border-gray-300 object-cover"
+                                            />
+                                        ) : (
+                                            <div className="w-8 h-8 rounded-full border border-gray-300 bg-gray-200 flex items-center justify-center">
+                                                <span className="text-gray-800 font-bold">
+                                                    {getInitial(user.username)}
+                                                </span>
                                             </div>
-                                        </div>
-                                    )}
-                                    <NavLink to="/Posts" className="text-gray-800 px-3 py-2 rounded-md text-base font-medium">
+                                        )}
+
+                                        {/* Hiển thị tên người dùng */}
+                                        <button
+                                            className="text-gray-800 px-3 py-2 rounded-md text-base font-medium flex items-center"
+                                        >
+                                            {user.username}
+                                        </button>
+
+                                        {/* Dropdown menu */}
+                                        {dropdownOpen && (
+                                            <div className="absolute top-8 right-0 mt-2 w-64 bg-white shadow-lg rounded-md ">
+                                                <div className="px-4 py-2 text-gray-800 text-base">
+                                                    <NavLink
+                                                        to="/Overview"
+                                                        className="flex items-center space-x-2 px-4 py-2 rounded hover:bg-red-500 hover:text-white text-gray-800 whitespace-nowrap"
+                                                    >
+                                                        <FaGlobe />
+                                                        <span>Tổng quan</span>
+                                                    </NavLink>
+                                                    <NavLink
+                                                        to="/ServicePost"
+                                                        className="flex items-center space-x-2 px-4 py-2 rounded hover:bg-red-500 hover:text-white text-gray-800 whitespace-nowrap"
+                                                    >
+                                                        <FaBook />
+                                                        <span>Quản lý tin đăng</span>
+                                                    </NavLink>
+                                                    <NavLink
+                                                        to="/Profile?tab=edit"
+                                                        className="flex items-center space-x-2 px-4 py-2 rounded hover:bg-red-500 hover:text-white text-gray-800 whitespace-nowrap"
+                                                    >
+                                                        <FaUserTie />
+                                                        <span>Chỉnh Sửa thông tin</span>
+                                                    </NavLink>
+                                                    <NavLink
+                                                        to="/Profile?tab=settings"
+                                                        className="flex items-center space-x-2 px-4 py-2 rounded hover:bg-red-500 hover:text-white text-gray-800 whitespace-nowrap"
+                                                    >
+                                                        <FaLock />
+                                                        <span>Thay đổi mật khẩu</span>
+                                                    </NavLink>
+                                                    <NavLink
+                                                        to="/Moneys"
+                                                        className="flex items-center space-x-2 px-4 py-2 rounded hover:bg-red-500 hover:text-white text-gray-800 whitespace-nowrap"
+                                                    >
+                                                        <FaHandHoldingDollar />
+                                                        <span>Nạp tiền</span>
+                                                    </NavLink>
+                                                    <button
+                                                        onClick={logout}
+                                                        className="flex items-center space-x-2 w-full px-4 py-2 rounded hover:bg-red-500 hover:text-white text-left text-gray-800 whitespace-nowrap"
+                                                    >
+                                                        <FaSignOutAlt className="transform scale-y-[-1]" />
+                                                        <span>Đăng Xuất</span>
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                        )}
+                                    </div>
+                                    {/* Nút Đăng Tin được tách riêng ra ngoài container profile */}
+                                    <NavLink
+                                        to="/Posts"
+                                        className="text-red-500 px-3 py-2 rounded-md text-base font-medium
+                                         border border-red-400 hover:bg-red-500 hover:text-white transition-colors duration-150"
+                                    >
                                         Đăng Tin
                                     </NavLink>
-                                </div>
+                                </>
                             ) : (
                                 <>
                                     <NavLink to="/Logins" className="text-gray-800 px-3 py-2 rounded-md text-base font-medium">
-                                        Login
+                                        Đăng Nhập
                                     </NavLink>
                                     <NavLink to="/Registers" className="text-gray-800 px-3 py-2 rounded-md text-base font-medium">
-                                        Register
+                                        Đăng Ký
                                     </NavLink>
-                                    <NavLink to="/Posts" className="text-gray-800 px-3 py-2 rounded-md text-base font-medium">
+                                    <NavLink
+                                        to="/ServicePost/Creates"
+                                        className="text-red-500 px-3 py-2 rounded-md text-base font-medium 
+                                        border border-red-400 hover:bg-red-500 hover:text-white transition-colors duration-150"
+                                    >
                                         Đăng Tin
                                     </NavLink>
                                 </>
