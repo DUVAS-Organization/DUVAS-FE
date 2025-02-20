@@ -6,68 +6,108 @@ import { useAuth } from '../../../Context/AuthProvider';
 import { FaArrowLeft, FaTimes, FaPlus } from "react-icons/fa";
 
 const BuildingsForm = () => {
-    const [building, setBuilding] = useState([]);
+    const [building, setBuilding] = useState({});
     const { buildingId } = useParams();
     const navigate = useNavigate();
     const { user } = useAuth();
     const [files, setFiles] = useState([]);
+    const [previewImage, setPreviewImage] = useState(null);
 
     useEffect(() => {
         if (buildingId) {
             BuildingService.getBuildingById(buildingId)
                 .then(data => {
                     setBuilding({
+                        buildingId: data.buildingId,
                         buildingName: data.buildingName || '',
                         userId: data.userId || user.userId, // Nếu có userId trong dữ liệu, dùng; nếu không, lấy từ context
                         location: data.location || '',
                         verify: data.verify || false,
+                        image: data.image || [],
                     });
                 })
-                .catch(error => console.error('Error fetching Building:', error));
+                .catch(error => {
+                    console.error('Error fetching Building:', error);
+                    showCustomNotification("error", "Không thể lấy thông tin tòa nhà!");
+                });
         } else {
-            setBuilding(prevBuilding => ({
-                ...prevBuilding,
-                userId: user.userId, // Lấy userId từ context và gán vào form
-            }));
+            setBuilding({
+                buildingName: '',
+                userId: user.userId,
+                location: '',
+                verify: false,
+                image: [],
+            });
         }
     }, [buildingId, user.userId]);
 
+    const convertFileToBase64 = (file) => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.onerror = () => {
+                console.error("Error converting file to base64");
+                reject(new Error("File conversion error"));
+            };
+            reader.readAsDataURL(file);
+        });
+    };
+
     const handleFileChange = (e) => {
         const selectedFiles = Array.from(e.target.files);
+        if (selectedFiles.length > 0) {
+            // Cập nhật state files để hiển thị preview
+            setFiles(prev => [...prev, ...selectedFiles]);
 
-        // Loại bỏ file trùng lặp (theo tên file)
-        const newFiles = selectedFiles.filter(file =>
-            !files.some(existingFile => existingFile.name === file.name)
-        );
-
-        setFiles(prevFiles => [...prevFiles, ...newFiles]); // Thêm file mới vào danh sách
+            // Chuyển đổi tất cả các file được chọn sang Base64
+            Promise.all(selectedFiles.map(file => convertFileToBase64(file)))
+                .then(base64Array => {
+                    setBuilding(prev => ({ ...prev, image: [...prev.image, ...base64Array] }));
+                })
+                .catch(error => {
+                    console.error("Error converting files:", error);
+                    showCustomNotification("error", "Lỗi khi chuyển đổi file!");
+                });
+        }
     };
 
     // Hàm xóa file đã chọn
     const handleRemoveFile = (index) => {
-        setFiles(prevFiles => prevFiles.filter((_, i) => i !== index));
+        setFiles(prev => prev.filter((_, i) => i !== index));
+        setBuilding(prev => ({ ...prev, image: prev.image.filter((_, i) => i !== index) }));
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (!building.image || building.image.length === 0) {
+            showCustomNotification("error", "Vui lòng chọn ít nhất 1 ảnh!");
+            return;
+        }
         try {
-            const formData = new FormData();
-            console.log("Dữ liệu gửi đi:", building);
-            formData.append("buildingName", building.buildingName);
-            formData.append("location", building.location);
-            formData.append("userId", user.userId);
+            // Tạo một FormData object để gửi dữ liệu dưới dạng multipart/form-data
+            let formData = new FormData();
+            formData.append('buildingName', building.buildingName);
+            formData.append('userId', Number(user.userId));
+            formData.append('location', building.location);
+            formData.append('verify', building.verify);
 
-            files.forEach((file) => {
-                formData.append("documents", file);
+            // Thêm ảnh vào FormData
+            building.image.forEach((img, index) => {
+                formData.append('image', img); // Thêm file vào trong formData
             });
-
+            for (let value of formData.entries()) {
+                console.log(value[0] + ": " + value[1]);
+            }
             if (buildingId) {
+                // Nếu có buildingId thì gọi API update
                 await BuildingService.updateBuilding(buildingId, formData);
                 showCustomNotification("success", "Chỉnh sửa thành công!");
             } else {
+                // Nếu không có buildingId thì gọi API add mới
                 await BuildingService.addBuilding(formData);
                 showCustomNotification("success", "Tạo thành công!");
             }
+
             navigate('/Admin/Buildings');
         } catch (error) {
             console.error('Error in handleSubmit:', error);
@@ -122,11 +162,10 @@ const BuildingsForm = () => {
                 </div>
 
                 <div className="mt-4">
-                    <label className="text-lg text-left font-bold text-black mb-2">
-                        Giấy tờ:
+                    <label className="flex text-lg text-left font-bold text-black mb-2">
+                        Ảnh: <span className="text-red-500 ml-1">*</span>
                     </label>
                     <div className="border border-gray-300 rounded-lg p-6 bg-white shadow-sm w-full text-center">
-                        {/* Input chọn file */}
                         <div className="flex items-center justify-center">
                             <label className="cursor-pointer bg-gray-200 p-3 rounded-lg flex items-center gap-2">
                                 <FaPlus className="text-blue-600" />
@@ -143,13 +182,11 @@ const BuildingsForm = () => {
                         <p className="text-gray-500 text-sm mb-3 font-medium text-center mt-2">
                             Định dạng: JPEG, PNG, PDF, MP4 - Tối đa 20MB
                         </p>
-
-                        {/* Danh sách file đã chọn */}
-                        {files.length > 0 && (
+                        {building.image && building.image.length > 0 && (
                             <div className="mt-3">
                                 <p className="font-semibold text-gray-700">File đã chọn:</p>
                                 <div className="grid grid-cols-3 gap-3 mt-2">
-                                    {files.map((file, index) => (
+                                    {building.image.map((img, index) => (
                                         <div key={index} className="relative border p-2 rounded-lg shadow-sm">
                                             <button
                                                 onClick={() => handleRemoveFile(index)}
@@ -157,11 +194,12 @@ const BuildingsForm = () => {
                                             >
                                                 <FaTimes size={14} />
                                             </button>
-                                            {file.type.startsWith("image/") ? (
-                                                <img src={URL.createObjectURL(file)} alt={file.name} className="w-full h-20 object-cover rounded-md" />
-                                            ) : (
-                                                <p className="text-sm text-gray-600 truncate">{file.name}</p>
-                                            )}
+                                            <img
+                                                src={img}
+                                                alt={`File ${index}`}
+                                                className="w-full h-20 object-cover rounded-md"
+                                                onClick={() => setPreviewImage(img)}
+                                            />
                                         </div>
                                     ))}
                                 </div>
@@ -169,33 +207,6 @@ const BuildingsForm = () => {
                         )}
                     </div>
                 </div>
-
-
-                {/* <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Verify</label>
-                    <div className="flex items-center">
-                        <label className="mr-4">
-                            <input
-                                type="radio"
-                                name="garret"
-                                value="True"
-                                checked={building.verify === true}
-                                onChange={() => setBuilding({ ...building, verify: true })}
-                            />
-                            Yes
-                        </label>
-                        <label>
-                            <input
-                                type="radio"
-                                name="garret"
-                                value="False"
-                                checked={building.verify === false}
-                                onChange={() => setBuilding({ ...building, verify: false })}
-                            />
-                            No
-                        </label>
-                    </div>
-                </div> */}
 
                 {/* Buttons */}
                 <div className="flex items-center flex-col">
@@ -208,6 +219,19 @@ const BuildingsForm = () => {
 
                 </div>
             </form>
+            {/* Modal để phóng to ảnh */}
+            {previewImage && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
+                    onClick={() => setPreviewImage(null)}
+                >
+                    <img
+                        src={previewImage}
+                        alt="Enlarged Preview"
+                        className="max-w-[75%] max-h-[85%] object-cover rounded-lg"
+                    />
+                </div>
+            )}
         </div>
     );
 };

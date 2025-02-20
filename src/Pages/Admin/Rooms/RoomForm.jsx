@@ -16,6 +16,7 @@ const RoomForm = () => {
     const { user } = useAuth();
     const [files, setFiles] = useState([]);
     const [previewImage, setPreviewImage] = useState(null);
+
     useEffect(() => {
         // Lấy danh sách Categories
         CategoryRooms.getCategoryRooms()
@@ -87,6 +88,7 @@ const RoomForm = () => {
             setRooms(prev => ({ ...prev, categoryRoomId: categoryRooms[0].categoryRoomId }));
         }
     }, [categoryRooms, roomId, room.categoryRoomId]);
+
     const convertFileToBase64 = (file) => {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -248,14 +250,6 @@ const RoomForm = () => {
                                 </option>
                             ))}
                         </select>
-                        {/* <input
-                            type="text"
-                            value={room.categoryRoomId}
-                            onChange={(e) => setRooms({ ...room, categoryRoomId: e.target.value })}
-                            required
-                            className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-
-                        /> */}
                     </div>
                     <div className="w-full">
                         <label className="flex text-lg font-bold text-black mb-1">
