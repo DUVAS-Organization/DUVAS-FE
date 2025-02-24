@@ -1,6 +1,29 @@
-import { FaCamera, FaRegHeart, FaMapMarkerAlt, FaSearch } from "react-icons/fa";
+import { FaCamera, FaRegHeart, FaMapMarkerAlt, FaSearch, FaTimes } from "react-icons/fa";
+import { NavLink, } from 'react-router-dom'
+import { useState } from 'react'
+import { FaGlobe, FaBook, FaUserTie, FaLock } from 'react-icons/fa'
+import { FaSignOutAlt, FaHandHoldingDollar } from 'react-icons/fa6'
+import RangeSlider from "../Components/RangeSlider";
 
 const Home = () => {
+    const [minPrice, setMinPrice] = useState("");
+    const [maxPrice, setMaxPrice] = useState("");
+    const [selectedPrice, setSelectedPrice] = useState("all");
+    const [dropdownOpen, setDropdownOpen] = useState(false);
+
+
+    const onApply = (filterData) => {
+        console.log("Bộ lọc được áp dụng:", filterData);
+        // Thực hiện xử lý dữ liệu ở đây (gọi API, cập nhật state, v.v.)
+    };
+
+    const handleApply = () => {
+        onApply({ minPrice, maxPrice, selectedPrice });
+    };
+
+    const handleClickEnter = () => {
+        setDropdownOpen(true);
+    };
     return (
         <div className="bg-white">
             <div className="bg-red-500 p-4">
@@ -46,12 +69,106 @@ const Home = () => {
                             <select className="w-1/3 bg-red-800 text-white rounded-lg px-4 py-2">
                                 <option>Loại Nhà cho thuê</option>
                             </select>
-                            <select className="w-1/3 bg-red-800 text-white rounded-lg px-4 py-2">
-                                <option>Mức giá</option>
-                            </select>
+                            <button
+                                onClick={handleClickEnter}
+                                className="w-1/3 bg-red-800 text-white text-left rounded-lg px-4 py-2 select-none relative">
+                                Mức giá
+                                {/* Dropdown menu */}
+                                {dropdownOpen && (
+                                    <div className="bg-white rounded-lg shadow-lg p-4 w-80 absolute top-full left-0 z-10">
+                                        <div className="flex justify-between items-center mb-4">
+                                            <h2 className="text-lg text-gray-800 font-semibold">Mức giá</h2>
+                                            <button className="text-gray-500" onClick={() => setDropdownOpen(false)}>
+                                                <FaTimes />
+                                            </button>
+                                        </div>
+
+                                        {/* Nhập giá */}
+                                        <div className="flex justify-between items-center mb-4">
+                                            <div className="flex flex-col items-center">
+                                                <label className="text-sm font-medium text-black mb-1">Giá thấp nhất</label>
+                                                <input
+                                                    type="number"
+                                                    placeholder="Từ"
+                                                    className="border rounded px-2 py-1 text-gray-800 text-center w-20"
+                                                    value={minPrice}
+                                                    onChange={(e) => setMinPrice(Number(e.target.value))}
+                                                />
+                                            </div>
+                                            <span className="text-xl text-gray-600">→</span>
+                                            <div className="flex flex-col items-center">
+                                                <label className="text-sm font-medium text-black mb-1">Giá cao nhất</label>
+                                                <input
+                                                    type="number"
+                                                    placeholder="Đến"
+                                                    className="border rounded px-2 py-1 text-gray-800 text-center w-20"
+                                                    value={maxPrice}
+                                                    onChange={(e) => setMaxPrice(Number(e.target.value))}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Range slider */}
+                                        <RangeSlider
+                                            className="my-5"
+                                            min={0}
+                                            max={100}
+                                            minValue={minPrice}
+                                            maxValue={maxPrice}
+                                            onChange={(minVal, maxVal) => {
+                                                setMinPrice(minVal);
+                                                setMaxPrice(maxVal);
+                                            }}
+                                        />
+
+                                        {/* Chọn khoảng giá */}
+                                        <div className="mb-4">
+                                            {[
+                                                { value: "all", label: "Tất cả mức giá" },
+                                                { value: "under500", label: "Dưới 500 triệu" },
+                                                { value: "500-800", label: "500 - 800 triệu" },
+                                                { value: "800-1b", label: "800 triệu - 1 tỷ" },
+                                                { value: "1-2b", label: "1 - 2 tỷ" }
+                                            ].map((item) => (
+                                                <div className="flex items-center mb-2" key={item.value}>
+                                                    <input
+                                                        type="radio"
+                                                        name="price"
+                                                        className="form-radio text-red-500"
+                                                        checked={selectedPrice === item.value}
+                                                        onChange={() => setSelectedPrice(item.value)}
+                                                    />
+                                                    <span className="ml-2 text-gray-700">{item.label}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        {/* Buttons */}
+                                        <div className="flex justify-between">
+                                            <button
+                                                className="bg-gray-200 text-gray-700 px-4 py-2 rounded"
+                                                onClick={() => {
+                                                    setMinPrice(0);
+                                                    setMaxPrice(100);
+                                                    setSelectedPrice("all");
+                                                }}
+                                            >
+                                                Đặt lại
+                                            </button>
+                                            <button
+                                                className="bg-red-500 text-white px-4 py-2 rounded"
+                                                onClick={handleApply}
+                                            >
+                                                Áp dụng
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </button>
                             <select className="w-1/3 bg-red-800 text-white rounded-lg px-4 py-2">
                                 <option>Diện tích</option>
                             </select>
+
                         </div>
                     </div>
                 </div>

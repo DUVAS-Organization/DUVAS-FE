@@ -181,7 +181,7 @@ const RoomDetails = () => {
                                             key={index}
                                             src={img}
                                             alt={`Image ${index}`}
-                                            className="w-full h-auto object-cover rounded-lg cursor-pointer"
+                                            className="w-full h-52 object-cover rounded-lg cursor-pointer"
                                             onClick={() => setPreviewImage(img)}
                                         />
                                     ))}
