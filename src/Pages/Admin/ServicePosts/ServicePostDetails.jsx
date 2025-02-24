@@ -106,8 +106,11 @@ const ServicePostDetails = () => {
 
                     {/* Giá */}
                     <div className="flex justify-between">
-                        <p className="text-lg font-medium"><strong>Giá (đ/h):</strong> {servicePost.price} đ</p>
+                        <p className="text-lg font-medium">
+                            <strong>Giá (đ/h):</strong> {servicePost.price?.toLocaleString("vi-VN")} đ
+                        </p>
                     </div>
+
 
                     {/* Địa chỉ */}
                     <div className="flex justify-between">

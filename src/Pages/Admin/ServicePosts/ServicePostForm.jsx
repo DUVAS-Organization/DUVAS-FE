@@ -5,6 +5,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { showCustomNotification } from '../../../Components/Notification';
 import { useAuth } from '../../../Context/AuthProvider';
 import { FaArrowLeft } from "react-icons/fa";
+import PriceInput from '../../../Components/PriceInput';
 
 const ServicePostForm = () => {
     const [servicePost, setServicePosts] = useState({});
@@ -119,13 +120,9 @@ const ServicePostForm = () => {
                         <label className="flex text-lg font-bold text-black mb-1">
                             Giá (đ/h): <p className='text-red-500 ml-1'>*</p>
                         </label>
-                        <input
-                            type="text"
-                            value={servicePost.price}
-                            onChange={(e) => setServicePosts({ ...servicePost, price: e.target.value })}
-                            required
-                            className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="Nhập Giá"
+                        <PriceInput
+                            value={servicePost.price || 0}
+                            onChange={(val) => setServicePosts({ ...servicePost, price: val })}
                         />
                     </div>
 
