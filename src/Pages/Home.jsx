@@ -1,29 +1,56 @@
-import { FaCamera, FaRegHeart, FaMapMarkerAlt, FaSearch, FaTimes } from "react-icons/fa";
+import { FaCamera, FaRegHeart, FaMapMarkerAlt, FaSearch, FaChevronUp, FaChevronDown } from "react-icons/fa";
 import { NavLink, } from 'react-router-dom'
 import { useState } from 'react'
-import { FaGlobe, FaBook, FaUserTie, FaLock } from 'react-icons/fa'
-import { FaSignOutAlt, FaHandHoldingDollar } from 'react-icons/fa6'
 import RangeSlider from "../Components/RangeSlider";
-
+import DropdownFilter from "../Components/DropdownFilter";
+import RangeInput from '../Components/RangeInput'
 const Home = () => {
-    const [minPrice, setMinPrice] = useState("");
-    const [maxPrice, setMaxPrice] = useState("");
+    // State cho Mức giá
+    const [priceDropdownOpen, setPriceDropdownOpen] = useState(false);
+    const [minPrice, setMinPrice] = useState(0);
+    const [maxPrice, setMaxPrice] = useState(100);
     const [selectedPrice, setSelectedPrice] = useState("all");
-    const [dropdownOpen, setDropdownOpen] = useState(false);
 
+    // State cho Diện tích (ví dụ)
+    const [areaDropdownOpen, setAreaDropdownOpen] = useState(false);
+    const [minArea, setMinArea] = useState(0);
+    const [maxArea, setMaxArea] = useState(1000);
+    const [selectedArea, setSelectedArea] = useState("all");
 
-    const onApply = (filterData) => {
-        console.log("Bộ lọc được áp dụng:", filterData);
-        // Thực hiện xử lý dữ liệu ở đây (gọi API, cập nhật state, v.v.)
+    const priceOptions = [
+        { value: "all", label: "Tất cả mức giá", min: 0, max: 100 },
+        { value: "under5", label: "Dưới 1 triệu", min: 0, max: 1 },
+        { value: "1-3", label: "1 - 3 triệu", min: 1, max: 3 },
+        { value: "3-5", label: "3 - 5 triệu", min: 3, max: 5 },
+        { value: "5-10", label: "5 - 10 triệu", min: 5, max: 10 },
+        { value: "10-20", label: "10 - 20 triệu", min: 10, max: 20 },
+        { value: "20-40", label: "20 - 40 triệu", min: 10, max: 40 },
+        { value: "40-70", label: "40 - 70 triệu", min: 40, max: 70 },
+        { value: "over70", label: "Trên 70 triệu", min: 70 }
+    ];
+
+    const areaOptions = [
+        { value: "all", label: "Tất cả diện tích", min: 0, max: 1000 },
+        { value: "under30", label: "Dưới 30 m²", min: 0, max: 30 },
+        { value: "30-50", label: "30 - 50 m²", min: 30, max: 50 },
+        { value: "50-80", label: "50 - 80 m²", min: 50, max: 80 },
+        { value: "80-100", label: "80 - 100 m²", min: 80, max: 100 },
+        { value: "100-150", label: "100 - 150 m²", min: 100, max: 150 },
+        { value: "150-200", label: "150 - 200 m²", min: 150, max: 200 },
+        { value: "200-250", label: "200 - 250 m²", min: 200, max: 250 },
+        { value: "250-300", label: "250 - 300 m²", min: 250, max: 300 },
+        { value: "300-500", label: "300 - 500 m²", min: 300, max: 500 },
+        { value: "over500", label: "Trên 500 m²", min: 500 }
+    ];
+
+    const handleApplyPrice = () => {
+        console.log("Giá:", minPrice, maxPrice, selectedPrice);
     };
 
-    const handleApply = () => {
-        onApply({ minPrice, maxPrice, selectedPrice });
+    const handleApplyArea = () => {
+        console.log("Diện tích:", minArea, maxArea, selectedArea);
     };
 
-    const handleClickEnter = () => {
-        setDropdownOpen(true);
-    };
     return (
         <div className="bg-white">
             <div className="bg-red-500 p-4">
@@ -69,48 +96,34 @@ const Home = () => {
                             <select className="w-1/3 bg-red-800 text-white rounded-lg px-4 py-2">
                                 <option>Loại Nhà cho thuê</option>
                             </select>
-                            <button
-                                onClick={handleClickEnter}
-                                className="w-1/3 bg-red-800 text-white text-left rounded-lg px-4 py-2 select-none relative">
-                                Mức giá
-                                {/* Dropdown menu */}
-                                {dropdownOpen && (
-                                    <div className="bg-white rounded-lg shadow-lg p-4 w-80 absolute top-full left-0 z-10">
-                                        <div className="flex justify-between items-center mb-4">
-                                            <h2 className="text-lg text-gray-800 font-semibold">Mức giá</h2>
-                                            <button className="text-gray-500" onClick={() => setDropdownOpen(false)}>
-                                                <FaTimes />
-                                            </button>
-                                        </div>
-
-                                        {/* Nhập giá */}
-                                        <div className="flex justify-between items-center mb-4">
-                                            <div className="flex flex-col items-center">
-                                                <label className="text-sm font-medium text-black mb-1">Giá thấp nhất</label>
-                                                <input
-                                                    type="number"
-                                                    placeholder="Từ"
-                                                    className="border rounded px-2 py-1 text-gray-800 text-center w-20"
-                                                    value={minPrice}
-                                                    onChange={(e) => setMinPrice(Number(e.target.value))}
-                                                />
-                                            </div>
-                                            <span className="text-xl text-gray-600">→</span>
-                                            <div className="flex flex-col items-center">
-                                                <label className="text-sm font-medium text-black mb-1">Giá cao nhất</label>
-                                                <input
-                                                    type="number"
-                                                    placeholder="Đến"
-                                                    className="border rounded px-2 py-1 text-gray-800 text-center w-20"
-                                                    value={maxPrice}
-                                                    onChange={(e) => setMaxPrice(Number(e.target.value))}
-                                                />
-                                            </div>
-                                        </div>
-
-                                        {/* Range slider */}
+                            <div className="w-1/3 relative">
+                                <button
+                                    onClick={() => {
+                                        setPriceDropdownOpen(prev => !prev);
+                                        setAreaDropdownOpen(false);
+                                    }}
+                                    className="w-full bg-red-800 text-white text-left rounded-lg px-4 py-2 select-none flex justify-between items-center"
+                                >
+                                    <span>Mức giá</span>
+                                    {priceDropdownOpen ? <FaChevronUp /> : <FaChevronDown />}
+                                </button>
+                                <DropdownFilter
+                                    isOpen={priceDropdownOpen}
+                                    onClose={() => setPriceDropdownOpen(false)}
+                                    title="Mức giá"
+                                >
+                                    {/* Nội dung cho dropdown Mức giá */}
+                                    <RangeInput
+                                        fromValue={minPrice}
+                                        toValue={maxPrice}
+                                        onChangeFrom={(val) => setMinPrice(val)}
+                                        onChangeTo={(val) => setMaxPrice(val)}
+                                        unit="triệu"
+                                        minAllowed={0}
+                                        maxAllowed={100}
+                                    />
+                                    <div className="my-5">
                                         <RangeSlider
-                                            className="my-5"
                                             min={0}
                                             max={100}
                                             minValue={minPrice}
@@ -120,54 +133,141 @@ const Home = () => {
                                                 setMaxPrice(maxVal);
                                             }}
                                         />
-
-                                        {/* Chọn khoảng giá */}
-                                        <div className="mb-4">
-                                            {[
-                                                { value: "all", label: "Tất cả mức giá" },
-                                                { value: "under500", label: "Dưới 500 triệu" },
-                                                { value: "500-800", label: "500 - 800 triệu" },
-                                                { value: "800-1b", label: "800 triệu - 1 tỷ" },
-                                                { value: "1-2b", label: "1 - 2 tỷ" }
-                                            ].map((item) => (
-                                                <div className="flex items-center mb-2" key={item.value}>
-                                                    <input
-                                                        type="radio"
-                                                        name="price"
-                                                        className="form-radio text-red-500"
-                                                        checked={selectedPrice === item.value}
-                                                        onChange={() => setSelectedPrice(item.value)}
-                                                    />
-                                                    <span className="ml-2 text-gray-700">{item.label}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-
-                                        {/* Buttons */}
-                                        <div className="flex justify-between">
-                                            <button
-                                                className="bg-gray-200 text-gray-700 px-4 py-2 rounded"
+                                    </div>
+                                    <div className="mb-4 h-40 overflow-y-scroll">
+                                        {priceOptions.map((item) => (
+                                            <label
+                                                key={item.value}
+                                                className="flex items-center mb-2 cursor-pointer"
                                                 onClick={() => {
-                                                    setMinPrice(0);
-                                                    setMaxPrice(100);
-                                                    setSelectedPrice("all");
+                                                    setSelectedPrice(item.value);
+                                                    if (item.value === "over70") {
+                                                        setMinPrice(item.min);
+                                                        setMaxPrice("");
+                                                    } else {
+                                                        setMinPrice(item.min);
+                                                        setMaxPrice(item.max);
+                                                    }
                                                 }}
                                             >
-                                                Đặt lại
-                                            </button>
-                                            <button
-                                                className="bg-red-500 text-white px-4 py-2 rounded"
-                                                onClick={handleApply}
-                                            >
-                                                Áp dụng
-                                            </button>
-                                        </div>
+                                                <input
+                                                    type="radio"
+                                                    name="price"
+                                                    className="form-radio text-red-500"
+                                                    checked={selectedPrice === item.value}
+                                                    onChange={() => { }}
+                                                />
+                                                <span className="ml-2 text-gray-700">{item.label}</span>
+                                            </label>
+                                        ))}
                                     </div>
-                                )}
-                            </button>
-                            <select className="w-1/3 bg-red-800 text-white rounded-lg px-4 py-2">
-                                <option>Diện tích</option>
-                            </select>
+                                    <div className="flex justify-between">
+                                        <button
+                                            className="bg-gray-200 text-gray-700 px-4 py-2 rounded"
+                                            onClick={() => {
+                                                setMinPrice(0);
+                                                setMaxPrice(100);
+                                                setSelectedPrice("all");
+                                            }}
+                                        >
+                                            Đặt lại
+                                        </button>
+                                        <button
+                                            className="bg-red-500 text-white px-4 py-2 rounded"
+                                            onClick={handleApplyPrice}
+                                        >
+                                            Áp dụng
+                                        </button>
+                                    </div>
+                                </DropdownFilter>
+                            </div>
+
+                            <div className="w-1/3 relative">
+                                <button
+                                    onClick={() => {
+                                        setAreaDropdownOpen(prev => !prev);
+                                        setPriceDropdownOpen(false);
+                                    }}
+                                    className="w-full bg-red-800 text-white text-left rounded-lg px-4 py-2 select-none flex justify-between items-center"
+                                >
+                                    <span>Diện tích</span>
+                                    {areaDropdownOpen ? <FaChevronUp /> : <FaChevronDown />}
+                                </button>
+                                <DropdownFilter
+                                    isOpen={areaDropdownOpen}
+                                    onClose={() => setAreaDropdownOpen(false)}
+                                    title="Diện tích"
+                                >
+                                    {/* Nội dung cho dropdown Diện tích – tương tự như Mức giá */}
+                                    <RangeInput
+                                        fromValue={minArea}
+                                        toValue={maxArea}
+                                        onChangeFrom={(val) => setMinArea(val)}
+                                        onChangeTo={(val) => setMaxArea(val)}
+                                        unit="m²"
+                                        minAllowed={0}
+                                        maxAllowed={1000}
+                                    />
+                                    <div className="my-5">
+                                        <RangeSlider
+                                            min={0}
+                                            max={1000}
+                                            minValue={minArea}
+                                            maxValue={maxArea}
+                                            onChange={(minVal, maxVal) => {
+                                                setMinArea(minVal);
+                                                setMaxArea(maxVal);
+                                            }}
+                                        />
+                                    </div>
+                                    <div className="mb-4 h-40 overflow-y-scroll">
+                                        {areaOptions.map((item) => (
+                                            <label
+                                                key={item.value}
+                                                className="flex items-center mb-2 cursor-pointer"
+                                                onClick={() => {
+                                                    setSelectedArea(item.value);
+                                                    if (item.value === "over500") {
+                                                        setMinArea(item.min);
+                                                        setMaxArea("");
+                                                    } else {
+                                                        setMinArea(item.min);
+                                                        setMaxArea(item.max);
+                                                    }
+                                                }}
+                                            >
+                                                <input
+                                                    type="radio"
+                                                    name="price"
+                                                    className="form-radio text-red-500"
+                                                    checked={selectedArea === item.value}
+                                                    onChange={() => { }}
+                                                />
+                                                <span className="ml-2 text-gray-700">{item.label}</span>
+                                            </label>
+                                        ))}
+
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <button
+                                            className="bg-gray-200 text-gray-700 px-4 py-2 rounded"
+                                            onClick={() => {
+                                                setMinArea(0);
+                                                setMaxArea(1000);
+                                                setSelectedArea("all");
+                                            }}
+                                        >
+                                            Đặt lại
+                                        </button>
+                                        <button
+                                            className="bg-red-500 text-white px-4 py-2 rounded"
+                                            onClick={handleApplyArea}
+                                        >
+                                            Áp dụng
+                                        </button>
+                                    </div>
+                                </DropdownFilter>
+                            </div>
 
                         </div>
                     </div>
