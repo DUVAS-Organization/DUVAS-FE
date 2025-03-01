@@ -32,6 +32,7 @@ import ServicePostForm from '../Pages/Admin/ServicePosts/ServicePostForm';
 import ServicePostDetails from '../Pages/Admin/ServicePosts/ServicePostDetails';
 import Home from '../Pages/Home';
 import Overview from '../Pages/User/Overview';
+import Message from '../Pages/User/Message';
 // import CategoryServiceForm from '../Components/Admin/CategoryServiceForm'
 
 const RoutesConfig = () => {
@@ -42,6 +43,7 @@ const RoutesConfig = () => {
             {/* Routes dành cho tất cả người dùng (User hoặc Admin) */}
             <Route path="/" element={<Home />} />
             <Route path="/Rooms" element={<RoomsList />} />
+            <Route path="/Message" element={<Message />} />
             <Route path="/Logins" element={<Login />} />
             <Route path="/Registers" element={<Registers />} />
             <Route path="/forgot-password" element={<ForgotPasswords />} />

@@ -3,8 +3,8 @@ import { useAuth } from '../../Context/AuthProvider';
 import { NavLink } from 'react-router-dom';
 import Image_Logo from '../../Assets/Images/logo2.png'
 import Sidebar from './Sidebar';
-import { FaBook, FaUserTie, FaGlobe, FaLock, FaSignOutAlt } from 'react-icons/fa';
-import { FaHandHoldingDollar } from "react-icons/fa6";
+import { FaBook, FaUserTie, FaGlobe, FaLock, FaSignOutAlt,FaUsers, FaFacebookMessenger } from 'react-icons/fa';
+import { FaHandHoldingDollar, FaMessage } from "react-icons/fa6";
 
 const Navbar = () => {
     const { user, logout, loading } = useAuth();
@@ -30,10 +30,10 @@ const Navbar = () => {
     };
 
     return (
-        <nav className="bg-white shadow-md font-sans sticky top-0 z-50 transition duration-500">
-            <div className="max-w-full mx-auto px-2 sm:px-4 lg:px-8">
+        <nav className="sticky top-0 z-50 font-sans transition duration-500 bg-white shadow-md">
+            <div className="max-w-full px-2 mx-auto sm:px-4 lg:px-8">
                 <div className="relative flex items-center h-16">
-                    <div className="flex-1 flex items-center justify-between">
+                    <div className="flex items-center justify-between flex-1">
                         <div className="flex-shrink-0">
                             <img
                                 src={Image_Logo}
@@ -43,19 +43,19 @@ const Navbar = () => {
                         </div>
                         <div className="hidden sm:block sm:ml-6">
                             <div className="flex space-x-4">
-                                <NavLink to="/" className="text-gray-800 px-3 py-2 rounded-md text-base font-medium">
+                                <NavLink to="/" className="px-3 py-2 text-base font-medium text-gray-800 rounded-md">
                                     Trang chủ
                                 </NavLink>
-                                <NavLink to="/Rooms" className="text-gray-800 px-3 py-2 rounded-md text-base font-medium">
+                                <NavLink to="/Rooms" className="px-3 py-2 text-base font-medium text-gray-800 rounded-md">
                                     Nhà trọ cho thuê
                                 </NavLink>
-                                <NavLink to="/Projects" className="text-gray-800 px-3 py-2 rounded-md text-base font-medium">
+                                <NavLink to="/Projects" className="px-3 py-2 text-base font-medium text-gray-800 rounded-md">
                                     Tin tức
                                 </NavLink>
                             </div>
                         </div>
 
-                        <div className="hidden sm:flex ml-auto space-x-4">
+                        <div className="hidden ml-auto space-x-4 sm:flex">
                             {user ? (
                                 <>
                                     <div
@@ -68,11 +68,11 @@ const Navbar = () => {
                                             <img
                                                 src={user.ProfilePicture}
                                                 alt={`${user.username}'s Profile`}
-                                                className="w-8 h-8 rounded-full border border-gray-300 object-cover"
+                                                className="object-cover w-8 h-8 border border-gray-300 rounded-full"
                                             />
                                         ) : (
-                                            <div className="w-8 h-8 rounded-full border border-gray-300 bg-gray-200 flex items-center justify-center">
-                                                <span className="text-gray-800 font-bold">
+                                            <div className="flex items-center justify-center w-8 h-8 bg-gray-200 border border-gray-300 rounded-full">
+                                                <span className="font-bold text-gray-800">
                                                     {getInitial(user.username)}
                                                 </span>
                                             </div>
@@ -80,53 +80,67 @@ const Navbar = () => {
 
                                         {/* Hiển thị tên người dùng */}
                                         <button
-                                            className="text-gray-800 px-3 py-2 rounded-md text-base font-medium flex items-center"
+                                            className="flex items-center px-3 py-2 text-base font-medium text-gray-800 rounded-md"
                                         >
                                             {user.username}
                                         </button>
 
                                         {/* Dropdown menu */}
                                         {dropdownOpen && (
-                                            <div className="absolute top-8 right-0 mt-2 w-64 bg-white shadow-lg rounded-md ">
-                                                <div className="px-4 py-2 text-gray-800 text-base">
+                                            <div className="absolute right-0 w-64 mt-2 bg-white rounded-md shadow-lg top-8 ">
+                                                <div className="px-4 py-2 text-base text-gray-800">
                                                     <NavLink
                                                         to="/Overview"
-                                                        className="flex items-center space-x-2 px-4 py-2 rounded hover:bg-red-500 hover:text-white text-gray-800 whitespace-nowrap"
+                                                        className="flex items-center px-4 py-2 space-x-2 text-gray-800 rounded hover:bg-red-500 hover:text-white whitespace-nowrap"
                                                     >
                                                         <FaGlobe />
                                                         <span>Tổng quan</span>
                                                     </NavLink>
                                                     <NavLink
+                                                        to="/Message"
+                                                        className="flex items-center px-4 py-2 space-x-2 text-gray-800 rounded hover:bg-red-500 hover:text-white whitespace-nowrap"
+                                                    >
+                                                        <FaFacebookMessenger />
+                                                        <span>Tin nhắn</span>
+                                                    </NavLink>
+                                                    <NavLink
                                                         to="/ServicePost"
-                                                        className="flex items-center space-x-2 px-4 py-2 rounded hover:bg-red-500 hover:text-white text-gray-800 whitespace-nowrap"
+                                                        className="flex items-center px-4 py-2 space-x-2 text-gray-800 rounded hover:bg-red-500 hover:text-white whitespace-nowrap"
                                                     >
                                                         <FaBook />
                                                         <span>Quản lý tin đăng</span>
                                                     </NavLink>
                                                     <NavLink
+                                                        to="/ServicePost"
+                                                        className="flex items-center px-4 py-2 space-x-2 text-gray-800 rounded hover:bg-red-500 hover:text-white whitespace-nowrap"
+                                                    >
+                                                        <FaUsers />
+                                                        <span>Gói ưu tiên</span>
+                                                    </NavLink>
+                                                    <NavLink
                                                         to="/Profile?tab=edit"
-                                                        className="flex items-center space-x-2 px-4 py-2 rounded hover:bg-red-500 hover:text-white text-gray-800 whitespace-nowrap"
+                                                        className="flex items-center px-4 py-2 space-x-2 text-gray-800 rounded hover:bg-red-500 hover:text-white whitespace-nowrap"
                                                     >
                                                         <FaUserTie />
                                                         <span>Chỉnh Sửa thông tin</span>
                                                     </NavLink>
                                                     <NavLink
                                                         to="/Profile?tab=settings"
-                                                        className="flex items-center space-x-2 px-4 py-2 rounded hover:bg-red-500 hover:text-white text-gray-800 whitespace-nowrap"
+                                                        className="flex items-center px-4 py-2 space-x-2 text-gray-800 rounded hover:bg-red-500 hover:text-white whitespace-nowrap"
                                                     >
                                                         <FaLock />
                                                         <span>Thay đổi mật khẩu</span>
                                                     </NavLink>
                                                     <NavLink
                                                         to="/Moneys"
-                                                        className="flex items-center space-x-2 px-4 py-2 rounded hover:bg-red-500 hover:text-white text-gray-800 whitespace-nowrap"
+                                                        className="flex items-center px-4 py-2 space-x-2 text-gray-800 rounded hover:bg-red-500 hover:text-white whitespace-nowrap"
                                                     >
                                                         <FaHandHoldingDollar />
                                                         <span>Nạp tiền</span>
                                                     </NavLink>
                                                     <button
                                                         onClick={logout}
-                                                        className="flex items-center space-x-2 w-full px-4 py-2 rounded hover:bg-red-500 hover:text-white text-left text-gray-800 whitespace-nowrap"
+                                                        className="flex items-center w-full px-4 py-2 space-x-2 text-left text-gray-800 rounded hover:bg-red-500 hover:text-white whitespace-nowrap"
                                                     >
                                                         <FaSignOutAlt className="transform scale-y-[-1]" />
                                                         <span>Đăng Xuất</span>
@@ -139,24 +153,22 @@ const Navbar = () => {
                                     {/* Nút Đăng Tin được tách riêng ra ngoài container profile */}
                                     <NavLink
                                         to="/Posts"
-                                        className="text-red-500 px-3 py-2 rounded-md text-base font-medium
-                                         border border-red-400 hover:bg-red-500 hover:text-white transition-colors duration-150"
+                                        className="px-3 py-2 text-base font-medium text-red-500 transition-colors duration-150 border border-red-400 rounded-md hover:bg-red-500 hover:text-white"
                                     >
                                         Đăng Tin
                                     </NavLink>
                                 </>
                             ) : (
                                 <>
-                                    <NavLink to="/Logins" className="text-gray-800 px-3 py-2 rounded-md text-base font-medium">
+                                    <NavLink to="/Logins" className="px-3 py-2 text-base font-medium text-gray-800 rounded-md">
                                         Đăng Nhập
                                     </NavLink>
-                                    <NavLink to="/Registers" className="text-gray-800 px-3 py-2 rounded-md text-base font-medium">
+                                    <NavLink to="/Registers" className="px-3 py-2 text-base font-medium text-gray-800 rounded-md">
                                         Đăng Ký
                                     </NavLink>
                                     <NavLink
                                         to="/ServicePost/Creates"
-                                        className="text-red-500 px-3 py-2 rounded-md text-base font-medium 
-                                        border border-red-400 hover:bg-red-500 hover:text-white transition-colors duration-150"
+                                        className="px-3 py-2 text-base font-medium text-red-500 transition-colors duration-150 border border-red-400 rounded-md hover:bg-red-500 hover:text-white"
                                     >
                                         Đăng Tin
                                     </NavLink>
