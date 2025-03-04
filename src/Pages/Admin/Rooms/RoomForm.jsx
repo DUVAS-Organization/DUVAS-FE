@@ -253,7 +253,7 @@ const RoomForm = () => {
                         </div>
                         <div className="w-full">
                             <label className="flex text-lg font-bold text-black mb-1">
-                                Giá(đ/h): <p className='text-red-500 ml-1'>*</p>
+                                Giá(đ/tháng): <p className='text-red-500 ml-1'>*</p>
                             </label>
                             <PriceInput
                                 value={room.price || 0}
@@ -305,7 +305,7 @@ const RoomForm = () => {
                     <div className="grid grid-cols-2 gap-4">
                         <div className="w-full flex items-center">
                             <label className="text-lg font-bold text-black mr-2 w-1/3">
-                                Diện Tích: <span className="text-red-500 ml-1">*</span>
+                                Diện Tích (m²): <span className="text-red-500 ml-1">*</span>
                             </label>
                             <input
                                 type="number"
