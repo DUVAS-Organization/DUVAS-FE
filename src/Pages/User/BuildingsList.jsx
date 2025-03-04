@@ -3,6 +3,7 @@ import BuildingService from '../../Services/User/BuildingService';
 import { useNavigate } from 'react-router-dom';
 import Icon from '../../Components/Icon';
 import Swal from 'sweetalert2';
+import Footer from '../../Components/Layout/Footer';
 
 const BuildingsList = () => {
     const [buildings, setBuildings] = useState([]);
@@ -96,6 +97,7 @@ const BuildingsList = () => {
                     </div>
                 ))}
             </div>
+            <Footer />
         </div>
     );
 

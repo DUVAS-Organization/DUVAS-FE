@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { FaEye, FaEyeSlash, FaEnvelope, FaKey, FaLock, FaLockOpen, FaArrowLeft } from "react-icons/fa";
 import { Link } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 import logo from '../../../Assets/Images/logo1.png'
 const ForgotPasswords = () => {
+    const navigate = useNavigate();
     const [password, setPassword] = useState("");
     const [rePassword, setRePassword] = useState("");
     const [otp, setOtp] = useState("");
@@ -153,9 +155,9 @@ const ForgotPasswords = () => {
                     {errorMessage && (
                         <div className="text-red-500 my-2">{errorMessage}</div>
                     )}
-                    <Link to="/Logins">
+                    <button onClick={() => navigate(-1)}>
                         <FaArrowLeft className="left-3 top-12 transform -translate-y-1/2 text-gray-500 text-xl cursor-pointer" />
-                    </Link>
+                    </button>
 
                     <h3 className="text-base font-semibold text-gray-800">Quên mật khẩu?</h3>
                     <div className="mb-4">

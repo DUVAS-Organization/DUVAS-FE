@@ -1,9 +1,9 @@
 // src/routes/index.js
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import BuildingsList from '../Pages/User/BuildingsList';
+import BuildingHome from '../Components/BuildingHome';
 import BuildingsForm from '../Pages/User/BuildingsForm';
-import RoomsList from '../Pages/User/RoomsList';
+// import RoomsHome from '../Components/RoomsHome';
 import RoomsForm from '../Pages/User/RoomsForm';
 import Login from '../Components/Layout/Auth/Login';
 import Registers from '../Components/Layout/Auth/RegisterForm';
@@ -33,7 +33,11 @@ import ServicePostDetails from '../Pages/Admin/ServicePosts/ServicePostDetails';
 import Home from '../Pages/Home';
 import RoomDetail from '../Pages/User/Room/RoomDetail'; 
 import Overview from '../Pages/User/Overview';
+
+import RoomsList from '../Pages/User/RoomsList';
+import RoomDetailsUser from '../Pages/User/RoomDetailsUser';
 import Message from '../Pages/User/Message';
+
 // import CategoryServiceForm from '../Components/Admin/CategoryServiceForm'
 const RoutesConfig = () => {
     const { user } = useAuth(); // Lấy thông tin người dùng từ AuthContext
@@ -55,11 +59,15 @@ const RoutesConfig = () => {
             {/* Routes dành cho User */}
             <Route
                 path="/"
-                element={user && user.role === "User" ? <BuildingsList /> : <Navigate to="/" />}
+                element={user && user.role === "User" ? <Home /> : <Navigate to="/" />}
             />
             <Route
                 path="/Overview"
                 element={user && user.role === "User" ? <Overview /> : <Navigate to="/" />}
+            />
+            <Route
+                path="/Buildings"
+                element={user && user.role === "User" ? <BuildingHome /> : <Navigate to="/" />}
             />
             <Route
                 path="/Buildings/Creates"
@@ -76,6 +84,10 @@ const RoutesConfig = () => {
             <Route
                 path="/Rooms/Creates"
                 element={user && user.role === "User" ? <RoomsForm /> : <Navigate to="/" />}
+            />
+            <Route
+                path="/Rooms/Details/:roomId"
+                element={user && user.role === "User" ? <RoomDetailsUser /> : <Navigate to="/" />}
             />
             <Route
                 path="/Rooms/:roomId"

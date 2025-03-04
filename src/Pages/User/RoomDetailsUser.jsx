@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import RoomServices from '../../../Services/Admin/RoomServices';
-import CategoryRooms from '../../../Services/Admin/CategoryRooms';
-import BuildingServices from '../../../Services/Admin/BuildingServices';
-import { showCustomNotification } from '../../../Components/Notification';
+import RoomServices from '../../Services/User/RoomService';
+import CategoryRooms from '../../Services/User/CategoryRoomService';
+import BuildingServices from '../../Services/User/BuildingService';
+import { showCustomNotification } from '../../Components/Notification';
 import { FaArrowLeft } from 'react-icons/fa';
-import Footer from '../../../Components/Layout/Footer';
+import Footer from '../../Components/Layout/Footer';
 
-const RoomDetails = () => {
+const RoomDetailsUser = () => {
     const { roomId } = useParams();
     const navigate = useNavigate();
 
@@ -75,7 +75,7 @@ const RoomDetails = () => {
     };
 
     const handleEdit = () => {
-        navigate(`/Admin/Rooms/Edit/${roomId}`);
+        navigate(`/Rooms/${roomId}`);
     };
 
     const handleDelete = async () => {
@@ -83,7 +83,7 @@ const RoomDetails = () => {
             try {
                 await RoomServices.deleteRoom(roomId);
                 showCustomNotification("success", "Xóa Phòng thành công!");
-                navigate('/Admin/Rooms');
+                navigate('/Rooms');
             } catch (error) {
                 console.error('Error deleting room:', error);
                 showCustomNotification("error", "Xóa Phòng thất bại, vui lòng thử lại!");
@@ -96,9 +96,9 @@ const RoomDetails = () => {
     }
 
     return (
-        <div className="p-6">
+        <div className="p-6 max-w-6xl mx-auto">
             {/* Header với nút quay lại */}
-            <div className="max-w-7xl rounded-2xl mb-2">
+            <div className=" rounded-2xl mb-2">
                 <button
                     onClick={() => navigate(-1)}
                     className="mt-2"
@@ -238,4 +238,4 @@ const RoomDetails = () => {
     );
 };
 
-export default RoomDetails;
+export default RoomDetailsUser;
