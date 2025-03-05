@@ -5,7 +5,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { showCustomNotification } from '../../../Components/Notification';
 import { useAuth } from '../../../Context/AuthProvider';
 import { FaArrowLeft } from "react-icons/fa";
-import PriceInput from '../../../Components/PriceInput';
+import PriceInput from '../../../Components/Layout/Range/PriceInput';
 
 const ServicePostForm = () => {
     const [servicePost, setServicePosts] = useState({});

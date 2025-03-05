@@ -6,22 +6,26 @@ import {
 } from "react-icons/fa";
 import { IoMdMail } from "react-icons/io";
 import logo from "../../Assets/Images/logo2.png";
+import { Link } from "react-router-dom";
 
 const Footer = () => {
     return (
         <footer className="bg-gray-100 shadow-md ">
             <div className="container mx-auto max-w-6xl px-6 py-8 ">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 border-b pb-8 items-stretch">
-                    <div className="flex flex-col justify-evenly">
-                        <div className="flex justify-center md:justify-start">
-                            <img
-                                src={logo}
-                                alt="Company Logo"
-                                className="h-48 w-96 border rounded-lg border-gray-200 shadow-lg p-2"
-                            />
+                    <Link
+                        to='/'
+                    >
+                        <div className="flex flex-col justify-evenly">
+                            <div className="flex justify-center md:justify-start">
+                                <img
+                                    src={logo}
+                                    alt="Company Logo"
+                                    className="h-48 w-96 border rounded-lg border-gray-200 shadow-lg p-2"
+                                />
+                            </div>
                         </div>
-                    </div>
-
+                    </Link>
                     {/* Cột 2: Giới thiệu DUVAS */}
                     <div className="flex flex-col  justify-center text-center md:text-left">
                         <h2 className="text-lg font-medium text-gray-800 mb-2">

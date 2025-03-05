@@ -1,8 +1,8 @@
 import { FaMapMarkerAlt, FaSearch, FaChevronUp, FaChevronDown } from "react-icons/fa";
 import { useState } from 'react'
-import RangeSlider from "../Components/RangeSlider";
+import RangeSlider from "../Components/Layout/Range/RangeSlider";
 import DropdownFilter from "../Components/DropdownFilter";
-import RangeInput from '../Components/RangeInput'
+import RangeInput from '../Components/Layout/Range/RangeInput'
 
 const Searchbar = () => {
     // State cho Mức giá
@@ -55,15 +55,15 @@ const Searchbar = () => {
             <div className="mx-auto max-w-6xl">
                 {/* Tab chọn */}
                 <div className="flex gap-1">
-                    <div className="bg-red-800 text-white rounded-t-lg px-4 py-2">
+                    {/* <div className="bg-red-800 text-white rounded-t-lg px-4 py-2">
                         Nhà đất bán
+                    </div> */}
+                    <div className="bg-red-800 text-white rounded-t-lg px-4 py-2">
+                        Nhà trọ cho thuê
                     </div>
-                    <div className="bg-gray-200 text-gray-800 rounded-t-lg px-4 py-2">
-                        Nhà cho thuê
-                    </div>
-                    <div className="bg-gray-200 text-gray-800 rounded-t-lg px-4 py-2">
+                    {/* <div className="bg-gray-200 text-gray-800 rounded-t-lg px-4 py-2">
                         Dự án
-                    </div>
+                    </div> */}
                 </div>
 
                 {/* Phần tìm kiếm */}
@@ -92,7 +92,7 @@ const Searchbar = () => {
                     {/* Ba select */}
                     <div className="flex space-x-2 mt-2">
                         <select className="w-1/3 bg-red-800 text-white rounded-lg px-4 py-2">
-                            <option>Loại Nhà cho thuê</option>
+                            <option>Loại Nhà trọ cho thuê</option>
                         </select>
                         <div className="w-1/3 relative">
                             <button

@@ -1,11 +1,20 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../Context/AuthProvider';
-import { NavLink } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import Image_Logo from '../../Assets/Images/logo2.png'
 import Sidebar from './Sidebar';
-import { FaBook, FaUserTie, FaGlobe, FaLock, FaSignOutAlt } from 'react-icons/fa';
-import { FaHandHoldingDollar } from "react-icons/fa6";
+import { FaBook, FaUserTie, FaGlobe, FaLock, FaSignOutAlt, FaUsers, FaFacebookMessenger, FaRegHeart, FaRegBell, FaRegBellSlash } from 'react-icons/fa';
+import { FaHandHoldingDollar, FaMessage } from "react-icons/fa6";
+import BellNotifications from './UIContext/BellNotifications';
+import SavePosts from './UIContext/SavePosts';
+import { UIProvider } from './UIContext/UIContext';
 
+const navLinks = [
+    { name: "Trang Chủ", path: "/" },
+    { name: "Nhà trọ cho thuê", path: "/Rooms" },
+    { name: "Tin tức", path: "/tin-tuc" },
+    { name: "Thông tin", path: "/thongtin" },
+];
 const Navbar = () => {
     const { user, logout, loading } = useAuth();
     const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -33,31 +42,46 @@ const Navbar = () => {
         <nav className="bg-white shadow-md font-sans sticky top-0 z-50 transition duration-500">
             <div className="max-w-full mx-auto px-2 sm:px-4 lg:px-8">
                 <div className="relative flex items-center h-16">
-                    <div className="flex-1 flex items-center justify-between">
-                        <div className="flex-shrink-0">
-                            <img
-                                src={Image_Logo}
-                                alt="DUVAS"
-                                className="max-w-[110px] h-auto"
-                            />
-                        </div>
-                        <div className="hidden sm:block sm:ml-6">
-                            <div className="flex space-x-4">
-                                <NavLink to="/" className="text-gray-800 px-3 py-2 rounded-md text-base font-medium">
-                                    Trang chủ
-                                </NavLink>
-                                <NavLink to="/Rooms" className="text-gray-800 px-3 py-2 rounded-md text-base font-medium">
-                                    Nhà trọ cho thuê
-                                </NavLink>
-                                <NavLink to="/Projects" className="text-gray-800 px-3 py-2 rounded-md text-base font-medium">
-                                    Tin tức
-                                </NavLink>
+                    <div className="flex items-center justify-between flex-1">
+                        <Link
+                            to='/'
+                        >
+                            <div className="flex-shrink-0">
+                                <img
+                                    src={Image_Logo}
+                                    alt="DUVAS"
+                                    className="max-w-[110px] h-auto"
+                                />
                             </div>
+                        </Link>
+                        <div className="hidden sm:flex space-x-1">
+                            {navLinks.map(({ name, path }) => (
+                                <NavLink
+                                    key={name}
+                                    to={path}
+                                    className={({ isActive }) => `relative px-3 py-1     text-base font-medium text-gray-800 transition-all
+                                        before:content-[''] before:absolute before:bottom-0 before:left-3 before:w-0 before:h-[2px] 
+                                        before:bg-red-500 before:transition-all before:duration-500 before:ease-in-out
+                                        hover:before:w-[calc(100%-1.5rem)] ${isActive ? 'before:w-[calc(100%-1.5rem)] text-red-500 font-semibold' : ''}`}
+                                >
+                                    {name}
+                                </NavLink>
+                            ))}
                         </div>
 
-                        <div className="hidden sm:flex ml-auto space-x-4">
+
+
+                        <div className="hidden ml-auto space-x-4 sm:flex">
+
                             {user ? (
                                 <>
+                                    <UIProvider>
+                                        <div className='flex gap-3'>
+                                            <SavePosts />
+                                            <BellNotifications />
+                                        </div>
+                                    </UIProvider>
+
                                     <div
                                         className="relative flex items-center"
                                         onMouseEnter={handleMouseEnter}
