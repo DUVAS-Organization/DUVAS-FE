@@ -7,7 +7,7 @@ import { showCustomNotification } from '../../../Components/Notification';
 import { useAuth } from '../../../Context/AuthProvider';
 import { FaArrowLeft, FaTimes, FaPlus } from "react-icons/fa";
 import Loading from '../../../Components/Loading';
-import PriceInput from '../../../Components/PriceInput';
+import PriceInput from '../../../Components/Layout/Range/PriceInput';
 
 const RoomForm = () => {
     const [room, setRooms] = useState({});

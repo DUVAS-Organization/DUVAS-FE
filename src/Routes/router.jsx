@@ -40,7 +40,7 @@ import Message from '../Pages/User/Message';
 
 // import CategoryServiceForm from '../Components/Admin/CategoryServiceForm'
 const RoutesConfig = () => {
-    const { user } = useAuth(); // Lấy thông tin người dùng từ AuthContext
+    const { user } = useAuth();
 
     return (
         <Routes>
