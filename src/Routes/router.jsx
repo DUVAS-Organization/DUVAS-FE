@@ -31,11 +31,14 @@ import RoomDetails from '../Pages/Admin/Rooms/RoomDetails';
 import ServicePostForm from '../Pages/Admin/ServicePosts/ServicePostForm';
 import ServicePostDetails from '../Pages/Admin/ServicePosts/ServicePostDetails';
 import Home from '../Pages/Home';
+import RoomDetail from '../Pages/User/Room/RoomDetail'; 
 import Overview from '../Pages/User/Overview';
+
 import RoomsList from '../Pages/User/RoomsList';
 import RoomDetailsUser from '../Pages/User/RoomDetailsUser';
-// import CategoryServiceForm from '../Components/Admin/CategoryServiceForm'
+import Message from '../Pages/User/Message';
 
+// import CategoryServiceForm from '../Components/Admin/CategoryServiceForm'
 const RoutesConfig = () => {
     const { user } = useAuth();
 
@@ -43,7 +46,10 @@ const RoutesConfig = () => {
         <Routes>
             {/* Routes dành cho tất cả người dùng (User hoặc Admin) */}
             <Route path="/" element={<Home />} />
+            <Route path="/RoomDetail" element={<RoomDetail />} />
+            <Route path="/Message" element={<Message />} />
             <Route path="/Rooms" element={<RoomsList />} />
+            <Route path="/Message" element={<Message />} />
             <Route path="/Logins" element={<Login />} />
             <Route path="/Registers" element={<Registers />} />
             <Route path="/forgot-password" element={<ForgotPasswords />} />

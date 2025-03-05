@@ -9,8 +9,8 @@ const SidebarUser = () => {
     const currentTab = params.get("tab");
 
     return (
-        <div className="w-56 text-black h-screen bg-white fixed border-r-2 flex flex-col pt-5 overflow-y-auto">
-            <ul className="text-justify text-base font-medium">
+        <div className="fixed flex flex-col h-screen pt-5 overflow-y-auto text-black bg-white border-r-2 w-52">
+            <ul className="text-base font-medium text-justify">
                 <li>
                     <NavLink
                         to="/Overview"
@@ -18,13 +18,13 @@ const SidebarUser = () => {
                             `block py-2 px-4 hover:bg-red-500 hover:text-white rounded-3xl ${isActive ? 'bg-red-500 text-white' : ''}`
                         }
                     >
-                        <FaGlobe className="inline-block mr-2 mb-1" />
+                        <FaGlobe className="inline-block mb-1 mr-2" />
                         Tổng Quan
                     </NavLink>
                 </li>
                 <li>
-                    <div className="block py-2 px-4 rounded-3xl">
-                        <FaUserTie className="inline-block mr-2 mb-2" />
+                    <div className="block px-4 py-2 rounded-3xl">
+                        <FaUserTie className="inline-block mb-2 mr-2" />
                         Tài Khoản
                     </div>
                     <ul className="ml-4">
@@ -32,7 +32,7 @@ const SidebarUser = () => {
                             <NavLink
                                 to="/Profile?tab=edit"
                                 className={() =>
-                                    `block py-2 px-4 hover:bg-red-500 hover:text-white rounded-3xl ${currentTab === "edit" ? "bg-red-500 text-white" : "text-black"
+                                    `block mb-1 py-2 px-4 hover:bg-red-500 hover:text-white rounded-3xl ${currentTab === "edit" ? "bg-red-500 text-white" : "text-black"
                                     }`
                                 }
                             >
@@ -43,7 +43,7 @@ const SidebarUser = () => {
                             <NavLink
                                 to="/Profile?tab=settings"
                                 className={() =>
-                                    `block py-2 px-4 hover:bg-red-500 hover:text-white rounded-3xl ${currentTab === "settings" ? "bg-red-500 text-white" : "text-black"
+                                    `block mb-1 py-2 px-4 hover:bg-red-500 hover:text-white rounded-3xl ${currentTab === "settings" ? "bg-red-500 text-white" : "text-black"
                                     }`
                                 }
                             >
@@ -64,8 +64,8 @@ const SidebarUser = () => {
                     </ul>
                 </li>
                 <li>
-                    <div className="block py-2 px-4 rounded-3xl">
-                        <FaBook className="inline-block mr-2 mb-1" />
+                    <div className="block px-4 py-2 rounded-3xl">
+                        <FaBook className="inline-block mb-1 mr-2" />
                         Bài Đăng
                     </div>
                     <ul className="pl-4">
@@ -73,7 +73,7 @@ const SidebarUser = () => {
                             <NavLink
                                 to="/ServicePost/Creates"
                                 className={({ isActive }) =>
-                                    `block py-2 px-4 hover:bg-red-500 hover:text-white rounded-3xl ${isActive ? 'bg-red-500 text-white' : ''
+                                    `block mb-1 py-2 px-4 hover:bg-red-500 hover:text-white rounded-3xl ${isActive ? 'bg-red-500 text-white' : ''
                                     }`
                                 }
                             >
@@ -94,8 +94,8 @@ const SidebarUser = () => {
                     </ul>
                 </li>
                 <li>
-                    <div className="block py-2 px-4 rounded-3xl">
-                        <FaHandHoldingDollar className="inline-block mr-2 mb-1" />
+                    <div className="block px-4 py-2 rounded-3xl">
+                        <FaHandHoldingDollar className="inline-block mb-1 mr-2" />
                         Tài Chính
                     </div>
                     <ul className="pl-4">
@@ -103,7 +103,7 @@ const SidebarUser = () => {
                             <NavLink
                                 to="/Transaction"
                                 className={({ isActive }) =>
-                                    `block py-2 px-4 hover:bg-red-500 hover:text-white rounded-3xl ${isActive ? 'bg-red-500 text-white' : ''
+                                    `block mb-1 py-2 px-4 hover:bg-red-500 hover:text-white rounded-3xl ${isActive ? 'bg-red-500 text-white' : ''
                                     }`
                                 }
                             >
