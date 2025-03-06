@@ -48,11 +48,11 @@ const RoomsHome = () => {
                         <Link key={room.roomId} to={`/Rooms/Details/${room.roomId}`} className="block">
                             <div className="bg-white rounded-lg shadow-md overflow-hidden h-[400px] flex flex-col">
                                 {room.image && room.image !== '' && (
-                                    <div className="w-full h-52">
+                                    <div className="relative w-full h-52 rounded-lg overflow-hidden">
                                         <img
                                             src={firstImage}
                                             alt={room.title}
-                                            className="w-full h-full object-cover rounded-lg cursor-pointer"
+                                            className="absolute inset-0 w-full h-full object-cover"
                                         />
                                     </div>
                                 )}
@@ -61,7 +61,7 @@ const RoomsHome = () => {
                                     <p className="text-red-500 font-semibold mb-2">
                                         {room.price.toLocaleString('vi-VN')} đ • {room.acreage} m²
                                     </p>
-                                    <p className="text-gray-600 mb-2 flex items-center">
+                                    <p className="text-gray-600 mb-2 flex items-center truncate">
                                         <FaMapMarkerAlt className="mr-1" /> {room.locationDetail}
                                     </p>
                                     <div className="mt-auto flex justify-between items-center border-t pt-2">

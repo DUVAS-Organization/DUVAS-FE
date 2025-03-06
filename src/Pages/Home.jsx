@@ -1,5 +1,5 @@
 import Footer from "../Components/Layout/Footer";
-import RoomsList from "../Components/RoomsHome";
+import RoomsHome from "../Components/RoomsHome";
 import Searchbar from "../Components/Searchbar";
 
 const Home = () => {
@@ -74,7 +74,7 @@ const Home = () => {
                     </div>
                 </div>
 
-                <RoomsList />
+                <RoomsHome />
             </div>
             <Footer />
         </div>

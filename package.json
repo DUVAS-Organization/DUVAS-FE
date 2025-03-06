@@ -13,6 +13,7 @@
     "@react-google-maps/api": "^2.20.5",
     "@react-oauth/google": "^0.12.1",
     "@tabler/icons-react": "^3.28.1",
+    "@tailwindcss/line-clamp": "^0.4.4",
     "axios": "^1.7.9",
     "bootstrap": "^5.3.3",
     "cra-template": "1.2.0",

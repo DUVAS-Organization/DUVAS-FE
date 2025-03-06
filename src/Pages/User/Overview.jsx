@@ -12,7 +12,7 @@ const Overview = () => {
                     <h1 className="text-4xl font-semibold mb-5">
                         Tổng quan
                     </h1>
-                    <div className="flex flex-col items-center space-y-1">
+                    {/* <div className="flex flex-col items-center space-y-1">
                         <div className="relative inline-block">
                             <FaRegBell className="text-2xl" />
                             <span className="
@@ -30,7 +30,7 @@ const Overview = () => {
                             </span>
                         </div>
                         <span>Thông báo</span>
-                    </div>
+                    </div> */}
                 </div>
 
                 <div className="mb-6">

@@ -4,8 +4,11 @@ import RoomServices from '../../Services/User/RoomService';
 import CategoryRooms from '../../Services/User/CategoryRoomService';
 import BuildingServices from '../../Services/User/BuildingService';
 import { showCustomNotification } from '../../Components/Notification';
-import { FaArrowLeft } from 'react-icons/fa';
+import { FaBath, FaBed, FaBuilding, FaCouch, FaMoneyBillWave, FaRegHeart, FaRegListAlt, FaRulerCombined } from 'react-icons/fa';
+import { FaPhoneVolume } from 'react-icons/fa6';
+import { BsExclamationTriangle } from "react-icons/bs";
 import Footer from '../../Components/Layout/Footer';
+import { FaMapMarkerAlt } from 'react-icons/fa';
 
 const RoomDetailsUser = () => {
     const { roomId } = useParams();
@@ -16,6 +19,11 @@ const RoomDetailsUser = () => {
     const [categoryRooms, setCategoryRooms] = useState([]);
     const [buildings, setBuildings] = useState([]);
     const [previewImage, setPreviewImage] = useState(null);
+
+    const [showFullPhone, setShowFullPhone] = useState(false);
+
+    const phoneNumber = "0961213137";
+    const maskedPhone = phoneNumber.slice(0, phoneNumber.length - 3) + "***";
 
     useEffect(() => {
         // Lấy danh sách Category Rooms và Buildings
@@ -53,18 +61,17 @@ const RoomDetailsUser = () => {
         }
     }, [roomId]);
 
-    // Hàm tra cứu tên Building dựa vào buildingId mà không dùng find()
+    // Hàm tra cứu tên Building dựa vào buildingId
     const getBuildingName = (buildingId) => {
         for (let i = 0; i < buildings.length; i++) {
             if (buildings[i].buildingId === buildingId) {
-                // Giả sử API trả về tên tòa nhà ở thuộc tính buildingName hoặc name
                 return buildings[i].buildingName || buildings[i].name;
             }
         }
         return 'N/A';
     };
 
-    // Hàm tra cứu tên Category dựa vào categoryRoomId mà không dùng find()
+    // Hàm tra cứu tên Category dựa vào categoryRoomId
     const getCategoryName = (categoryRoomId) => {
         for (let i = 0; i < categoryRooms.length; i++) {
             if (categoryRooms[i].categoryRoomId === categoryRoomId) {
@@ -95,132 +102,253 @@ const RoomDetailsUser = () => {
         return <div>Loading...</div>;
     }
 
+    // Tách ảnh ra mảng
+    let imagesArray = [];
+    try {
+        imagesArray = JSON.parse(room.image);
+    } catch (error) {
+        imagesArray = room.image;
+    }
+    if (!Array.isArray(imagesArray)) {
+        imagesArray = [imagesArray];
+    }
+
     return (
-        <div className="p-6 max-w-6xl mx-auto">
-            {/* Header với nút quay lại */}
-            <div className=" rounded-2xl mb-2">
-                <button
-                    onClick={() => navigate(-1)}
-                    className="mt-2"
-                >
+        <div className="max-w-6xl mx-auto p-4">
+            {/* Nút quay lại */}
+            {/* <div className="mb-2 flex items-center gap-2">
+                <button onClick={() => navigate(-1)}>
                     <FaArrowLeft size={20} />
                 </button>
-                <h1 className="text-4xl font-bold text-blue-600 mb-6">Chi tiết Phòng</h1>
-                <div className="border-t-2 border-black w-full mb-5"></div>
+                <h1 className="text-2xl font-bold text-blue-600">Chi tiết Phòng</h1>
             </div>
+            <div className="border-t-2 border-gray-300 w-full mb-4"></div> */}
 
-
-            {/* Bố cục 2 cột: hiển thị các trường thông tin */}
-            <div className="grid grid-cols bg-white shadow-xl rounded-lg py-5 px-10 ">
-                <div className="text-left space-y-4">
-                    <div className="grid grid-cols-3 gap-6">
-                        <p className="text-lg font-medium">
-                            <strong>Tiêu Đề: </strong> {room.title}
-                        </p>
-                        <p className="text-lg font-medium">
-                            <strong>Tòa Nhà:</strong> {getBuildingName(room.buildingId)}
-                        </p>
-                        <p className="text-lg font-medium">
-                            <strong>Giá (đ/tháng):</strong> {room.price.toLocaleString('vi-VN')} đ
-                        </p>
-
-                    </div>
-                    <div className="grid grid-cols-3 gap-6">
-                        <p className="text-lg font-medium">
-                            <strong>Địa chỉ:</strong> {room.locationDetail}
-                        </p>
-                        <p className="text-lg font-medium">
-                            <strong>Diện tích (m²):</strong> {room.acreage}
-                        </p>
-
-                        <p className="text-lg font-medium">
-                            <strong>Loại Phòng:</strong> {getCategoryName(room.categoryRoomId)}
-                        </p>
-                    </div>
-                    <div className="grid grid-cols-3 gap-6">
-                        <p className="text-lg font-medium">
-                            <strong>Phòng tắm:</strong> {room.numberOfBathroom}
-                        </p>
-                        <p className="text-lg font-medium">
-                            <strong>Giường ngủ:</strong> {room.numberOfBedroom}
-                        </p>
-                        <p className="text-lg font-medium">
-                            <strong>Gác Xếp:</strong> {room.garret ? 'Có' : 'Không'}
-                        </p>
-                    </div>
-                    <div className="grid grid-cols-3 gap-6">
-                        <p className="text-lg font-medium">
-                            <strong>Mô tả:</strong> {room.description}
-                        </p>
-                        <p className="text-lg font-medium">
-                            <strong>Nội thất:</strong> {room.furniture}
-                        </p>
-                        {/* <p className="text-lg font-medium">
-                            <strong>Note:</strong> {room.note}
-                        </p> */}
-                    </div>
-                </div>
-            </div>
-
-
-            {/* Phần hiển thị ảnh (nếu có) - hiển thị 3 ảnh trên 1 hàng */}
-            <div className="mt-6 bg-gray-100 shadow-md rounded-lg p-6">
-                <h2 className="text-2xl font-bold mb-4">Ảnh: </h2>
-                {room.image && room.image !== '' && (
-                    (() => {
-                        let images;
-                        try {
-                            images = JSON.parse(room.image);
-                        } catch (error) {
-                            images = room.image;
-                        }
-                        if (Array.isArray(images)) {
-                            return (
-                                <div className="grid grid-cols-4 gap-4 w-full">
-                                    {images.map((img, index) => (
+            {/* Bố cục 2 cột: Cột trái (ảnh + thông tin mô tả), Cột phải (sidebar liên hệ) */}
+            <div className="flex flex-col md:flex-row gap-4">
+                {/* Cột trái */}
+                <div className="w-full md:w-4/5 bg-white p-4 rounded-lg shadow space-y-4">
+                    {/* Hiển thị ảnh (carousel hoặc grid) */}
+                    {imagesArray && imagesArray.length > 0 && (
+                        <div className="w-full">
+                            {/* Ảnh đầu to, phía dưới là các ảnh nhỏ (nếu muốn) */}
+                            <div className="mb-2 w-full h-60 overflow-hidden rounded-lg">
+                                <img
+                                    src={previewImage || imagesArray[0]}
+                                    alt="Preview"
+                                    className="w-full h-full object-cover cursor-pointer"
+                                    onClick={() =>
+                                        setPreviewImage(previewImage ? null : imagesArray[0])
+                                    }
+                                />
+                            </div>
+                            {/* Danh sách ảnh nhỏ (nếu có) */}
+                            {imagesArray.length > 1 && (
+                                <div className="flex gap-2">
+                                    {imagesArray.slice(0, 4).map((img, idx) => (
                                         <img
-                                            key={index}
+                                            key={idx}
                                             src={img}
-                                            alt={`Image ${index}`}
-                                            className="w-full h-52 object-cover rounded-lg cursor-pointer"
+                                            alt={`Thumbnail ${idx}`}
+                                            className="w-20 h-16 object-cover rounded-md cursor-pointer"
                                             onClick={() => setPreviewImage(img)}
                                         />
                                     ))}
+                                    {imagesArray.length > 4 && (
+                                        <div className="flex items-center justify-center w-20 h-16 bg-black bg-opacity-50 text-white rounded-md">
+                                            +{imagesArray.length - 4}
+                                        </div>
+                                    )}
                                 </div>
-                            );
-                        } else {
-                            return (
-                                <div className="grid grid-cols-4 gap-4 w-full">
-                                    <img
-                                        src={images}
-                                        alt={room.title}
-                                        className="w-full h-auto object-cover rounded-lg cursor-pointer"
-                                        onClick={() => setPreviewImage(images)}
-                                    />
+                            )}
+                        </div>
+                    )}
+
+                    {/* Tiêu đề + địa chỉ */}
+                    <h2 className="text-2xl font-bold text-gray-800">
+                        {room.title || 'Tiêu đề phòng'}
+                    </h2>
+                    <div className="text-gray-600 flex items-center mb-2">
+                        <FaMapMarkerAlt className="mr-1" />
+                        {room.locationDetail}
+                    </div>
+
+                    {/* Giá + diện tích */}
+                    <div className="mb-4">
+                        {/* Dòng đầu: Mức giá - Diện tích (xám) + icon bên phải */}
+                        <div className="flex items-center justify-between">
+                            {/* Nhãn Mức giá, Diện tích */}
+                            <div className="flex space-x-5">
+                                <div className="flex flex-col text-black text-lg">
+                                    <span className='font-semibold'>Mức giá</span>
+                                    <span className="text-red-500 font-medium">
+                                        {room.price.toLocaleString('vi-VN')} đ/tháng
+                                    </span>
                                 </div>
-                            );
-                        }
-                    })()
-                )}
+                                <div className="flex flex-col text-black text-lg">
+                                    <span className='font-semibold'>Diện tích</span>
+                                    <span className="text-red-500 font-medium">
+                                        {room.acreage} m²
+                                    </span>
+                                </div>
+                            </div>
+                            {/* Icon bên phải */}
+                            <div className="flex gap-4 text-2xl text-gray-600">
+                                <button>
+                                    <BsExclamationTriangle />
+                                </button>
+                                <button>
+                                    <FaRegHeart />
+                                </button>
+                            </div>
+                        </div>
+
+
+
+                    </div>
+
+                    {/* Thông tin mô tả */}
+                    <div>
+                        <h3 className="text-lg font-semibold mb-1">Thông tin mô tả</h3>
+                        <p className="text-gray-700">{room.description}</p>
+                    </div>
+
+                    {/* Thông tin chi tiết khác (có thể đặt bên dưới mô tả) */}
+                    {/* <div className="bg-gray-50 p-3 rounded-md">
+                        <h4 className="text-md font-semibold mb-2">Thông tin chi tiết</h4>
+                        <ul className="list-disc list-inside text-gray-600 space-y-1">
+                            <li><strong>Tòa Nhà:</strong> {getBuildingName(room.buildingId)}</li>
+                            <li><strong>Loại Phòng:</strong> {getCategoryName(room.categoryRoomId)}</li>
+                            <li><strong>Phòng tắm:</strong> {room.numberOfBathroom}</li>
+                            <li><strong>Giường ngủ:</strong> {room.numberOfBedroom}</li>
+                            <li><strong>Gác Xếp:</strong> {room.garret ? 'Có' : 'Không'}</li>
+                            <li><strong>Nội thất:</strong> {room.furniture || 'Không'}</li>
+                        </ul>
+                    </div> */}
+                    <div className="flex items-center gap-x-2">
+                        <p>Mọi chi tiết xin liên hệ:</p>
+                        <button
+                            onClick={(e) => {
+                                e.preventDefault();     // Ngăn Link điều hướng
+                                e.stopPropagation();    // Ngăn sự kiện nổi bọt
+                                setShowFullPhone(true); // Hiện full số
+                            }}
+                            className="text-base bg-white text-gray-800 px-2 py-1 flex items-center gap-1"
+                        >
+                            {showFullPhone ? (
+                                phoneNumber
+                            ) : (
+                                <>
+                                    {maskedPhone}
+                                    {/* Tách "Hiện số" ra, có bg + rounded khác */}
+                                    <span className="bg-green-500 ml-1 text-white px-2 py-0.5 rounded-md">
+                                        Hiện số
+                                    </span>
+                                </>
+                            )}
+                        </button>
+
+                    </div>
+                    <p>Cám ơn tất cả mọi người đã xem ai có nhu cầu giúp mình nhé.</p>
+
+                    <div>
+                        <h2 className='text-xl font-bold mb-5'>Đặc điểm phòng trọ</h2>
+                        <div className="grid grid-cols-2 ml-5 gap-y-2">
+                            <div className="flex gap-x-1 items-center">
+                                <FaMoneyBillWave className="text-lg text-gray-600" />
+                                <strong>Mức giá: </strong>
+                                {room.price.toLocaleString('vi-VN')} đ/tháng
+                            </div>
+                            <div className="flex gap-x-1 items-center">
+                                <FaBuilding className="text-lg text-gray-600" />
+                                <strong>Tòa Nhà:</strong> {getBuildingName(room.buildingId)}
+                            </div>
+                            <div className="flex gap-x-1 items-center">
+                                <FaRulerCombined className="text-lg text-gray-600" />
+                                <strong>Diện tích: </strong>{room.acreage} m²
+                            </div>
+                            <div className="flex gap-x-1 items-center">
+                                <FaCouch className="text-lg text-gray-600" />
+                                <strong>Nội thất:</strong> {room.furniture || 'Không'}
+                            </div>
+                            <div className="flex gap-x-1 items-center">
+                                <FaBath className="text-lg text-gray-600" />
+                                <strong>Phòng tắm:</strong> {room.numberOfBathroom}
+                            </div>
+                            <div className="flex gap-x-1 items-center">
+                                <FaBed className="text-lg text-gray-600" />
+                                <strong>Giường ngủ:</strong> {room.numberOfBedroom}
+                            </div>
+                            <div className="flex gap-x-1 items-center">
+                                <FaRegListAlt className="text-lg text-gray-500" />
+                                <strong>Loại Phòng:</strong> {getCategoryName(room.categoryRoomId)}
+                            </div>
+                            {/* <div className="flex gap-x-1 items-center">
+                                <FaArrowUp className="text-lg text-gray-600" />
+                                <strong>Gác Xếp:</strong> {room.garret ? 'Có' : 'Không'}
+                            </div> */}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Cột phải (sidebar liên hệ) */}
+                <div className="w-full md:w-1/5 bg-white p-4 rounded-lg shadow space-y-4">
+                    {/* Thông tin chủ nhà (tạm cứng) - bạn có thể sửa theo API */}
+                    <div className="flex items-center gap-3">
+                        <img
+                            src="https://via.placeholder.com/60x60"
+                            alt="Avatar"
+                            className="w-14 h-14 object-cover rounded-full"
+                        />
+                        <div>
+                            <p className="font-semibold">Lê Thanh Hải</p>
+                            <button className="text-blue-600 text-sm underline">
+                                Chat qua Zalo
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Nút điện thoại */}
+                    <button
+                        onClick={(e) => {
+                            e.preventDefault();     // Ngăn Link điều hướng
+                            e.stopPropagation();    // Ngăn sự kiện nổi bọt
+                            setShowFullPhone(true); // Hiện full số
+                        }}
+                        className='text-lg bg-green-600 text-white px-2 py-1 rounded-lg flex gap-2' >
+                        <FaPhoneVolume className='mt-1' />
+                        {showFullPhone ? phoneNumber : `${maskedPhone}`}
+                    </button>
+
+                    {/* Một số thông tin phụ */}
+                    <div className="bg-gray-100 p-3 rounded-md text-sm text-gray-600 leading-6">
+                        Hãy cho chủ nhà biết bạn thấy tin này trên <strong>Trang web ABC</strong> để
+                        nhận ưu đãi tốt nhất.
+                        <br />
+                        <span className="text-gray-500">
+                            (Tin đăng còn hạn, cập nhật lần cuối: 1 ngày trước)
+                        </span>
+                    </div>
+
+                    {/* Nút chỉnh sửa & xóa (nếu cần) */}
+                    {/* <div className="flex justify-between pt-3 border-t">
+                        <button
+                            onClick={handleEdit}
+                            className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-400"
+                        >
+                            Chỉnh sửa
+                        </button>
+                        <button
+                            onClick={handleDelete}
+                            className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-400"
+                        >
+                            Xóa
+                        </button>
+                    </div> */}
+                </div>
             </div>
 
-            {/* Các nút chỉnh sửa và xóa */}
-            <div className="mt-6 flex justify-around">
-                <button
-                    onClick={handleEdit}
-                    className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-400"
-                >
-                    Chỉnh sửa
-                </button>
-                <button
-                    onClick={handleDelete}
-                    className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-400"
-                >
-                    Xóa
-                </button>
-            </div>
-
-            {/* Modal để phóng to ảnh */}
+            {/* Modal phóng to ảnh (nếu cần) */}
             {previewImage && (
                 <div
                     className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
@@ -233,6 +361,7 @@ const RoomDetailsUser = () => {
                     />
                 </div>
             )}
+
             <Footer />
         </div>
     );
