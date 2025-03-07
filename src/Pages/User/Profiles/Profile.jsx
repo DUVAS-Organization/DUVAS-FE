@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { FaTimes, FaRegEyeSlash, FaAngleDown, FaAngleUp, FaRegEye, FaWallet, FaCopy } from "react-icons/fa";
-import Layout from "../../Components/Layout/Layout";
+import Layout from "../../../Components/Layout/Layout";
 import { NavLink } from "react-router-dom";
-import Footer from "../../Components/Layout/Footer";
+import Footer from "../../../Components/Layout/Footer";
 
 const Profile = () => {
     const [activeTab, setActiveTab] = useState("edit");

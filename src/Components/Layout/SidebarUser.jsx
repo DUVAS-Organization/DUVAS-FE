@@ -15,7 +15,7 @@ const SidebarUser = () => {
                     <NavLink
                         to="/Overview"
                         className={({ isActive }) =>
-                            `block py-2 px-4 hover:bg-red-500 hover:text-white rounded-3xl ${isActive ? 'bg-red-500 text-white' : ''}`
+                            `block py-2 px-4 hover:bg-red-400 hover:text-white rounded-3xl ${isActive ? 'bg-red-500 text-white' : ''}`
                         }
                     >
                         <FaGlobe className="inline-block mb-1 mr-2" />
@@ -32,7 +32,8 @@ const SidebarUser = () => {
                             <NavLink
                                 to="/Profile?tab=edit"
                                 className={() =>
-                                    `block mb-1 py-2 px-4 hover:bg-red-500 hover:text-white rounded-3xl ${currentTab === "edit" ? "bg-red-500 text-white" : "text-black"
+                                    `block py-2 px-4 mb-0.5 hover:bg-red-400 hover:text-white rounded-3xl ${currentTab === "edit" ? "bg-red-500 text-white" : "text-black"
+
                                     }`
                                 }
                             >
@@ -43,7 +44,8 @@ const SidebarUser = () => {
                             <NavLink
                                 to="/Profile?tab=settings"
                                 className={() =>
-                                    `block mb-1 py-2 px-4 hover:bg-red-500 hover:text-white rounded-3xl ${currentTab === "settings" ? "bg-red-500 text-white" : "text-black"
+                                    `block py-2 px-4 mb-0.5 hover:bg-red-400 hover:text-white rounded-3xl ${currentTab === "settings" ? "bg-red-500 text-white" : "text-black"
+
                                     }`
                                 }
                             >
@@ -54,7 +56,7 @@ const SidebarUser = () => {
                             <NavLink
                                 to="/Profile?tab=registerLandlord"
                                 className={() =>
-                                    `block py-2 px-4 hover:bg-red-500 hover:text-white rounded-3xl ${currentTab === "registerLandlord" ? "bg-red-500 text-white" : "text-black"
+                                    `block py-2 px-4 hover:bg-red-400 hover:text-white rounded-3xl ${currentTab === "registerLandlord" ? "bg-red-500 text-white" : "text-black"
                                     }`
                                 }
                             >
@@ -73,7 +75,8 @@ const SidebarUser = () => {
                             <NavLink
                                 to="/ServicePost/Creates"
                                 className={({ isActive }) =>
-                                    `block mb-1 py-2 px-4 hover:bg-red-500 hover:text-white rounded-3xl ${isActive ? 'bg-red-500 text-white' : ''
+                                    `block py-2 px-4 mb-0.5 hover:bg-red-400 hover:text-white rounded-3xl ${isActive ? 'bg-red-500 text-white' : ''
+
                                     }`
                                 }
                             >
@@ -84,7 +87,7 @@ const SidebarUser = () => {
                             <NavLink
                                 to="/ServicePost"
                                 className={({ isActive }) =>
-                                    `block py-2 px-4 hover:bg-red-500 hover:text-white rounded-3xl ${isActive ? 'bg-red-500 text-white' : ''
+                                    `block py-2 px-4 hover:bg-red-400 hover:text-white rounded-3xl ${isActive ? 'bg-red-500 text-white' : ''
                                     }`
                                 }
                             >
@@ -103,7 +106,8 @@ const SidebarUser = () => {
                             <NavLink
                                 to="/Transaction"
                                 className={({ isActive }) =>
-                                    `block mb-1 py-2 px-4 hover:bg-red-500 hover:text-white rounded-3xl ${isActive ? 'bg-red-500 text-white' : ''
+                                    `block py-2 px-4 mb-0.5 hover:bg-red-400 hover:text-white rounded-3xl ${isActive ? 'bg-red-500 text-white' : ''
+
                                     }`
                                 }
                             >
@@ -114,7 +118,7 @@ const SidebarUser = () => {
                             <NavLink
                                 to="/Withdraws"
                                 className={({ isActive }) =>
-                                    `block py-2 px-4 hover:bg-red-500 hover:text-white rounded-3xl ${isActive ? 'bg-red-500 text-white' : ''
+                                    `block py-2 px-4 hover:bg-red-400 hover:text-white rounded-3xl ${isActive ? 'bg-red-500 text-white' : ''
                                     }`
                                 }
                             >

@@ -1,17 +1,17 @@
 // src/routes/index.js
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import BuildingHome from '../Components/BuildingHome';
-import BuildingsForm from '../Pages/User/BuildingsForm';
+import BuildingHome from '../Components/ComponentPage/BuildingHome';
+import BuildingsForm from '../Pages/User/Buildings/BuildingsForm';
 // import RoomsHome from '../Components/RoomsHome';
-import RoomsForm from '../Pages/User/RoomsForm';
+import RoomsForm from '../Pages/User/Rooms/RoomsForm';
 import Login from '../Components/Layout/Auth/Login';
 import Registers from '../Components/Layout/Auth/RegisterForm';
 import ForgotPasswords from '../Components/Layout/Auth/ForgotPassword';
 import { useAuth } from '../Context/AuthProvider'; // Import useAuth
-import Profile from '../Pages/User/Profile';
+import Profile from '../Pages/User/Profiles/Profile';
 
-import ServicePost from '../Pages/User/ServicePost';
+import ServicePost from '../Pages/User/ServicePosts/ServicePost';
 
 import AccountList from '../Pages/Admin/Accounts/AccountList'
 import ServicePostList from '../Pages/Admin/ServicePosts/ServicePostList'
@@ -31,14 +31,12 @@ import RoomDetails from '../Pages/Admin/Rooms/RoomDetails';
 import ServicePostForm from '../Pages/Admin/ServicePosts/ServicePostForm';
 import ServicePostDetails from '../Pages/Admin/ServicePosts/ServicePostDetails';
 import Home from '../Pages/Home';
-import RoomDetail from '../Pages/User/Room/RoomDetail'; 
-import Overview from '../Pages/User/Overview';
-
-import RoomsList from '../Pages/User/RoomsList';
-import RoomDetailsUser from '../Pages/User/RoomDetailsUser';
-import Message from '../Pages/User/Message';
-
+import Overview from '../Pages/User/Profiles/Overview';
+import RoomsList from '../Pages/User/Rooms/RoomsList';
+import RoomDetailsUser from '../Pages/User/Rooms/RoomDetailsUser';
+import RoomBookingSuccess from '../Pages/User/Rooms/RoomBookingSuccess';
 // import CategoryServiceForm from '../Components/Admin/CategoryServiceForm'
+
 const RoutesConfig = () => {
     const { user } = useAuth();
 
@@ -46,10 +44,7 @@ const RoutesConfig = () => {
         <Routes>
             {/* Routes dành cho tất cả người dùng (User hoặc Admin) */}
             <Route path="/" element={<Home />} />
-            <Route path="/RoomDetail" element={<RoomDetail />} />
-            <Route path="/Message" element={<Message />} />
             <Route path="/Rooms" element={<RoomsList />} />
-            <Route path="/Message" element={<Message />} />
             <Route path="/Logins" element={<Login />} />
             <Route path="/Registers" element={<Registers />} />
             <Route path="/forgot-password" element={<ForgotPasswords />} />
@@ -88,6 +83,10 @@ const RoutesConfig = () => {
             <Route
                 path="/Rooms/Details/:roomId"
                 element={user && user.role === "User" ? <RoomDetailsUser /> : <Navigate to="/" />}
+            />
+            <Route
+                path="/Rooms/BookingSuccess"
+                element={user && user.role === "User" ? <RoomBookingSuccess /> : <Navigate to="/" />}
             />
             <Route
                 path="/Rooms/:roomId"
