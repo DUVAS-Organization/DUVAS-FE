@@ -1,9 +1,20 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../Context/AuthProvider';
 import { Link, NavLink } from 'react-router-dom';
-import Image_Logo from '../../Assets/Images/logo2.png'
+import Image_Logo from '../../Assets/Images/logo2.png';
 import Sidebar from './Sidebar';
-import { FaBook, FaUserTie, FaGlobe, FaLock, FaSignOutAlt, FaUsers, FaFacebookMessenger, FaRegHeart, FaRegBell, FaRegBellSlash } from 'react-icons/fa';
+import {
+    FaBook,
+    FaUserTie,
+    FaGlobe,
+    FaLock,
+    FaSignOutAlt,
+    FaUsers,
+    FaFacebookMessenger,
+    FaRegHeart,
+    FaRegBell,
+    FaRegBellSlash,
+} from 'react-icons/fa';
 import { FaHandHoldingDollar, FaMessage } from "react-icons/fa6";
 import BellNotifications from './UIContext/BellNotifications';
 import SavePosts from './UIContext/SavePosts';
@@ -15,6 +26,7 @@ const navLinks = [
     { name: "Tin tức", path: "/tin-tuc" },
     { name: "Thông tin", path: "/thongtin" },
 ];
+
 const Navbar = () => {
     const { user, logout, loading } = useAuth();
     const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -25,6 +37,7 @@ const Navbar = () => {
     if (user?.role === 'Admin') {
         return <Sidebar />;
     }
+
     const handleMouseEnter = () => {
         setDropdownOpen(true);
     };
@@ -33,7 +46,7 @@ const Navbar = () => {
         setDropdownOpen(false);
     };
 
-    // Lấy chữ cái đầu của username
+    // Hàm lấy chữ cái đầu của username
     const getInitial = (username) => {
         return username ? username.charAt(0).toUpperCase() : '';
     };
@@ -43,9 +56,7 @@ const Navbar = () => {
             <div className="max-w-full mx-auto px-2 sm:px-4 lg:px-8">
                 <div className="relative flex items-center h-16">
                     <div className="flex items-center justify-between flex-1">
-                        <Link
-                            to='/'
-                        >
+                        <Link to='/'>
                             <div className="flex-shrink-0">
                                 <img
                                     src={Image_Logo}
@@ -59,20 +70,20 @@ const Navbar = () => {
                                 <NavLink
                                     key={name}
                                     to={path}
-                                    className={({ isActive }) => `relative px-3 py-1     text-base font-medium text-gray-800 transition-all
-                                        before:content-[''] before:absolute before:bottom-0 before:left-3 before:w-0 before:h-[2px] 
-                                        before:bg-red-500 before:transition-all before:duration-500 before:ease-in-out
-                                        hover:before:w-[calc(100%-1.5rem)] ${isActive ? 'before:w-[calc(100%-1.5rem)] text-red-500 font-semibold' : ''}`}
+                                    className={({ isActive }) =>
+                                        `relative px-3 py-1 text-base font-medium text-gray-800 transition-all
+                     before:content-[''] before:absolute before:bottom-0 before:left-3 before:w-0 before:h-[2px] 
+                     before:bg-red-500 before:transition-all before:duration-500 before:ease-in-out
+                     hover:before:w-[calc(100%-1.5rem)] ${isActive ? 'before:w-[calc(100%-1.5rem)] text-red-500 font-semibold' : ''
+                                        }`
+                                    }
                                 >
                                     {name}
                                 </NavLink>
                             ))}
                         </div>
 
-
-
                         <div className="hidden ml-auto space-x-4 sm:flex">
-
                             {user ? (
                                 <>
                                     <UIProvider>
@@ -87,7 +98,8 @@ const Navbar = () => {
                                         onMouseEnter={handleMouseEnter}
                                         onMouseLeave={handleMouseLeave}
                                     >
-                                        {/* Hiển thị ảnh đại diện hoặc chữ cái đầu */}
+                                        {/* Xử lý ảnh profile: nếu có user.profilePicture thì hiển thị ảnh,
+                        nếu không hiển thị fallback với chữ cái đầu */}
                                         {user.ProfilePicture ? (
                                             <img
                                                 src={user.ProfilePicture}
@@ -103,15 +115,13 @@ const Navbar = () => {
                                         )}
 
                                         {/* Hiển thị tên người dùng */}
-                                        <button
-                                            className="text-gray-800 px-3 py-2 rounded-md text-base font-medium flex items-center"
-                                        >
+                                        <button className="text-gray-800 px-3 py-2 rounded-md text-base font-medium flex items-center">
                                             {user.username}
                                         </button>
 
                                         {/* Dropdown menu */}
                                         {dropdownOpen && (
-                                            <div className="absolute top-8 right-0 mt-2 w-64 bg-white shadow-lg rounded-md ">
+                                            <div className="absolute top-8 right-0 mt-2 w-64 bg-white shadow-lg rounded-md">
                                                 <div className="px-4 py-2 text-gray-800 text-base">
                                                     <NavLink
                                                         to="/Overview"
@@ -164,14 +174,12 @@ const Navbar = () => {
                                                     </button>
                                                 </div>
                                             </div>
-
                                         )}
                                     </div>
-                                    {/* Nút Đăng Tin được tách riêng ra ngoài container profile */}
+                                    {/* Nút Đăng Tin */}
                                     <NavLink
                                         to="/Posts"
-                                        className="text-red-500 px-3 py-2 rounded-md text-base font-medium
-                                         border border-red-400 hover:bg-red-500 hover:text-white transition-colors duration-150"
+                                        className="text-red-500 px-3 py-2 rounded-md text-base font-medium border border-red-400 hover:bg-red-500 hover:text-white transition-colors duration-150"
                                     >
                                         Đăng Tin
                                     </NavLink>
@@ -186,8 +194,7 @@ const Navbar = () => {
                                     </NavLink>
                                     <NavLink
                                         to="/ServicePost/Creates"
-                                        className="text-red-500 px-3 py-2 rounded-md text-base font-medium 
-                                        border border-red-400 hover:bg-red-500 hover:text-white transition-colors duration-150"
+                                        className="text-red-500 px-3 py-2 rounded-md text-base font-medium border border-red-400 hover:bg-red-500 hover:text-white transition-colors duration-150"
                                     >
                                         Đăng Tin
                                     </NavLink>

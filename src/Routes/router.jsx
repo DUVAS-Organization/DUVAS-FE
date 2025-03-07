@@ -37,6 +37,8 @@ import RoomDetailsUser from '../Pages/User/Rooms/RoomDetailsUser';
 import RoomBookingSuccess from '../Pages/User/Rooms/RoomBookingSuccess';
 // import CategoryServiceForm from '../Components/Admin/CategoryServiceForm'
 
+import Message from '../Pages/User/Profiles/Message';
+
 const RoutesConfig = () => {
     const { user } = useAuth();
 
@@ -46,6 +48,7 @@ const RoutesConfig = () => {
             <Route path="/" element={<Home />} />
             <Route path="/Rooms" element={<RoomsList />} />
             <Route path="/Logins" element={<Login />} />
+            <Route path="/Message" element={<Message />} />
             <Route path="/Registers" element={<Registers />} />
             <Route path="/forgot-password" element={<ForgotPasswords />} />
             <Route path="/Profile" element={<Profile />} />
