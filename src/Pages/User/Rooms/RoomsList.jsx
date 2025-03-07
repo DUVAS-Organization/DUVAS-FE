@@ -70,8 +70,8 @@ const RoomsList = () => {
 
     if (!rooms.length) {
         return (
-            <div className="bg-white min-h-screen p-4">
-                <p className="text-red-500 font-semibold">Không tìm thấy phòng nào.</p>
+            <div className="bg-white min-h-screen p-4 flex justify-center">
+                <p className="text-black font-semibold">Không tìm thấy phòng nào.</p>
             </div>
         );
     }
