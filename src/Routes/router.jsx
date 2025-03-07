@@ -37,7 +37,7 @@ import RoomDetailsUser from '../Pages/User/Rooms/RoomDetailsUser';
 import RoomBookingSuccess from '../Pages/User/Rooms/RoomBookingSuccess';
 // import CategoryServiceForm from '../Components/Admin/CategoryServiceForm'
 
-import Message from '../Pages/User/Message';
+import Message from '../Pages/User/Profiles/Message';
 const RoutesConfig = () => {
     const { user } = useAuth();
 

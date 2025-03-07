@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { FaUpload, FaPaperPlane, FaSearch } from "react-icons/fa";
-import { useAuth } from "../../Context/AuthProvider"; // Điều chỉnh đường dẫn nếu cần
+import { useAuth } from "../../../Context/AuthProvider"; // Điều chỉnh đường dẫn nếu cần
 
 const Message = () => {
   // Lấy thông tin user từ AuthProvider
@@ -12,7 +12,7 @@ const Message = () => {
   // State cho tin nhắn nhập, danh sách tin nhắn gửi (nếu cần) và các tin nhắn của cuộc trò chuyện
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]); // Dùng nếu cần lưu tin nhắn gửi tạm (không bắt buộc)
-  
+
   // State cho danh sách cuộc trò chuyện và tin nhắn của cuộc trò chuyện được chọn
   const [conversations, setConversations] = useState([]);
   const [selectedConversation, setSelectedConversation] = useState(null);
@@ -181,18 +181,16 @@ const Message = () => {
               conversationMessages.map((msg, index) => (
                 <div
                   key={index}
-                  className={`flex ${
-                    msg.userSendID === Number(currentUserId)
+                  className={`flex ${msg.userSendID === Number(currentUserId)
                       ? "justify-end"
                       : "justify-start"
-                  } mb-2`}
+                    } mb-2`}
                 >
                   <div
-                    className={`max-w-[60%] p-3 rounded-lg ${
-                      msg.userSendID === Number(currentUserId)
+                    className={`max-w-[60%] p-3 rounded-lg ${msg.userSendID === Number(currentUserId)
                         ? "bg-blue-200"
                         : "bg-gray-200"
-                    }`}
+                      }`}
                   >
                     <div className="text-xs text-gray-400 mb-1">
                       {new Date(msg.dateTime).toLocaleTimeString()}

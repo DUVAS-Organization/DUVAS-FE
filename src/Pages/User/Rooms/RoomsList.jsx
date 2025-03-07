@@ -126,7 +126,7 @@ const RoomsList = () => {
                                     : room.description;
 
                             // Tính số điện thoại của người đăng cho room này
-                            const roomUserPhone = room?.User?.phone || 'Null';
+                            const roomUserPhone = room?.User?.phone || 'N/A';
                             const roomMaskedPhone =
                                 roomUserPhone && roomUserPhone.length > 3
                                     ? roomUserPhone.slice(0, roomUserPhone.length - 3) + '***'
