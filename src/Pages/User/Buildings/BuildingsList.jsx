@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import BuildingService from '../../Services/User/BuildingService';
+import BuildingService from '../../../Services/User/BuildingService';
 import { useNavigate } from 'react-router-dom';
-import Icon from '../../Components/Icon';
+import Icon from '../../../Components/Icon';
 import Swal from 'sweetalert2';
-import Footer from '../../Components/Layout/Footer';
+import Footer from '../../../Components/Layout/Footer';
 
 const BuildingsList = () => {
     const [buildings, setBuildings] = useState([]);

@@ -1,5 +1,5 @@
 import Footer from "../Components/Layout/Footer";
-import RoomsHome from "../Components/RoomsHome";
+import RoomsHome from "../Components/ComponentPage/RoomsHome";
 import Searchbar from "../Components/Searchbar";
 
 const Home = () => {

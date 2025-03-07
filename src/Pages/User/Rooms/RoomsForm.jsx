@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import RoomService from '../../Services/User/RoomService';
+import RoomService from '../../../Services/User/RoomService';
 import { useNavigate, useParams } from 'react-router-dom';
-import CategoryRoomService from '../../Services/User/CategoryRoomService';
-import BuildingService from '../../Services/User/BuildingService';
-import UserService from '../../Services/User/UserService'
+import CategoryRoomService from '../../../Services/User/CategoryRoomService';
+import BuildingService from '../../../Services/User/BuildingService';
+import UserService from '../../../Services/User/UserService'
 import Swal from 'sweetalert2';
 
 const RoomsForm = () => {

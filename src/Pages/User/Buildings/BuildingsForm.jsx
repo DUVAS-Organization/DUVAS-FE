@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import BuildingService from '../../Services/User/BuildingService';
+import BuildingService from '../../../Services/User/BuildingService';
 import { useNavigate, useParams } from 'react-router-dom';
-import UserService from '../../Services/User/UserService'
-import { showCustomNotification } from '../../Components/Notification'
-import { useAuth } from '../../Context/AuthProvider';
+import UserService from '../../../Services/User/UserService'
+import { showCustomNotification } from '../../../Components/Notification'
+import { useAuth } from '../../../Context/AuthProvider';
 
 const BuildingsForm = () => {
     const [building, setBuilding] = useState([]);

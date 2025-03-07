@@ -1,8 +1,8 @@
 import React from 'react';
-import Layout from '../../Components/Layout/Layout';
+import Layout from '../../../Components/Layout/Layout';
 import { FaRegBell, FaWallet, FaRegNewspaper } from "react-icons/fa";
 import { Link } from 'react-router-dom';
-import Footer from '../../Components/Layout/Footer';
+import Footer from '../../../Components/Layout/Footer';
 
 const Overview = () => {
     return (
