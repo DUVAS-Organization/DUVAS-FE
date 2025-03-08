@@ -38,6 +38,7 @@ import RoomBookingSuccess from '../Pages/User/Rooms/RoomBookingSuccess';
 // import CategoryServiceForm from '../Components/Admin/CategoryServiceForm'
 
 import Message from '../Pages/User/Profiles/Message';
+import MessageAdmin from '../Pages/Admin/MessageAdmin';
 
 const RoutesConfig = () => {
     const { user } = useAuth();
@@ -107,6 +108,10 @@ const RoutesConfig = () => {
             <Route
                 path="/Admin/Accounts"
                 element={user && user.role === "Admin" ? <AccountList /> : <Navigate to="/Logins" />}
+            />
+            <Route
+                path="/Admin/Message"
+                element={user && user.role === "Admin" ? <MessageAdmin /> : <Navigate to="/Logins" />}
             />
             <Route
                 path="/Admin/Landlord"

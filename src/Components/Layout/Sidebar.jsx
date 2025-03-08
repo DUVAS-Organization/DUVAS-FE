@@ -57,6 +57,17 @@ const Sidebar = () => {
                 </li>
                 <li>
                     <NavLink
+                        to="/Admin/Message"
+                        className={({ isActive }) =>
+                            `block py-2 px-4 hover:bg-blue-400 rounded-3xl ${isActive ? 'bg-blue-500 text-white' : ''}`
+                        }
+                    >
+                        <FaUserCircle className="inline-block mr-2" />
+                        Tin Nhắn
+                    </NavLink>
+                </li>
+                <li>
+                    <NavLink
                         to="/Admin/ServicePosts"
                         className={({ isActive }) =>
                             `block py-2 px-4 hover:bg-blue-400 rounded-3xl ${isActive ? 'bg-blue-500 text-white' : ''}`

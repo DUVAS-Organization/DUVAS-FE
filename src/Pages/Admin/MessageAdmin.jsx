@@ -9,11 +9,11 @@ import {
   FaBell,
   FaTimes,
 } from "react-icons/fa";
-import { useAuth } from "../../../Context/AuthProvider";
+import { useAuth } from "../../Context/AuthProvider";
 import { useLocation } from "react-router-dom";
-import UserService from "../../../Services/User/UserService";
+import UserService from "../../Services/User/UserService";
 
-// Hàm hiển thị avatar: nếu có ảnh thì hiển thị, nếu không thì hiển thị chữ cái đầu
+// Hàm hiển thị avatar
 const renderAvatar = (avatar, name, size = 40) => {
   if (avatar) {
     return (
@@ -38,11 +38,11 @@ const renderAvatar = (avatar, name, size = 40) => {
   }
 };
 
-const Message = () => {
+const MessageAdmin = () => {
   const { user } = useAuth();
   const currentUserId = user ? user.userId : null;
 
-  // State tin nhắn, hội thoại, thông tin đối phương,...
+  // State tin nhắn, hội thoại
   const [message, setMessage] = useState("");
   const [conversations, setConversations] = useState([]);
   const [selectedConversation, setSelectedConversation] = useState(null);
@@ -52,48 +52,50 @@ const Message = () => {
   const [conversationMessages, setConversationMessages] = useState([]);
   const [pollingInterval, setPollingInterval] = useState(null);
 
-  // State cho các tính năng bổ sung
+  // Tìm kiếm, mute, loading
   const [isMuted, setIsMuted] = useState(false);
   const [showSearchBox, setShowSearchBox] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [conversationSearchTerm, setConversationSearchTerm] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSending, setIsSending] = useState(false);
+
+  // Upload ảnh
+  const [attachedFiles, setAttachedFiles] = useState([]);
+  const [attachedPreviews, setAttachedPreviews] = useState([]);
+  const [previewImage, setPreviewImage] = useState(null);
+
+  // Refs
+  const messagesContainerRef = useRef(null);
+  const messagesEndRef = useRef(null);
+  const fileInputRef = useRef(null);
+
+  // Lọc tin nhắn theo searchTerm
   const displayedMessages = searchTerm
     ? conversationMessages.filter((msg) =>
       msg.content.toLowerCase().includes(searchTerm.toLowerCase())
     )
     : conversationMessages;
+
+  // Lọc hội thoại theo conversationSearchTerm
   const filteredConversations = conversations.filter((conv) => {
     const name = conv.partnerName || `User ${conv.userGetID}`;
     return name.toLowerCase().includes(conversationSearchTerm.toLowerCase());
   });
 
-  // Loading và gửi tin nhắn
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSending, setIsSending] = useState(false);
-
-  // Refs cho auto-scroll và file upload
-  const messagesContainerRef = useRef(null);
-  const messagesEndRef = useRef(null);
-  const fileInputRef = useRef(null);
-
-  // State cho upload nhiều ảnh
-  const [attachedFiles, setAttachedFiles] = useState([]);
-  const [attachedPreviews, setAttachedPreviews] = useState([]);
-  const [previewImage, setPreviewImage] = useState(null);
-
-  // Định nghĩa hàm handleToggleMute
+  // Toggle mute
   const handleToggleMute = () => {
     setIsMuted((prev) => !prev);
-    // Nếu cần, gọi API lưu trạng thái mute cho cuộc trò chuyện
+    // Gọi API nếu cần
   };
 
-  // Định nghĩa hàm handleToggleSearch (nếu chưa có)
+  // Toggle search box
   const handleToggleSearch = () => {
     setShowSearchBox((prev) => !prev);
     setSearchTerm("");
   };
 
-  // Hàm upload file
+  // Upload file
   const uploadFile = async (file) => {
     const formData = new FormData();
     formData.append("file", file);
@@ -131,12 +133,12 @@ const Message = () => {
     }
   };
 
-  // Lấy danh sách hội thoại và bổ sung thông tin đối phương
+  // Fetch hội thoại
   useEffect(() => {
     if (!currentUserId) return;
     setIsLoading(true);
     fetch(`https://localhost:8000/api/Message/conversations/${currentUserId}`)
-      .then((response) => response.json())
+      .then((res) => res.json())
       .then(async (data) => {
         const newConversations = await Promise.all(
           data.map(async (conv) => {
@@ -146,7 +148,7 @@ const Message = () => {
               conv.partnerPicture = userInfo.profilePicture;
               conv.partnerIsActive = userInfo.isActive || false;
             } catch (error) {
-              console.error("Error fetching user info for", conv.userGetID, error);
+              console.error("Error fetching user info:", error);
               conv.partnerName = `User ${conv.userGetID}`;
               conv.partnerPicture = "";
               conv.partnerIsActive = false;
@@ -156,32 +158,36 @@ const Message = () => {
         );
         setConversations(newConversations);
       })
-      .catch((error) => console.error("Error fetching conversations:", error))
+      .catch((err) => console.error("Error fetching conversations:", err))
       .finally(() => setIsLoading(false));
   }, [currentUserId]);
 
-  // Lấy danh sách tin nhắn của hội thoại
+  // Fetch tin nhắn
   const fetchConversationMessages = (partnerId) => {
     if (!currentUserId) return;
     setIsLoading(true);
     fetch(`https://localhost:8000/api/Message/user/${currentUserId}/${partnerId}`)
-      .then((response) => response.json())
-      .then((data) => setConversationMessages(data))
-      .catch((error) =>
-        console.error("Error fetching conversation messages:", error)
-      )
+      .then((res) => res.json())
+      .then((data) => {
+        setConversationMessages(data);
+      })
+      .catch((err) => console.error("Error fetching messages:", err))
       .finally(() => setIsLoading(false));
   };
 
-  // Khi chọn hội thoại, set thông tin đối phương và reset file đính kèm
-  const handleSelectConversation = (partnerId, partnerName = "", partnerAvatar = "", partnerIsActive = false) => {
+  // Chọn hội thoại
+  const handleSelectConversation = (
+    partnerId,
+    partnerName = "",
+    partnerAvatar = "",
+    partnerIsActive = false
+  ) => {
     setSelectedConversation(partnerId);
     setSelectedPartnerName(partnerName);
     setSelectedPartnerAvatar(partnerAvatar);
     setSelectedPartnerIsActive(partnerIsActive);
     setAttachedFiles([]);
     setAttachedPreviews([]);
-
     fetchConversationMessages(partnerId);
 
     if (pollingInterval) clearInterval(pollingInterval);
@@ -191,7 +197,7 @@ const Message = () => {
     setPollingInterval(intervalId);
   };
 
-  // Lấy thông tin từ route state nếu có
+  // Lấy partnerId từ state (nếu có)
   const locationState = useLocation();
   useEffect(() => {
     if (locationState.state?.partnerId) {
@@ -205,14 +211,14 @@ const Message = () => {
     // eslint-disable-next-line
   }, [locationState.state]);
 
-  // Clear polling khi unmount
+  // Clear polling
   useEffect(() => {
     return () => {
       if (pollingInterval) clearInterval(pollingInterval);
     };
   }, [pollingInterval]);
 
-  // Auto-scroll xuống cuối tin nhắn (chỉ nếu gần dưới cùng)
+  // Auto-scroll
   useEffect(() => {
     if (messagesContainerRef.current && messagesEndRef.current) {
       const container = messagesContainerRef.current;
@@ -224,13 +230,14 @@ const Message = () => {
     }
   }, [displayedMessages]);
 
-  // Gửi tin nhắn: nếu có file đính kèm, upload trước rồi gửi tin nhắn với URL ảnh (JSON string)
+  // Gửi tin nhắn
   const handleSendMessage = async () => {
     if (isSending) return;
     if (!message.trim() && attachedFiles.length === 0) return;
     if (!selectedConversation || !currentUserId) return;
 
     setIsSending(true);
+
     let uploadedImageUrls = [];
     if (attachedFiles.length > 0) {
       try {
@@ -251,7 +258,6 @@ const Message = () => {
       status: 1,
     };
 
-    // Xóa input và file preview ngay
     setMessage("");
     setAttachedFiles([]);
     setAttachedPreviews([]);
@@ -261,15 +267,15 @@ const Message = () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(newMsg),
     })
-      .then((response) => {
-        if (!response.ok) throw new Error("Gửi tin nhắn thất bại");
-        return response.json();
+      .then((res) => {
+        if (!res.ok) throw new Error("Gửi tin nhắn thất bại");
+        return res.json();
       })
-      .catch((error) => console.error("Error sending message:", error))
+      .catch((err) => console.error("Error sending message:", err))
       .finally(() => setIsSending(false));
   };
 
-  // Xử lý sự kiện Enter ở input tin nhắn
+  // Xử lý Enter
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -278,15 +284,17 @@ const Message = () => {
   };
 
   return (
-    <div className="flex h-[90vh] bg-white text-black">
-      {/* SIDEBAR TRÁI: Danh sách hội thoại */}
-      <div className="w-1/4 border-r border-gray-300 flex flex-col">
-        {/* Header sidebar */}
+    <div className="flex h-screen bg-gray-100">
+      {/* SIDEBAR TRÁI */}
+      <div className="w-1/4 border-r bg-white flex flex-col">
+        {/* Header */}
         <div className="p-4 border-b">
-          <div className="text-xl font-bold mb-4">Đoạn chat</div>
+          <h2 className="text-2xl font-bold text-blue-600 mb-2">
+            Admin Messaging Panel
+          </h2>
           <div className="relative">
             <input
-              className="w-full p-2 bg-gray-200 rounded-full pl-10 pr-10 text-black"
+              className="w-full p-2 bg-gray-200 rounded-full pl-10 pr-10 text-black focus:outline-none"
               placeholder="Tìm kiếm trên Messenger"
               type="text"
               value={conversationSearchTerm}
@@ -295,13 +303,17 @@ const Message = () => {
             <FaSearch className="absolute left-3 top-3 text-gray-500" />
           </div>
         </div>
-        {/* Danh sách conversation */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-2">
+
+        {/* Danh sách hội thoại */}
+        <div className="flex-1 overflow-y-auto p-2">
+          {isLoading && (
+            <div className="text-center py-2 text-gray-500">Loading...</div>
+          )}
           {filteredConversations.length > 0 ? (
             filteredConversations.map((conv, index) => (
               <div
                 key={index}
-                className="flex items-center space-x-3 hover:bg-gray-100 p-2 rounded cursor-pointer"
+                className="flex items-center p-2 rounded-lg hover:bg-gray-100 cursor-pointer"
                 onClick={() =>
                   handleSelectConversation(
                     conv.userGetID,
@@ -316,30 +328,34 @@ const Message = () => {
                   conv.partnerName || `User ${conv.userGetID}`,
                   40
                 )}
-                <div>
-                  <div className="font-bold">
-                    {conv.partnerName ? conv.partnerName : `User ${conv.userGetID}`}
+                <div className="ml-3">
+                  <div className="font-semibold">
+                    {conv.partnerName
+                      ? conv.partnerName
+                      : `User ${conv.userGetID}`}
                   </div>
-                  <div className="text-sm text-gray-500">
+                  <div className="text-sm text-gray-500 truncate max-w-[160px]">
                     {conv.latestMessageContent}
                   </div>
                 </div>
               </div>
             ))
           ) : (
-            <div className="text-gray-500">Không có cuộc trò chuyện nào.</div>
+            <div className="text-gray-500 text-center mt-4">
+              Không có cuộc trò chuyện nào
+            </div>
           )}
         </div>
       </div>
 
-      {/* PHẦN GIỮA: Nội dung chat */}
+      {/* CỘT GIỮA: Khu vực chat */}
       <div className="flex-1 flex flex-col">
         {/* Header chat */}
-        <div className="flex items-center justify-between p-4 border-b">
+        <div className="flex items-center justify-between p-4 border-b bg-white">
           <div className="flex items-center space-x-3">
             {renderAvatar(selectedPartnerAvatar, selectedPartnerName, 40)}
             <div>
-              <div className="font-bold">
+              <div className="font-bold text-gray-700">
                 {selectedPartnerName || "Chọn cuộc trò chuyện"}
               </div>
               <div className="text-sm text-gray-500">
@@ -347,39 +363,47 @@ const Message = () => {
               </div>
             </div>
           </div>
-          <div className="flex items-center space-x-3 text-2xl">
-            <button className="text-red-600 hover:scale-125 transition">
+          <div className="flex items-center space-x-4 text-xl text-blue-600">
+            <button className="hover:text-red-600 transition">
               <FaPhoneAlt />
             </button>
-            <button className="text-3xl text-red-600 hover:scale-125 transition">
+            <button className="hover:text-red-600 transition">
               <FaVideo />
             </button>
           </div>
         </div>
-        {/* Danh sách tin nhắn */}
-        <div ref={messagesContainerRef} className="flex-1 p-4 overflow-y-auto">
+
+        {/* Nội dung chat */}
+        <div
+          ref={messagesContainerRef}
+          className="flex-1 p-4 overflow-y-auto bg-white"
+        >
           {selectedConversation ? (
             displayedMessages.length > 0 ? (
-              displayedMessages.map((msg, index) => (
-                <div
-                  key={index}
-                  className={`flex ${msg.userSendID === Number(currentUserId)
-                    ? "justify-end"
-                    : "justify-start"
-                    } mb-2`}
-                >
+              displayedMessages.map((msg, index) => {
+                const isCurrentUser = msg.userSendID === Number(currentUserId);
+                return (
                   <div
-                    className={`max-w-[60%] p-3 rounded-lg ${msg.userSendID === Number(currentUserId)
-                      ? "bg-blue-200"
-                      : "bg-gray-200"
-                      }`}
+                    key={index}
+                    className={`flex ${isCurrentUser ? "justify-end" : "justify-start"
+                      } mb-3`}
                   >
-                    <div className="text-xs text-gray-400 mb-1">
-                      {new Date(msg.dateTime).toLocaleString()}
-                    </div>
-                    <div>{msg.content}</div>
-                    {msg.image && (
-                      (() => {
+                    <div
+                      className={`p-3 rounded-lg max-w-[70%] ${isCurrentUser
+                        ? "bg-blue-100 text-gray-700"
+                        : "bg-gray-200 text-gray-700"
+                        }`}
+                    >
+                      <div className="text-xs text-gray-500 mb-1">
+                        {new Date(msg.dateTime).toLocaleString("vi-VN", {
+                          dateStyle: "short",
+                          timeStyle: "short",
+                        })}
+                      </div>
+                      <div className="whitespace-pre-wrap break-words">
+                        {msg.content}
+                      </div>
+                      {msg.image && (() => {
                         let images = [];
                         try {
                           images = JSON.parse(msg.image);
@@ -388,9 +412,9 @@ const Message = () => {
                         }
                         return (
                           <div className="mt-2 grid grid-cols-2 gap-2">
-                            {images.map((imgUrl, idx) => (
+                            {images.map((imgUrl, idx2) => (
                               <img
-                                key={idx}
+                                key={idx2}
                                 src={imgUrl}
                                 alt="Attached"
                                 className="w-full h-32 object-cover rounded-md cursor-pointer"
@@ -399,30 +423,31 @@ const Message = () => {
                             ))}
                           </div>
                         );
-                      })()
-                    )}
+                      })()}
+                    </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             ) : (
-              <div className="text-gray-500">Chưa có tin nhắn.</div>
+              <div className="text-center text-gray-500 mt-4">
+                Chưa có tin nhắn.
+              </div>
             )
           ) : (
-            <div className="text-gray-500">Chọn một cuộc trò chuyện để xem tin nhắn</div>
-          )}
-          {isLoading && (
-            <div className="flex justify-center items-center py-4">
-              <span className="text-gray-500">Loading...</span>
+            <div className="text-center text-gray-500 mt-4">
+              Chọn một cuộc trò chuyện để xem tin nhắn
             </div>
           )}
+
           <div ref={messagesEndRef} />
         </div>
+
         {/* Thanh nhập tin nhắn */}
-        <div className="border-t p-4 flex flex-col">
+        <div className="border-t p-3 bg-white">
           <div className="flex items-center space-x-3">
             <button
               onClick={handleUploadClick}
-              className="bg-red-600 p-2 rounded-full text-white hover:bg-red-700 transition-colors"
+              className="bg-blue-600 p-2 rounded-full text-white hover:bg-blue-500 transition"
             >
               <FaUpload />
             </button>
@@ -435,7 +460,7 @@ const Message = () => {
               onChange={handleFileChange}
             />
             <input
-              className="w-full p-2 bg-gray-200 rounded-full text-black"
+              className="w-full p-2 bg-gray-100 rounded-full text-black focus:outline-none"
               placeholder="Aa"
               type="text"
               value={message}
@@ -444,13 +469,15 @@ const Message = () => {
             />
             <button
               type="submit"
-              className="bg-red-600 p-2 rounded-full text-white hover:bg-red-700 transition-colors"
+              className="bg-blue-600 p-2 rounded-full text-white hover:bg-blue-500 transition"
               onClick={handleSendMessage}
+              disabled={isSending}
             >
               <FaPaperPlane />
             </button>
           </div>
-          {/* Preview các ảnh đính kèm */}
+
+          {/* Preview ảnh đính kèm */}
           {attachedPreviews.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-3">
               {attachedPreviews.map((preview, index) => (
@@ -474,64 +501,69 @@ const Message = () => {
         </div>
       </div>
 
-      {/* SIDEBAR PHẢI: Thông tin người chat & Tính năng */}
-      <div className="w-1/4 border-l p-4 flex flex-col">
-        {/* Thông tin cơ bản */}
-        <div className="flex items-center space-x-3 mb-3">
-          {renderAvatar(selectedPartnerAvatar, selectedPartnerName, 50)}
-          <div>
-            <div className="font-bold text-base">
-              {selectedPartnerName || "Người lạ"}
+      {/* SIDEBAR PHẢI: Admin Controls */}
+      <div className="w-1/4 border-l bg-white flex flex-col">
+        {/* Thông tin đối phương */}
+        <div className="p-4 border-b">
+          <div className="flex items-center space-x-3 mb-3">
+            {renderAvatar(selectedPartnerAvatar, selectedPartnerName, 50)}
+            <div>
+              <div className="font-bold text-base text-gray-700">
+                {selectedPartnerName || "Người lạ"}
+              </div>
+              <div className="text-sm text-gray-500">
+                {selectedPartnerIsActive ? "Đang hoạt động" : "Không hoạt động"}
+              </div>
             </div>
-            <div className="text-sm text-gray-500">
-              {selectedPartnerIsActive ? "Đang hoạt động" : "Không hoạt động"}
-            </div>
+          </div>
+
+          <div className="flex flex-col space-y-2">
+            <button
+              className="flex items-center px-3 py-2 w-full rounded-full border text-gray-600 hover:bg-gray-100 transition"
+              onClick={handleToggleMute}
+            >
+              <FaBell className="mr-2" />
+              <span className="text-base">
+                {isMuted ? "Bật thông báo" : "Tắt thông báo"}
+              </span>
+            </button>
+            <button
+              className="flex items-center px-3 py-2 w-full rounded-full border text-gray-600 hover:bg-gray-100 transition"
+              onClick={handleToggleSearch}
+            >
+              <FaSearch className="mr-2" />
+              <span className="text-base">Tìm kiếm</span>
+            </button>
+            {showSearchBox && (
+              <div className="flex flex-col px-3">
+                <input
+                  className="mt-2 p-2 border rounded-md"
+                  placeholder="Nhập từ khóa..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Tính năng TẮT THÔNG BÁO & TÌM KIẾM */}
-        <div className="flex flex-col space-y-3 mb-4">
-          <button
-            className="flex items-center px-3 py-2 w-full rounded-full border text-gray-600 hover:bg-gray-100 transition"
-            onClick={handleToggleMute}
-          >
-            <FaBell className="mr-2" />
-            <span className="text-base">
-              {isMuted ? "Bật thông báo" : "Tắt thông báo"}
-            </span>
-          </button>
-          <button
-            className="flex items-center px-3 py-2 w-full rounded-full border text-gray-600 hover:bg-gray-100 transition"
-            onClick={handleToggleSearch}
-          >
-            <FaSearch className="mr-2" />
-            <span className="text-base">Tìm kiếm</span>
-          </button>
-          {showSearchBox && (
-            <div className="flex flex-col px-3">
-              <input
-                className="mt-2 p-2 border rounded-md"
-                placeholder="Nhập từ khóa..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-          )}
-        </div>
-
-        <hr className="mb-4" />
-
-        {/* Các nút/cài đặt khác */}
-        <div className="flex flex-col space-y-2 text-sm text-gray-700">
-          <button className="text-left py-2 px-2 hover:bg-gray-100 rounded">
-            Xem tin nhắn đã ghim
-          </button>
-          <button className="text-left py-2 px-2 hover:bg-gray-100 rounded">
-            Đổi chủ đề
-          </button>
-          <button className="text-left py-2 px-2 hover:bg-gray-100 rounded">
-            File phương tiện &amp; file
-          </button>
+        {/* Admin Tools */}
+        <div className="flex-1 p-4">
+          <h3 className="font-bold text-gray-700 mb-3">Admin Tools</h3>
+          <div className="flex flex-col space-y-3">
+            <button className="flex items-center px-3 py-2 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 transition">
+              <FaUser className="mr-2" />
+              <span className="text-base">Quản lý người dùng</span>
+            </button>
+            <button className="flex items-center px-3 py-2 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 transition">
+              <FaBell className="mr-2" />
+              <span className="text-base">Báo cáo tin nhắn</span>
+            </button>
+            <button className="flex items-center px-3 py-2 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 transition">
+              <FaSearch className="mr-2" />
+              <span className="text-base">Thống kê chat</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -552,4 +584,4 @@ const Message = () => {
   );
 };
 
-export default Message;
+export default MessageAdmin;
