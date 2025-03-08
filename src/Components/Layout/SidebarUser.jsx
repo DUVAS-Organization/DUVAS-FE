@@ -102,12 +102,11 @@ const SidebarUser = () => {
                         Tài Chính
                     </div>
                     <ul className="pl-4">
-                        <li>
+                    <li>
                             <NavLink
                                 to="/Transaction"
                                 className={({ isActive }) =>
-                                    `block py-2 px-4 mb-0.5 hover:bg-red-400 hover:text-white rounded-3xl ${isActive ? 'bg-red-500 text-white' : ''
-
+                                    `block mb-1 py-2 px-4 hover:bg-red-500 hover:text-white rounded-3xl ${isActive ? 'bg-red-500 text-white' : ''
                                     }`
                                 }
                             >
@@ -116,13 +115,35 @@ const SidebarUser = () => {
                         </li>
                         <li>
                             <NavLink
-                                to="/Withdraws"
+                                to="/Moneys"
                                 className={({ isActive }) =>
-                                    `block py-2 px-4 hover:bg-red-400 hover:text-white rounded-3xl ${isActive ? 'bg-red-500 text-white' : ''
+                                    `block py-2 px-4 hover:bg-red-500 hover:text-white rounded-3xl ${isActive ? 'bg-red-500 text-white' : ''
                                     }`
                                 }
                             >
                                 Nạp tiền
+                            </NavLink>
+                        </li>
+                        <li>
+                            <NavLink
+                                to="/Withdraw"
+                                className={({ isActive }) =>
+                                    `block py-2 px-4 hover:bg-red-500 hover:text-white rounded-3xl ${isActive ? 'bg-red-500 text-white' : ''
+                                    }`
+                                }
+                            >
+                                Rút tiền
+                            </NavLink>
+                        </li>
+                        <li>
+                            <NavLink
+                                to="/BankAccounts"
+                                className={({ isActive }) =>
+                                    `block py-2 px-4 hover:bg-red-500 hover:text-white rounded-3xl ${isActive ? 'bg-red-500 text-white' : ''
+                                    }`
+                                }
+                            >
+                                Tài khoản của bạn
                             </NavLink>
                         </li>
                     </ul>
