@@ -373,7 +373,24 @@ const RoomDetailsUser = () => {
                     </div>
                     <div className="bg-gray-100 py-3 rounded-md text-sm text-gray-600 leading-6">
                         Hãy cho chủ nhà biết bạn thấy phòng này trên <strong>DUVAS </strong>
-                        bằng cách<button className="text-red-500 hover:underline font-medium ml-1">Nhắn Tin</button>  để nhận ưu đãi tốt nhất.
+                        bằng cách
+                        <button
+                            className="text-red-500 hover:underline font-medium ml-1"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                // Chuyển đến trang Message và truyền partnerId và partnerName qua state
+                                navigate('/Message', {
+                                    state: {
+                                        partnerId: room.User.userId,
+                                        partnerName: room.User.name,
+                                        partnerAvatar: room.User.profilePicture
+                                    }
+                                });
+                            }}
+                        >
+                            Nhắn Tin
+                        </button>  để nhận ưu đãi tốt nhất.
                         <br />
                     </div>
                 </div>
