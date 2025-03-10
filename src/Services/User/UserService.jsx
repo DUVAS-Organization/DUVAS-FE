@@ -60,7 +60,7 @@ const UserService = {
     },
     genOtp: () => {
         const token = localStorage.getItem("authToken");
-        axios.get('https://localhost:8000/otp',{
+        axios.get('https://localhost:8000/api/UserProfile/otp',{
             headers: {
                 Authorization: `Bearer ${token}`,
                 "Content-Type": "application/json",
