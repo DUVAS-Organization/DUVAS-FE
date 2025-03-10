@@ -23,7 +23,7 @@ import { UIProvider } from './UIContext/UIContext';
 const navLinks = [
     { name: "Trang Chủ", path: "/" },
     { name: "Nhà trọ cho thuê", path: "/Rooms" },
-    { name: "Tin tức", path: "/tin-tuc" },
+    { name: "Tin Dịch vụ", path: "/ServicePosts" },
     { name: "Thông tin", path: "/thongtin" },
 ];
 
@@ -87,7 +87,7 @@ const Navbar = () => {
                             {user ? (
                                 <>
                                     <UIProvider>
-                                        <div className='flex gap-3'>
+                                        <div className='flex gap-3 items-center'>
                                             <SavePosts />
                                             <BellNotifications />
                                         </div>
