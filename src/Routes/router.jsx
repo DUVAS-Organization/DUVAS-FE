@@ -39,6 +39,7 @@ import RoomBookingSuccess from '../Pages/User/Rooms/RoomBookingSuccess';
 
 import Message from '../Pages/User/Profiles/Message';
 import MessageAdmin from '../Pages/Admin/MessageAdmin';
+import SavedPostList from '../Pages/User/Profiles/SavedPostList';
 
 const RoutesConfig = () => {
     const { user } = useAuth();
@@ -96,7 +97,10 @@ const RoutesConfig = () => {
                 path="/Rooms/:roomId"
                 element={user && user.role === "User" ? <RoomsForm /> : <Navigate to="/" />}
             />
-
+            <Route
+                path="/SavedPosts"
+                element={user && user.role === "User" ? <SavedPostList /> : <Navigate to="/" />}
+            />
             <Route
                 path="/ServicePost/Creates"
                 element={user && user.role === "User" ? <ServicePostForm /> : <Navigate to="/Logins" />}
