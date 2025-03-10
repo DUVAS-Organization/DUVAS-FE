@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import RoomService from '../../../Services/User/RoomService';
 import UserService from '../../../Services/User/UserService';
 import { useNavigate, Link } from 'react-router-dom';
-import { FaRegBell, FaMapMarkerAlt, FaRegHeart, FaCamera } from 'react-icons/fa';
+import { FaRegBell, FaMapMarkerAlt, FaRegHeart, FaCamera, FaHeart } from 'react-icons/fa';
 import { FaPhoneVolume } from "react-icons/fa6";
 import Searchbar from '../../../Components/Searchbar';
 import Footer from '../../../Components/Layout/Footer';
@@ -16,7 +16,9 @@ const RoomsList = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
     const [loading, setLoading] = useState(false);
-
+    const [savedPosts, setSavedPosts] = useState(() => {
+        return JSON.parse(localStorage.getItem("savedPosts")) || [];
+    });
     // State để hiển thị số điện thoại riêng cho từng room (key là roomId)
     const [showFullPhoneById, setShowFullPhoneById] = useState({});
     // Số điện thoại mặc định nếu không có dữ liệu từ API
@@ -59,6 +61,31 @@ const RoomsList = () => {
     const handleViewMore = () => {
         navigate('/Rooms');
     };
+
+    const toggleSavePost = async (roomId) => {
+        if (!user) {
+            alert("Bạn cần đăng nhập để lưu bài.");
+            return;
+        }
+
+        try {
+            const isSaved = savedPosts.includes(roomId);
+
+            const response = await fetch("https://localhost:8000/api/SavedPosts", {
+                method: isSaved ? "DELETE" : "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userId: user.userId, roomId }),
+            });
+
+            // Cập nhật danh sách bài đã lưu trên UI
+            setSavedPosts((prev) =>
+                isSaved ? prev.filter((id) => id !== roomId) : [...prev, roomId]
+            );
+        } catch (error) {
+            console.error("Lỗi khi lưu / xóa bài:", error);
+        }
+    };
+
 
     if (loading) {
         return (
@@ -270,9 +297,21 @@ const RoomsList = () => {
                                                                     : `${roomMaskedPhone} • Hiện số`}
                                                             </button>
                                                             <span>|</span>
-                                                            <button className="text-gray-600 p-2 border border-gray-300 rounded-lg">
-                                                                <FaRegHeart />
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    e.stopPropagation();
+                                                                    toggleSavePost(room.roomId);
+                                                                }}
+                                                                className="text-2xl"
+                                                            >
+                                                                {savedPosts.includes(room.roomId) ? (
+                                                                    <FaHeart className="text-red-500" />
+                                                                ) : (
+                                                                    <FaRegHeart className="text-gray-600" />
+                                                                )}
                                                             </button>
+
                                                         </div>
                                                     </div>
                                                 </div>
@@ -373,9 +412,21 @@ const RoomsList = () => {
                                                             : `${roomMaskedPhone} • Hiện số`}
                                                     </button>
                                                     <span>|</span>
-                                                    <button className="text-gray-600 p-2 border border-gray-300 rounded-lg">
-                                                        <FaRegHeart />
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            e.stopPropagation();
+                                                            toggleSavePost(room.roomId);
+                                                        }}
+                                                        className="text-2xl"
+                                                    >
+                                                        {savedPosts.includes(room.roomId) ? (
+                                                            <FaHeart className="text-red-500" />
+                                                        ) : (
+                                                            <FaRegHeart className="text-gray-600" />
+                                                        )}
                                                     </button>
+
                                                 </div>
                                             </div>
                                         </div>

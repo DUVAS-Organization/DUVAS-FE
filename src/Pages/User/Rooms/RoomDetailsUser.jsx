@@ -18,6 +18,7 @@ import {
     FaMapMarkerAlt,
     FaAngleLeft,
     FaAngleRight,
+    FaHeart,
 } from 'react-icons/fa';
 import { FaPhoneVolume } from 'react-icons/fa6';
 import { BsExclamationTriangle } from 'react-icons/bs';
@@ -28,13 +29,16 @@ import Loading from '../../../Components/Loading';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
 import 'swiper/css/free-mode';
-import { FreeMode } from 'swiper';
+import { useAuth } from '../../../Context/AuthProvider';
 
 const RoomDetailsUser = () => {
     const { roomId } = useParams();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
-
+    const { user } = useAuth();
+    const [savedPosts, setSavedPosts] = useState(() => {
+        return JSON.parse(localStorage.getItem("savedPosts")) || [];
+    });
     // State cho dữ liệu phòng, category và building
     const [room, setRoom] = useState(null);
     const [categoryRooms, setCategoryRooms] = useState([]);
@@ -110,6 +114,39 @@ const RoomDetailsUser = () => {
         const found = categoryRooms.find(c => c.categoryRoomId === categoryRoomId);
         return found ? found.categoryName : 'N/A';
     };
+    const toggleSavePost = async () => {
+        if (!user || !roomId) {
+            console.error("Lỗi: userId hoặc roomId không hợp lệ!", { user, roomId });
+            return;
+        }
+
+        try {
+            const response = await fetch("https://localhost:8000/api/SavedPosts", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userId: user.userId, roomId: parseInt(roomId) }),
+            });
+
+            if (!response.ok) {
+                throw new Error("Lỗi khi lưu/xóa bài đăng");
+            }
+
+            // Xử lý cập nhật trạng thái lưu/xóa
+            setSavedPosts((prev) => {
+                if (prev.includes(parseInt(roomId))) {
+                    return prev.filter((id) => id !== parseInt(roomId)); // Xóa khỏi danh sách
+                } else {
+                    return [...prev, parseInt(roomId)]; // Thêm vào danh sách
+                }
+            });
+        } catch (error) {
+            console.error("❌ Lỗi khi lưu / xóa bài:", error);
+        }
+    };
+
+
+
+
 
     if (loading) {
         return (
@@ -255,9 +292,22 @@ const RoomDetailsUser = () => {
                                 <button>
                                     <BsExclamationTriangle />
                                 </button>
-                                <button>
-                                    <FaRegHeart />
+                                <button
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        toggleSavePost(); // Gọi hàm mà không cần truyền `roomId` vì đã lấy từ `useParams()`
+                                    }}
+                                    className="text-2xl"
+                                >
+                                    {savedPosts.includes(parseInt(roomId)) ? (
+                                        <FaHeart className="text-red-500" />
+                                    ) : (
+                                        <FaRegHeart className="text-gray-600" />
+                                    )}
                                 </button>
+
+
                             </div>
                         </div>
                     </div>

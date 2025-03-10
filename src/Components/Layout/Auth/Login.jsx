@@ -3,6 +3,7 @@ import { FaEye, FaEyeSlash, FaEnvelope, FaKey, FaLock, FaLockOpen } from "react-
 import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../../../Context/AuthProvider';
 import logo from '../../../Assets/Images/logo1.png'
+import image2 from '../../../Assets/Images/image2.png'
 import { jwtDecode } from 'jwt-decode';
 
 const LoginPage = () => {
@@ -113,23 +114,10 @@ const LoginPage = () => {
         <div className="flex items-center justify-center my-5 bg-gray-100">
             <div className="flex flex-col md:flex-row bg-white rounded-lg shadow-md w-full max-w-4xl">
                 {/* Bên trái: Hình ảnh */}
-                <div className="relative w-full md:w-1/2">
-                    <img
-                        src="https://batdongsan.com.vn/sellernet/static/media/cover.800e56db.png"
-                        alt="Illustration"
-                        className="w-full h-auto"
-                    />
-                    <div className="absolute top-0 left-0 w-32 h-auto z-10">
-                        <img
-                            src={logo}
-                            alt="Logo"
-                            className="w-full h-auto ml-8 mt-5"
-                        />
-                    </div>
-                    <div className="hidden md:flex flex-col items-center justify-center">
-                        <h2 className="text-center text-lg font-semibold mb-4">
-                            Tìm nhà trọ dễ dàng
-                        </h2>
+                <div className="relative w-full md:w-1/2 flex flex-col items-center justify-center">
+                    <img src={image2} alt="Illustration" className="w-full h-full object-cover rounded-l-lg" />
+                    <div className="absolute top-0 left-0 w-32 h-auto">
+                        <img src={logo} alt="Logo" className="w-full h-auto ml-8 mt-2" />
                     </div>
                 </div>
 
