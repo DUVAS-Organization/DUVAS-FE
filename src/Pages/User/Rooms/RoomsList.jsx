@@ -70,21 +70,30 @@ const RoomsList = () => {
 
         try {
             const isSaved = savedPosts.includes(roomId);
-
-            const response = await fetch("https://localhost:8000/api/SavedPosts", {
-                method: isSaved ? "DELETE" : "POST",
+            const response = await fetch(`https://localhost:8000/api/SavedPosts`, {
+                method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ userId: user.userId, roomId }),
             });
 
-            // Cập nhật danh sách bài đã lưu trên UI
-            setSavedPosts((prev) =>
-                isSaved ? prev.filter((id) => id !== roomId) : [...prev, roomId]
-            );
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || "Lỗi khi thực hiện thao tác.");
+            }
+
+            const result = await response.json();
+
+            if (result.status === "saved") {
+                setSavedPosts((prev) => [...prev, roomId]);
+            } else {
+                setSavedPosts((prev) => prev.filter((id) => id !== roomId));
+            }
         } catch (error) {
             console.error("Lỗi khi lưu / xóa bài:", error);
         }
     };
+
+
 
 
     if (loading) {

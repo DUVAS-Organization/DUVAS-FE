@@ -131,7 +131,7 @@ const RoomDetailsUser = () => {
                 throw new Error("Lỗi khi lưu/xóa bài đăng");
             }
 
-            // Xử lý cập nhật trạng thái lưu/xóa
+            // Cập nhật danh sách bài đã lưu
             setSavedPosts((prev) => {
                 if (prev.includes(parseInt(roomId))) {
                     return prev.filter((id) => id !== parseInt(roomId)); // Xóa khỏi danh sách
@@ -143,10 +143,6 @@ const RoomDetailsUser = () => {
             console.error("❌ Lỗi khi lưu / xóa bài:", error);
         }
     };
-
-
-
-
 
     if (loading) {
         return (
