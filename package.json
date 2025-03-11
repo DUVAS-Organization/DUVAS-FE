@@ -31,7 +31,7 @@
     "react-router-dom": "^7.1.1",
     "react-scripts": "5.0.1",
     "sweetalert2": "^11.15.3",
-    "swiper": "^8.4.6",
+    "swiper": "^8.4.7",
     "tailwindcss": "^3.4.17",
     "web-vitals": "^4.2.4"
   },

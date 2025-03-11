@@ -35,6 +35,7 @@ import Overview from '../Pages/User/Profiles/Overview';
 import RoomsList from '../Pages/User/Rooms/RoomsList';
 import RoomDetailsUser from '../Pages/User/Rooms/RoomDetailsUser';
 import RoomBookingSuccess from '../Pages/User/Rooms/RoomBookingSuccess';
+import ViewProfile from '../Pages/User/ViewProfile';
 // import CategoryServiceForm from '../Components/Admin/CategoryServiceForm'
 
 import Message from '../Pages/User/Profiles/Message';
@@ -46,6 +47,7 @@ const RoutesConfig = () => {
     return (
         <Routes>
             {/* Routes dành cho tất cả người dùng (User hoặc Admin) */}
+            <Route path="/ViewProfile" element={<ViewProfile />} />
             <Route path="/" element={<Home />} />
             <Route path="/Rooms" element={<RoomsList />} />
             <Route path="/Logins" element={<Login />} />
