@@ -40,12 +40,13 @@ import RoomBookingSuccess from '../Pages/User/Rooms/RoomBookingSuccess';
 import Message from '../Pages/User/Profiles/Message';
 import MessageAdmin from '../Pages/Admin/MessageAdmin';
 import SavedPostList from '../Pages/User/Profiles/SavedPostList';
-
+import ViewProfile from '../Pages/Landlord/ViewProfile'
 const RoutesConfig = () => {
     const { user } = useAuth();
 
     return (
         <Routes>
+
             {/* Routes dành cho tất cả người dùng (User hoặc Admin) */}
             <Route path="/" element={<Home />} />
             <Route path="/Rooms" element={<RoomsList />} />
@@ -212,7 +213,18 @@ const RoutesConfig = () => {
                 path="/Admin/CategoryRooms/:categoryRoomId"
                 element={user && user.role === "Admin" ? <CategoryRoomForm /> : <Navigate to="/Logins" />}
             />
+
+
+            <Route
+                path="/ViewProfiles"
+                element={user && user.role === "Landlord" ? <ViewProfile /> : <Navigate to="/" />}
+            />
+
+
         </Routes>
+
+
+
     );
 };
 
