@@ -60,6 +60,12 @@ export const AuthProvider = ({ children }) => {
       navigate('/'); // Điều hướng đến trang dành cho User
     } else if (newUser.role === 'Admin') {
       navigate('/Admin/Accounts'); // Điều hướng đến trang Admin
+    }
+    else if (newUser.role === 'Landlord') {
+      navigate('/'); // Điều hướng đến trang Landlord
+    }
+    else if (newUser.role === 'Service') {
+      navigate('/'); // Điều hướng đến trang Service
     } else {
       navigate('/'); // Điều hướng đến trang chủ cho người dùng không xác định
     }

@@ -508,8 +508,7 @@ const RoomDetailsUser = () => {
                             }}
                         >
                             Nhắn Tin
-                        </button>
-                        <p> để nhận ưu đãi tốt nhất.</p>
+                        </button> để nhận ưu đãi tốt nhất.
                         <br />
                     </div>
                 </div>
@@ -527,7 +526,7 @@ const RoomDetailsUser = () => {
                 </div>
             )}
             <div>
-                <h3 className='text-xl font-semibold ml-5 mt-4'>Phòng trọ</h3>
+                {/* <h3 className='text-xl font-semibold ml-5 mt-4'>Phòng trọ</h3> */}
                 <RoomsHome />
             </div>
             <Footer />
