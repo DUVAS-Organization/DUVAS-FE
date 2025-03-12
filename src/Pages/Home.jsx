@@ -11,7 +11,7 @@ const Home = () => {
             <div className="max-w-6xl mx-auto mt-8">
                 <div className="flex justify-between items-center pb-2">
                     <div className="flex space-x-4 text-xl">
-                        <div className="text-red-700 font-bold">Tin dịch vụ</div>
+                        <div className="text-gray-800 font-bold">Tin dịch vụ</div>
                     </div>
                     <div className="text-red-600">Xem thêm →</div>
                 </div>
@@ -57,23 +57,20 @@ const Home = () => {
                 </div>
             </div>
             <div className="container mx-auto max-w-6xl py-8 mt-8">
-                <div className="flex justify-between items-center mb-6">
+                {/* <div className="flex justify-between items-center mb-6">
                     <div>
                         <h1 className="text-2xl font-bold mb-4 text-red-700 ">Phòng trọ</h1>
                     </div>
                     <div className="space-x-4">
-                        {/* <a className="text-black hover:text-gray-600" href="#">
-                            Tin nhà đất bán mới nhất
-                        </a> */}
                         <span>|</span>
                         <a className="text-black hover:text-gray-600" href="#">
                             Tin nhà cho thuê mới nhất
                         </a>
                         <span>|</span>
                     </div>
-                </div>
+                </div> */}
 
-                <RoomsHome />
+                <RoomsHome className="text-red-800" />
             </div>
             <Footer />
         </div>
