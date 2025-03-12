@@ -139,11 +139,11 @@ const SavePosts = () => {
                                             className="w-12 h-12 rounded-md object-cover"
                                         />
                                         <div className="flex-1">
-                                            <p className="text-sm font-medium text-gray-800 truncate">
+                                            <p className="text-sm font-medium text-gray-800 truncate max-w-[280px]">
                                                 {title || "Không có tiêu đề"}
                                             </p>
 
-                                            <p className="text-xs text-gray-500 font-semibold">
+                                            <p className="text-xs text-gray-500 font-semibold truncate max-w-[250px]">
                                                 {locationDetail || "Không xác định"}
                                             </p>
                                             <p className="text-xs text-gray-500 italic">

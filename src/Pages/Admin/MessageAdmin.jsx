@@ -363,14 +363,14 @@ const MessageAdmin = () => {
               </div>
             </div>
           </div>
-          <div className="flex items-center space-x-4 text-xl text-blue-600">
+          {/* <div className="flex items-center space-x-4 text-xl text-blue-600">
             <button className="hover:text-red-600 transition">
               <FaPhoneAlt />
             </button>
             <button className="hover:text-red-600 transition">
               <FaVideo />
             </button>
-          </div>
+          </div> */}
         </div>
 
         {/* Nội dung chat */}

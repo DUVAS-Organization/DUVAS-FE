@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import RoomService from '../../../Services/User/RoomService';
 import UserService from '../../../Services/User/UserService';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useParams } from 'react-router-dom';
 import { FaRegBell, FaMapMarkerAlt, FaRegHeart, FaCamera, FaHeart } from 'react-icons/fa';
 import { FaPhoneVolume } from "react-icons/fa6";
 import Searchbar from '../../../Components/Searchbar';
@@ -9,15 +9,18 @@ import Footer from '../../../Components/Layout/Footer';
 import { useAuth } from '../../../Context/AuthProvider';
 import FAQList from '../../../Components/FAQ/FAQList';
 import Loading from '../../../Components/Loading';
+import { showCustomNotification } from '../../../Components/Notification';
 
 const RoomsList = () => {
+    const { roomId } = useParams();
     const [rooms, setRooms] = useState([]);
     const [visibleRooms, setVisibleRooms] = useState(6);
     const navigate = useNavigate();
     const { user } = useAuth();
     const [loading, setLoading] = useState(false);
     const [savedPosts, setSavedPosts] = useState(() => {
-        return JSON.parse(localStorage.getItem("savedPosts")) || [];
+        const local = localStorage.getItem("savedPosts");
+        return local ? JSON.parse(local).map(id => Number(id)) : [];
     });
     // State để hiển thị số điện thoại riêng cho từng room (key là roomId)
     const [showFullPhoneById, setShowFullPhoneById] = useState({});
@@ -26,7 +29,11 @@ const RoomsList = () => {
     useEffect(() => {
         fetchRooms();
     }, []);
-
+    useEffect(() => {
+        if (user && user.userId) {
+            fetchSavedPosts();
+        }
+    }, [user]);
     const fetchRooms = async () => {
         setLoading(true);
         try {
@@ -61,39 +68,72 @@ const RoomsList = () => {
     const handleViewMore = () => {
         navigate('/Rooms');
     };
+    useEffect(() => {
+        if (user && user.userId) {
+            fetchSavedPosts();
+        }
+    }, [user]);
 
-    const toggleSavePost = async (roomId) => {
-        if (!user) {
-            alert("Bạn cần đăng nhập để lưu bài.");
+    // Lấy danh sách bài đăng đã lưu của user
+    const fetchSavedPosts = async () => {
+        try {
+            // Dùng endpoint GET /api/SavedPosts/{userId}
+            const response = await fetch(`https://localhost:8000/api/SavedPosts/${user.userId}`);
+            if (!response.ok) throw new Error("Lỗi khi lấy danh sách bài đã lưu!");
+            const data = await response.json();
+            const savedRoomIds = data.map(item => Number(item.roomId));
+            setSavedPosts(savedRoomIds);
+            localStorage.setItem("savedPosts", JSON.stringify(savedRoomIds));
+        } catch (error) {
+            console.error("Lỗi khi lấy danh sách bài đã lưu:", error);
+        }
+    };
+
+    // Hàm lưu/bỏ lưu bài đăng (toggle)
+    const toggleSavePost = async (roomId, e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (!user || !roomId) {
+            showCustomNotification("error", "Bạn cần đăng nhập để lưu tin!");
             return;
         }
 
         try {
-            const isSaved = savedPosts.includes(roomId);
-            const response = await fetch(`https://localhost:8000/api/SavedPosts`, {
+            // Ép roomId sang số
+            const roomIdNum = Number(roomId);
+            const isSaved = savedPosts.includes(roomIdNum);
+
+            // Gọi API toggle lưu bài
+            const response = await fetch("https://localhost:8000/api/SavedPosts", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ userId: user.userId, roomId }),
+                body: JSON.stringify({ userId: user.userId, roomId: roomIdNum }),
             });
 
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || "Lỗi khi thực hiện thao tác.");
+                const errorText = await response.text();
+                throw new Error(errorText || "Lỗi khi lưu/xóa bài đăng");
             }
 
-            const result = await response.json();
+            // Giả sử API trả về JSON có thuộc tính status ("saved" hoặc "removed")
+            const text = await response.text();
+            const result = text ? JSON.parse(text) : {};
 
-            if (result.status === "saved") {
-                setSavedPosts((prev) => [...prev, roomId]);
-            } else {
-                setSavedPosts((prev) => prev.filter((id) => id !== roomId));
+            // Cập nhật state savedPosts
+            if (result.status === "removed") {
+                setSavedPosts(prev => prev.filter(id => id !== roomIdNum));
+                // showCustomNotification("error", "Bỏ lưu tin thành công!");
+            } else if (result.status === "saved") {
+                setSavedPosts(prev => [...prev, roomIdNum]);
+                showCustomNotification("success", "Lưu tin thành công!");
             }
+            localStorage.setItem("savedPosts", JSON.stringify(savedPosts));
         } catch (error) {
             console.error("Lỗi khi lưu / xóa bài:", error);
+            showCustomNotification("error", "Đã xảy ra lỗi, vui lòng thử lại.");
         }
     };
-
-
 
 
     if (loading) {
@@ -127,7 +167,7 @@ const RoomsList = () => {
                     {/* Danh sách phòng */}
                     <div className="w-3/4 bg-white p-4 rounded shadow space-y-3">
                         <h1 className="text-2xl font-semibold">
-                            Cho thuê nhà trọ, phòng trọ trên toàn quốc
+                            Phòng trọ
                         </h1>
                         <div className="flex justify-between">
                             <p className="mb-2">Hiện có {rooms.length} phòng trọ.</p>
@@ -170,6 +210,8 @@ const RoomsList = () => {
 
                             // Layout cho 3 phòng đầu tiên
                             if (index < 3) {
+                                const isSaved = savedPosts.includes(Number(room.roomId));
+
                                 return (
                                     <div key={room.roomId}>
                                         <Link to={`/Rooms/Details/${room.roomId}`} className="block">
@@ -209,7 +251,7 @@ const RoomsList = () => {
                                                             </div>
                                                         </div>
                                                     ) : (
-                                                        <div className="flex h-full">
+                                                        <div className="flex h-full gap-0.5">
                                                             <div className="w-1/2 h-full">
                                                                 <img
                                                                     src={images[0]}
@@ -310,11 +352,11 @@ const RoomsList = () => {
                                                                 onClick={(e) => {
                                                                     e.preventDefault();
                                                                     e.stopPropagation();
-                                                                    toggleSavePost(room.roomId);
+                                                                    toggleSavePost(room.roomId, e);
                                                                 }}
                                                                 className="text-2xl"
                                                             >
-                                                                {savedPosts.includes(room.roomId) ? (
+                                                                {isSaved ? (
                                                                     <FaHeart className="text-red-500" />
                                                                 ) : (
                                                                     <FaRegHeart className="text-gray-600" />
@@ -330,6 +372,8 @@ const RoomsList = () => {
                                 );
                             } else {
                                 // Layout cho các phòng thứ 4 trở đi (hiển thị dạng ngang)
+                                const isSaved = savedPosts.includes(Number(room.roomId));
+
                                 return (
                                     <Link key={room.roomId} to={`/Rooms/Details/${room.roomId}`} className="block">
                                         <div className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col">
@@ -425,11 +469,11 @@ const RoomsList = () => {
                                                         onClick={(e) => {
                                                             e.preventDefault();
                                                             e.stopPropagation();
-                                                            toggleSavePost(room.roomId);
+                                                            toggleSavePost(room.roomId, e);
                                                         }}
                                                         className="text-2xl"
                                                     >
-                                                        {savedPosts.includes(room.roomId) ? (
+                                                        {isSaved ? (
                                                             <FaHeart className="text-red-500" />
                                                         ) : (
                                                             <FaRegHeart className="text-gray-600" />

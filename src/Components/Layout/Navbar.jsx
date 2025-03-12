@@ -22,7 +22,7 @@ import { UIProvider } from './UIContext/UIContext';
 
 const navLinks = [
     { name: "Trang Chủ", path: "/" },
-    { name: "Nhà trọ cho thuê", path: "/Rooms" },
+    { name: "Phòng trọ - Căn hộ", path: "/Rooms" },
     { name: "Tin Dịch vụ", path: "/ServicePosts" },
     { name: "Thông tin", path: "/thongtin" },
 ];

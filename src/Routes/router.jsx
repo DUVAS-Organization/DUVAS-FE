@@ -54,7 +54,10 @@ const RoutesConfig = () => {
             <Route path="/Registers" element={<Registers />} />
             <Route path="/forgot-password" element={<ForgotPasswords />} />
             <Route path="/Profile" element={<Profile />} />
-
+            <Route
+                path="/Rooms/Details/:roomId"
+                element={<RoomDetailsUser />}
+            />
 
             {/* Routes dành cho User */}
             <Route

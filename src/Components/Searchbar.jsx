@@ -59,7 +59,7 @@ const Searchbar = () => {
                         Nhà đất bán
                     </div> */}
                     <div className="bg-red-800 text-white rounded-t-lg px-4 py-2">
-                        Nhà trọ cho thuê
+                        Phòng trọ - Căn hộ
                     </div>
                     {/* <div className="bg-gray-200 text-gray-800 rounded-t-lg px-4 py-2">
                         Dự án
@@ -92,7 +92,9 @@ const Searchbar = () => {
                     {/* Ba select */}
                     <div className="flex space-x-2 mt-2">
                         <select className="w-1/3 bg-red-800 text-white rounded-lg px-4 py-2">
-                            <option>Loại Nhà trọ cho thuê</option>
+                            <option className="bg-white text-black">Phòng trọ</option>
+                            <option className="bg-white text-black">Căn hộ</option>
+                            <option className="bg-white text-black">Nhà nguyên căn</option>
                         </select>
                         <div className="w-1/3 relative">
                             <button
