@@ -3,6 +3,7 @@ import { FaCamera, FaMapMarkerAlt, FaRegHeart, FaHeart } from 'react-icons/fa';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../Context/AuthProvider';
 import RoomService from '../../Services/User/RoomService';
+import { showCustomNotification } from '../Notification';
 
 const RoomsHome = () => {
     const { user } = useAuth(); // Lấy user từ context
@@ -52,7 +53,7 @@ const RoomsHome = () => {
         e.stopPropagation();
 
         if (!user || !roomId) {
-            alert("Bạn cần đăng nhập để lưu bài.");
+            showCustomNotification("error", "Bạn cần đăng nhập để lưu tin!");
             return;
         }
 
@@ -130,8 +131,9 @@ const RoomsHome = () => {
                                     <p className="text-red-500 font-semibold mb-2">
                                         {room.price.toLocaleString('vi-VN')} đ • {room.acreage} m²
                                     </p>
-                                    <p className="text-gray-600 mb-2 flex items-center truncate">
-                                        <FaMapMarkerAlt className="mr-1" /> {room.locationDetail}
+                                    <p className="text-gray-600 mb-2 flex items-center truncate max-w-[240px]">
+                                        <FaMapMarkerAlt className="mr-1 absolute" />
+                                        <p className=' ml-5'>{room.locationDetail}</p>
                                     </p>
                                     <div className="mt-auto flex justify-between items-center border-t pt-2">
                                         <button

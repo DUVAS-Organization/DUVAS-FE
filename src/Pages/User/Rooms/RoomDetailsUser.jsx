@@ -310,20 +310,20 @@ const RoomDetailsUser = () => {
 
                     {/* Thông tin mô tả */}
                     <div>
-                        <h3 className="text-xl font-semibold mb-1">Thông tin mô tả</h3>
+                        <h3 className="text-xl font-semibold mb-1">Mô tả</h3>
                         <p className="text-gray-700">{room.description}</p>
                     </div>
 
                     {/* Liên hệ */}
                     <div className="flex items-center gap-x-2">
-                        <p>Mọi chi tiết xin liên hệ:</p>
+                        <p className='text-xl font-semibold '>Liên hệ:</p>
                         <button
                             onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
                                 setShowFullPhone(true);
                             }}
-                            className="text-base bg-white text-gray-800 px-2 py-1 flex items-center gap-1"
+                            className="text-base bg-white text-gray-800 px-2 mt-1 flex items-center gap-1"
                         >
                             {showFullPhone ? (
                                 userPhone || 'N/A'
@@ -337,11 +337,27 @@ const RoomDetailsUser = () => {
                             )}
                         </button>
                     </div>
-                    <p>Cám ơn tất cả mọi người đã xem ai có nhu cầu giúp mình nhé.</p>
+                    <p>Cám ơn tất cả mọi người đã xem ai có nhu cầu   <button
+                        className="text-red-500 hover:underline font-medium ml-1"
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            // Chuyển đến trang Message và truyền partnerId và partnerName qua state
+                            navigate('/Message', {
+                                state: {
+                                    partnerId: room.User.userId,
+                                    partnerName: room.User.name,
+                                    partnerAvatar: room.User.profilePicture
+                                }
+                            });
+                        }}
+                    >
+                        Nhắn Tin
+                    </button> giúp mình nhé.</p>
 
                     {/* Đặc điểm phòng */}
                     <div>
-                        <h2 className='text-xl font-bold mb-5'>Đặc điểm phòng trọ</h2>
+                        <h2 className='text-xl font-semibold mb-5'>Chi tiết</h2>
                         <div className="grid grid-cols-2 ml-5 gap-y-2">
                             <div className="flex gap-x-1 items-center">
                                 <FaMoneyBillWave className="text-lg text-gray-600" />
@@ -436,7 +452,8 @@ const RoomDetailsUser = () => {
                             }}
                         >
                             Nhắn Tin
-                        </button>  để nhận ưu đãi tốt nhất.
+                        </button>
+                        <p>  để nhận ưu đãi tốt nhất.</p>
                         <br />
                     </div>
                 </div>
@@ -457,7 +474,7 @@ const RoomDetailsUser = () => {
             )}
 
             <div>
-                <h3 className='text-xl font-bold ml-5 mt-4'>Phòng trọ dành cho bạn</h3>
+                <h3 className='text-xl font-semibold ml-5 mt-4'>Phòng trọ</h3>
                 <RoomsHome />
             </div>
             <Footer />

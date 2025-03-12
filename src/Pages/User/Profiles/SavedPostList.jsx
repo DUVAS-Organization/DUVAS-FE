@@ -115,7 +115,7 @@ const SavedPostList = () => {
 
 
                         // Tính price hiển thị: "850 triệu" => (price / 1e6).toFixed(0) + " triệu"
-                        const priceTrieu = (room.price / 1e6).toFixed(0); // "850"
+                        // const priceTrieu = (room.price / 1e6).toFixed(0); // "850"
                         // pricePerM2 => "2.83" => "2.83 tr/m²"
                         const pricePerM2Str = room.pricePerM2
                             ? `${room.pricePerM2} tr/m²`
@@ -142,8 +142,8 @@ const SavedPostList = () => {
                                     </h3>
                                     {/* Dòng 2: Price - acreage - pricePerM2 */}
                                     <div className="text-red-500 text-xl font-semibold flex items-center">
-                                        {priceTrieu} triệu - {room.acreage} m²{" "}
-                                        <p className="text-gray-500 text-lg">  {pricePerM2Str && <>- {pricePerM2Str}</>}</p>
+                                        {room.price.toLocaleString('vi-VN')} đ - {room.acreage} m²{" "}
+                                        {/* <p className="text-gray-500 text-lg">  {pricePerM2Str && <>- {pricePerM2Str}</>}</p> */}
                                     </div>
                                     {/* Dòng 3: Location */}
                                     <p className="text-gray-600 text-base flex items-center">
