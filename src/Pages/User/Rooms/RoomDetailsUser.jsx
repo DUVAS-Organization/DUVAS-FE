@@ -24,8 +24,6 @@ import { FaPhoneVolume } from 'react-icons/fa6';
 import { BsExclamationTriangle } from 'react-icons/bs';
 import Footer from '../../../Components/Layout/Footer';
 import Loading from '../../../Components/Loading';
-
-// Import Swiper components and CSS
 import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
 import 'swiper/css/free-mode';
@@ -34,22 +32,34 @@ import { useAuth } from '../../../Context/AuthProvider';
 const RoomDetailsUser = () => {
     const { roomId } = useParams();
     const navigate = useNavigate();
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(false); // loading cho dữ liệu trang
+    const [isRenting, setIsRenting] = useState(false); // loading khi thực hiện thuê
     const { user } = useAuth();
     const [savedPosts, setSavedPosts] = useState(() => {
         return JSON.parse(localStorage.getItem("savedPosts")) || [];
     });
-    // State cho dữ liệu phòng, category và building
     const [room, setRoom] = useState(null);
     const [categoryRooms, setCategoryRooms] = useState([]);
     const [buildings, setBuildings] = useState([]);
-
-    // Ảnh chính & modal
     const [currentIndex, setCurrentIndex] = useState(0);
     const [previewImage, setPreviewImage] = useState(null);
-
-    // Hiển thị số điện thoại
     const [showFullPhone, setShowFullPhone] = useState(false);
+
+    // Hàm decode JWT token để lấy tên người dùng nếu user.name chưa có
+    const getUserName = () => {
+        if (user && user.name) return user.name;
+        try {
+            const token = user.token || localStorage.getItem("token");
+            if (token) {
+                const payload = token.split('.')[1];
+                const decoded = JSON.parse(atob(payload));
+                return decoded["http://schemas.xmlsoap.org/ws/2005/identity/claims/name"] || "Anonymous";
+            }
+        } catch (e) {
+            console.error("Error decoding token:", e);
+        }
+        return "Anonymous";
+    };
 
     useEffect(() => {
         setLoading(true);
@@ -57,15 +67,12 @@ const RoomDetailsUser = () => {
             CategoryRooms.getCategoryRooms()
                 .then((data) => setCategoryRooms(data))
                 .catch((error) => console.error('Error fetching categories:', error)),
-
             BuildingServices.getBuildings()
                 .then((data) => setBuildings(data))
                 .catch((error) => console.error('Error fetching Buildings:', error)),
-
             roomId
                 ? RoomServices.getRoomById(roomId)
                     .then((data) => {
-                        // Tạo đối tượng room
                         const roomData = {
                             buildingId: data.buildingId,
                             title: data.title || '',
@@ -82,7 +89,6 @@ const RoomDetailsUser = () => {
                             note: data.note || '',
                             userId: data.userId
                         };
-                        // Fetch thông tin người đăng dựa theo userId
                         return UserService.getUserById(data.userId)
                             .then((userData) => ({ ...roomData, User: userData }))
                             .catch((error) => {
@@ -103,40 +109,35 @@ const RoomDetailsUser = () => {
         });
     }, [roomId]);
 
-    // Hàm tra cứu tên Building
     const getBuildingName = (buildingId) => {
         const found = buildings.find(b => b.buildingId === buildingId);
         return found ? (found.buildingName || found.name) : 'N/A';
     };
 
-    // Hàm tra cứu tên Category
     const getCategoryName = (categoryRoomId) => {
         const found = categoryRooms.find(c => c.categoryRoomId === categoryRoomId);
         return found ? found.categoryName : 'N/A';
     };
+
     const toggleSavePost = async () => {
         if (!user || !roomId) {
             console.error("Lỗi: userId hoặc roomId không hợp lệ!", { user, roomId });
             return;
         }
-
         try {
             const response = await fetch("https://localhost:8000/api/SavedPosts", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ userId: user.userId, roomId: parseInt(roomId) }),
             });
-
             if (!response.ok) {
                 throw new Error("Lỗi khi lưu/xóa bài đăng");
             }
-
-            // Cập nhật danh sách bài đã lưu
             setSavedPosts((prev) => {
                 if (prev.includes(parseInt(roomId))) {
-                    return prev.filter((id) => id !== parseInt(roomId)); // Xóa khỏi danh sách
+                    return prev.filter((id) => id !== parseInt(roomId));
                 } else {
-                    return [...prev, parseInt(roomId)]; // Thêm vào danh sách
+                    return [...prev, parseInt(roomId)];
                 }
             });
         } catch (error) {
@@ -144,7 +145,93 @@ const RoomDetailsUser = () => {
         }
     };
 
+    const handleRentRoom = async () => {
+        if (!room || !user) {
+            console.log("room hoặc user không hợp lệ:", room, user);
+            showCustomNotification("error", "Thông tin phòng hoặc người dùng không hợp lệ!");
+            return;
+        }
+        setIsRenting(true);
+        try {
+            const token = user.token || localStorage.getItem("token");
+            console.log("Token:", token);
+
+            // Gọi API track-room để kiểm tra trạng thái phòng
+            const trackRoomResponse = await fetch(`https://localhost:8000/api/RoomManagement/track-room/${roomId}`, {
+                method: "GET",
+                headers: { "Authorization": `Bearer ${token}` },
+            });
+            if (trackRoomResponse.ok) {
+                const roomStatusObj = await trackRoomResponse.json();
+                console.log("Room status:", roomStatusObj);
+                // Nếu status = 2 thì phòng đã được thuê
+                if (roomStatusObj.status === 2) {
+                    showCustomNotification("error", "Phòng này đã được thuê!");
+                    return;
+                }
+            } else {
+                console.log("Không thể lấy thông tin room status, trạng thái:", trackRoomResponse.status);
+            }
+
+            const rentPayload = {
+                RoomId: parseInt(roomId),
+                RenterID: user.userId
+            };
+            console.log("Đang gửi payload thuê phòng:", rentPayload);
+            const rentResponse = await fetch("https://localhost:8000/api/RoomManagement/rent-room", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(rentPayload)
+            });
+            console.log("rentResponse status:", rentResponse.status);
+            if (!rentResponse.ok) {
+                const rentErrorData = await rentResponse.json();
+                throw new Error(rentErrorData.message || "Lỗi khi thực hiện thuê phòng");
+            }
+
+            const renterName = getUserName();
+            console.log("RenterName được sử dụng:", renterName);
+
+            const sendMailPayload = {
+                userIdLandlord: room.User.userId,
+                roomId: parseInt(roomId),
+                renterName: renterName
+            };
+            console.log("Đang gửi payload send-mail:", sendMailPayload);
+            const sendMailResponse = await fetch("https://localhost:8000/api/RoomManagement/send-mail", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify(sendMailPayload)
+            });
+            console.log("sendMailResponse status:", sendMailResponse.status);
+            if (!sendMailResponse.ok) {
+                const sendMailErrorData = await sendMailResponse.json();
+                throw new Error(sendMailErrorData.message || "Lỗi khi gửi email cho chủ phòng");
+            }
+
+            showCustomNotification("success", "Yêu cầu thuê phòng và gửi mail thành công!");
+            navigate('/Rooms/BookingSuccess');
+        } catch (error) {
+            console.log("Error in handleRentRoom catch block:", error);
+            showCustomNotification("error", error.message || "Có lỗi xảy ra");
+        } finally {
+            setIsRenting(false);
+        }
+    };
+
     if (loading) {
+        return (
+            <div className="max-w-6xl mx-auto p-4">
+                <Loading />
+            </div>
+        );
+    }
+
+    // Nếu đang xử lý thuê, hiển thị Loading
+    if (isRenting) {
         return (
             <div className="max-w-6xl mx-auto p-4">
                 <Loading />
@@ -160,7 +247,6 @@ const RoomDetailsUser = () => {
         );
     }
 
-    // Xử lý ảnh
     let imagesArray = [];
     try {
         imagesArray = JSON.parse(room.image);
@@ -171,7 +257,6 @@ const RoomDetailsUser = () => {
         imagesArray = [imagesArray];
     }
 
-    // Next/Prev ảnh chính
     const handlePrev = (e) => {
         e.stopPropagation();
         setCurrentIndex((prev) => (prev - 1 + imagesArray.length) % imagesArray.length);
@@ -180,41 +265,28 @@ const RoomDetailsUser = () => {
         e.stopPropagation();
         setCurrentIndex((prev) => (prev + 1) % imagesArray.length);
     };
-
-    // Mở modal ảnh to
     const openPreview = () => {
         setPreviewImage(imagesArray[currentIndex]);
     };
 
-    // Chỉ tính toán phone sau khi room != null
-    const userPhone = room?.User?.phone || ''; // nếu không có thì chuỗi rỗng
-    // Nếu userPhone rỗng hoặc không đủ dài, ta đặt mask tạm là 'N/A'
+    const userPhone = room?.User?.phone || '';
     const maskedPhone =
         userPhone && userPhone.length > 3
             ? userPhone.slice(0, userPhone.length - 3) + '***'
             : 'N/A';
 
-    const handleRentRoom = () => {
-        // ...Xử lý logic thuê phòng (gọi API, kiểm tra v.v.)
-        navigate('/Rooms/BookingSuccess');
-    };
     return (
         <div className="max-w-6xl mx-auto p-4 bg-white">
             <div className="flex flex-col md:flex-row gap-4">
-                {/* Cột trái */}
                 <div className="w-full md:w-3/4 bg-white p-4 rounded-lg shadow space-y-4">
-                    {/* Ảnh chính (carousel) */}
                     {imagesArray.length > 0 && (
                         <div className="relative w-full h-96 overflow-hidden rounded-lg">
-                            {/* Ảnh đang hiển thị */}
                             <img
                                 src={imagesArray[currentIndex]}
                                 alt={`Image-${currentIndex}`}
                                 className="w-full h-full object-cover cursor-pointer"
                                 onClick={openPreview}
                             />
-
-                            {/* Nút prev/next cho ảnh chính */}
                             {imagesArray.length > 1 && (
                                 <>
                                     <button
@@ -233,8 +305,6 @@ const RoomDetailsUser = () => {
                             )}
                         </div>
                     )}
-
-                    {/* Thumbnails với drag to scroll */}
                     {imagesArray.length > 1 && (
                         <div className="mt-2">
                             <Swiper
@@ -248,8 +318,7 @@ const RoomDetailsUser = () => {
                                         <img
                                             src={img}
                                             alt={`Thumbnail-${idx}`}
-                                            className={`w-full h-20 object-cover rounded-md ${idx === currentIndex ? 'border-2 border-blue-500' : ''
-                                                }`}
+                                            className={`w-full h-20 object-cover rounded-md ${idx === currentIndex ? 'border-2 border-blue-500' : ''}`}
                                             onClick={() => setCurrentIndex(idx)}
                                         />
                                     </SwiperSlide>
@@ -257,8 +326,6 @@ const RoomDetailsUser = () => {
                             </Swiper>
                         </div>
                     )}
-
-                    {/* Tiêu đề + địa chỉ */}
                     <h2 className="text-2xl font-bold text-gray-800">
                         {room.title || 'Tiêu đề phòng'}
                     </h2>
@@ -266,8 +333,6 @@ const RoomDetailsUser = () => {
                         <FaMapMarkerAlt className="mr-1" />
                         {room.locationDetail}
                     </div>
-
-                    {/* Giá + diện tích */}
                     <div className="mb-4">
                         <div className="flex items-center justify-between">
                             <div className="flex space-x-5">
@@ -292,7 +357,7 @@ const RoomDetailsUser = () => {
                                     onClick={(e) => {
                                         e.preventDefault();
                                         e.stopPropagation();
-                                        toggleSavePost(); // Gọi hàm mà không cần truyền `roomId` vì đã lấy từ `useParams()`
+                                        toggleSavePost();
                                     }}
                                     className="text-2xl"
                                 >
@@ -302,19 +367,13 @@ const RoomDetailsUser = () => {
                                         <FaRegHeart className="text-gray-600" />
                                     )}
                                 </button>
-
-
                             </div>
                         </div>
                     </div>
-
-                    {/* Thông tin mô tả */}
                     <div>
                         <h3 className="text-xl font-semibold mb-1">Mô tả</h3>
                         <p className="text-gray-700">{room.description}</p>
                     </div>
-
-                    {/* Liên hệ */}
                     <div className="flex items-center gap-x-2">
                         <p className='text-xl font-semibold '>Liên hệ:</p>
                         <button
@@ -337,25 +396,26 @@ const RoomDetailsUser = () => {
                             )}
                         </button>
                     </div>
-                    <p>Cám ơn tất cả mọi người đã xem ai có nhu cầu   <button
-                        className="text-red-500 hover:underline font-medium ml-1"
-                        onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            // Chuyển đến trang Message và truyền partnerId và partnerName qua state
-                            navigate('/Message', {
-                                state: {
-                                    partnerId: room.User.userId,
-                                    partnerName: room.User.name,
-                                    partnerAvatar: room.User.profilePicture
-                                }
-                            });
-                        }}
-                    >
-                        Nhắn Tin
-                    </button> giúp mình nhé.</p>
-
-                    {/* Đặc điểm phòng */}
+                    <p>
+                        Cám ơn tất cả mọi người đã xem ai có nhu cầu&nbsp;
+                        <button
+                            className="text-red-500 hover:underline font-medium ml-1"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                navigate('/Message', {
+                                    state: {
+                                        partnerId: room.User.userId,
+                                        partnerName: room.User.name,
+                                        partnerAvatar: room.User.profilePicture
+                                    }
+                                });
+                            }}
+                        >
+                            Nhắn Tin
+                        </button>
+                        &nbsp;giúp mình nhé.
+                    </p>
                     <div>
                         <h2 className='text-xl font-semibold mb-5'>Chi tiết</h2>
                         <div className="grid grid-cols-2 ml-5 gap-y-2">
@@ -391,8 +451,6 @@ const RoomDetailsUser = () => {
                         </div>
                     </div>
                 </div>
-
-                {/* Cột phải (sidebar liên hệ) */}
                 <div className="w-full md:w-1/4 bg-white p-4 rounded-lg shadow space-y-4 sticky top-">
                     <div className="flex items-center gap-3">
                         {room.User && room.User.profilePicture ? (
@@ -404,9 +462,7 @@ const RoomDetailsUser = () => {
                         ) : (
                             <div className="w-14 h-14 rounded-full bg-gray-300 flex items-center justify-center">
                                 <span className="text-xl font-semibold text-gray-800">
-                                    {room.User && room.User.name
-                                        ? room.User.name.charAt(0).toUpperCase()
-                                        : "U"}
+                                    {room.User && room.User.name ? room.User.name.charAt(0).toUpperCase() : "U"}
                                 </span>
                             </div>
                         )}
@@ -426,10 +482,11 @@ const RoomDetailsUser = () => {
                             </button>
                         </div>
                     </div>
-                    <div className=' flex justify-center'>
+                    <div className='flex justify-center'>
                         <button
                             onClick={handleRentRoom}
-                            className='w-52 bg-red-500 text-white font-medium px-5 py-1 rounded-xl hover:bg-red-400'>
+                            className='w-52 bg-red-500 text-white font-medium px-5 py-1 rounded-xl hover:bg-red-400'
+                        >
                             Thuê
                         </button>
                     </div>
@@ -441,7 +498,6 @@ const RoomDetailsUser = () => {
                             onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                // Chuyển đến trang Message và truyền partnerId và partnerName qua state
                                 navigate('/Message', {
                                     state: {
                                         partnerId: room.User.userId,
@@ -453,13 +509,11 @@ const RoomDetailsUser = () => {
                         >
                             Nhắn Tin
                         </button>
-                        <p>  để nhận ưu đãi tốt nhất.</p>
+                        <p> để nhận ưu đãi tốt nhất.</p>
                         <br />
                     </div>
                 </div>
             </div>
-
-            {/* Modal phóng to ảnh */}
             {previewImage && (
                 <div
                     className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
@@ -472,7 +526,6 @@ const RoomDetailsUser = () => {
                     />
                 </div>
             )}
-
             <div>
                 <h3 className='text-xl font-semibold ml-5 mt-4'>Phòng trọ</h3>
                 <RoomsHome />
