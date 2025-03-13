@@ -51,7 +51,7 @@ const Money = () => {
                                 className="mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-md">
                                 Lấy mã thanh toán
                             </button>
-                        </form>
+                        </form> 
 
                         <div className="w-2/3 flex items-center justify-center">
                             {qrCode ? (

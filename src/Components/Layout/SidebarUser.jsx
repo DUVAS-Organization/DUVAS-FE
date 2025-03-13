@@ -102,7 +102,7 @@ const SidebarUser = () => {
                         Tài Chính
                     </div>
                     <ul className="pl-4">
-                    <li>
+                        <li>
                             <NavLink
                                 to="/Transaction"
                                 className={({ isActive }) =>
@@ -111,6 +111,17 @@ const SidebarUser = () => {
                                 }
                             >
                                 Lịch sử giao dịch
+                            </NavLink>
+                        </li>
+                        <li>
+                            <NavLink
+                                to="/Withdraw"
+                                className={({ isActive }) =>
+                                    `block mb-1 py-2 px-4 hover:bg-red-500 hover:text-white rounded-3xl ${isActive ? 'bg-red-500 text-white' : ''
+                                    }`
+                                }
+                            >
+                                Lịch sử rút tiền
                             </NavLink>
                         </li>
                         <li>
@@ -126,7 +137,7 @@ const SidebarUser = () => {
                         </li>
                         <li>
                             <NavLink
-                                to="/Withdraw"
+                                to="/Withdraw/Create"
                                 className={({ isActive }) =>
                                     `block py-2 px-4 hover:bg-red-500 hover:text-white rounded-3xl ${isActive ? 'bg-red-500 text-white' : ''
                                     }`

@@ -31,10 +31,15 @@ const BankAccount = () => {
     }, []);
 
     const handleAddBank = async () => {
-        let data = { accountNumber, accountName , bankCode: selectedBankCode };
-        let resp = await UserService.addNewBank(data, otp);
-        setUserBankAccounts(prev => [...prev, resp.data]);
-        setIsEnteringOtp(false);
+        try {
+            let data = { accountNumber, accountName , bankCode: selectedBankCode };
+            let resp = await UserService.addNewBank(data, otp);
+            setUserBankAccounts(prev => [...prev, resp.data]);
+            setIsEnteringOtp(false);
+        } catch (error) {
+            console.error(error);
+        }
+
     };
 
     const genOtp = async () => {

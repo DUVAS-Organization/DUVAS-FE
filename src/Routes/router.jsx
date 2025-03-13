@@ -42,6 +42,8 @@ import Money from '../Pages/User/Transactions/Money';
 import BankAccount from '../Pages/User/Transactions/BankAccount'
 import Transaction from '../Pages/User/Transactions/Transaction'
 import Withdraw from '../Pages/User/Transactions/Withdraw';
+import CreateWithdraw from '../Pages/User/Transactions/CreateWithdraw';
+import AdminTransaction from '../Pages/Admin/Transactions/Transaction';
 const RoutesConfig = () => {
     const { user } = useAuth();
 
@@ -57,10 +59,11 @@ const RoutesConfig = () => {
             <Route path="/Profile" element={<Profile />} />
 
 
-            <Route path="/Moneys" element={<Money/>} />
-            <Route path="/BankAccounts" element={<BankAccount/>}/>
-            <Route path="/Transaction" element={<Transaction/>}/>
-            <Route path="/Withdraw" element={<Withdraw/>}/>
+            <Route path="/Moneys" element={<Money />} />
+            <Route path="/BankAccounts" element={<BankAccount />} />
+            <Route path="/Transaction" element={<Transaction />} />
+            <Route path="/Withdraw" element={<Withdraw />} />
+            <Route path="/Withdraw/Create" element={<CreateWithdraw/>}/>
 
 
             {/* Routes dành cho User */}
@@ -208,6 +211,12 @@ const RoutesConfig = () => {
             <Route
                 path="/Admin/CategoryRooms/:categoryRoomId"
                 element={user && user.role === "Admin" ? <CategoryRoomForm /> : <Navigate to="/Logins" />}
+            />
+
+            {/* Transaction */}
+            <Route
+                path="/Admin/Withdraws"
+                element={user && user.role === "Admin" ? <AdminTransaction /> : <Navigate to="/Logins" />}
             />
         </Routes>
     );
