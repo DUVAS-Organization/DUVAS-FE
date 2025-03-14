@@ -18,6 +18,7 @@
     "axios": "^1.7.9",
     "bootstrap": "^5.3.3",
     "cra-template": "1.2.0",
+    "duvas-fe": "file:",
     "framer-motion": "^12.4.10",
     "jwt-decode": "^4.0.0",
     "rc-slider": "^11.1.8",
