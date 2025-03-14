@@ -16,23 +16,22 @@ import BellNotifications from './UIContext/BellNotifications';
 import SavePosts from './UIContext/SavePosts';
 import { UIProvider } from './UIContext/UIContext';
 import RoomDropdown from './RoomDropdown';
+import ServiceDropdown from './ServiceDropdown'; // Thêm import mới
 import { MdBedroomParent, MdCleaningServices } from 'react-icons/md';
 
 const navLinks = [
     { name: "Trang Chủ", path: "/" },
-    { name: "Tin Dịch vụ", path: "/ServicePosts" },
+    // "Tin Dịch vụ" sẽ được thay bằng ServiceDropdown, nên không cần trong navLinks nữa
     { name: "Thông tin", path: "/thongtin" },
 ];
 
 const Navbar = () => {
     const { user, logout, loading } = useAuth();
     const [dropdownOpen, setDropdownOpen] = useState(false); // Dropdown của user profile
-    const [roomDropdownOpen, setRoomDropdownOpen] = useState(false); // (Không cần dùng nữa nếu dùng RoomDropdown riêng)
     const dropdownRef = useRef(null);
     const location = useLocation();
     const queryParams = new URLSearchParams(location.search);
     const tab = queryParams.get("tab") || "";
-    const isActiveDropdown = ["Phòng trọ", "Căn hộ", "Nhà nguyên căn"].includes(tab);
 
     // Đóng dropdown khi click bên ngoài
     useEffect(() => {
@@ -54,9 +53,7 @@ const Navbar = () => {
 
     const getInitial = (username) => username ? username.charAt(0).toUpperCase() : '';
 
-    // Hàm render dropdown menu cho user
     const renderDropdownItems = () => {
-        // Bảo vệ: nếu user null, trả về null
         if (!user) return null;
         return (
             <div className="px-4 py-2 text-gray-800 text-base">
@@ -74,15 +71,6 @@ const Navbar = () => {
                     <FaFacebookMessenger />
                     <span>Tin nhắn</span>
                 </NavLink>
-                {/* {user.role === "Landlord" && (
-                    <NavLink
-                        to="/ServicePost"
-                        className="flex items-center space-x-2 px-4 py-2 rounded hover:bg-red-500 hover:text-white text-gray-800 whitespace-nowrap"
-                    >
-                        <FaBook />
-                        <span>Quản lý tin đăng</span>
-                    </NavLink>
-                )} */}
                 {user.role === "Landlord" && (
                     <NavLink
                         to="/ManageRooms"
@@ -92,15 +80,6 @@ const Navbar = () => {
                         <span>Quản lý Phòng</span>
                     </NavLink>
                 )}
-                {/* {user.role === "Service" && (
-                    <NavLink
-                        to="/ServicePost"
-                        className="flex items-center space-x-2 px-4 py-2 rounded hover:bg-red-500 hover:text-white text-gray-800 whitespace-nowrap"
-                    >
-                        <FaBook />
-                        <span>Quản lý tin đăng</span>
-                    </NavLink>
-                )} */}
                 {user.role === "Service" && (
                     <NavLink
                         to="/ManageServices"
@@ -149,11 +128,7 @@ const Navbar = () => {
                     {/* Logo */}
                     <Link to="/">
                         <div className="flex-shrink-0">
-                            <img
-                                src={Image_Logo}
-                                alt="DUVAS"
-                                className="max-w-[110px] h-auto"
-                            />
+                            <img src={Image_Logo} alt="DUVAS" className="max-w-[110px] h-auto" />
                         </div>
                     </Link>
                     {/* Menu chính */}
@@ -170,7 +145,11 @@ const Navbar = () => {
                         >
                             Trang Chủ
                         </NavLink>
+                        {/* Dropdown Phòng trọ */}
                         <RoomDropdown />
+                        {/* Dropdown Tin Dịch vụ */}
+                        <ServiceDropdown />
+                        {/* Các link còn lại */}
                         {navLinks.slice(1).map(({ name, path }) => (
                             <NavLink
                                 key={name}

@@ -62,7 +62,10 @@ const RoutesConfig = () => {
                 path="/Rooms/Details/:roomId"
                 element={<RoomDetailsUser />}
             />
-
+            <Route
+                path="/ServicePosts"
+                element={<ServicePost />}
+            />
             {/* Routes dành cho User */}
             <Route
                 path="/"
@@ -102,7 +105,7 @@ const RoutesConfig = () => {
             /> */}
             <Route
                 path="/SavedPosts"
-                element={user && user.role === "User" ? <SavedPostList /> : <Navigate to="/" />}
+                element={user ? <SavedPostList /> : <Navigate to="/" />}
             />
             <Route
                 path="/ServicePost/Creates"
