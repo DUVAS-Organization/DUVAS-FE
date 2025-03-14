@@ -2,14 +2,37 @@ import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { FaBook, FaUserTie, FaGlobe } from 'react-icons/fa';
 import { FaHandHoldingDollar } from "react-icons/fa6";
+import { MdBedroomParent, MdCleaningServices } from 'react-icons/md';
+import { useAuth } from '../../Context/AuthProvider';
 
 const SidebarUser = () => {
     const location = useLocation();
     const params = new URLSearchParams(location.search);
     const currentTab = params.get("tab");
 
+    const { user } = useAuth();
+
+    // Nếu user chưa được xác định, không render
+    if (!user) {
+        return null;
+    }
+
+    let postTitle = "Bài Đăng";
+    let createLink = "/ServicePost/Creates";
+    let listLink = "/ServicePost";
+
+    if (user.role === "Landlord") {
+        postTitle = "Phòng";
+        createLink = "/Room/Create";
+        listLink = "/Room";
+    } else if (user.role === "Service") {
+        postTitle = "Dịch vụ";
+        createLink = "/ServicePost/Creates";
+        listLink = "/ServicePost";
+    }
+
     return (
-        <div className="fixed flex flex-col h-screen pt-5 overflow-y-auto text-black bg-white border-r-2 w-52">
+        <div className="fixed flex flex-col h-screen pt-5 overflow-y-auto text-black bg-white border-r-2 w-52 ">
             <ul className="text-base font-medium text-justify">
                 <li>
                     <NavLink
@@ -32,9 +55,7 @@ const SidebarUser = () => {
                             <NavLink
                                 to="/Profile?tab=edit"
                                 className={() =>
-                                    `block py-2 px-4 mb-0.5 hover:bg-red-400 hover:text-white rounded-3xl ${currentTab === "edit" ? "bg-red-500 text-white" : "text-black"
-
-                                    }`
+                                    `block py-2 px-4 mb-0.5 hover:bg-red-400 hover:text-white rounded-3xl ${currentTab === "edit" ? "bg-red-500 text-white" : "text-black"}`
                                 }
                             >
                                 Chỉnh sửa thông tin
@@ -44,9 +65,7 @@ const SidebarUser = () => {
                             <NavLink
                                 to="/Profile?tab=settings"
                                 className={() =>
-                                    `block py-2 px-4 mb-0.5 hover:bg-red-400 hover:text-white rounded-3xl ${currentTab === "settings" ? "bg-red-500 text-white" : "text-black"
-
-                                    }`
+                                    `block py-2 px-4 mb-0.5 hover:bg-red-400 hover:text-white rounded-3xl ${currentTab === "settings" ? "bg-red-500 text-white" : "text-black"}`
                                 }
                             >
                                 Cài đặt tài khoản
@@ -56,8 +75,7 @@ const SidebarUser = () => {
                             <NavLink
                                 to="/Profile?tab=registerLandlord"
                                 className={() =>
-                                    `block py-2 px-4 hover:bg-red-400 hover:text-white rounded-3xl ${currentTab === "registerLandlord" ? "bg-red-500 text-white" : "text-black"
-                                    }`
+                                    `block py-2 px-4 hover:bg-red-400 hover:text-white rounded-3xl ${currentTab === "registerLandlord" ? "bg-red-500 text-white" : "text-black"}`
                                 }
                             >
                                 Đăng ký thành chủ
@@ -67,17 +85,21 @@ const SidebarUser = () => {
                 </li>
                 <li>
                     <div className="block px-4 py-2 rounded-3xl">
-                        <FaBook className="inline-block mb-1 mr-2" />
-                        Bài Đăng
+                        {user.role === "Landlord" ? (
+                            <MdBedroomParent className="inline-block mb-1 mr-2 " />
+                        ) : user.role === "Service" ? (
+                            <MdCleaningServices className="inline-block mb-1 mr-2" />
+                        ) : (
+                            <FaBook className="inline-block mb-1 mr-2" />
+                        )}
+                        {postTitle}
                     </div>
                     <ul className="pl-4">
                         <li>
                             <NavLink
-                                to="/ServicePost/Creates"
+                                to={createLink}
                                 className={({ isActive }) =>
-                                    `block py-2 px-4 mb-0.5 hover:bg-red-400 hover:text-white rounded-3xl ${isActive ? 'bg-red-500 text-white' : ''
-
-                                    }`
+                                    `block py-2 px-4 mb-0.5 hover:bg-red-400 hover:text-white rounded-3xl ${isActive ? 'bg-red-500 text-white' : ''}`
                                 }
                             >
                                 Đăng mới
@@ -85,13 +107,12 @@ const SidebarUser = () => {
                         </li>
                         <li>
                             <NavLink
-                                to="/ServicePost"
+                                to={listLink}
                                 className={({ isActive }) =>
-                                    `block py-2 px-4 hover:bg-red-400 hover:text-white rounded-3xl ${isActive ? 'bg-red-500 text-white' : ''
-                                    }`
+                                    `block py-2 px-4 hover:bg-red-400 hover:text-white rounded-3xl ${isActive ? 'bg-red-500 text-white' : ''}`
                                 }
                             >
-                                Danh sách Tin
+                                {user.role === "Landlord" ? "Danh sách Phòng" : user.role === "Service" ? "Danh sách Dịch vụ" : "Danh sách Tin"}
                             </NavLink>
                         </li>
                     </ul>
@@ -106,9 +127,7 @@ const SidebarUser = () => {
                             <NavLink
                                 to="/Transaction"
                                 className={({ isActive }) =>
-                                    `block py-2 px-4 mb-0.5 hover:bg-red-400 hover:text-white rounded-3xl ${isActive ? 'bg-red-500 text-white' : ''
-
-                                    }`
+                                    `block py-2 px-4 mb-0.5 hover:bg-red-400 hover:text-white rounded-3xl ${isActive ? 'bg-red-500 text-white' : ''}`
                                 }
                             >
                                 Lịch sử giao dịch
@@ -118,8 +137,7 @@ const SidebarUser = () => {
                             <NavLink
                                 to="/Withdraws"
                                 className={({ isActive }) =>
-                                    `block py-2 px-4 hover:bg-red-400 hover:text-white rounded-3xl ${isActive ? 'bg-red-500 text-white' : ''
-                                    }`
+                                    `block py-2 px-4 hover:bg-red-400 hover:text-white rounded-3xl ${isActive ? 'bg-red-500 text-white' : ''}`
                                 }
                             >
                                 Nạp tiền

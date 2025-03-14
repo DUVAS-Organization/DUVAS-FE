@@ -47,7 +47,6 @@ const Profile = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
     const currentUserId = user ? user.userId : null;
-    console.log("currentUserId:", currentUserId);
 
     const handleConfirm = () => {
         console.log("Xác nhận thông tin:", { cccdNumber });
@@ -162,8 +161,8 @@ const Profile = () => {
                         <ul className="flex space-x-4">
                             <li
                                 className={`pb-2 cursor-pointer ${activeTab === "edit"
-                                        ? "border-b-2 border-red-500 text-red-500"
-                                        : "text-black"
+                                    ? "border-b-2 border-red-500 text-red-500"
+                                    : "text-black"
                                     }`}
                                 onClick={() => handleTabClick("edit")}
                             >
@@ -171,8 +170,8 @@ const Profile = () => {
                             </li>
                             <li
                                 className={`pb-2 cursor-pointer ${activeTab === "settings"
-                                        ? "border-b-2 border-red-500 text-red-500"
-                                        : "text-black"
+                                    ? "border-b-2 border-red-500 text-red-500"
+                                    : "text-black"
                                     }`}
                                 onClick={() => handleTabClick("settings")}
                             >
@@ -180,8 +179,8 @@ const Profile = () => {
                             </li>
                             <li
                                 className={`pb-2 cursor-pointer ${activeTab === "registerLandlord"
-                                        ? "border-b-2 border-red-500 text-red-500"
-                                        : "text-black"
+                                    ? "border-b-2 border-red-500 text-red-500"
+                                    : "text-black"
                                     }`}
                                 onClick={() => handleTabClick("registerLandlord")}
                             >
