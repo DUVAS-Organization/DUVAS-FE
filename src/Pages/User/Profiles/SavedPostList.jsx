@@ -146,8 +146,9 @@ const SavedPostList = () => {
                                         {/* <p className="text-gray-500 text-lg">  {pricePerM2Str && <>- {pricePerM2Str}</>}</p> */}
                                     </div>
                                     {/* Dòng 3: Location */}
-                                    <p className="text-gray-600 text-base flex items-center">
-                                        <FaMapMarkerAlt className="mr-1" /> {room.locationDetail}
+                                    <p className="text-gray-600 text-base flex items-center truncate max-w-[400px] " >
+                                        <FaMapMarkerAlt className="mr-1 absolute" />
+                                        <p className="ml-5">{room.locationDetail}</p>
                                     </p>
                                     {/* Dòng 4: Thời gian */}
                                     <p className="text-gray-400 text-base">

@@ -6,7 +6,6 @@ import DropdownFilter from "../Components/DropdownFilter";
 import RangeInput from '../Components/Layout/Range/RangeInput';
 import CategoryRoomService from '../Services/User/CategoryRoomService';
 import CategoryServiceService from '../Services/User/CategoryServices';
-import axios from 'axios';
 
 const Searchbar = () => {
     const [priceDropdownOpen, setPriceDropdownOpen] = useState(false);
@@ -36,7 +35,7 @@ const Searchbar = () => {
                     const roomData = await CategoryRoomService.getCategoryRooms();
                     setCategoriesRoom(roomData);
                     setCategoriesService([]);
-                } else {
+                } else if (activeTab === "services") { // Đồng nhất với nút tab
                     const serviceData = await CategoryServiceService.getCategoryServices();
                     setCategoriesService(serviceData);
                     setCategoriesRoom([]);
@@ -98,75 +97,30 @@ const Searchbar = () => {
         );
     };
 
-    const handleSearch = async () => {
-        try {
-            // Tham số gửi lên API
-            const searchParams = {};
-            if (selectedCategoryId) {
-                searchParams[activeTab === "rooms" ? "categoryRoomId" : "categoryServiceId"] = parseInt(selectedCategoryId);
-            }
-            if (minPrice !== 0) searchParams.minPrice = minPrice * 1000000;
-            if (maxPrice !== 100) searchParams.maxPrice = maxPrice * 1000000;
-            if (activeTab === "rooms") {
-                if (minArea !== 0) searchParams.minArea = minArea;
-                if (maxArea !== 1000) searchParams.maxArea = maxArea;
-            }
-            searchParams.location = "Đà Nẵng";
+    const handleSearch = () => {
+        // Tạo queryParams cho URL điều hướng
+        const queryParams = {};
 
-            // Tham số cho URL điều hướng
-            const queryParams = {};
-            if (activeTab === "rooms") {
-                const selectedCategory = categoriesRoom.find(c => c.categoryRoomId.toString() === selectedCategoryId);
-                queryParams.tab = selectedCategory ? selectedCategory.categoryName : "Phòng trọ";
-                if (selectedCategoryId) queryParams.categoryRoomId = selectedCategoryId;
-                if (minPrice !== 0) queryParams.minPrice = minPrice;
-                if (maxPrice !== 100) queryParams.maxPrice = maxPrice;
-                if (minArea !== 0) queryParams.minArea = minArea;
-                if (maxArea !== 1000) queryParams.maxArea = maxArea;
-            } else {
-                const selectedCategory = categoriesService.find(c => c.categoryServiceId.toString() === selectedCategoryId);
-                queryParams.tab = selectedCategory ? selectedCategory.categoryServiceName : "Dọn dẹp";
-                if (selectedCategoryId) queryParams.categoryServiceId = selectedCategoryId;
-                if (minPrice !== 0) queryParams.minPrice = minPrice;
-                if (maxPrice !== 100) queryParams.maxPrice = maxPrice;
-            }
-
+        if (activeTab === "rooms") {
+            const selectedCategory = categoriesRoom.find(c => c.categoryRoomId.toString() === selectedCategoryId);
+            queryParams.tab = selectedCategory ? selectedCategory.categoryName : "Phòng trọ";
+            if (selectedCategoryId) queryParams.categoryRoomId = selectedCategoryId;
+            if (minPrice !== 0) queryParams.minPrice = minPrice;
+            if (maxPrice !== 100) queryParams.maxPrice = maxPrice;
+            if (minArea !== 0) queryParams.minArea = minArea;
+            if (maxArea !== 1000) queryParams.maxArea = maxArea;
             const queryString = new URLSearchParams(queryParams).toString();
-            const endpoint = activeTab === "rooms"
-                ? 'http://localhost:8000/api/search/rooms'
-                : 'http://localhost:8000/api/search/serviceposts';
-
-            // Gọi API
-            const response = await axios.get(endpoint, { params: searchParams });
-            console.log("Search results:", response.data);
-
-            // Điều hướng tới trang phù hợp
-            const path = activeTab === "rooms"
-                ? `/Rooms?${queryString}`
-                : `/Services?${queryString}`;
-            navigate(path);
-        } catch (error) {
-            console.error("Search error:", error);
-            // Nếu lỗi API, vẫn điều hướng với các tham số đã chọn
-            const queryParams = {};
-            if (activeTab === "rooms") {
-                const selectedCategory = categoriesRoom.find(c => c.categoryRoomId.toString() === selectedCategoryId);
-                queryParams.tab = selectedCategory ? selectedCategory.categoryName : "Phòng trọ";
-                if (selectedCategoryId) queryParams.categoryRoomId = selectedCategoryId;
-                if (minPrice !== 0) queryParams.minPrice = minPrice;
-                if (maxPrice !== 100) queryParams.maxPrice = maxPrice;
-                if (minArea !== 0) queryParams.minArea = minArea;
-                if (maxArea !== 1000) queryParams.maxArea = maxArea;
-            } else {
-                if (selectedCategoryId) queryParams.categoryServiceId = selectedCategoryId;
-                if (minPrice !== 0) queryParams.minPrice = minPrice;
-                if (maxPrice !== 100) queryParams.maxPrice = maxPrice;
-            }
+            console.log("Navigating to Rooms:", `/Rooms?${queryString}`);
+            navigate(`/Rooms?${queryString}`);
+        } else if (activeTab === "services") { // Đồng nhất với nút tab
+            const selectedCategory = categoriesService.find(c => c.categoryServiceId.toString() === selectedCategoryId);
+            queryParams.tab = selectedCategory ? selectedCategory.categoryServiceName : "Dọn dẹp";
+            if (selectedCategoryId) queryParams.categoryServiceId = selectedCategoryId;
+            if (minPrice !== 0) queryParams.minPrice = minPrice;
+            if (maxPrice !== 100) queryParams.maxPrice = maxPrice;
             const queryString = new URLSearchParams(queryParams).toString();
-            const path = activeTab === "rooms"
-                ? `/Rooms?${queryString}`
-                : `/Services?${queryString}`;
-            navigate(path);
+            console.log("Navigating to ServicePosts:", `/ServicePosts?${queryString}`);
+            navigate(`/ServicePosts?${queryString}`);
         }
     };
 
@@ -203,6 +157,7 @@ const Searchbar = () => {
                             />
                             <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
                             <button
+                                type='button' // Đổi thành button để không submit form
                                 onClick={handleSearch}
                                 className="absolute right-0 top-1/2 transform -translate-y-1/2 h-8 bg-red-600 text-white rounded-lg px-4 mx-2"
                             >
@@ -225,7 +180,7 @@ const Searchbar = () => {
                                         value={cat.categoryRoomId || cat.categoryServiceId}
                                         className="bg-white text-black"
                                     >
-                                        {cat.categoryName} {cat.categoryServiceName}
+                                        {cat.categoryName || cat.categoryServiceName} {/* Sửa lỗi hiển thị */}
                                     </option>
                                 ))}
                             </select>

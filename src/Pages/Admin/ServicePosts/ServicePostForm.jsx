@@ -4,8 +4,9 @@ import CategoryServices from '../../../Services/Admin/CategoryServices';
 import { useNavigate, useParams } from 'react-router-dom';
 import { showCustomNotification } from '../../../Components/Notification';
 import { useAuth } from '../../../Context/AuthProvider';
-import { FaArrowLeft } from "react-icons/fa";
+import { FaArrowLeft, FaTimes, FaPlus } from "react-icons/fa";
 import PriceInput from '../../../Components/Layout/Range/PriceInput';
+import Loading from '../../../Components/Loading';
 
 const ServicePostForm = () => {
     const [servicePost, setServicePosts] = useState({});
@@ -13,6 +14,15 @@ const ServicePostForm = () => {
     const { servicePostId } = useParams();
     const { user } = useAuth();
     const navigate = useNavigate();
+    const [loading, setLoading] = useState(false);
+    // State cho ảnh đã lưu (khi edit)
+    const [existingImages, setExistingImages] = useState([]);
+    // State cho file mới được chọn
+    const [newFiles, setNewFiles] = useState([]);
+    // State cho preview URL của file mới
+    const [newPreviews, setNewPreviews] = useState([]);
+    // State hiển thị preview phóng to
+    const [previewImage, setPreviewImage] = useState(null);
 
     useEffect(() => {
         CategoryServices.getCategoryServices()
@@ -23,6 +33,12 @@ const ServicePostForm = () => {
             // Nếu có servicePostId => chỉnh sửa, fetch dữ liệu từ API
             ServicePost.getServicePostById(servicePostId)
                 .then(data => {
+                    let images = [];
+                    try {
+                        images = data.image ? JSON.parse(data.image) : [];
+                    } catch (error) {
+                        images = data.image ? [data.image] : [];
+                    }
                     setServicePosts({
                         servicePostId: data.servicePostId,
                         userId: data.userId || user.userId,
@@ -33,6 +49,8 @@ const ServicePostForm = () => {
                         description: data.description,
                         categoryServiceId: data.categoryServiceId,
                     });
+                    // Ảnh đã lưu từ DB (Cloudinary URL)
+                    setExistingImages(images);
                 })
                 .catch(error => console.error('Error fetching Category Service:', error));
         } else {
@@ -55,9 +73,60 @@ const ServicePostForm = () => {
         }
     }, [categoryServices, servicePostId, servicePost.categoryServiceId]);
 
+    // Khi người dùng chọn file mới, cập nhật newFiles và newPreviews
+    const handleFileChange = (e) => {
+        const selectedFiles = Array.from(e.target.files);
+        if (selectedFiles.length > 0) {
+            setNewFiles(prev => [...prev, ...selectedFiles]);
+            const previews = selectedFiles.map(file => URL.createObjectURL(file));
+            setNewPreviews(prev => [...prev, ...previews]);
+        }
+    };
+
+    // Xóa file khỏi danh sách: nếu isNew=true thì xóa file mới, ngược lại xóa ảnh đã có
+    const handleRemoveFile = (index, isNew) => {
+        if (isNew) {
+            setNewFiles(prev => prev.filter((_, i) => i !== index));
+            setNewPreviews(prev => prev.filter((_, i) => i !== index));
+        } else {
+            setExistingImages(prev => prev.filter((_, i) => i !== index));
+        }
+    };
+
+    // Hàm upload file mới lên API xử lý upload ảnh lên Cloudinary
+    const uploadFile = async (file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        try {
+            const response = await fetch('https://localhost:8000/api/Upload/upload-image', {
+                method: 'POST',
+                body: formData,
+            });
+            if (!response.ok) {
+                throw new Error('Upload failed');
+            }
+            const data = await response.json();
+            return data.imageUrl;
+        } catch (error) {
+            console.error("Error uploading file:", error);
+            throw error;
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
+        const totalImagesCount = existingImages.length + newFiles.length;
+        if (totalImagesCount === 0) {
+            showCustomNotification("error", "Vui lòng chọn ít nhất 1 ảnh!");
+            return;
+        }
+        setLoading(true);
         try {
+            // Upload file mới song song để giảm thời gian chờ
+            const uploadedImageUrls = await Promise.all(newFiles.map(file => uploadFile(file)));
+            // Kết hợp URL từ ảnh đã có và ảnh mới upload
+            const finalImageUrls = [...existingImages, ...uploadedImageUrls];
+
             // Lấy dữ liệu từ state servicePost
             let servicePostData = {
                 title: servicePost.title,
@@ -67,6 +136,7 @@ const ServicePostForm = () => {
                 description: servicePost.description,
                 categoryServiceId: servicePost.categoryServiceId,
                 userId: user.userId,
+                image: JSON.stringify(finalImageUrls),
             };
 
             if (servicePostId) {
@@ -84,11 +154,22 @@ const ServicePostForm = () => {
         } catch (error) {
             console.error('Error in handleSubmit:', error);
             showCustomNotification("error", "Vui lòng thử lại!");
+        } finally {
+            setLoading(false);
         }
     };
 
+    // Tạo mảng kết hợp preview: ảnh từ server (existingImages) và ảnh mới (newPreviews)
+    const combinedPreviews = [
+        ...existingImages.map(url => ({ url, isNew: false })),
+        ...newPreviews.map((url, idx) => ({ url, isNew: true, index: idx }))
+    ];
+
     return (
         <div className="max-w-5xl mx-auto p-6 bg-white shadow-md rounded-lg mt-10">
+            {loading &&
+                <Loading />
+            }
             <div className='max-w-7xl rounded-2xl mb-2'>
                 <button
                     onClick={() => navigate(-1)}
@@ -125,7 +206,6 @@ const ServicePostForm = () => {
                             onChange={(val) => setServicePosts({ ...servicePost, price: val })}
                         />
                     </div>
-
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <div className="w-full">
@@ -161,7 +241,6 @@ const ServicePostForm = () => {
                             Mô tả:
                         </label>
                         <textarea
-                            type="text"
                             value={servicePost.description}
                             onChange={(e) => setServicePosts({ ...servicePost, description: e.target.value })}
                             required
@@ -174,7 +253,7 @@ const ServicePostForm = () => {
                             Loại Dịch Vụ: <p className='text-red-500 ml-1'>*</p>
                         </label>
                         <select
-                            value={servicePost.categoryServiceId}
+                            value={servicePost.categoryServiceId || ''}
                             onChange={(e) => setServicePosts({ ...servicePost, categoryServiceId: parseInt(e.target.value) })}
                             required
                             className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
@@ -188,16 +267,82 @@ const ServicePostForm = () => {
                         </select>
                     </div>
                 </div>
-                {/* Các trường input khác bạn có thể thêm tương tự */}
+                <div className="mt-4">
+                    <label className="flex text-lg text-left font-bold text-black mb-2">
+                        Ảnh: <span className="text-red-500 ml-1">*</span>
+                    </label>
+                    <div className="border border-gray-300 rounded-lg p-6 bg-white shadow-sm w-full text-center">
+                        <div className="flex items-center justify-center">
+                            <label className="cursor-pointer bg-gray-200 p-3 rounded-lg flex items-center gap-2">
+                                <FaPlus className="text-blue-600" />
+                                <span className="text-gray-700 font-semibold">Thêm Ảnh</span>
+                                <input
+                                    type="file"
+                                    multiple
+                                    onChange={handleFileChange}
+                                    accept=".jpeg, .png, .pdf, .mp4"
+                                    className="hidden"
+                                />
+                            </label>
+                        </div>
+                        <p className="text-gray-500 text-sm mb-3 font-medium text-center mt-2">
+                            Định dạng: JPEG, PNG - Tối đa 5MB
+                        </p>
+                        {combinedPreviews.length > 0 && (
+                            <div className="mt-3">
+                                <p className="font-semibold text-gray-700">Ảnh đã chọn:</p>
+                                <div className="grid grid-cols-3 gap-3 mt-2">
+                                    {combinedPreviews.map((item, index) => (
+                                        <div key={index} className="relative border p-2 rounded-lg shadow-sm">
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    if (item.isNew) {
+                                                        handleRemoveFile(item.index, true);
+                                                    } else {
+                                                        handleRemoveFile(index, false);
+                                                    }
+                                                }}
+                                                className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
+                                            >
+                                                <FaTimes size={14} />
+                                            </button>
+                                            <img
+                                                src={item.url}
+                                                alt={`File ${index}`}
+                                                className="w-full h-20 object-cover rounded-md cursor-pointer"
+                                                onClick={() => setPreviewImage(item.url)}
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+                {/* Buttons */}
                 <div className="flex items-center flex-col">
                     <button
                         type="submit"
-                        className="bg-blue-500 text-white px-4 py-1 rounded-md shadow-md hover:bg-blue-400 "
+                        className="bg-blue-500 text-white px-4 py-1 rounded-md shadow-md hover:bg-blue-400"
                     >
                         Lưu
                     </button>
                 </div>
             </form>
+            {/* Modal để phóng to ảnh */}
+            {previewImage && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
+                    onClick={() => setPreviewImage(null)}
+                >
+                    <img
+                        src={previewImage}
+                        alt="Enlarged Preview"
+                        className="max-w-[75%] max-h-[85%]"
+                    />
+                </div>
+            )}
         </div>
     );
 };

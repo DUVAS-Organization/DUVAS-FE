@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import ServicePost from '../../../Services/Admin/ServicePost';
 import CategoryServices from '../../../Services/Admin/CategoryServices';
 import { showCustomNotification } from '../../../Components/Notification';
-import { useAuth } from '../../../Context/AuthProvider'
+import { useAuth } from '../../../Context/AuthProvider';
 import { FaArrowLeft } from 'react-icons/fa';
 
 const ServicePostDetails = () => {
@@ -12,6 +12,8 @@ const ServicePostDetails = () => {
     const { servicePostId } = useParams();
     const { user } = useAuth();
     const navigate = useNavigate();
+    const [images, setImages] = useState([]);
+    const [previewImage, setPreviewImage] = useState(null);
 
     useEffect(() => {
         CategoryServices.getCategoryServices()
@@ -19,10 +21,16 @@ const ServicePostDetails = () => {
             .catch((error) => console.error('Error fetching categories:', error));
 
         if (servicePostId) {
-            // Nếu có servicePostId => chỉnh sửa, fetch dữ liệu từ API
+            // Nếu có servicePostId => fetch dữ liệu từ API
             ServicePost.getServicePostById(servicePostId)
                 .then(data => {
                     console.log(data);
+                    let images = [];
+                    try {
+                        images = data.image ? JSON.parse(data.image) : [];
+                    } catch (error) {
+                        images = data.image ? [data.image] : [];
+                    }
                     setServicePosts({
                         servicePostId: data.servicePostId,
                         userId: data.userId || user.userId,
@@ -34,6 +42,7 @@ const ServicePostDetails = () => {
                         description: data.description,
                         categoryServiceId: data.categoryServiceId,
                     });
+                    setImages(images);
                 })
                 .catch(error => console.error('Error fetching Category Service:', error));
         } else {
@@ -95,7 +104,6 @@ const ServicePostDetails = () => {
                 <div className="border-t-2 border-black w-full mb-5"></div>
             </div>
 
-
             {/* Bố cục 2 cột: hiển thị các trường thông tin */}
             <div className="max-w-3xl mx-auto bg-white shadow-xl rounded-lg py-5 px-10">
                 <div className="space-y-6">
@@ -110,7 +118,6 @@ const ServicePostDetails = () => {
                             <strong>Giá (đ/h):</strong> {servicePost.price?.toLocaleString("vi-VN")} đ
                         </p>
                     </div>
-
 
                     {/* Địa chỉ */}
                     <div className="flex justify-between">
@@ -131,9 +138,29 @@ const ServicePostDetails = () => {
                     <div className="flex justify-between">
                         <p className="text-lg font-medium"><strong>Mô tả:</strong> {servicePost.description}</p>
                     </div>
+
+                    {/* Ảnh */}
+                    <div className="mt-4">
+                        <p className="text-lg font-medium mb-2"><strong>Ảnh:</strong></p>
+                        {images.length > 0 ? (
+                            <div className="grid grid-cols-3 gap-3">
+                                {images.map((url, index) => (
+                                    <div key={index} className="relative border p-2 rounded-lg shadow-sm">
+                                        <img
+                                            src={url}
+                                            alt={`Service Post Image ${index}`}
+                                            className="w-full h-20 object-cover rounded-md cursor-pointer"
+                                            onClick={() => setPreviewImage(url)}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <p className="text-gray-500">Không có ảnh nào.</p>
+                        )}
+                    </div>
                 </div>
             </div>
-
 
             {/* Các nút chỉnh sửa và xóa */}
             <div className="mt-6 mx-20 flex justify-around">
@@ -150,6 +177,20 @@ const ServicePostDetails = () => {
                     Xóa
                 </button>
             </div>
+
+            {/* Modal để phóng to ảnh */}
+            {previewImage && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
+                    onClick={() => setPreviewImage(null)}
+                >
+                    <img
+                        src={previewImage}
+                        alt="Enlarged Preview"
+                        className="max-w-[75%] max-h-[85%] object-cover rounded-lg"
+                    />
+                </div>
+            )}
         </div>
     );
 };
