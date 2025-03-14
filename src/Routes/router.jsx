@@ -42,6 +42,7 @@ import SavedPostList from '../Pages/User/Profiles/SavedPostList';
 
 
 import RoomListLandlord from '../Pages/Landlord/Rooms/RoomList'
+import RoomRentalConfirmation from '../Pages/Landlord/Rooms/RoomRentalConfirmation'
 import ViewProfile from '../Pages/Landlord/ViewProfile'
 import RoomsFormLandlord from '../Pages/Landlord/Rooms/RoomsForm';
 const RoutesConfig = () => {
@@ -87,6 +88,10 @@ const RoutesConfig = () => {
             <Route
                 path="/Rooms"
                 element={user && user.role === "User" ? <RoomsList /> : <Navigate to="/" />}
+            />
+            <Route
+                path="/Rooms/Contract/:roomid"
+                element={<RoomRentalConfirmation /> }
             />
             <Route
                 path="/Rooms/Details/:roomId"
