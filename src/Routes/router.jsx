@@ -4,7 +4,6 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import BuildingHome from '../Components/ComponentPage/BuildingHome';
 import BuildingsForm from '../Pages/User/Buildings/BuildingsForm';
 // import RoomsHome from '../Components/RoomsHome';
-import RoomsForm from '../Pages/User/Rooms/RoomsForm';
 import Login from '../Components/Layout/Auth/Login';
 import Registers from '../Components/Layout/Auth/RegisterForm';
 import ForgotPasswords from '../Components/Layout/Auth/ForgotPassword';
@@ -40,7 +39,11 @@ import RoomBookingSuccess from '../Pages/User/Rooms/RoomBookingSuccess';
 import Message from '../Pages/User/Profiles/Message';
 import MessageAdmin from '../Pages/Admin/MessageAdmin';
 import SavedPostList from '../Pages/User/Profiles/SavedPostList';
+
+
+import RoomListLandlord from '../Pages/Landlord/Rooms/RoomList'
 import ViewProfile from '../Pages/Landlord/ViewProfile'
+import RoomsFormLandlord from '../Pages/Landlord/Rooms/RoomsForm';
 const RoutesConfig = () => {
     const { user } = useAuth();
 
@@ -86,10 +89,6 @@ const RoutesConfig = () => {
                 element={user && user.role === "User" ? <RoomsList /> : <Navigate to="/" />}
             />
             <Route
-                path="/Rooms/Creates"
-                element={user && user.role === "User" ? <RoomsForm /> : <Navigate to="/" />}
-            />
-            <Route
                 path="/Rooms/Details/:roomId"
                 element={user && user.role === "User" ? <RoomDetailsUser /> : <Navigate to="/" />}
             />
@@ -97,10 +96,10 @@ const RoutesConfig = () => {
                 path="/Rooms/BookingSuccess"
                 element={user && user.role === "User" ? <RoomBookingSuccess /> : <Navigate to="/" />}
             />
-            <Route
+            {/* <Route
                 path="/Rooms/:roomId"
                 element={user && user.role === "User" ? <RoomsForm /> : <Navigate to="/" />}
-            />
+            /> */}
             <Route
                 path="/SavedPosts"
                 element={user && user.role === "User" ? <SavedPostList /> : <Navigate to="/" />}
@@ -214,7 +213,16 @@ const RoutesConfig = () => {
                 element={user && user.role === "Admin" ? <CategoryRoomForm /> : <Navigate to="/Logins" />}
             />
 
-
+            {/* Routes dành cho Admin */}
+            {/* Rooms */}
+            <Route
+                path="/Room/Create"
+                element={user && user.role === "Landlord" ? <RoomsFormLandlord /> : <Navigate to="/" />}
+            /> <Route
+                path="/Room"
+                element={user && user.role === "Landlord" ? <RoomListLandlord /> : <Navigate to="/" />}
+            />
+            {/* Profile */}
             <Route
                 path="/ViewProfiles"
                 element={user && user.role === "Landlord" ? <ViewProfile /> : <Navigate to="/" />}
