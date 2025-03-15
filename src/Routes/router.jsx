@@ -44,6 +44,7 @@ import SavedPostList from '../Pages/User/Profiles/SavedPostList';
 import RoomListLandlord from '../Pages/Landlord/Rooms/RoomList'
 import ViewProfile from '../Pages/Landlord/ViewProfile'
 import RoomsFormLandlord from '../Pages/Landlord/Rooms/RoomsForm';
+import RoomRentalConfirmation from '../Pages/Landlord/Rooms/RoomRentalConfirmation';
 const RoutesConfig = () => {
     const { user } = useAuth();
 
@@ -216,7 +217,7 @@ const RoutesConfig = () => {
                 element={user && user.role === "Admin" ? <CategoryRoomForm /> : <Navigate to="/Logins" />}
             />
 
-            {/* Routes dành cho Admin */}
+            {/* Routes dành cho Landlord */}
             {/* Rooms */}
             <Route
                 path="/Room/Create"
@@ -230,7 +231,10 @@ const RoutesConfig = () => {
                 path="/ViewProfiles"
                 element={user && user.role === "Landlord" ? <ViewProfile /> : <Navigate to="/" />}
             />
-
+            <Route
+                path="/Rooms/Contract/:roomid"
+                element={user ? <RoomRentalConfirmation /> : <Navigate to="/" />}
+            />
 
         </Routes>
 
