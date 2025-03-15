@@ -42,7 +42,7 @@ const Sidebar = () => {
                     className="w-full h-40 border-b-2"
                 />
             </div>
-            <h3 className='text-gray-500'>Admin Management</h3>
+            {/* <h3 className='text-gray-500'>Quản Lý Admin</h3> */}
             <ul className="flex-1 text-justify text-base font-medium">
                 <li>
                     <NavLink

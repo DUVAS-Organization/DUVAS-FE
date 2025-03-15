@@ -5,7 +5,7 @@ import RoomServices from "../../../Services/Admin/RoomServices";
 import CategoryRoomServices from "../../../Services/Admin/CategoryRooms";
 import Counts from '../../../Components/Counts';
 import { FiFilter, FiPlus } from 'react-icons/fi';
-import { FaChevronDown, FaLock } from "react-icons/fa";
+import { FaChevronDown, FaChevronLeft, FaChevronRight, FaLock } from "react-icons/fa";
 
 const RoomList = () => {
     const [rooms, setRooms] = useState([]);
@@ -146,16 +146,17 @@ const RoomList = () => {
                                     <td className="py-2 px-4 text-gray-700 border-b">
                                         {index + 1 + indexOfFirstRow}
                                     </td>
-                                    <td className="py-2 px-4 text-gray-700 border-b">{room.title}</td>
+                                    <td className="py-2 px-4 text-gray-700 border-b truncate max-w-[250px]">{room.title}</td>
                                     <td className="py-2 px-4 text-gray-700 border-b">{room.categoryName}</td>
                                     <td className="py-2 px-4 text-gray-700 border-b">{room.price.toLocaleString('vi-VN')} đ</td>
-                                    <td className="py-2 px-4 text-gray-700 border-b">{room.locationDetail}</td>
-                                    <td className="py-2 text-gray-700 border-b flex justify-around text-center">
-                                        {room.isPermission ? 'Đã thuê' : 'Trống'}
+                                    <td className="py-2 px-4 text-gray-700 border-b truncate max-w-[200px]">{room.locationDetail}</td>
+                                    <td className="py-2 w-36 text-gray-700 border-b flex justify-around text-left truncate max-w-[200px]">
+                                        {room.status === 1 ? "Trống" : room.status === 2 ? "Chờ giao dịch" : room.status === 3 ? "Đã thuê" : "Không xác định"}
                                         <button onClick={(e) => e.stopPropagation()}>
                                             <FaLock className="mt-1" />
                                         </button>
                                     </td>
+
                                     <td className="py-2 px-4 border-b text-blue-600 text-center underline underline-offset-2 hover:text-red-500">
                                         <NavLink
                                             to="/Admin/Rooms/AcceptRooms"
@@ -179,9 +180,9 @@ const RoomList = () => {
                             <button
                                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                                 disabled={currentPage === 1}
-                                className="px-3 py-2 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 rounded-l-lg hover:bg-gray-100 hover:text-gray-700"
+                                className="px-3 py-2 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 rounded-l-lg hover:bg-gray-200 hover:text-gray-700"
                             >
-                                Previous
+                                <FaChevronLeft className='text-xl' />
                             </button>
                         </li>
                         {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNumber => (
@@ -190,7 +191,7 @@ const RoomList = () => {
                                     onClick={() => paginate(pageNumber)}
                                     className={`px-3 py-2 leading-tight border border-gray-300 ${currentPage === pageNumber
                                         ? 'bg-blue-500 text-white'
-                                        : 'bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-700'
+                                        : 'bg-white text-gray-500 hover:bg-gray-200 hover:text-gray-700'
                                         }`}
                                 >
                                     {pageNumber}
@@ -201,9 +202,9 @@ const RoomList = () => {
                             <button
                                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                                 disabled={currentPage === totalPages}
-                                className="px-3 py-2 leading-tight text-gray-500 bg-white border border-gray-300 rounded-r-lg hover:bg-gray-100 hover:text-gray-700"
+                                className="px-3 py-2 leading-tight text-gray-500 bg-white border border-gray-300 rounded-r-lg hover:bg-gray-200 hover:text-gray-700"
                             >
-                                Next
+                                <FaChevronRight className='text-xl' />
                             </button>
                         </li>
                     </ul>

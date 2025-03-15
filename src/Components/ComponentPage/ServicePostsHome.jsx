@@ -65,7 +65,7 @@ const ServicePostsHome = () => {
                     prevIndex === filteredServicePosts.length - 1 ? 0 : prevIndex + 1
                 );
             }
-        }, 5000);
+        }, 1500);
         return () => clearInterval(interval);
     }, [filteredServicePosts, hoveredPostId]);
 
@@ -246,7 +246,7 @@ const ServicePostsHome = () => {
                     <Link
                         key={post.servicePostId}
                         to={`/ServicePosts/Details/${post.servicePostId}`}
-                        className="block text-xl font-bold px-2 py-1 text-gray-600 hover:text-white hover:bg-red-500 rounded truncate"
+                        className="block text-xl font-semibold px-2 py-1 text-gray-600 hover:text-white hover:bg-red-500 rounded truncate"
                         onMouseEnter={() => setHoveredPostId(post.servicePostId)}
                         onMouseLeave={() => setHoveredPostId(null)}
                     >

@@ -208,7 +208,11 @@ const RoomList = () => {
                                                 </p>
                                                 <p className="text-gray-600 text-sm mt-1 flex items-center">
                                                     <FaChartArea className="mr-1" />
-                                                    Diện tích: <span className="text-red-500">{room.acreage || 'N/A'} m²</span>
+                                                    Diện tích:
+                                                    <span className="text-gray-800">
+                                                        &nbsp;{room.acreage || 'N/A'}
+                                                    </span>
+                                                    &nbsp;m²
                                                 </p>
                                                 <p className="text-red-500 font-medium text-base mt-1">
                                                     {room.price ? `${room.price.toLocaleString('vi-VN')} đ/tháng` : 'Thỏa thuận'}

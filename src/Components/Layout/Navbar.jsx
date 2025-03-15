@@ -22,7 +22,7 @@ import { MdBedroomParent, MdCleaningServices } from 'react-icons/md';
 const navLinks = [
     { name: "Trang Chủ", path: "/" },
     // "Tin Dịch vụ" sẽ được thay bằng ServiceDropdown, nên không cần trong navLinks nữa
-    { name: "Thông tin", path: "/thongtin" },
+    { name: "Thông tin", path: "/Wiki" },
 ];
 
 const Navbar = () => {

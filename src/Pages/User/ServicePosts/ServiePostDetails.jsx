@@ -128,7 +128,7 @@ const ServicePostDetails = () => {
     const handleRequestService = async () => {
         if (!servicePost || !user) {
             console.log("servicePost hoặc user không hợp lệ:", servicePost, user);
-            showCustomNotification("error", "Thông tin bài đăng hoặc người dùng không hợp lệ!");
+            showCustomNotification("error", "Vui lòng đăng nhập để thực hiện yêu cầu!");
             return;
         }
         setIsRequesting(true);

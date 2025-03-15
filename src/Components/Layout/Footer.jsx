@@ -62,7 +62,7 @@ const Footer = () => {
                 {/* Phần dưới: Copyright */}
                 <div className="flex justify-center pt-8">
                     <p className="text-sm text-gray-500">
-                        Copyright ©2025 DUVAS.com. All rights reserved.
+                        Copyright ©2025 DUVAS.com.vn. All rights reserved.
                     </p>
                 </div>
             </div>

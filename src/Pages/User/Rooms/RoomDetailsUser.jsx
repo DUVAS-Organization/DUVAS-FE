@@ -147,7 +147,7 @@ const RoomDetailsUser = () => {
     const handleRentRoom = async () => {
         if (!room || !user) {
             console.log("room hoặc user không hợp lệ:", room, user);
-            showCustomNotification("error", "Thông tin phòng hoặc người dùng không hợp lệ!");
+            showCustomNotification("error", "Vui lòng đăng nhập để tiếp tục!");
             return;
         }
         setIsRenting(true);
@@ -393,7 +393,7 @@ const RoomDetailsUser = () => {
                         </button>
                     </div>
                     <p>
-                        Cám ơn tất cả mọi người đã xem ai có nhu cầu&nbsp;
+                        Cám ơn tất cả mọi người đã xem ai có nhu cầu
                         <button
                             className="text-red-500 hover:underline font-medium ml-1"
                             onClick={(e) => {
@@ -485,11 +485,22 @@ const RoomDetailsUser = () => {
                             onClick={handleRentRoom}
                             className='w-52 bg-red-500 text-white font-medium px-5 py-1 rounded-xl hover:bg-red-400'
                         >
-                            Thuê
+                            Đặt Phòng
                         </button>
                     </div>
+                    <div className="bg-gray-100 py-3 px-4 rounded-md text-sm text-gray-600 leading-6">
+                        <span className="inline">
+                            <span className="font-medium">Lưu ý:&nbsp;</span>
+                            Sau khi bạn nhấn vào&nbsp;
+                            <span className="font-medium text-red-500">Đặt phòng</span>, thông tin của bạn sẽ được gửi đến chủ nhà để xem xét.
+                            Chủ nhà có thể chấp nhận hoặc từ chối yêu cầu của bạn.
+                        </span>
+                    </div>
+
+
+
                     <div className="bg-gray-100 py-3 rounded-md text-sm text-gray-600 leading-6">
-                        Hãy cho chủ nhà biết bạn thấy phòng này trên <strong>DUVAS </strong>
+                        Hãy cho chủ nhà biết bạn thấy phòng này hoặc đã đặt phòng trên <strong>DUVAS </strong>
                         bằng cách
                         <button
                             className="text-red-500 hover:underline font-medium ml-1"
