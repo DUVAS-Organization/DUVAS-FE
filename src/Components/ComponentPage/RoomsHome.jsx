@@ -1,36 +1,49 @@
 import React, { useEffect, useState } from 'react';
 import { FaCamera, FaMapMarkerAlt, FaRegHeart, FaHeart } from 'react-icons/fa';
-import { useNavigate, Link, useParams, useLocation } from 'react-router-dom'; // CHANGED: thêm useLocation
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../Context/AuthProvider';
 import RoomService from '../../Services/User/RoomService';
 import { showCustomNotification } from '../Notification';
 import Loading from '../Loading';
+import { styled } from '@mui/material/styles';
+
+// Styled component thêm hiệu ứng hover giống ServicePostsHome
+const CardItem = styled('div')(({ theme }) => ({
+    backgroundColor: '#fff',
+    borderRadius: '8px',
+    overflow: 'hidden',
+    transition: 'transform 0.2s, box-shadow 0.2s',
+    cursor: 'pointer',
+    boxShadow: theme.shadows[3],
+    '&:hover': {
+        transform: 'scale(1.02)',
+        boxShadow: theme.shadows[6],
+    },
+    ...theme.applyStyles('dark', {
+        backgroundColor: '#1A2027',
+    }),
+}));
 
 const RoomsHome = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
     const [rooms, setRooms] = useState([]);
-    // Dùng Set để lưu các phòng đã lưu
     const [savedPosts, setSavedPosts] = useState(new Set());
-    // Visible count cho mỗi nhóm category
     const defaultVisible = 4;
     const [visibleRoomsByCategory, setVisibleRoomsByCategory] = useState({});
 
-    // CHANGED: Lấy query parameters từ URL
     const location = useLocation();
     const queryParams = new URLSearchParams(location.search);
-    const categoryQuery = queryParams.get("category") || ""; // categoryRoomId (string)
+    const categoryQuery = queryParams.get("category") || "";
     const minPriceQuery = queryParams.get("minPrice") ? Number(queryParams.get("minPrice")) : 0;
     const maxPriceQuery = queryParams.get("maxPrice") ? Number(queryParams.get("maxPrice")) : Infinity;
     const minAreaQuery = queryParams.get("minArea") ? Number(queryParams.get("minArea")) : 0;
     const maxAreaQuery = queryParams.get("maxArea") ? Number(queryParams.get("maxArea")) : Infinity;
 
-    // Lấy danh sách phòng khi component mount
     useEffect(() => {
         fetchRooms();
     }, []);
 
-    // Nếu user đăng nhập => Lấy danh sách phòng đã lưu
     useEffect(() => {
         if (user && user.userId) {
             fetchSavedPosts();
@@ -61,26 +74,20 @@ const RoomsHome = () => {
     const toggleSavePost = async (roomId, e) => {
         e.preventDefault();
         e.stopPropagation();
-
         if (!user || !roomId) {
             showCustomNotification("error", "Bạn cần đăng nhập để lưu tin!");
             return;
         }
-
         try {
             const response = await fetch("https://localhost:8000/api/SavedPosts/", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ userId: user.userId, roomId: parseInt(roomId) }),
             });
-
             if (!response.ok) {
                 throw new Error("Lỗi khi lưu/xóa bài đăng");
             }
-
             const result = await response.json();
-
-            // Cập nhật state dựa trên kết quả API
             setSavedPosts((prevSaved) => {
                 const newSaved = new Set(prevSaved);
                 if (result.status === "removed") {
@@ -96,14 +103,7 @@ const RoomsHome = () => {
         }
     };
 
-    const handleLoadMoreForCategory = (category) => {
-        setVisibleRoomsByCategory((prev) => ({
-            ...prev,
-            [category]: (prev[category] || defaultVisible) + 4,
-        }));
-    };
-
-    // ADDED: Nếu có query param category, lọc rooms dựa trên categoryRoomId và các range price, area.
+    // Lọc phòng theo query param
     const filteredRooms = rooms.filter(room => {
         const categoryMatch = categoryQuery ? String(room.categoryRoomId) === categoryQuery : true;
         const priceMatch = room.price >= minPriceQuery && room.price <= maxPriceQuery;
@@ -111,7 +111,7 @@ const RoomsHome = () => {
         return categoryMatch && priceMatch && areaMatch;
     });
 
-    // ADDED: Nếu có query param category, hiển thị nhóm duy nhất, ngược lại, nhóm toàn bộ.
+    // Nhóm phòng theo category nếu không có query param category
     let groupedRooms;
     if (categoryQuery) {
         const groupName = filteredRooms[0]?.categoryName || "Khác";
@@ -129,7 +129,7 @@ const RoomsHome = () => {
 
     if (!rooms.length) {
         return (
-            <div className="bg-white min-h-screen p-4 flex justify-center">
+            <div className="bg-white p-4 flex justify-center">
                 <p className="text-black font-semibold">Không tìm thấy phòng nào.</p>
             </div>
         );
@@ -157,10 +157,9 @@ const RoomsHome = () => {
                                     const imageCount = Array.isArray(images) ? images.length : 1;
                                     const firstImage = Array.isArray(images) ? images[0] : images;
                                     const isSaved = savedPosts.has(room.roomId);
-
                                     return (
                                         <Link key={room.roomId} to={`/Rooms/Details/${room.roomId}`} className="block">
-                                            <div className="bg-white rounded-lg shadow-md overflow-hidden h-[400px] flex flex-col">
+                                            <CardItem className="bg-white rounded-lg shadow-md overflow-hidden h-[400px] flex flex-col">
                                                 {room.image && room.image !== '' && (
                                                     <div className="relative w-full h-52 rounded-lg overflow-hidden">
                                                         <img
@@ -168,7 +167,6 @@ const RoomsHome = () => {
                                                             alt={room.title}
                                                             className="absolute inset-0 w-full h-full object-cover"
                                                         />
-                                                        {/* Nhãn category */}
                                                         {room.categoryName && (
                                                             <span className="absolute top-2 left-0 bg-red-600 text-white text-sm font-semibold px-3 py-1 z-10 rounded-r-lg">
                                                                 {room.categoryName}
@@ -201,7 +199,7 @@ const RoomsHome = () => {
                                                         </span>
                                                     </div>
                                                 </div>
-                                            </div>
+                                            </CardItem>
                                         </Link>
                                     );
                                 })}
@@ -209,7 +207,10 @@ const RoomsHome = () => {
                             {visibleCount < roomsInCategory.length && (
                                 <div className="flex justify-center mt-6">
                                     <button
-                                        onClick={() => handleLoadMoreForCategory(category)}
+                                        onClick={() => setVisibleRoomsByCategory(prev => ({
+                                            ...prev,
+                                            [category]: (prev[category] || defaultVisible) + 4,
+                                        }))}
                                         className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition"
                                     >
                                         Xem thêm

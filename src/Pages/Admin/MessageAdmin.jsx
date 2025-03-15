@@ -290,7 +290,7 @@ const MessageAdmin = () => {
         {/* Header */}
         <div className="p-4 border-b">
           <h2 className="text-2xl font-bold text-blue-600 mb-2">
-            Admin Messaging Panel
+            Admin Messenger
           </h2>
           <div className="relative">
             <input
@@ -548,7 +548,7 @@ const MessageAdmin = () => {
         </div>
 
         {/* Admin Tools */}
-        <div className="flex-1 p-4">
+        {/* <div className="flex-1 p-4">
           <h3 className="font-bold text-gray-700 mb-3">Admin Tools</h3>
           <div className="flex flex-col space-y-3">
             <button className="flex items-center px-3 py-2 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 transition">
@@ -561,10 +561,10 @@ const MessageAdmin = () => {
             </button>
             <button className="flex items-center px-3 py-2 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 transition">
               <FaSearch className="mr-2" />
-              <span className="text-base">Thống kê chat</span>
+              <span className="text-base">Thống kê tin nhắn</span>
             </button>
           </div>
-        </div>
+        </div> */}
       </div>
 
       {/* Modal Preview Ảnh */}
