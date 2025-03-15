@@ -1,6 +1,9 @@
 import Footer from "../Components/Layout/Footer";
 import RoomsHome from "../Components/ComponentPage/RoomsHome";
+import ServicePostsHome from "../Components/ComponentPage/ServicePostsHome";
 import Searchbar from "../Components/Searchbar";
+import { Link } from "react-router-dom";
+import { FaArrowRight } from "react-icons/fa6";
 
 const Home = () => {
 
@@ -9,52 +12,17 @@ const Home = () => {
         <div className="bg-white">
             <Searchbar />
             <div className="max-w-6xl mx-auto mt-8">
-                <div className="flex justify-between items-center pb-2">
-                    <div className="flex space-x-4 text-xl">
-                        <div className="text-gray-800 font-bold">Tin dịch vụ</div>
+                <div className="flex justify-between items-center  p-4">
+                    <div className="flex text-xl">
+                        <div className="text-gray-800 font-bold ">Tin dịch vụ</div>
                     </div>
-                    <div className="text-red-600">Xem thêm →</div>
+                    <Link
+                        to="/ServicePosts"
+                        className="text-red-600 font-semibold flex items-center hover:scale-105 transition duration-100">
+                        Xem thêm <FaArrowRight className="ml-1 text-sm mt-1" />
+                    </Link>
                 </div>
-                <div className="mt-4">
-                    <div className="flex space-x-4">
-                        <div className="w-1/3">
-                            <img
-                                className="rounded-lg shadow-md overflow-hidden"
-                                alt="Image of a cityscape with buildings"
-                                height="200"
-                                src="https://storage.googleapis.com/a1aa/image/DEtIGStEO_sg24yKvGcjViznxp5GVEZmRfoqAcQ5GHI.jpg"
-                                width="w-full"
-                            />
-                            <div className="mt-2 text-gray-800 font-bold">
-                                Nguồn Vốn Tiếp Tục Là Thách Thức Của Thị Trường Bất Động Sản Năm 2025
-                            </div>
-                        </div>
-                        <div className="w-1/3">
-                            <img
-                                className="rounded-lg shadow-md overflow-hidden"
-                                alt="Image of a cityscape with buildings"
-                                height="200"
-                                src="https://storage.googleapis.com/a1aa/image/DEtIGStEO_sg24yKvGcjViznxp5GVEZmRfoqAcQ5GHI.jpg"
-                                width="w-full"
-                            />
-                            <div className="mt-2 text-gray-800 font-bold">
-                                Công nghệ xanh và bền vững: Tương lai của xây dựng thông minh
-                            </div>
-                        </div>
-                        <div className="w-1/3 ">
-                            <img
-                                className="rounded-lg shadow-md overflow-hidden"
-                                alt="Image of a cityscape with buildings"
-                                height="200"
-                                src="https://storage.googleapis.com/a1aa/image/DEtIGStEO_sg24yKvGcjViznxp5GVEZmRfoqAcQ5GHI.jpg"
-                                width="w-full"
-                            />
-                            <div className="mt-2 text-gray-800 font-bold">
-                                Khám phá xu hướng kiến trúc hiện đại tại các đô thị lớn
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <ServicePostsHome />
             </div>
             <div className="container mx-auto max-w-6xl py-8 mt-8">
                 {/* <div className="flex justify-between items-center mb-6">

@@ -9,13 +9,11 @@ const SidebarUser = () => {
     const location = useLocation();
     const params = new URLSearchParams(location.search);
     const currentTab = params.get("tab");
+    const currentPath = location.pathname; // Lấy đường dẫn hiện tại
 
     const { user } = useAuth();
 
-    // Nếu user chưa được xác định, không render
-    if (!user) {
-        return null;
-    }
+    if (!user) return null;
 
     let postTitle = "Bài Đăng";
     let createLink = "/ServicePost/Creates";
@@ -32,7 +30,7 @@ const SidebarUser = () => {
     }
 
     return (
-        <div className="fixed flex flex-col h-screen pt-5 overflow-y-auto text-black bg-white border-r-2 w-52 ">
+        <div className="fixed flex flex-col h-screen pt-5 overflow-y-auto text-black bg-white border-r-2 w-52">
             <ul className="text-base font-medium text-justify">
                 <li>
                     <NavLink
@@ -45,6 +43,8 @@ const SidebarUser = () => {
                         Tổng Quan
                     </NavLink>
                 </li>
+
+                {/* Tài khoản */}
                 <li>
                     <div className="block px-4 py-2 rounded-3xl">
                         <FaUserTie className="inline-block mb-2 mr-2" />
@@ -83,10 +83,12 @@ const SidebarUser = () => {
                         </li>
                     </ul>
                 </li>
+
+                {/* Bài đăng / Phòng / Dịch vụ */}
                 <li>
                     <div className="block px-4 py-2 rounded-3xl">
                         {user.role === "Landlord" ? (
-                            <MdBedroomParent className="inline-block mb-1 mr-2 " />
+                            <MdBedroomParent className="inline-block mb-1 mr-2" />
                         ) : user.role === "Service" ? (
                             <MdCleaningServices className="inline-block mb-1 mr-2" />
                         ) : (
@@ -98,9 +100,8 @@ const SidebarUser = () => {
                         <li>
                             <NavLink
                                 to={createLink}
-                                className={({ isActive }) =>
-                                    `block py-2 px-4 mb-0.5 hover:bg-red-400 hover:text-white rounded-3xl ${isActive ? 'bg-red-500 text-white' : ''}`
-                                }
+                                className={`block py-2 px-4 mb-0.5 hover:bg-red-400 hover:text-white rounded-3xl ${currentPath === createLink ? "bg-red-500 text-white" : ""
+                                    }`}
                             >
                                 Đăng mới
                             </NavLink>
@@ -108,15 +109,16 @@ const SidebarUser = () => {
                         <li>
                             <NavLink
                                 to={listLink}
-                                className={({ isActive }) =>
-                                    `block py-2 px-4 hover:bg-red-400 hover:text-white rounded-3xl ${isActive ? 'bg-red-500 text-white' : ''}`
-                                }
+                                className={`block py-2 px-4 hover:bg-red-400 hover:text-white rounded-3xl ${currentPath === listLink ? "bg-red-500 text-white" : ""
+                                    }`}
                             >
-                                {user.role === "Landlord" ? "Danh sách Phòng" : user.role === "Service" ? "Danh sách Dịch vụ" : "Danh sách Tin"}
+                                {user.role === "Landlord" ? "Quản Lý Phòng" : user.role === "Service" ? "Quản Lý Dịch vụ" : "Quản Lý Tin"}
                             </NavLink>
                         </li>
                     </ul>
                 </li>
+
+                {/* Tài chính */}
                 <li>
                     <div className="block px-4 py-2 rounded-3xl">
                         <FaHandHoldingDollar className="inline-block mb-1 mr-2" />

@@ -8,6 +8,7 @@ import { useAuth } from '../../../Context/AuthProvider';
 import { FaArrowLeft, FaTimes, FaPlus, FaMinus } from "react-icons/fa";
 import Loading from '../../../Components/Loading';
 import PriceInput from '../../../Components/Layout/Range/PriceInput';
+import SidebarUser from '../../../Components/Layout/SidebarUser';
 
 const RoomForm = () => {
     const [room, setRooms] = useState({});
@@ -19,22 +20,16 @@ const RoomForm = () => {
     const [price, setPrice] = useState("");
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState({});
-    // State cho ảnh đã lưu (khi edit)
     const [existingImages, setExistingImages] = useState([]);
-    // State cho file mới được chọn
     const [newFiles, setNewFiles] = useState([]);
-    // State cho preview URL của file mới
     const [newPreviews, setNewPreviews] = useState([]);
-    // State hiển thị preview phóng to
     const [previewImage, setPreviewImage] = useState(null);
 
     useEffect(() => {
-        // Lấy danh sách Categories
         CategoryRooms.getCategoryRooms()
             .then((data) => setCategoryRooms(data))
             .catch((error) => console.error('Error fetching categories:', error));
 
-        // Lấy danh sách Buildings
         BuildingServices.getBuildings()
             .then((data) => setBuildings(data))
             .catch((error) => console.error('Error fetching Buildings:', error));
@@ -64,7 +59,6 @@ const RoomForm = () => {
                         categoryRoomId: data.categoryRoomId || 1,
                         note: data.note || '',
                     });
-                    // Ảnh đã lưu từ DB (Cloudinary URL)
                     setExistingImages(images);
                 })
                 .catch(error => {
@@ -92,7 +86,7 @@ const RoomForm = () => {
 
     useEffect(() => {
         if (!roomId && buildings.length > 0 && room.buildingId === null) {
-            setRooms(prev => ({ ...prev, buildingId: buildings[0].buildingId }));
+            setRooms(prev => ({ ...prev, buildingId: null }));
         }
     }, [buildings, roomId, room.buildingId]);
 
@@ -102,7 +96,6 @@ const RoomForm = () => {
         }
     }, [categoryRooms, roomId, room.categoryRoomId]);
 
-    // Khi người dùng chọn file mới, cập nhật newFiles và newPreviews
     const handleFileChange = (e) => {
         const selectedFiles = Array.from(e.target.files);
         if (selectedFiles.length > 0) {
@@ -112,7 +105,6 @@ const RoomForm = () => {
         }
     };
 
-    // Xóa file khỏi danh sách: nếu isNew=true thì xóa file mới, ngược lại xóa ảnh đã có
     const handleRemoveFile = (index, isNew) => {
         if (isNew) {
             setNewFiles(prev => prev.filter((_, i) => i !== index));
@@ -122,7 +114,6 @@ const RoomForm = () => {
         }
     };
 
-    // Hàm upload file mới lên API xử lý upload ảnh lên Cloudinary
     const uploadFile = async (file) => {
         const formData = new FormData();
         formData.append('file', file);
@@ -144,7 +135,6 @@ const RoomForm = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        // Tổng số ảnh bao gồm cả ảnh đã có và file mới
         const totalImagesCount = existingImages.length + newFiles.length;
         if (totalImagesCount === 0) {
             showCustomNotification("error", "Vui lòng chọn ít nhất 1 ảnh!");
@@ -152,18 +142,16 @@ const RoomForm = () => {
         }
         setLoading(true);
         try {
-            // Upload file mới song song để giảm thời gian chờ
             const uploadedImageUrls = await Promise.all(newFiles.map(file => uploadFile(file)));
-            // Kết hợp URL từ ảnh đã có và ảnh mới upload
             const finalImageUrls = [...existingImages, ...uploadedImageUrls];
 
             const roomData = {
-                buildingId: room.buildingId,
+                buildingId: room.buildingId || null, // Nếu không chọn, mặc định là null ("Không có")
                 title: room.title,
                 description: room.description,
                 locationDetail: room.locationDetail,
                 acreage: Number(room.acreage),
-                furniture: room.furniture,
+                furniture: room.furniture || 'Không nội thất',
                 numberOfBathroom: Number(room.numberOfBathroom),
                 numberOfBedroom: Number(room.numberOfBedroom),
                 garret: room.garret,
@@ -191,7 +179,6 @@ const RoomForm = () => {
         }
     };
 
-    // Tạo mảng kết hợp preview: ảnh từ server (existingImages) và ảnh mới (newPreviews)
     const combinedPreviews = [
         ...existingImages.map(url => ({ url, isNew: false })),
         ...newPreviews.map((url, idx) => ({ url, isNew: true, index: idx }))
@@ -202,15 +189,15 @@ const RoomForm = () => {
 
     const validateStep1 = () => {
         const newErrors = {};
-        if (!room.buildingId) newErrors.buildingId = 'Tòa nhà là bắt buộc';
         if (!room.title) newErrors.title = 'Tiêu đề là bắt buộc';
         if (!room.price || isNaN(Number(room.price)) || Number(room.price) <= 0) newErrors.price = 'Giá phải là số dương';
         if (!room.categoryRoomId) newErrors.categoryRoomId = 'Loại phòng là bắt buộc';
         if (!room.locationDetail) newErrors.locationDetail = 'Địa chỉ là bắt buộc';
-        if (!room.acreage || isNaN(Number(room.acreage)) || Number(room.acreage) <= 0) newErrors.acreage = 'Diện tích phải là số dương';
-        if (!room.furniture) newErrors.furniture = 'Nội thất là bắt buộc';
+        if (!room.acreage || isNaN(Number(room.acreage)) || Number(room.acreage) < 0) newErrors.acreage = 'Diện tích phải là số không âm';
         if (!room.numberOfBathroom && room.numberOfBathroom !== 0 || isNaN(Number(room.numberOfBathroom)) || Number(room.numberOfBathroom) < 0) newErrors.numberOfBathroom = 'Số phòng tắm phải là số không âm';
         if (!room.numberOfBedroom && room.numberOfBedroom !== 0 || isNaN(Number(room.numberOfBedroom)) || Number(room.numberOfBedroom) < 0) newErrors.numberOfBedroom = 'Số giường ngủ phải là số không âm';
+        if (!room.description) newErrors.description = 'Mô tả là bắt buộc';
+        else if (room.description.length <= 50) newErrors.description = 'Mô tả phải trên 50 ký tự';
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -218,7 +205,7 @@ const RoomForm = () => {
     const validateStep2 = () => {
         const totalImagesCount = existingImages.length + newFiles.length;
         if (totalImagesCount === 0) {
-            setErrors({ ...errors, images: 'Phải tải lên ít nhất một hình ảnh' });
+            showCustomNotification("error", "Vui lòng chọn ít nhất 1 ảnh!");
             return false;
         }
         setErrors({ ...errors, images: '' });
@@ -226,7 +213,7 @@ const RoomForm = () => {
     };
 
     const validateStep3 = () => {
-        return true; // Bước xác nhận không cần validation
+        return true;
     };
 
     const handleNext = () => {
@@ -237,7 +224,7 @@ const RoomForm = () => {
             setCompletedSteps([true, true, false]);
             setStep(3);
         } else if (step === 3 && validateStep3()) {
-            handleSubmit(new Event('submit')); // Gọi handleSubmit với event giả
+            handleSubmit(new Event('submit'));
         }
     };
 
@@ -245,7 +232,6 @@ const RoomForm = () => {
         if (step > 1) setStep(step - 1);
     };
 
-    // Hàm tăng/giảm số lượng
     const handleIncrement = (field) => {
         setRooms(prev => ({
             ...prev,
@@ -262,8 +248,9 @@ const RoomForm = () => {
 
     return (
         <div className="flex min-h-screen bg-white">
-            {loading && <div>Loading...</div>}
-            <div className="w-64 bg-white p-4 fixed h-full border-r border-gray-200">
+            {loading && <Loading />}
+            <SidebarUser />
+            <div className="w-64 bg-white px-2 py-8 max-w-6xl mx-auto ml-56 h-full border-r border-gray-200">
                 <h1 className="text-2xl font-bold text-red-600 mb-4">{roomId ? 'Chỉnh Sửa Phòng' : 'Tạo Phòng'}</h1>
                 <ul className="space-y-2">
                     <li className={`text-lg ${step === 1 ? 'text-red-600 font-bold' : 'text-gray-600'}`}>
@@ -277,7 +264,7 @@ const RoomForm = () => {
                     </li>
                 </ul>
             </div>
-            <div className="flex-1 p-8 ml-64">
+            <div className="flex-1 p-8">
                 {step === 1 && (
                     <div>
                         <h2 className="text-xl font-bold mb-2 text-red-600">{roomId ? 'Chỉnh Sửa Phòng - Bước 1' : 'Tạo Phòng - Bước 1'}</h2>
@@ -287,21 +274,22 @@ const RoomForm = () => {
                                 <label className="block text-sm font-medium text-gray-700">Tòa Nhà</label>
                                 <select
                                     value={room.buildingId || ''}
-                                    onChange={(e) => setRooms({ ...room, buildingId: parseInt(e.target.value) })}
+                                    onChange={(e) => setRooms({ ...room, buildingId: parseInt(e.target.value) || null })}
                                     className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
                                 >
-                                    <option value="" disabled>Vui lòng chọn...</option>
+                                    <option value="">Không có</option>
                                     {buildings.map((building) => (
                                         <option key={building.buildingId} value={building.buildingId}>
                                             {building.buildingName}
                                         </option>
                                     ))}
                                 </select>
-                                {errors.buildingId && <p className="text-red-500 text-sm">{errors.buildingId}</p>}
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="w-full">
-                                    <label className="block text-sm font-medium text-gray-700">Tiêu Đề</label>
+                                    <label className="block text-sm font-medium text-gray-700">
+                                        Tiêu Đề <span className="text-red-500">*</span>
+                                    </label>
                                     <input
                                         type="text"
                                         value={room.title}
@@ -310,20 +298,24 @@ const RoomForm = () => {
                                         className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
                                         placeholder="Nhập Tiêu đề"
                                     />
-                                    {errors.title && <p className="text-red-500 text-sm">{errors.title}</p>}
+                                    {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
                                 </div>
                                 <div className="w-full">
-                                    <label className="block text-sm font-medium text-gray-700">Giá (đ/tháng)</label>
+                                    <label className="block text-sm font-medium text-gray-700">
+                                        Giá (đ/tháng) <span className="text-red-500">*</span>
+                                    </label>
                                     <PriceInput
                                         value={room.price || 0}
                                         onChange={(val) => setRooms({ ...room, price: val })}
                                     />
-                                    {errors.price && <p className="text-red-500 text-sm">{errors.price}</p>}
+                                    {errors.price && <p className="text-red-500 text-sm mt-1">{errors.price}</p>}
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="w-full">
-                                    <label className="block text-sm font-medium text-gray-700">Loại Phòng</label>
+                                    <label className="block text-sm font-medium text-gray-700">
+                                        Loại Phòng <span className="text-red-500">*</span>
+                                    </label>
                                     <select
                                         value={room.categoryRoomId || ''}
                                         onChange={(e) => setRooms({ ...room, categoryRoomId: parseInt(e.target.value) })}
@@ -337,10 +329,12 @@ const RoomForm = () => {
                                             </option>
                                         ))}
                                     </select>
-                                    {errors.categoryRoomId && <p className="text-red-500 text-sm">{errors.categoryRoomId}</p>}
+                                    {errors.categoryRoomId && <p className="text-red-500 text-sm mt-1">{errors.categoryRoomId}</p>}
                                 </div>
                                 <div className="w-full">
-                                    <label className="block text-sm font-medium text-gray-700">Địa chỉ</label>
+                                    <label className="block text-sm font-medium text-gray-700">
+                                        Địa chỉ <span className="text-red-500">*</span>
+                                    </label>
                                     <input
                                         type="text"
                                         value={room.locationDetail}
@@ -349,38 +343,51 @@ const RoomForm = () => {
                                         className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
                                         placeholder="Nhập Địa chỉ"
                                     />
-                                    {errors.locationDetail && <p className="text-red-500 text-sm">{errors.locationDetail}</p>}
+                                    {errors.locationDetail && <p className="text-red-500 text-sm mt-1">{errors.locationDetail}</p>}
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
-                                <div className="w-full flex items-center">
-                                    <label className="block text-sm font-medium text-gray-700 w-1/3">Diện Tích (m²)</label>
+                                <div className="w-full">
+                                    <label className="block text-sm font-medium text-gray-700">
+                                        Diện Tích (m²) <span className="text-red-500">*</span>
+                                    </label>
                                     <input
                                         type="number"
                                         value={room.acreage}
-                                        onChange={(e) => setRooms({ ...room, acreage: e.target.value })}
+                                        onChange={(e) => {
+                                            const value = e.target.value;
+                                            if (value === '' || (Number(value) >= 0)) {
+                                                setRooms({ ...room, acreage: value });
+                                            }
+                                        }}
+                                        min="0"
                                         required
-                                        className="flex-1 p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
+                                        className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
                                         placeholder="0"
                                     />
-                                    {errors.acreage && <p className="text-red-500 text-sm">{errors.acreage}</p>}
+                                    {errors.acreage && <p className="text-red-500 text-sm mt-1">{errors.acreage}</p>}
                                 </div>
-
-                                <div className="w-full flex items-center">
-                                    <label className="block text-sm font-medium text-gray-700 w-1/3">Nội Thất</label>
-                                    <input
-                                        type="text"
+                                <div className="w-full">
+                                    <label className="block text-sm font-medium text-gray-700">
+                                        Nội Thất <span className="text-red-500">*</span>
+                                    </label>
+                                    <select
                                         value={room.furniture}
                                         onChange={(e) => setRooms({ ...room, furniture: e.target.value })}
-                                        required
-                                        className="flex-1 p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
-                                    />
-                                    {errors.furniture && <p className="text-red-500 text-sm">{errors.furniture}</p>}
+                                        className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
+                                    >
+                                        <option value="">Chọn nội thất...</option>
+                                        <option value="Đầy đủ">Đầy đủ</option>
+                                        <option value="Cơ bản">Cơ bản</option>
+                                        <option value="Không nội thất">Không nội thất</option>
+                                    </select>
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="w-full flex items-center">
-                                    <label className="block text-sm font-medium text-gray-700 w-1/3">Phòng tắm</label>
+                                    <label className="block text-sm font-medium text-gray-700 w-1/3">
+                                        Phòng tắm <span className="text-red-500">*</span>
+                                    </label>
                                     <div className="flex-1 flex items-center space-x-2">
                                         <button
                                             type="button"
@@ -398,10 +405,12 @@ const RoomForm = () => {
                                             <FaPlus />
                                         </button>
                                     </div>
-                                    {errors.numberOfBathroom && <p className="text-red-500 text-sm">{errors.numberOfBathroom}</p>}
+                                    {errors.numberOfBathroom && <p className="text-red-500 text-sm mt-1">{errors.numberOfBathroom}</p>}
                                 </div>
                                 <div className="w-full flex items-center">
-                                    <label className="block text-sm font-medium text-gray-700 w-1/3">Giường ngủ</label>
+                                    <label className="block text-sm font-medium text-gray-700 w-1/3">
+                                        Giường ngủ <span className="text-red-500">*</span>
+                                    </label>
                                     <div className="flex-1 flex items-center space-x-2">
                                         <button
                                             type="button"
@@ -419,29 +428,22 @@ const RoomForm = () => {
                                             <FaPlus />
                                         </button>
                                     </div>
-                                    {errors.numberOfBedroom && <p className="text-red-500 text-sm">{errors.numberOfBedroom}</p>}
+                                    {errors.numberOfBedroom && <p className="text-red-500 text-sm mt-1">{errors.numberOfBedroom}</p>}
                                 </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="w-full flex items-center">
-                                    <label className="block text-sm font-medium text-gray-700 w-1/3">Mô tả</label>
-                                    <textarea
-                                        value={room.description}
-                                        onChange={(e) => setRooms({ ...room, description: e.target.value })}
-                                        required
-                                        className="flex-1 p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
-                                        placeholder="Nhập Mô tả"
-                                    />
-                                </div>
-                                {/* <div className="w-full flex items-center">
-                                    <label className="block text-sm font-medium text-gray-700 mr-2">Gác Xếp</label>
-                                    <input
-                                        type="checkbox"
-                                        checked={room.garret}
-                                        onChange={(e) => setRooms({ ...room, garret: e.target.checked })}
-                                        className="h-5 w-5"
-                                    />
-                                </div> */}
+                            <div className="w-full">
+                                <label className="block text-sm font-medium text-gray-700">
+                                    Mô tả <span className="text-red-500">*</span>
+                                </label>
+                                <textarea
+                                    value={room.description}
+                                    onChange={(e) => setRooms({ ...room, description: e.target.value })}
+                                    required
+                                    className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
+                                    placeholder="Nhập Mô tả (tối thiểu 50 ký tự)"
+                                    rows="5"
+                                />
+                                {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description}</p>}
                             </div>
                         </div>
                     </div>
@@ -468,7 +470,6 @@ const RoomForm = () => {
                             <p className="text-gray-500 text-sm mb-3 font-medium text-center mt-2">
                                 Định dạng: JPEG, PNG - Tối đa 5MB
                             </p>
-                            {errors.images && <p className="text-red-500 text-sm">{errors.images}</p>}
                             {combinedPreviews.length > 0 && (
                                 <div className="mt-3">
                                     <p className="font-semibold text-gray-700">Ảnh đã chọn:</p>

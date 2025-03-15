@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import ServicePostService from '../../../Services/Admin/ServicePost';
+import UserService from '../../../Services/User/UserService'; // Thêm UserService
 import { FaRegBell, FaMapMarkerAlt, FaRegHeart, FaHeart } from 'react-icons/fa';
 import Searchbar from '../../../Components/Searchbar';
 import Footer from '../../../Components/Layout/Footer';
@@ -45,7 +46,23 @@ const ServicePostList = () => {
             console.log('Fetching all service posts...');
             const postsData = await ServicePostService.getServicePosts();
             console.log('Fetched posts:', postsData);
-            setServicePosts(postsData || []);
+            // Lấy thông tin User cho mỗi bài đăng
+            const postsWithUser = await Promise.all(postsData.map(async (post) => {
+                try {
+                    const userData = await UserService.getUserById(post.userId);
+                    return {
+                        ...post,
+                        User: userData || { name: 'Chưa xác định', phone: 'N/A', profilePicture: null }
+                    };
+                } catch (error) {
+                    console.error(`Error fetching user for post ${post.servicePostId}:`, error);
+                    return {
+                        ...post,
+                        User: { name: 'Chưa xác định', phone: 'N/A', profilePicture: null }
+                    };
+                }
+            }));
+            setServicePosts(postsWithUser || []);
         } catch (error) {
             console.error('Error fetching Service Posts:', error);
             setServicePosts([]);
@@ -124,7 +141,7 @@ const ServicePostList = () => {
         );
     }
 
-    // Lọc bài đăng tương tự RoomsList
+    // Lọc bài đăng
     let filteredPosts = servicePosts;
     if (categoryServiceId) {
         filteredPosts = servicePosts.filter(post => post.categoryServiceId === Number(categoryServiceId));
@@ -183,7 +200,7 @@ const ServicePostList = () => {
                                     ? words.slice(0, maxWords).join(' ') + '...'
                                     : post.description;
 
-                            const postUserPhone = post?.User?.phone || 'N/A';
+                            const postUserPhone = post.User?.phone || 'N/A'; // Sử dụng post.User.phone
                             const postMaskedPhone =
                                 postUserPhone && postUserPhone.length > 3
                                     ? postUserPhone.slice(0, postUserPhone.length - 3) + '***'
@@ -251,20 +268,18 @@ const ServicePostList = () => {
                                                     <p className="text-gray-600 mb-2">{shortDescription}</p>
                                                     <div className="mt-auto flex justify-between items-center border-t pt-2">
                                                         <div className="flex items-center gap-3">
-                                                            {post.User && post.User.profilePicture ? (
+                                                            {post.User?.profilePicture ? (
                                                                 <img src={post.User.profilePicture} alt={post.User.name} className="w-10 h-10 rounded-full object-cover" />
                                                             ) : (
                                                                 <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
                                                                     <span className="text-lg font-semibold text-gray-700">
-                                                                        {post.User && post.User.name
-                                                                            ? post.User.name.charAt(0).toUpperCase()
-                                                                            : post.title.charAt(0).toUpperCase()}
+                                                                        {post.User?.name ? post.User.name.charAt(0).toUpperCase() : post.title.charAt(0).toUpperCase()}
                                                                     </span>
                                                                 </div>
                                                             )}
                                                             <div className="flex flex-col">
                                                                 <span className="text-black font-semibold">
-                                                                    {post.User && post.User.name ? post.User.name : 'Chưa xác định'}
+                                                                    {post.User?.name || 'Chưa xác định'}
                                                                 </span>
                                                                 <span className="text-gray-500">đã đăng lên</span>
                                                             </div>
@@ -341,20 +356,18 @@ const ServicePostList = () => {
                                             </div>
                                             <div className="mt-auto flex justify-between items-center border-t py-3 px-4">
                                                 <div className="flex items-center gap-3">
-                                                    {post.User && post.User.profilePicture ? (
+                                                    {post.User?.profilePicture ? (
                                                         <img src={post.User.profilePicture} alt={post.User.name} className="w-10 h-10 rounded-full object-cover" />
                                                     ) : (
                                                         <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
                                                             <span className="text-lg font-semibold text-gray-700">
-                                                                {post.User && post.User.name
-                                                                    ? post.User.name.charAt(0).toUpperCase()
-                                                                    : post.title.charAt(0).toUpperCase()}
+                                                                {post.User?.name ? post.User.name.charAt(0).toUpperCase() : post.title.charAt(0).toUpperCase()}
                                                             </span>
                                                         </div>
                                                     )}
                                                     <div className="flex flex-col">
                                                         <span className="text-black font-semibold">
-                                                            {post.User && post.User.name ? post.User.name : 'Chưa xác định'}
+                                                            {post.User?.name || 'Chưa xác định'}
                                                         </span>
                                                         <span className="text-gray-500">đã đăng lên</span>
                                                     </div>

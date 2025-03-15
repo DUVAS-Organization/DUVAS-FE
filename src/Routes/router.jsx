@@ -45,6 +45,9 @@ import RoomListLandlord from '../Pages/Landlord/Rooms/RoomList'
 import ViewProfile from '../Pages/Landlord/ViewProfile'
 import RoomsFormLandlord from '../Pages/Landlord/Rooms/RoomsForm';
 import RoomRentalConfirmation from '../Pages/Landlord/Rooms/RoomRentalConfirmation';
+
+import ServicePostDetailsUser from '../Pages/User/ServicePosts/ServiePostDetails'
+import Wiki from '../Pages/Wiki'
 const RoutesConfig = () => {
     const { user } = useAuth();
 
@@ -59,6 +62,7 @@ const RoutesConfig = () => {
             <Route path="/Registers" element={<Registers />} />
             <Route path="/forgot-password" element={<ForgotPasswords />} />
             <Route path="/Profile" element={<Profile />} />
+            <Route path="/Wiki" element={<Wiki />} />
             <Route
                 path="/Rooms/Details/:roomId"
                 element={<RoomDetailsUser />}
@@ -67,6 +71,10 @@ const RoutesConfig = () => {
                 path="/ServicePosts"
                 element={<ServicePost />}
             />
+            <Route
+                path="/ServicePosts/Details/:servicePostId"
+                element={<ServicePostDetailsUser />}
+            />
             {/* Routes dành cho User */}
             <Route
                 path="/"
@@ -74,7 +82,7 @@ const RoutesConfig = () => {
             />
             <Route
                 path="/Overview"
-                element={user && user.role === "User" ? <Overview /> : <Navigate to="/" />}
+                element={user ? <Overview /> : <Navigate to="/" />}
             />
             <Route
                 path="/Buildings"
@@ -232,7 +240,7 @@ const RoutesConfig = () => {
                 element={user && user.role === "Landlord" ? <ViewProfile /> : <Navigate to="/" />}
             />
             <Route
-                path="/Rooms/Contract/:roomid"
+                path="/Rooms/Contract/:roomId"
                 element={user ? <RoomRentalConfirmation /> : <Navigate to="/" />}
             />
 

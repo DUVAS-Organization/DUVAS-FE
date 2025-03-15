@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { FaMapMarkerAlt, FaSearch, FaChevronUp, FaChevronDown } from "react-icons/fa";
 import { useNavigate } from 'react-router-dom';
 import RangeSlider from "../Components/Layout/Range/RangeSlider";
-import DropdownFilter from "../Components/DropdownFilter";
+import DropdownFilter from "../Components/Layout/DropdownFilter";
 import RangeInput from '../Components/Layout/Range/RangeInput';
 import CategoryRoomService from '../Services/User/CategoryRoomService';
 import CategoryServiceService from '../Services/User/CategoryServices';
 
-const Searchbar = (props) => {
+const Searchbar = () => {
     const [priceDropdownOpen, setPriceDropdownOpen] = useState(false);
     const [minPrice, setMinPrice] = useState(0);
     const [maxPrice, setMaxPrice] = useState(100);
@@ -27,7 +27,7 @@ const Searchbar = (props) => {
 
     const [activeTab, setActiveTab] = useState("rooms");
     const navigate = useNavigate();
-    const { isManagementRoom } = props;
+
     useEffect(() => {
         const fetchCategories = async () => {
             try {
@@ -35,7 +35,7 @@ const Searchbar = (props) => {
                     const roomData = await CategoryRoomService.getCategoryRooms();
                     setCategoriesRoom(roomData);
                     setCategoriesService([]);
-                } else if (activeTab === "services") { // Đồng nhất với nút tab
+                } else if (activeTab === "services") {
                     const serviceData = await CategoryServiceService.getCategoryServices();
                     setCategoriesService(serviceData);
                     setCategoriesRoom([]);
@@ -112,7 +112,7 @@ const Searchbar = (props) => {
             const queryString = new URLSearchParams(queryParams).toString();
             console.log("Navigating to Rooms:", `/Rooms?${queryString}`);
             navigate(`/Rooms?${queryString}`);
-        } else if (activeTab === "services") { // Đồng nhất với nút tab
+        } else if (activeTab === "services") {
             const selectedCategory = categoriesService.find(c => c.categoryServiceId.toString() === selectedCategoryId);
             queryParams.tab = selectedCategory ? selectedCategory.categoryServiceName : "Dọn dẹp";
             if (selectedCategoryId) queryParams.categoryServiceId = selectedCategoryId;
@@ -157,7 +157,7 @@ const Searchbar = (props) => {
                             />
                             <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
                             <button
-                                type='button' // Đổi thành button để không submit form
+                                type="button"
                                 onClick={handleSearch}
                                 className="absolute right-0 top-1/2 transform -translate-y-1/2 h-8 bg-red-600 text-white rounded-lg px-4 mx-2"
                             >
@@ -180,7 +180,7 @@ const Searchbar = (props) => {
                                         value={cat.categoryRoomId || cat.categoryServiceId}
                                         className="bg-white text-black"
                                     >
-                                        {cat.categoryName || cat.categoryServiceName} {/* Sửa lỗi hiển thị */}
+                                        {cat.categoryName || cat.categoryServiceName}
                                     </option>
                                 ))}
                             </select>
@@ -310,6 +310,7 @@ const Searchbar = (props) => {
                 </div>
             </div>
         </div>
+
     );
 };
 
