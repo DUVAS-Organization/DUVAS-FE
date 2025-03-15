@@ -7,7 +7,7 @@ import RangeInput from '../Components/Layout/Range/RangeInput';
 import CategoryRoomService from '../Services/User/CategoryRoomService';
 import CategoryServiceService from '../Services/User/CategoryServices';
 
-const Searchbar = () => {
+const Searchbar = (props) => {
     const [priceDropdownOpen, setPriceDropdownOpen] = useState(false);
     const [minPrice, setMinPrice] = useState(0);
     const [maxPrice, setMaxPrice] = useState(100);
@@ -27,7 +27,7 @@ const Searchbar = () => {
 
     const [activeTab, setActiveTab] = useState("rooms");
     const navigate = useNavigate();
-
+    const { isManagementRoom } = props;
     useEffect(() => {
         const fetchCategories = async () => {
             try {

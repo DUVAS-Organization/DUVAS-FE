@@ -73,7 +73,7 @@ const Navbar = () => {
                 </NavLink>
                 {user.role === "Landlord" && (
                     <NavLink
-                        to="/ManageRooms"
+                        to="/Room"
                         className="flex items-center space-x-2 px-4 py-2 rounded hover:bg-red-500 hover:text-white text-gray-800 whitespace-nowrap"
                     >
                         <MdBedroomParent />
