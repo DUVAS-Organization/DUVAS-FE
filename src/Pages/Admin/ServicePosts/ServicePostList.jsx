@@ -118,10 +118,10 @@ const ServicePostList = () => {
                                 >
                                     <td className="py-2 px-4 text-gray-700 border-b">{index + 1}</td>
                                     <td className="py-2 px-4 text-gray-700 border-b">{servicePost.name}</td>
-                                    <td className="py-2 px-4 text-gray-700 border-b">{servicePost.title}</td>
+                                    <td className="py-2 px-4 text-gray-700 border-b truncate max-w-[250px]">{servicePost.title}</td>
                                     <td className="py-2 px-4 text-gray-700 border-b">{servicePost.price.toLocaleString('vi-VN')} đ</td>
-                                    <td className="py-2 px-4 text-gray-700 border-b">{servicePost.location}</td>
-                                    <td className="py-2 px-4 text-gray-700 border-b">{servicePost.description}</td>
+                                    <td className="py-2 px-4 text-gray-700 border-b truncate max-w-[250px]">{servicePost.location}</td>
+                                    <td className="py-2 px-4 text-gray-700 border-b truncate max-w-[250px]">{servicePost.description}</td>
                                 </tr>
                             ))
                         )}

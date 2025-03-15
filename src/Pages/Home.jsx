@@ -17,7 +17,7 @@ const Home = () => {
                         <div className="text-gray-800 font-bold ">Tin dịch vụ</div>
                     </div>
                     <Link
-                        to="/ServicePosts"
+                        to="/ServicePosts?tab=Dịch%20vụ%20giặt%20ủi"
                         className="text-red-600 font-semibold flex items-center hover:scale-105 transition duration-100">
                         Xem thêm <FaArrowRight className="ml-1 text-sm mt-1" />
                     </Link>
