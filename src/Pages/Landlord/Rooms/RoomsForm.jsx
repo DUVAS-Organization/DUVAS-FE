@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import RoomServices from '../../../Services/Admin/RoomServices';
+import RoomLandlordService from '../../../Services/Landlord/RoomLandlordService';
 import BuildingServices from '../../../Services/Admin/BuildingServices';
 import CategoryRooms from '../../../Services/Admin/CategoryRooms';
 import { showCustomNotification } from '../../../Components/Notification';
@@ -17,7 +17,6 @@ const RoomForm = () => {
     const { roomId } = useParams();
     const navigate = useNavigate();
     const { user } = useAuth();
-    const [price, setPrice] = useState("");
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState({});
     const [existingImages, setExistingImages] = useState([]);
@@ -35,7 +34,7 @@ const RoomForm = () => {
             .catch((error) => console.error('Error fetching Buildings:', error));
 
         if (roomId) {
-            RoomServices.getRoomById(roomId)
+            RoomLandlordService.getRoom(roomId)
                 .then(data => {
                     let images = [];
                     try {
@@ -45,7 +44,6 @@ const RoomForm = () => {
                     }
                     setRooms({
                         roomId: data.roomId,
-                        userId: data.userId || user.userId,
                         buildingId: data.buildingId,
                         title: data.title || '',
                         description: data.description || '',
@@ -58,16 +56,19 @@ const RoomForm = () => {
                         price: data.price || 0,
                         categoryRoomId: data.categoryRoomId || 1,
                         note: data.note || '',
+                        status: data.status || 1,
+                        deposit: data.deposit || 0,
+                        isPermission: data.isPermission || false,
                     });
                     setExistingImages(images);
                 })
                 .catch(error => {
                     console.error('Error fetching Room:', error);
-                    showCustomNotification("error", "Không thể lấy thông tin Phòng!");
+                    showCustomNotification("error", error.message || "Không thể lấy thông tin Phòng!");
+                    if (error.message.includes("Unauthorized")) navigate('/login');
                 });
         } else {
             setRooms({
-                userId: user.userId,
                 buildingId: null,
                 title: '',
                 description: '',
@@ -80,9 +81,12 @@ const RoomForm = () => {
                 price: 0,
                 categoryRoomId: null,
                 note: '',
+                status: 1,
+                deposit: 0,
+                isPermission: false,
             });
         }
-    }, [roomId, user.userId]);
+    }, [roomId, navigate]);
 
     useEffect(() => {
         if (!roomId && buildings.length > 0 && room.buildingId === null) {
@@ -140,40 +144,61 @@ const RoomForm = () => {
             showCustomNotification("error", "Vui lòng chọn ít nhất 1 ảnh!");
             return;
         }
+
+        if (!room.title || room.title.length < 3) {
+            showCustomNotification("error", "Tiêu đề phải ít nhất 3 ký tự!");
+            return;
+        }
+        if (!room.description || room.description.length < 50) {
+            showCustomNotification("error", "Mô tả phải ít nhất 50 ký tự!");
+            return;
+        }
+        if (!room.categoryRoomId || isNaN(room.categoryRoomId)) {
+            showCustomNotification("error", "Vui lòng chọn loại phòng hợp lệ!");
+            return;
+        }
+
         setLoading(true);
         try {
             const uploadedImageUrls = await Promise.all(newFiles.map(file => uploadFile(file)));
             const finalImageUrls = [...existingImages, ...uploadedImageUrls];
 
             const roomData = {
-                buildingId: room.buildingId || null, // Nếu không chọn, mặc định là null ("Không có")
                 title: room.title,
                 description: room.description,
-                locationDetail: room.locationDetail,
+                locationDetail: room.locationDetail || '',
                 acreage: Number(room.acreage),
                 furniture: room.furniture || 'Không nội thất',
                 numberOfBathroom: Number(room.numberOfBathroom),
                 numberOfBedroom: Number(room.numberOfBedroom),
-                garret: room.garret,
+                garret: room.garret || false,
                 price: Number(room.price),
                 categoryRoomId: Number(room.categoryRoomId),
-                note: room.note,
-                userId: Number(user.userId),
-                image: JSON.stringify(finalImageUrls)
+                note: room.note || '',
+                buildingId: room.buildingId || null,
+                image: JSON.stringify(finalImageUrls),
+                status: room.status || 1,
+                deposit: Number(room.deposit || 0),
+                isPermission: room.isPermission ? 1 : 0
             };
+
             console.log("Dữ liệu gửi đi:", roomData);
 
             if (roomId) {
-                await RoomServices.updateRoom(roomId, { ...roomData, roomId: room.roomId });
+                await RoomLandlordService.updateRoom(roomId, roomData);
                 showCustomNotification("success", "Chỉnh sửa thành công!");
             } else {
-                await RoomServices.addRoom(roomData);
-                showCustomNotification("success", "Tạo thành công!");
+                const response = await RoomLandlordService.addRoom(roomData);
+                showCustomNotification("success", response.message || "Tạo thành công!");
             }
             navigate('/Room');
         } catch (error) {
             console.error('Error in handleSubmit:', error);
-            showCustomNotification("error", "Vui lòng thử lại!");
+            showCustomNotification("error", error.message || "Đã xảy ra lỗi, vui lòng thử lại!");
+            if (error.message.includes("Unauthorized")) {
+                localStorage.removeItem('authToken');
+                navigate('/login');
+            }
         } finally {
             setLoading(false);
         }
@@ -190,6 +215,7 @@ const RoomForm = () => {
     const validateStep1 = () => {
         const newErrors = {};
         if (!room.title) newErrors.title = 'Tiêu đề là bắt buộc';
+        else if (room.title.length < 3) newErrors.title = 'Tiêu đề phải ít nhất 3 ký tự';
         if (!room.price || isNaN(Number(room.price)) || Number(room.price) <= 0) newErrors.price = 'Giá phải là số dương';
         if (!room.categoryRoomId) newErrors.categoryRoomId = 'Loại phòng là bắt buộc';
         if (!room.locationDetail) newErrors.locationDetail = 'Địa chỉ là bắt buộc';
