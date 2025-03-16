@@ -127,7 +127,7 @@ const SidebarUser = () => {
                     <ul className="pl-4">
                         <li>
                             <NavLink
-                                to="/Transaction"
+                                to="/Transactions"
                                 className={({ isActive }) =>
                                     `block py-2 px-4 mb-0.5 hover:bg-red-400 hover:text-white rounded-3xl ${isActive ? 'bg-red-500 text-white' : ''}`
                                 }

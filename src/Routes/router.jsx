@@ -48,6 +48,7 @@ import RoomRentalConfirmation from '../Pages/Landlord/Rooms/RoomRentalConfirmati
 
 import ServicePostDetailsUser from '../Pages/User/ServicePosts/ServiePostDetails'
 import Wiki from '../Pages/Wiki'
+import Transactions from '../Pages/User/Profiles/Transactions';
 const RoutesConfig = () => {
     const { user } = useAuth();
 
@@ -83,6 +84,10 @@ const RoutesConfig = () => {
             <Route
                 path="/Overview"
                 element={user ? <Overview /> : <Navigate to="/" />}
+            />
+            <Route
+                path="/Transactions"
+                element={user ? <Transactions /> : <Navigate to="/" />}
             />
             <Route
                 path="/Buildings"
