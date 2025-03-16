@@ -4,16 +4,19 @@ import { MdClose } from "react-icons/md";
 import { BiBookHeart } from "react-icons/bi";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../../Context/AuthProvider";
+// Nếu bạn có context UI riêng để mở dropdown, import vào. 
+// Hoặc bỏ qua nếu bạn không dùng:
 import { useUI } from "./UIContext";
 
-const SavePosts = () => {
-    const { openDropdown, toggleDropdown } = useUI();
+const SavedPostList = () => {
+    const { openDropdown, toggleDropdown } = useUI(); // nếu không dùng, bỏ dòng này
     const [isOpen, setIsOpen] = useState(false);
     const { user } = useAuth();
     const navigate = useNavigate();
     const [savedPosts, setSavedPosts] = useState([]);
     const dropdownRef = useRef(null);
 
+    // Đóng dropdown khi click bên ngoài
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -24,6 +27,7 @@ const SavePosts = () => {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
+    // Lấy danh sách bài đã lưu
     useEffect(() => {
         if (user) {
             fetchSavedPosts();
@@ -34,60 +38,81 @@ const SavePosts = () => {
         try {
             const response = await fetch(`https://localhost:8000/api/SavedPosts/${user.userId}`);
             if (!response.ok) throw new Error("Lỗi khi lấy danh sách bài đã lưu");
-
             const data = await response.json();
+
+            console.log("Dữ liệu SavedPosts trả về:", data); // Kiểm tra log
             setSavedPosts(data);
         } catch (error) {
             console.error("❌ Lỗi khi lấy danh sách bài đã lưu:", error);
         }
     };
 
-    const removeSavedPost = async (roomId, e) => {
+    // Xoá bài đã lưu (toggle)
+    const removeSavedPost = async (post, e) => {
         e.stopPropagation();
         try {
+            // Tạo payload tương ứng với kiểu bài đăng
+            const payload = { userId: user.userId };
+            if (post.room) {
+                payload.roomId = post.roomId;          // Giữ logic cũ cho Room
+            } else if (post.servicePost) {
+                payload.servicePostId = post.servicePostId; // Bổ sung cho ServicePost
+            }
+
             const response = await fetch("https://localhost:8000/api/SavedPosts", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ userId: user.userId, roomId }),
+                body: JSON.stringify(payload),
             });
-
             const data = await response.json();
+
             if (data.status === "removed") {
-                setSavedPosts((prev) => prev.filter((post) => post.roomId !== roomId));
+                // Lọc bỏ bài vừa xoá khỏi state
+                setSavedPosts((prev) =>
+                    prev.filter(
+                        (p) =>
+                            !(
+                                (p.room && payload.roomId && p.roomId === payload.roomId) ||
+                                (p.servicePost && payload.servicePostId && p.servicePostId === payload.servicePostId)
+                            )
+                    )
+                );
             }
         } catch (error) {
             console.error("❌ Lỗi khi xóa bài đã lưu:", error);
         }
     };
+
+    // Hàm format thời gian hiển thị
     const formatTimeAgo = (savedAt) => {
         const savedTime = new Date(savedAt);
         const now = new Date();
         const diffInSeconds = Math.floor((now - savedTime) / 1000);
 
         if (diffInSeconds < 60) return "Vừa lưu xong";
-
         const diffInMinutes = Math.floor(diffInSeconds / 60);
         if (diffInMinutes < 60) return `Vừa lưu ${diffInMinutes} phút trước`;
-
         const diffInHours = Math.floor(diffInMinutes / 60);
         if (diffInHours < 24) return `Vừa lưu ${diffInHours} giờ trước`;
 
-        return savedTime.toLocaleString("vi-VN"); // Hiển thị dd/mm/yyyy HH:MM nếu trên 1 ngày
+        return savedTime.toLocaleString("vi-VN");
+    };
+
+    // Toggle dropdown
+    const handleToggleDropdown = () => {
+        // Nếu có dùng context UI
+        if (openDropdown !== "savedPosts") {
+            toggleDropdown("savedPosts");
+        } else {
+            toggleDropdown(null);
+        }
+        setIsOpen(!isOpen);
     };
 
     return (
         <div className="relative flex flex-col items-center" ref={dropdownRef}>
-            <button
-                onClick={() => {
-                    if (openDropdown !== "savedPosts") {
-                        toggleDropdown("savedPosts");
-                    } else {
-                        toggleDropdown(null);
-                    }
-                    setIsOpen(!isOpen);
-                }}
-                className="relative"
-            >
+            {/* Nút mở dropdown */}
+            <button onClick={handleToggleDropdown} className="relative">
                 <FaRegHeart className="text-2xl text-black" />
                 {savedPosts.length > 0 && (
                     <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
@@ -96,6 +121,7 @@ const SavePosts = () => {
                 )}
             </button>
 
+            {/* Nội dung dropdown */}
             {isOpen && (
                 <div className="absolute left-1/2 -translate-x-1/2 mt-10 w-96 h-80 bg-white shadow-lg rounded-md border border-gray-200 flex flex-col">
                     <div className="px-4 py-2 border-b text-lg font-semibold text-center">
@@ -104,22 +130,40 @@ const SavePosts = () => {
 
                     <div className="flex-1 overflow-y-auto">
                         {savedPosts.length > 0 ? (
-                            savedPosts.map((post) => {
-                                if (!post.room) {
-                                    console.error("Lỗi: Dữ liệu phòng trọ không tồn tại trong bài đăng đã lưu", post);
+                            savedPosts.map((post, index) => {
+                                // Tách dữ liệu
+                                let title = "";
+                                let location = "";
+                                let image = "";
+                                let detailLink = "#";
+
+                                // Bài đăng là Room
+                                if (post.room) {
+                                    title = post.room.title || "Không có tiêu đề";
+                                    location = post.room.locationDetail || "Không xác định";
+                                    image = post.room.image;  // mảng JSON hoặc URL
+                                    detailLink = `/Rooms/Details/${post.roomId}`;
+                                }
+                                // Bài đăng là ServicePost
+                                else if (post.servicePost) {
+                                    title = post.servicePost.title || "Không có tiêu đề";
+                                    location = post.servicePost.location || "Không xác định";
+                                    image = post.servicePost.image;
+                                    detailLink = `/ServicePosts/Details/${post.servicePostId}`;
+                                }
+                                else {
+                                    // Nếu cả room và servicePost đều null => Không hiển thị
                                     return null;
                                 }
 
-                                const { title, price, acreage, locationDetail, image } = post.room;
-                                const savedAt = post.savedAt;
-
+                                // Parse ảnh
                                 let images = [];
                                 if (typeof image === "string") {
                                     try {
-                                        images = JSON.parse(image);
+                                        images = JSON.parse(image); // nếu là chuỗi JSON
                                     } catch (err) {
-                                        console.error("Lỗi parse ảnh:", err);
-                                        images = [];
+                                        // Nếu parse lỗi, coi như 1 URL
+                                        images = [image];
                                     }
                                 }
                                 const firstImg =
@@ -129,33 +173,31 @@ const SavePosts = () => {
 
                                 return (
                                     <Link
-                                        to={`/Rooms/Details/${post.roomId}`}
-                                        key={post.roomId}
+                                        to={detailLink}
+                                        key={index}
                                         className="flex items-center gap-3 p-3 hover:bg-gray-100 rounded-md relative"
                                     >
                                         <img
                                             src={firstImg}
-                                            alt="Phòng trọ"
+                                            alt="Ảnh bài đăng"
                                             className="w-12 h-12 rounded-md object-cover"
                                         />
                                         <div className="flex-1">
                                             <p className="text-sm font-medium text-gray-800 truncate max-w-[280px]">
-                                                {title || "Không có tiêu đề"}
+                                                {title}
                                             </p>
-
                                             <p className="text-xs text-gray-500 font-semibold truncate max-w-[250px]">
-                                                {locationDetail || "Không xác định"}
+                                                {location}
                                             </p>
                                             <p className="text-xs text-gray-500 italic">
-                                                {savedAt ? formatTimeAgo(savedAt) : "Không xác định"}
+                                                {post.savedAt ? formatTimeAgo(post.savedAt) : "Không xác định"}
                                             </p>
-
                                         </div>
                                         <button
                                             onClick={(e) => {
                                                 e.preventDefault();
                                                 e.stopPropagation();
-                                                removeSavedPost(post.roomId, e);
+                                                removeSavedPost(post, e);
                                             }}
                                             className="absolute right-2 p-1 text-black"
                                         >
@@ -177,7 +219,10 @@ const SavePosts = () => {
 
                     {savedPosts.length > 0 && (
                         <div className="p-3 border-t text-center">
-                            <button onClick={() => navigate("/SavedPosts")} className="text-red-500 text-sm font-medium hover:underline">
+                            <button
+                                onClick={() => navigate("/SavedPosts")}
+                                className="text-red-500 text-sm font-medium hover:underline"
+                            >
                                 Xem tất cả →
                             </button>
                         </div>
@@ -188,4 +233,4 @@ const SavePosts = () => {
     );
 };
 
-export default SavePosts;
+export default SavedPostList;

@@ -2,12 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { FaCamera, FaMapMarkerAlt, FaRegHeart, FaHeart } from 'react-icons/fa';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../Context/AuthProvider';
-import RoomService from '../../Services/User/RoomService';
+import RoomManagementService from '../../Services/User/RoomManagementService';
 import { showCustomNotification } from '../Notification';
-import Loading from '../Loading';
 import { styled } from '@mui/material/styles';
 
-// Styled component thêm hiệu ứng hover giống ServicePostsHome
 const CardItem = styled('div')(({ theme }) => ({
     backgroundColor: '#fff',
     borderRadius: '8px',
@@ -40,6 +38,13 @@ const RoomsHome = () => {
     const minAreaQuery = queryParams.get("minArea") ? Number(queryParams.get("minArea")) : 0;
     const maxAreaQuery = queryParams.get("maxArea") ? Number(queryParams.get("maxArea")) : Infinity;
 
+    // Ánh xạ categoryRoomId sang tên danh mục
+    const categoryMap = {
+        1: "Phòng trọ",
+        2: "Căn hộ",
+        3: "Nhà nguyên căn",
+    };
+
     useEffect(() => {
         fetchRooms();
     }, []);
@@ -52,10 +57,12 @@ const RoomsHome = () => {
 
     const fetchRooms = async () => {
         try {
-            const data = await RoomService.getRooms();
+            const data = await RoomManagementService.getAvailableRooms();
+            console.log('Dữ liệu phòng từ API:', data); // Log để kiểm tra
             setRooms(data);
         } catch (error) {
-            console.error('Lỗi khi lấy danh sách phòng:', error);
+            console.error('Lỗi khi lấy danh sách phòng trống:', error);
+            showCustomNotification("error", error.message || "Không thể tải danh sách phòng!");
         }
     };
 
@@ -66,6 +73,7 @@ const RoomsHome = () => {
             const data = await response.json();
             const savedRoomIds = new Set(data.map(item => item.roomId));
             setSavedPosts(savedRoomIds);
+
         } catch (error) {
             console.error("Lỗi khi lấy danh sách bài đã lưu:", error);
         }
@@ -95,11 +103,15 @@ const RoomsHome = () => {
                 } else if (result.status === "saved") {
                     newSaved.add(parseInt(roomId));
                 }
+
                 return newSaved;
             });
+            if (result.status === "saved") {
+                showCustomNotification("success", "Lưu tin thành công!");
+            }
         } catch (error) {
             console.error("Lỗi khi lưu / xóa bài:", error);
-            alert("Đã xảy ra lỗi, vui lòng thử lại.");
+            showCustomNotification("error", "Đã xảy ra lỗi, vui lòng thử lại!");
         }
     };
 
@@ -111,14 +123,14 @@ const RoomsHome = () => {
         return categoryMatch && priceMatch && areaMatch;
     });
 
-    // Nhóm phòng theo category nếu không có query param category
+    // Nhóm phòng theo categoryRoomId thay vì categoryName
     let groupedRooms;
     if (categoryQuery) {
-        const groupName = filteredRooms[0]?.categoryName || "Khác";
+        const groupName = categoryMap[filteredRooms[0]?.categoryRoomId] || "Khác";
         groupedRooms = { [groupName]: filteredRooms };
     } else {
-        groupedRooms = rooms.reduce((acc, room) => {
-            const category = room.categoryName ? room.categoryName : "Khác";
+        groupedRooms = filteredRooms.reduce((acc, room) => {
+            const category = categoryMap[room.categoryRoomId] || "Khác";
             if (!acc[category]) {
                 acc[category] = [];
             }
@@ -130,7 +142,7 @@ const RoomsHome = () => {
     if (!rooms.length) {
         return (
             <div className="bg-white p-4 flex justify-center">
-                <p className="text-black font-semibold">Không tìm thấy phòng nào.</p>
+                <p className="text-black font-semibold">Không tìm thấy phòng trống nào.</p>
             </div>
         );
     }
@@ -157,6 +169,7 @@ const RoomsHome = () => {
                                     const imageCount = Array.isArray(images) ? images.length : 1;
                                     const firstImage = Array.isArray(images) ? images[0] : images;
                                     const isSaved = savedPosts.has(room.roomId);
+                                    const categoryName = categoryMap[room.categoryRoomId] || "Khác"; // Ánh xạ để hiển thị trên UI
                                     return (
                                         <Link key={room.roomId} to={`/Rooms/Details/${room.roomId}`} className="block">
                                             <CardItem className="bg-white rounded-lg shadow-md overflow-hidden h-[400px] flex flex-col">
@@ -167,11 +180,9 @@ const RoomsHome = () => {
                                                             alt={room.title}
                                                             className="absolute inset-0 w-full h-full object-cover"
                                                         />
-                                                        {room.categoryName && (
-                                                            <span className="absolute top-2 left-0 bg-red-600 text-white text-sm font-semibold px-3 py-1 z-10 rounded-r-lg">
-                                                                {room.categoryName}
-                                                            </span>
-                                                        )}
+                                                        <span className="absolute top-2 left-0 bg-red-600 text-white text-sm font-semibold px-3 py-1 z-10 rounded-r-lg">
+                                                            {categoryName}
+                                                        </span>
                                                     </div>
                                                 )}
                                                 <div className="p-4 flex-1 flex flex-col">
