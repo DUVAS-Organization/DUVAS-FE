@@ -128,7 +128,7 @@ const Navbar = () => {
                     {/* Logo */}
                     <Link to="/">
                         <div className="flex-shrink-0">
-                            <img src={Image_Logo} alt="DUVAS" className="max-w-[110px] h-auto" />
+                            <img src={Image_Logo} alt="DUVAS" className="max-w-[110px]" />
                         </div>
                     </Link>
                     {/* Menu chính */}
