@@ -65,7 +65,7 @@ const ServicePostsHome = () => {
                     prevIndex === filteredServicePosts.length - 1 ? 0 : prevIndex + 1
                 );
             }
-        }, 1500);
+        }, 2000);
         return () => clearInterval(interval);
     }, [filteredServicePosts, hoveredPostId]);
 
@@ -117,6 +117,9 @@ const ServicePostsHome = () => {
                 }
                 return newSaved;
             });
+            if (result.status === "saved") {
+                showCustomNotification("success", "Lưu tin thành công!");
+            }
         } catch (error) {
             console.error("Lỗi khi lưu / xóa bài:", error);
             showCustomNotification("error", "Không thể lưu tin này!");
