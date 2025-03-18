@@ -58,7 +58,7 @@ const RoomForm = () => {
                         note: data.note || '',
                         status: data.status || 1,
                         deposit: data.deposit || 0,
-                        isPermission: data.isPermission || false,
+                        isPermission: data.isPermission || 1,
                     });
                     setExistingImages(images);
                 })
@@ -83,7 +83,7 @@ const RoomForm = () => {
                 note: '',
                 status: 1,
                 deposit: 0,
-                isPermission: false,
+                isPermission: 1,
             });
         }
     }, [roomId, navigate]);
@@ -179,7 +179,7 @@ const RoomForm = () => {
                 image: JSON.stringify(finalImageUrls),
                 status: room.status || 1,
                 deposit: Number(room.deposit || 0),
-                isPermission: room.isPermission ? 1 : 0
+                isPermission: room.isPermission || 1
             };
 
             console.log("Dữ liệu gửi đi:", roomData);
