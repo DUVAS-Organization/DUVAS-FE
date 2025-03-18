@@ -43,9 +43,9 @@ const ServicePostList = () => {
     const fetchServicePosts = async () => {
         setLoading(true);
         try {
-            console.log('Fetching all service posts...');
+            // console.log('Fetching all service posts...');
             const postsData = await ServicePostService.getServicePosts();
-            console.log('Fetched posts:', postsData);
+            // console.log('Fetched posts:', postsData);
             // Lấy thông tin User cho mỗi bài đăng
             const postsWithUser = await Promise.all(postsData.map(async (post) => {
                 try {

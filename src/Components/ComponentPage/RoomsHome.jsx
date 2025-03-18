@@ -58,7 +58,6 @@ const RoomsHome = () => {
     const fetchRooms = async () => {
         try {
             const data = await RoomManagementService.getAvailableRooms();
-            console.log('Dữ liệu phòng từ API:', data); // Log để kiểm tra
             setRooms(data);
         } catch (error) {
             console.error('Lỗi khi lấy danh sách phòng trống:', error);

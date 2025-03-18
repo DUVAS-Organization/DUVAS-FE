@@ -110,7 +110,7 @@ const Searchbar = () => {
             if (minArea !== 0) queryParams.minArea = minArea;
             if (maxArea !== 1000) queryParams.maxArea = maxArea;
             const queryString = new URLSearchParams(queryParams).toString();
-            console.log("Navigating to Rooms:", `/Rooms?${queryString}`);
+            // console.log("Navigating to Rooms:", `/Rooms?${queryString}`);
             navigate(`/Rooms?${queryString}`);
         } else if (activeTab === "services") {
             const selectedCategory = categoriesService.find(c => c.categoryServiceId.toString() === selectedCategoryId);
@@ -119,7 +119,7 @@ const Searchbar = () => {
             if (minPrice !== 0) queryParams.minPrice = minPrice;
             if (maxPrice !== 100) queryParams.maxPrice = maxPrice;
             const queryString = new URLSearchParams(queryParams).toString();
-            console.log("Navigating to ServicePosts:", `/ServicePosts?${queryString}`);
+            // console.log("Navigating to ServicePosts:", `/ServicePosts?${queryString}`);
             navigate(`/ServicePosts?${queryString}`);
         }
     };

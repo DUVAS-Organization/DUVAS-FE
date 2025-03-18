@@ -18,7 +18,7 @@ export const AuthProvider = ({ children }) => {
     if (token) {
       try {
         const decodedToken = jwtDecode(token); // Giải mã token
-        console.log("Decoded Token:", decodedToken); // Log ra để kiểm tra payload
+        // console.log("Decoded Token:", decodedToken); // Log ra để kiểm tra payload
 
         const newUser = {
           username: decodedToken["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"], // Trích xuất username từ token

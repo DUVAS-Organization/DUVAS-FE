@@ -39,8 +39,6 @@ const SavedPostList = () => {
             const response = await fetch(`https://localhost:8000/api/SavedPosts/${user.userId}`);
             if (!response.ok) throw new Error("Lỗi khi lấy danh sách bài đã lưu");
             const data = await response.json();
-
-            console.log("Dữ liệu SavedPosts trả về:", data); // Kiểm tra log
             setSavedPosts(data);
         } catch (error) {
             console.error("❌ Lỗi khi lấy danh sách bài đã lưu:", error);

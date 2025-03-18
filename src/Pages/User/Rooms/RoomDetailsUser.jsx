@@ -29,6 +29,9 @@ import 'swiper/css';
 import 'swiper/css/free-mode';
 import { useAuth } from '../../../Context/AuthProvider';
 
+// Thêm import mới
+import { FaTimes } from 'react-icons/fa';
+
 const RoomDetailsUser = () => {
     const { roomId } = useParams();
     const navigate = useNavigate();
@@ -44,6 +47,8 @@ const RoomDetailsUser = () => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [previewImage, setPreviewImage] = useState(null);
     const [showFullPhone, setShowFullPhone] = useState(false);
+    // Thêm state mới cho modal
+    const [showRentModal, setShowRentModal] = useState(false);
 
     const getUserName = () => {
         if (user && user.name) return user.name;
@@ -52,7 +57,7 @@ const RoomDetailsUser = () => {
             if (token) {
                 const payload = token.split('.')[1];
                 const decoded = JSON.parse(atob(payload));
-                return decoded["http://schemas.xmlsoap.org/ws/2005/identity/claims/name"] || "Anonymous";
+                return decoded["http://schemas.xmlsoap.org/ws/2005/identity/claims/name"];
             }
         } catch (e) {
             console.error("Error decoding token:", e);
@@ -154,7 +159,6 @@ const RoomDetailsUser = () => {
         setIsRenting(true);
         try {
             const token = user.token || localStorage.getItem("token");
-            console.log("Token:", token);
 
             const trackRoomResponse = await fetch(`https://localhost:8000/api/RoomManagement/track-room/${roomId}`, {
                 method: "GET",
@@ -219,6 +223,95 @@ const RoomDetailsUser = () => {
             setIsRenting(false);
         }
     };
+
+    // Thêm hàm xử lý submit form mới
+    const handleSubmitRentForm = (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const rentDetails = {
+            name: formData.get('fullName'),
+            phoneNumber: formData.get('phone'),
+            moveInDate: formData.get('moveInDate'),
+            duration: formData.get('duration')
+        };
+        console.log('Rent details:', rentDetails);
+        setShowRentModal(false);
+        handleRentRoom();
+    };
+
+    // Thêm component Modal mới
+    const RentModal = () => (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="bg-white p-6 rounded-lg w-full max-w-md">
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-xl font-semibold">Thông tin thuê phòng</h3>
+                    <button
+                        onClick={() => setShowRentModal(false)}
+                        className="text-gray-600 hover:text-gray-800"
+                    >
+                        <FaTimes size={20} />
+                    </button>
+                </div>
+                <form onSubmit={handleSubmitRentForm}>
+                    <div className="mb-4">
+                        <label className="block text-gray-700 mb-2">Họ và tên</label>
+                        <input
+                            type="text"
+                            name="fullName"
+                            required
+                            className="w-full p-2 border rounded-md"
+                            placeholder="Nhập họ và tên"
+                        />
+                    </div>
+                    <div className="mb-4">
+                        <label className="block text-gray-700 mb-2">Số điện thoại</label>
+                        <input
+                            type="tel"
+                            name="phone"
+                            required
+                            className="w-full p-2 border rounded-md"
+                            placeholder="Nhập số điện thoại"
+                        />
+                    </div>
+                    <div className="mb-4">
+                        <label className="block text-gray-700 mb-2">Ngày dọn vào</label>
+                        <input
+                            type="date"
+                            name="moveInDate"
+                            required
+                            className="w-full p-2 border rounded-md"
+                        />
+                    </div>
+                    <div className="mb-4">
+                        <label className="block text-gray-700 mb-2">Thời gian thuê (tháng)</label>
+                        <input
+                            type="number"
+                            name="duration"
+                            min="1"
+                            required
+                            className="w-full p-2 border rounded-md"
+                            placeholder="Số tháng muốn thuê"
+                        />
+                    </div>
+                    <div className="flex justify-end gap-4">
+                        <button
+                            type="button"
+                            onClick={() => setShowRentModal(false)}
+                            className="px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400"
+                        >
+                            Hủy
+                        </button>
+                        <button
+                            type="submit"
+                            className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
+                        >
+                            Xác nhận
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
 
     if (loading) {
         return (
@@ -483,7 +576,10 @@ const RoomDetailsUser = () => {
                     </div>
                     <div className='flex justify-center'>
                         <button
-                            onClick={handleRentRoom}
+                            onClick={(e) => {
+                                e.preventDefault();
+                                setShowRentModal(true);
+                            }}
                             className='w-52 bg-red-500 text-white font-medium px-5 py-1 rounded-xl hover:bg-red-400'
                         >
                             Đặt Phòng
@@ -497,8 +593,6 @@ const RoomDetailsUser = () => {
                             Chủ nhà có thể chấp nhận hoặc từ chối yêu cầu của bạn.
                         </span>
                     </div>
-
-
 
                     <div className="bg-gray-100 py-3 rounded-md text-sm text-gray-600 leading-6">
                         Hãy cho chủ nhà biết bạn thấy phòng này hoặc đã đặt phòng trên <strong>DUVAS </strong>
@@ -523,6 +617,8 @@ const RoomDetailsUser = () => {
                     </div>
                 </div>
             </div>
+            {/* Thêm render modal mới */}
+            {showRentModal && <RentModal />}
             {previewImage && (
                 <div
                     className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"

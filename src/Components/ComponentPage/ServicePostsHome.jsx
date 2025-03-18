@@ -72,7 +72,6 @@ const ServicePostsHome = () => {
     const fetchServicePosts = async () => {
         try {
             const data = await ServicePost.getServicePosts();
-            console.log('Service Posts:', data);
             setServicePosts(data || []);
         } catch (error) {
             console.error('Lỗi khi lấy danh sách bài đăng dịch vụ:', error);
