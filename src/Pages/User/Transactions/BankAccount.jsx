@@ -138,7 +138,7 @@ const BankAccount = () => {
                                     <button
                                         onClick={() => genOtp()}
                                         type="button"
-                                        className="mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-md"
+                                        className="mt-4 w-full bg-red-500 hover:bg-red-400 text-white font-medium py-2 px-4 rounded-md"
                                     >
                                         Lấy mã OTP
                                     </button>
@@ -170,11 +170,11 @@ const BankAccount = () => {
                                     <thead className="bg-gray-100">
                                         <tr>
                                             <th className="px-4 py-2 border">ID</th>
-                                            <th className="px-4 py-2 border">Account Number</th>
-                                            <th className="px-4 py-2 border">Account Name</th>
-                                            <th className="px-4 py-2 border">Bank Code</th>
-                                            <th className="px-4 py-2 border">Status</th>
-                                            <th className="px-4 py-2 border">Action</th>
+                                            <th className="px-4 py-2 border">Số tài khoản</th>
+                                            <th className="px-4 py-2 border">Tên tài khoản</th>
+                                            <th className="px-4 py-2 border">Mã ngân hàng</th>
+                                            <th className="px-4 py-2 border">Trạng thái</th>
+                                            <th className="px-4 py-2 border">Hành động</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -192,7 +192,7 @@ const BankAccount = () => {
                                                         onClick={() => handleChangeStatus(account.id, account.status)}
                                                         className="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-white rounded"
                                                     >
-                                                        {account.status === "Active" ? "Deactivate" : "Activate"}
+                                                        {account.status === "Active" ? "Hủy kích hoạt" : "Kích hoạt"}
                                                     </button>
                                                 </td>
                                             </tr>

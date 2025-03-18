@@ -10,7 +10,8 @@ const SidebarUser = () => {
     const params = new URLSearchParams(location.search);
     const currentTab = params.get("tab");
     const currentPath = location.pathname; // Lấy đường dẫn hiện tại
-
+    const isWithdrawActive = location.pathname === "/Withdraw";
+    const isWithdrawCreateActive = location.pathname === "/Withdraw/Create";
     const { user } = useAuth();
 
     if (!user) return null;
@@ -138,9 +139,7 @@ const SidebarUser = () => {
                         <li>
                             <NavLink
                                 to="/Withdraw"
-                                className={({ isActive }) =>
-                                    `block py-2 px-4 hover:bg-red-400 hover:text-white rounded-3xl ${isActive ? 'bg-red-500 text-white' : ''}`
-                                }
+                                className={`block py-2 px-4 hover:bg-red-400 hover:text-white rounded-3xl ${isWithdrawActive ? 'bg-red-500 text-white' : ''}`}
                             >
                                 Lịch sử rút tiền
                             </NavLink>
@@ -158,10 +157,7 @@ const SidebarUser = () => {
                         <li>
                             <NavLink
                                 to="/Withdraw/Create"
-                                className={({ isActive }) =>
-                                    `block py-2 px-4 hover:bg-red-500 hover:text-white rounded-3xl ${isActive ? 'bg-red-500 text-white' : ''
-                                    }`
-                                }
+                                className={`block py-2 px-4 hover:bg-red-500 hover:text-white rounded-3xl ${isWithdrawCreateActive ? 'bg-red-500 text-white' : ''}`}
                             >
                                 Rút tiền
                             </NavLink>
@@ -170,8 +166,7 @@ const SidebarUser = () => {
                             <NavLink
                                 to="/BankAccounts"
                                 className={({ isActive }) =>
-                                    `block py-2 px-4 hover:bg-red-500 hover:text-white rounded-3xl ${isActive ? 'bg-red-500 text-white' : ''
-                                    }`
+                                    `block py-2 px-4 hover:bg-red-500 hover:text-white rounded-3xl ${isActive ? 'bg-red-500 text-white' : ''}`
                                 }
                             >
                                 Tài khoản của bạn

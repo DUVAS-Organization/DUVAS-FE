@@ -197,7 +197,7 @@ const RoomDetailsUser = () => {
             const sendMailPayload = {
                 userIdLandlord: room.User.userId,
                 roomId: parseInt(roomId),
-                renterName: renterName
+                renterName: renterName || "Anonymous"
             };
             console.log("Đang gửi payload send-mail:", sendMailPayload);
             const sendMailResponse = await fetch("https://localhost:8000/api/RoomManagement/send-mail", {
@@ -585,7 +585,7 @@ const RoomDetailsUser = () => {
                             Đặt Phòng
                         </button>
                     </div>
-                    <div className="bg-gray-100 py-3 px-4 rounded-md text-sm text-gray-600 leading-6">
+                    <div className="bg-gray-100 py-3 px-4 rounded-md text-sm text-justify text-gray-600 leading-6">
                         <span className="inline">
                             <span className="font-medium">Lưu ý:&nbsp;</span>
                             Sau khi bạn nhấn vào&nbsp;
@@ -594,7 +594,7 @@ const RoomDetailsUser = () => {
                         </span>
                     </div>
 
-                    <div className="bg-gray-100 py-3 rounded-md text-sm text-gray-600 leading-6">
+                    <div className="bg-gray-100 py-3 rounded-md text-justify text-sm text-gray-600 leading-6">
                         Hãy cho chủ nhà biết bạn thấy phòng này hoặc đã đặt phòng trên <strong>DUVAS </strong>
                         bằng cách
                         <button

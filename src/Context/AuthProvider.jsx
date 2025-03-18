@@ -31,7 +31,7 @@ export const AuthProvider = ({ children }) => {
         setUser(newUser); // Lưu thông tin người dùng vào trạng thái
 
       } catch (error) {
-        console.error("Lỗi khi giải mã token:", error);
+        // console.error("Lỗi khi giải mã token:", error);
         setUser(null); // Nếu có lỗi khi giải mã, setUser null
       }
     } else {
@@ -44,7 +44,7 @@ export const AuthProvider = ({ children }) => {
   const login = (token) => {
     localStorage.setItem('authToken', token); // Lưu token vào localStorage
     const decodedToken = jwtDecode(token); // Giải mã token
-    console.log("Decoded Token after login:", decodedToken); // Log ra để kiểm tra payload
+    // console.log("Decoded Token after login:", decodedToken); // Log ra để kiểm tra payload
 
     const newUser = {
       username: decodedToken["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"], // Trích xuất username từ token

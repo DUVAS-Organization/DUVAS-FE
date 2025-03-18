@@ -85,7 +85,7 @@ const RoutesConfig = () => {
             {/* Routes dành cho User */}
             <Route
                 path="/Moneys"
-                element={user ? <Money /> : <Navigate to="/Profile" />}
+                element={user ? <Money /> : <Navigate to="/" />}
             />
             <Route
                 path="/BankAccounts"

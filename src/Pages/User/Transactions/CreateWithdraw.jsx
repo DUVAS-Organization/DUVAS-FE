@@ -21,7 +21,7 @@ const CreateWithdraw = () => {
                 }
             } catch (error) {
                 setError("Không thể lấy được tài khoản ngân hàng.");
-                // showCustomNotification("error", "Có lỗi xảy ra!");
+                showCustomNotification("error", "Có lỗi xảy ra!");
             }
         };
         fetchBankAccounts();
@@ -97,7 +97,7 @@ const CreateWithdraw = () => {
                                 ) :
                                     (
                                         <option>
-                                            No bank account
+                                            Không có tài khoản ngân hàng
                                         </option>
                                     )}
                             </select>
@@ -106,7 +106,7 @@ const CreateWithdraw = () => {
                         {/* Submit Button */}
                         <button
                             type="submit"
-                            className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg transition duration-200"
+                            className="w-full bg-red-500 hover:bg-red-400 text-white py-2 px-4 rounded-lg transition duration-200"
                             disabled={loading}
                         >
                             {loading ? "Processing..." : "Rút tiền"}

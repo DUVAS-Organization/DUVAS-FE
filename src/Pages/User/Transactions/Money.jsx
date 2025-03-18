@@ -50,7 +50,7 @@ const Money = () => {
                             />
 
                             <button type="submit"
-                                className="mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-md">
+                                className="mt-4 w-full bg-red-500 hover:bg-red-400 text-white font-medium py-2 px-4 rounded-md">
                                 Lấy mã thanh toán
                             </button>
                         </form>
