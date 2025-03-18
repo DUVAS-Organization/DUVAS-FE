@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Layout from "../../../Components/Layout/Layout";
 import Footer from "../../../Components/Layout/Footer";
 import UserService from "../../../Services/User/UserService";
+import { showCustomNotification } from "../../../Components/Notification";
 
 const CreateWithdraw = () => {
     const [amount, setAmount] = useState("");
@@ -20,6 +21,7 @@ const CreateWithdraw = () => {
                 }
             } catch (error) {
                 setError("Failed to fetch bank accounts.");
+                showCustomNotification("error", "Có lỗi xảy ra!");
             }
         };
         fetchBankAccounts();
@@ -31,7 +33,6 @@ const CreateWithdraw = () => {
             setError("Please enter an amount and select a bank.");
             return;
         }
-
         setLoading(true);
         setError(null);
         setMessage(null);

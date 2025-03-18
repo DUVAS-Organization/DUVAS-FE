@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import Layout from "../../../Components/Layout/Layout";
 import Footer from "../../../Components/Layout/Footer";
 import UserService from "../../../Services/User/UserService";
+import { showCustomNotification } from "../../../Components/Notification";
 
 const BankAccount = () => {
     const [accountNumber, setAccountNumber] = useState('');
@@ -25,6 +26,7 @@ const BankAccount = () => {
                 setBankCodes(response.data.data);
             } catch (error) {
                 console.error("Error fetching data:", error);
+                showCustomNotification("error", "Có lỗi xảy ra!");
             }
         };
         fetchData();
@@ -35,9 +37,11 @@ const BankAccount = () => {
             let data = { accountNumber, accountName , bankCode: selectedBankCode };
             let resp = await UserService.addNewBank(data, otp);
             setUserBankAccounts(prev => [...prev, resp.data]);
+            showCustomNotification("success", "Thêm tài khoản thanh toán thành công!");
             setIsEnteringOtp(false);
         } catch (error) {
             console.error(error);
+            showCustomNotification("error", "Có lỗi xảy ra!");
         }
 
     };
@@ -59,6 +63,7 @@ const BankAccount = () => {
             setUserBankAccounts(prev =>
                 prev.map(acc => acc.id === accountId ? { ...acc, status: "Inactive" } : acc)
             );
+            showCustomNotification("success", "Cập nhật thông tin thành công!");
         } else {
             // Activate → Require OTP
             setChangingBankAccount(accountId);
@@ -77,8 +82,12 @@ const BankAccount = () => {
             );
             setChangingBankAccount(null);
             setIsEnteringOtp(false);
+            showCustomNotification("success", "Thành công!");
+
         } catch (error) {
             console.error("Error activating account:", error);
+            showCustomNotification("error", "Có lỗi xảy ra!");
+
         }
     };
 

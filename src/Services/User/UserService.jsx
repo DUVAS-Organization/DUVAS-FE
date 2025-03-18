@@ -125,6 +125,16 @@ const UserService = {
             },
         });
     },
+    getCurrentUserWithdrawRequest: () => {
+        const token = localStorage.getItem("authToken");
+        const url = `https://localhost:8000/api/WithDraw/user`;
+        return axios.get(url,{
+            headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+            },
+        })
+    }
 };
 
 export default UserService;

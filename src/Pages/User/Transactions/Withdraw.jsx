@@ -3,10 +3,10 @@ import { useLocation, useNavigate } from "react-router-dom";
 import Layout from "../../../Components/Layout/Layout";
 import Footer from "../../../Components/Layout/Footer";
 import UserService from "../../../Services/User/UserService";
+import { showCustomNotification } from "../../../Components/Notification";
 
 const WithdrawTransaction = () => {
     const [withdrawRequests, setWithdrawRequests] = useState([]);
-    const [paymentLinks, setPaymentLinks] = useState([]);
     useEffect(() => {
         const getTransactions = async () => {
             try {
@@ -14,11 +14,11 @@ const WithdrawTransaction = () => {
                 setWithdrawRequests(data.data);
             } catch (error) {
                 console.error("Error fetching bank accounts:", error);
+                showCustomNotification("error","Có lỗi xảy ra!");
             }
         }
         getTransactions();
     }, []);
-    console.log(paymentLinks);
 
     return (
         <Layout showNavbar={false} showSidebar={true}>
@@ -36,6 +36,7 @@ const WithdrawTransaction = () => {
                                     <th className="p-3 border">Ngày Tạo Đơn</th>
                                     <th className="p-3 border">Ngày Cập Nhật Đơn</th>
                                     <th className="p-3 border">Trạng Thái</th>
+                                    <th className="p-3 border">Lý Do</th>
                                 </tr>
                             </thead>    
                             <tbody>
@@ -52,6 +53,7 @@ const WithdrawTransaction = () => {
                                                     {transaction.status === "Pending" ? "Đang xử lý" : "Thành Công"}
                                                 </span>
                                             </td>
+                                            <td className="p-3 border">{transaction.reason || "Không"}</td>
                                         </tr>
                                     ))
                                 ) : (

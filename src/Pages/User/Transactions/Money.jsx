@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import Layout from "../../../Components/Layout/Layout";
 import Footer from "../../../Components/Layout/Footer";
 import UserService from "../../../Services/User/UserService";
+import { showCustomNotification } from "../../../Components/Notification";
 const Money = () => {
     const location = useLocation();
     const navigate = useNavigate();
@@ -23,6 +24,7 @@ const Money = () => {
             }
         }
         // thanh cong
+        showCustomNotification("success", "Thanh toán thành công!");
     };
 
     return (
