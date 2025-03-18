@@ -48,7 +48,13 @@ import RoomRentalConfirmation from '../Pages/Landlord/Rooms/RoomRentalConfirmati
 
 import ServicePostDetailsUser from '../Pages/User/ServicePosts/ServiePostDetails'
 import Wiki from '../Pages/Wiki'
-import Transactions from '../Pages/User/Profiles/Transactions';
+import Money from '../Pages/User/Transactions/Money';
+import BankAccount from '../Pages/User/Transactions/BankAccount'
+import Transaction from '../Pages/User/Transactions/Transaction'
+import Withdraw from '../Pages/User/Transactions/Withdraw';
+import CreateWithdraw from '../Pages/User/Transactions/CreateWithdraw';
+import AdminTransaction from '../Pages/Admin/Transactions/Transaction';
+
 const RoutesConfig = () => {
     const { user } = useAuth();
 
@@ -78,16 +84,33 @@ const RoutesConfig = () => {
             />
             {/* Routes dành cho User */}
             <Route
+                path="/Moneys"
+                element={user ? <Money /> : <Navigate to="/Profile" />}
+            />
+            <Route
+                path="/BankAccounts"
+                element={user ? <BankAccount /> : <Navigate to="/" />}
+            />
+            <Route
+                path="/Transaction"
+                element={user ? <Transaction /> : <Navigate to="/" />}
+            />
+            <Route
+                path="/Withdraw"
+                element={user ? <Withdraw /> : <Navigate to="/" />}
+            />
+            <Route
+                path="/Withdraw/Create"
+                element={user ? <CreateWithdraw /> : <Navigate to="/" />}
+            />
+
+            <Route
                 path="/"
                 element={user && user.role === "User" ? <Home /> : <Navigate to="/" />}
             />
             <Route
                 path="/Overview"
                 element={user ? <Overview /> : <Navigate to="/" />}
-            />
-            <Route
-                path="/Transactions"
-                element={user ? <Transactions /> : <Navigate to="/" />}
             />
             <Route
                 path="/Buildings"
@@ -228,6 +251,11 @@ const RoutesConfig = () => {
             <Route
                 path="/Admin/CategoryRooms/:categoryRoomId"
                 element={user && user.role === "Admin" ? <CategoryRoomForm /> : <Navigate to="/Logins" />}
+            />
+            {/* Transaction */}
+            <Route
+                path="/Admin/Withdraws"
+                element={user && user.role === "Admin" ? <AdminTransaction /> : <Navigate to="/Logins" />}
             />
 
             {/* Routes dành cho Landlord */}

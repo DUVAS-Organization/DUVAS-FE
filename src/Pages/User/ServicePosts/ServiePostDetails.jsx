@@ -171,7 +171,7 @@ const ServicePostDetails = () => {
             navigate('/Services/RequestSuccess');
         } catch (error) {
             console.log("Error in handleRequestService catch block:", error);
-            showCustomNotification("error", error.message || "Có lỗi xảy ra");
+            showCustomNotification("error", "Có lỗi xảy ra");
         } finally {
             setIsRequesting(false);
         }

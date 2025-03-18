@@ -69,6 +69,51 @@ const RoomsList = () => {
         }
     };
 
+    // Thêm hàm mới để lấy danh sách phòng trống và không bị khóa
+    const fetchAvailableRooms = async () => {
+        setLoading(true);
+        try {
+            const availableRoomsData = await RoomService.getAvailableRooms();
+            if (!availableRoomsData || availableRoomsData.length === 0) {
+                setRooms([]);
+                showCustomNotification("info", "Hiện tại không có phòng trống nào khả dụng!");
+                return;
+            }
+            const roomsWithUser = await Promise.all(
+                availableRoomsData.map(async (room) => {
+                    if (!room.User && room.userId) {
+                        try {
+                            const userData = await UserService.getUserById(room.userId);
+                            return { ...room, User: userData };
+                        } catch (error) {
+                            console.error(`Error fetching user for room ${room.roomId}:`, error);
+                            return room;
+                        }
+                    }
+                    return room;
+                })
+            );
+            // Lọc lại để đảm bảo chỉ hiển thị phòng status = 1 và isPermission = 1
+            const filteredRooms = roomsWithUser.filter(room =>
+                room.status === 1 && room.isPermission === 1
+            );
+            setRooms(filteredRooms);
+            if (filteredRooms.length === 0) {
+                showCustomNotification("info", "Hiện tại không có phòng trống nào khả dụng!");
+            }
+        } catch (error) {
+            console.error('Error fetching Available Rooms:', error);
+            // showCustomNotification("error", "Không thể tải danh sách phòng trống! Vui lòng thử lại sau.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Thêm useEffect mới để gọi fetchAvailableRooms thay vì fetchRooms
+    useEffect(() => {
+        fetchAvailableRooms();
+    }, []);
+
     const handleLoadMore = () => {
         setVisibleRooms((prev) => prev + 3);
     };
@@ -164,11 +209,6 @@ const RoomsList = () => {
     // Lọc thêm theo giá và diện tích
     filteredRooms = filteredRooms.filter((r) => r.price >= minPrice && r.price <= maxPrice);
     filteredRooms = filteredRooms.filter((r) => r.acreage >= minArea && r.acreage <= maxArea);
-
-    // Hiển thị toast nếu không tìm thấy phòng
-    // if (filteredRooms.length === 0) {
-    //     showCustomNotification("info", "Không tìm thấy phòng phù hợp với tiêu chí tìm kiếm.");
-    // }
 
     return (
         <div className="bg-white min-h-screen p-4">
