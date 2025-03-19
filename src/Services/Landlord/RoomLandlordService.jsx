@@ -26,26 +26,32 @@ const handleError = (error) => {
         const { status, data } = error.response;
         const errorMessage = data.message || data.error || data || 'Unknown error';
         console.error(`Server Error [${status}]:`, data);
+        // Log chi tiết lỗi validation nếu có
+        if (data.errors) {
+            console.error('Validation Errors:', data.errors);
+            // Trả về lỗi với thông tin validation chi tiết
+            throw new Error(JSON.stringify({ message: errorMessage, validationErrors: data.errors }));
+        }
         switch (status) {
             case 400:
-                throw new Error(errorMessage || 'Invalid data provided.');
+                throw new Error(errorMessage || 'Dữ liệu không hợp lệ.');
             case 401:
                 localStorage.removeItem('authToken');
-                throw new Error('Unauthorized: Please log in again.');
+                throw new Error('Không được phép: Vui lòng đăng nhập lại.');
             case 403:
-                throw new Error('Forbidden: You do not have permission.');
+                throw new Error('Bị cấm: Bạn không có quyền truy cập.');
             case 404:
-                throw new Error(errorMessage || 'Resource not found.');
+                throw new Error(errorMessage || 'Không tìm thấy tài nguyên.');
             case 500:
-                throw new Error('Server error occurred. Please try again later.');
+                throw new Error('Lỗi máy chủ. Vui lòng thử lại sau.');
             default:
-                throw new Error('An unexpected error occurred.');
+                throw new Error('Đã xảy ra lỗi không xác định.');
         }
     } else if (error.request) {
-        console.error('No response from server:', error.request);
-        throw new Error('Unable to connect to the server.');
+        console.error('Không nhận được phản hồi từ máy chủ:', error.request);
+        throw new Error('Không thể kết nối đến máy chủ.');
     } else {
-        console.error('Error:', error.message);
+        console.error('Lỗi:', error.message);
         throw error;
     }
 };
@@ -118,6 +124,14 @@ const RoomLandlordService = {
         try {
             const response = await api.patch(`/${roomId}/Status`, null, { params: { roomId, status } });
             return response.data; // { Message }
+        } catch (error) {
+            handleError(error);
+        }
+    },
+    generateRoomDescription: async (roomData) => {
+        try {
+            const response = await api.post('/generate-description', roomData);
+            return response.data; // { title, description }
         } catch (error) {
             handleError(error);
         }

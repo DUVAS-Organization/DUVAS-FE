@@ -275,6 +275,86 @@ const RoomForm = () => {
         }));
     };
 
+    // New function to handle the "Tạo với AI" button click
+    const handleGenerateWithAI = async () => {
+        setLoading(true);
+        try {
+            // Chuẩn bị dữ liệu phòng để gửi lên API
+            const roomData = {
+                // Các trường bắt buộc (không nullable) trong RoomDTO
+                Title: room.title || '',
+                Description: room.description || '',
+                LocationDetail: room.locationDetail || '',
+                Image: room.image || '',
+                Acreage: Number(room.acreage) || 0,
+                Furniture: room.furniture || 'Không nội thất',
+                NumberOfBedroom: Number(room.numberOfBedroom) || 0,
+                NumberOfBathroom: Number(room.numberOfBathroom) || 0,
+                Price: Number(room.price) || 0,
+                Note: room.note || '',
+                UserId: room.userId || null,
+                BuildingId: room.buildingId || null,
+                CategoryRoomId: room.categoryRoomId || 1,
+                Garret: room.garret || false,
+                IsPermission: room.isPermission || 1,
+                Deposit: room.deposit || 0,
+                status: room.status || 1,
+                reputation: room.reputation || 0,
+            };
+
+            // Kiểm tra dữ liệu trước khi gửi
+            if (roomData.Acreage <= 0) {
+                throw new Error('Diện tích phải lớn hơn 0.');
+            }
+            if (roomData.Price <= 0) {
+                throw new Error('Giá phải lớn hơn 0.');
+            }
+            const validFurnitureValues = ['Đầy đủ', 'Cơ bản', 'Không nội thất'];
+            if (!validFurnitureValues.includes(roomData.Furniture)) {
+                throw new Error('Vui lòng chọn nội thất hợp lệ (Đầy đủ, Cơ bản, hoặc Không nội thất).');
+            }
+            // Kiểm tra các trường bắt buộc không nullable
+            if (!roomData.LocationDetail) {
+                throw new Error('Địa chỉ không được để trống.');
+            }
+            // Image có thể để trống (vì chưa upload ảnh), nhưng không được null
+            if (roomData.Image === null) {
+                roomData.Image = '';
+            }
+
+            // Gọi API generateRoomDescription
+            const result = await RoomLandlordService.generateRoomDescription(roomData);
+
+            // Cập nhật tiêu đề và mô tả với giá trị từ AI
+            setRooms(prev => ({
+                ...prev,
+                title: result.title || prev.title,
+                description: result.description || prev.description,
+            }));
+
+            showCustomNotification("success", "Tạo tiêu đề và mô tả thành công với AI!");
+        } catch (error) {
+            console.error('Lỗi khi tạo mô tả với AI:', error);
+            // Xử lý lỗi và hiển thị thông báo chi tiết
+            let errorMessage = "Lỗi khi tạo tiêu đề và mô tả với AI!";
+            try {
+                const parsedError = JSON.parse(error.message);
+                if (parsedError.validationErrors) {
+                    // Lấy và định dạng thông báo lỗi validation
+                    const validationMessages = Object.values(parsedError.validationErrors).flat().join(' ');
+                    errorMessage = validationMessages || parsedError.message || errorMessage;
+                } else {
+                    errorMessage = parsedError.message || error.message || errorMessage;
+                }
+            } catch (e) {
+                errorMessage = error.message || errorMessage;
+            }
+            showCustomNotification("error", errorMessage);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div className="flex min-h-screen bg-white">
             {loading && <Loading />}
@@ -300,6 +380,7 @@ const RoomForm = () => {
                         <div className="border-b-2 border-red-500 w-32 mb-4"></div>
                         <div className="space-y-4">
                             <div className="w-full">
+                                <h3 className="text-lg font-semibold text-gray-800 mb-2">Thông tin Phòng</h3>
                                 <label className="block text-sm font-medium text-gray-700">Tòa Nhà</label>
                                 <select
                                     value={room.buildingId || ''}
@@ -317,20 +398,6 @@ const RoomForm = () => {
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="w-full">
                                     <label className="block text-sm font-medium text-gray-700">
-                                        Tiêu Đề <span className="text-red-500">*</span>
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={room.title}
-                                        onChange={(e) => setRooms({ ...room, title: e.target.value })}
-                                        required
-                                        className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
-                                        placeholder="Nhập Tiêu đề"
-                                    />
-                                    {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
-                                </div>
-                                <div className="w-full">
-                                    <label className="block text-sm font-medium text-gray-700">
                                         Giá (đ/tháng) <span className="text-red-500">*</span>
                                     </label>
                                     <PriceInput
@@ -339,8 +406,6 @@ const RoomForm = () => {
                                     />
                                     {errors.price && <p className="text-red-500 text-sm mt-1">{errors.price}</p>}
                                 </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
                                 <div className="w-full">
                                     <label className="block text-sm font-medium text-gray-700">
                                         Loại Phòng <span className="text-red-500">*</span>
@@ -360,6 +425,8 @@ const RoomForm = () => {
                                     </select>
                                     {errors.categoryRoomId && <p className="text-red-500 text-sm mt-1">{errors.categoryRoomId}</p>}
                                 </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
                                 <div className="w-full">
                                     <label className="block text-sm font-medium text-gray-700">
                                         Địa chỉ <span className="text-red-500">*</span>
@@ -374,8 +441,6 @@ const RoomForm = () => {
                                     />
                                     {errors.locationDetail && <p className="text-red-500 text-sm mt-1">{errors.locationDetail}</p>}
                                 </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
                                 <div className="w-full">
                                     <label className="block text-sm font-medium text-gray-700">
                                         Diện Tích (m²) <span className="text-red-500">*</span>
@@ -396,6 +461,8 @@ const RoomForm = () => {
                                     />
                                     {errors.acreage && <p className="text-red-500 text-sm mt-1">{errors.acreage}</p>}
                                 </div>
+                            </div>
+                            <div className="grid grid-cols-3 gap-4">
                                 <div className="w-full">
                                     <label className="block text-sm font-medium text-gray-700">
                                         Nội Thất <span className="text-red-500">*</span>
@@ -411,10 +478,8 @@ const RoomForm = () => {
                                         <option value="Không nội thất">Không nội thất</option>
                                     </select>
                                 </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
                                 <div className="w-full flex items-center">
-                                    <label className="block text-sm font-medium text-gray-700 w-1/3">
+                                    <label className="block text-sm font-medium text-gray-700 w-1/3 ml-20">
                                         Phòng tắm <span className="text-red-500">*</span>
                                     </label>
                                     <div className="flex-1 flex items-center space-x-2">
@@ -436,8 +501,9 @@ const RoomForm = () => {
                                     </div>
                                     {errors.numberOfBathroom && <p className="text-red-500 text-sm mt-1">{errors.numberOfBathroom}</p>}
                                 </div>
+
                                 <div className="w-full flex items-center">
-                                    <label className="block text-sm font-medium text-gray-700 w-1/3">
+                                    <label className="block text-sm font-medium text-gray-700 w-1/3 ml-30">
                                         Giường ngủ <span className="text-red-500">*</span>
                                     </label>
                                     <div className="flex-1 flex items-center space-x-2">
@@ -459,20 +525,73 @@ const RoomForm = () => {
                                     </div>
                                     {errors.numberOfBedroom && <p className="text-red-500 text-sm mt-1">{errors.numberOfBedroom}</p>}
                                 </div>
+                                {/* Empty div to maintain grid alignment */}
+                                <div className="w-full"></div>
+
                             </div>
-                            <div className="w-full">
-                                <label className="block text-sm font-medium text-gray-700">
-                                    Mô tả <span className="text-red-500">*</span>
-                                </label>
-                                <textarea
-                                    value={room.description}
-                                    onChange={(e) => setRooms({ ...room, description: e.target.value })}
-                                    required
-                                    className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
-                                    placeholder="Nhập Mô tả (tối thiểu 50 ký tự)"
-                                    rows="5"
-                                />
-                                {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description}</p>}
+
+                            {/* Tiêu đề & Mô tả Section */}
+                            <div className="w-full rounded-lg bg-white shadow-sm">
+                                <h3 className="text-lg font-semibold text-gray-800 mb-2">Tiêu đề & Mô tả</h3>
+                                {/* Tạo nhanh với AI Section */}
+                                <div className="w-full flex justify-between items-center">
+                                    <h3 className="text-sm font-medium text-gray-700 mb-2">Tạo nhanh với AI</h3>
+                                    <div className="space-y-2">
+                                        <button
+                                            type="button"
+                                            onClick={handleGenerateWithAI}
+                                            className="flex items-center space-x-1 px-3 py-2 border border-gray-400 rounded-full shadow-sm text-gray-800 hover:bg-gray-300 w-full font-medium"
+                                        >
+                                            <svg
+                                                className="w-4 h-4 text-green-500"
+                                                fill="currentColor"
+                                                viewBox="0 0 24 24"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                            >
+                                                <path d="M12 2l2.4 7.2h7.6l-6 4.8 2.4 7.2-6-4.8-6 4.8 2.4-7.2-6-4.8h7.6z" />
+                                            </svg>
+                                            <span>Tạo với AI</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="flex space-x-4">
+                                    <div className="flex-1 space-y-4">
+                                        {/* Tiêu Đề */}
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700">
+                                                Tiêu Đề <span className="text-red-500">*</span>
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={room.title}
+                                                onChange={(e) => setRooms({ ...room, title: e.target.value })}
+                                                className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
+                                                placeholder="Mô tả ngắn gọn về loại hình phòng, diện tích, địa chỉ (VD: cho thuê phòng trọ 20m2 tại Hải Châu, Đà Nẵng)"
+                                            />
+                                            {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
+                                        </div>
+                                        {/* Mô tả */}
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700">
+                                                Mô tả <span className="text-red-500">*</span>
+                                            </label>
+                                            <textarea
+                                                value={room.description}
+                                                onChange={(e) => setRooms({ ...room, description: e.target.value })}
+                                                className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
+                                                placeholder="Mô tả chi tiết về:
+• Loại hình cho thuê
+• Vị trí
+• Diện tích
+• Tình trạng nội thất
+...
+(VD: Phòng trọ có vị trí thuận lợi, gần công viên, trường học...)"
+                                                rows="5"
+                                            />
+                                            {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description}</p>}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

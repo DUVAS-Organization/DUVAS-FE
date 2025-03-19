@@ -151,8 +151,8 @@ const RoomDetailsUser = () => {
     };
 
     const handleRentRoom = async () => {
-        if (!room || !user) {
-            console.log("room hoặc user không hợp lệ:", room, user);
+        if (!room) {
+            console.log("room không hợp lệ:", room);
             showCustomNotification("error", "Vui lòng đăng nhập để tiếp tục!");
             return;
         }
@@ -408,7 +408,7 @@ const RoomDetailsUser = () => {
                                         <img
                                             src={img}
                                             alt={`Thumbnail-${idx}`}
-                                            className={`w-full h-20 object-cover rounded-md ${idx === currentIndex ? 'border-2 border-blue-500' : ''}`}
+                                            className={`w-full h-20 object-cover rounded-md ${idx === currentIndex ? 'border-2 border-red-500' : ''}`}
                                             onClick={() => setCurrentIndex(idx)}
                                         />
                                     </SwiperSlide>
@@ -578,6 +578,13 @@ const RoomDetailsUser = () => {
                         <button
                             onClick={(e) => {
                                 e.preventDefault();
+                                e.stopPropagation();
+                                // Kiểm tra user đã đăng nhập hay chưa
+                                if (!user) {
+                                    showCustomNotification("error", "Vui lòng đăng nhập để tiếp tục!");
+                                    return;
+                                }
+                                // Nếu đã đăng nhập, hiển thị form đặt phòng
                                 setShowRentModal(true);
                             }}
                             className='w-52 bg-red-500 text-white font-medium px-5 py-1 rounded-xl hover:bg-red-400'
@@ -585,10 +592,11 @@ const RoomDetailsUser = () => {
                             Đặt Phòng
                         </button>
                     </div>
-                    <div className="bg-gray-100 py-3 px-4 rounded-md text-sm text-justify text-gray-600 leading-6">
+
+                    <div className="bg-gray-100 py-3 rounded-md text-sm text-justify text-gray-600 leading-6">
                         <span className="inline">
                             <span className="font-medium">Lưu ý:&nbsp;</span>
-                            Sau khi bạn nhấn vào&nbsp;
+                            Sau khi bạn nhấn vào nút&nbsp;
                             <span className="font-medium text-red-500">Đặt phòng</span>, thông tin của bạn sẽ được gửi đến chủ nhà để xem xét.
                             Chủ nhà có thể chấp nhận hoặc từ chối yêu cầu của bạn.
                         </span>
