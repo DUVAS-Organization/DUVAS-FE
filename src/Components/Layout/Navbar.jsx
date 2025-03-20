@@ -16,18 +16,19 @@ import BellNotifications from './UIContext/BellNotifications';
 import SavePosts from './UIContext/SavePosts';
 import { UIProvider } from './UIContext/UIContext';
 import RoomDropdown from './RoomDropdown';
-import ServiceDropdown from './ServiceDropdown'; // Thêm import mới
+import ServiceDropdown from './ServiceDropdown';
 import { MdBedroomParent, MdCleaningServices } from 'react-icons/md';
+import { getUserProfile } from '../../Services/User/UserProfileService'; // Import UserService
 
 const navLinks = [
     { name: "Trang Chủ", path: "/" },
-    // "Tin Dịch vụ" sẽ được thay bằng ServiceDropdown, nên không cần trong navLinks nữa
     { name: "Thông tin", path: "/Wiki" },
 ];
 
 const Navbar = () => {
     const { user, logout, loading } = useAuth();
     const [dropdownOpen, setDropdownOpen] = useState(false); // Dropdown của user profile
+    const [userProfile, setUserProfile] = useState(null); // State để lưu thông tin chi tiết người dùng
     const dropdownRef = useRef(null);
     const location = useLocation();
     const queryParams = new URLSearchParams(location.search);
@@ -43,6 +44,32 @@ const Navbar = () => {
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, [dropdownRef]);
+
+    // Lấy thông tin chi tiết người dùng từ UserService khi user thay đổi
+    useEffect(() => {
+        const fetchUserProfile = async () => {
+            if (user && user.userId) { // Giả định user có userId
+                try {
+                    const profileData = await getUserProfile(user.userId);
+                    setUserProfile({
+                        userName: profileData.userName || user.username,
+                        name: profileData.name || '',
+                        profilePicture: profileData.profilePicture || "https://www.gravatar.com/avatar/?d=mp",
+                    });
+                } catch (error) {
+                    console.error("Error fetching user profile:", error);
+                    // Nếu lỗi, dùng dữ liệu mặc định hoặc từ user
+                    setUserProfile({
+                        userName: user.username || '',
+                        name: '',
+                        profilePicture: "https://www.gravatar.com/avatar/?d=mp",
+                    });
+                }
+            }
+        };
+
+        fetchUserProfile();
+    }, [user]);
 
     if (loading) {
         return <div>Loading...</div>;
@@ -176,16 +203,17 @@ const Navbar = () => {
                                     </div>
                                 </UIProvider>
                                 <div ref={dropdownRef} className="relative flex items-center">
-                                    {user.ProfilePicture ? (
+                                    {userProfile?.profilePicture ? (
                                         <img
-                                            src={user.ProfilePicture}
-                                            alt={`${user.username}'s Profile`}
+                                            src={userProfile.profilePicture}
+                                            alt={`${userProfile.userName}'s Profile`}
                                             className="w-8 h-8 rounded-full border border-gray-300 object-cover"
+                                            onError={(e) => { e.target.src = "https://www.gravatar.com/avatar/?d=mp"; }}
                                         />
                                     ) : (
                                         <div className="w-8 h-8 rounded-full border border-gray-300 bg-gray-200 flex items-center justify-center">
                                             <span className="text-gray-800 font-bold">
-                                                {getInitial(user.username)}
+                                                {getInitial(userProfile?.userName || user.username)}
                                             </span>
                                         </div>
                                     )}
@@ -193,7 +221,7 @@ const Navbar = () => {
                                         onClick={() => setDropdownOpen(!dropdownOpen)}
                                         className="text-gray-800 px-3 py-2 rounded-md text-base font-medium flex items-center"
                                     >
-                                        {user.username}
+                                        {userProfile?.name || userProfile?.userName || user.username}
                                     </button>
                                     {dropdownOpen && (
                                         <div className="absolute top-8 right-0 mt-2 w-64 bg-white shadow-lg rounded-md">

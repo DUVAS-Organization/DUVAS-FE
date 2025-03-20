@@ -75,7 +75,7 @@ const RoomDetailsUser = () => {
                 const payload = token.split('.')[1];
                 const decodedPayload = decodeURIComponent(escape(atob(payload)));
                 const decoded = JSON.parse(decodedPayload);
-                return decoded["phone"] || "Chưa có thông tin";
+                return decoded["sub"] || "Chưa có thông tin";
             }
         } catch (e) {
             console.error("Error decoding token for phone:", e);
