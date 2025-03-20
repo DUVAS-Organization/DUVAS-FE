@@ -542,15 +542,14 @@ const RoomsList = () => {
                             <h3 className="font-bold mb-2">Lọc theo khoảng giá</h3>
                             <ul>
                                 {[
-                                    "Thỏa thuận",
-                                    "Dưới 1 triệu",
-                                    "1 - 3 triệu",
-                                    "3 - 5 triệu",
-                                    "5 - 10 triệu",
-                                    "10 - 20 triệu",
-                                    "20 - 40 triệu",
-                                    "40 - 70 triệu",
-                                    "Trên 70 triệu",
+                                    <Link to="/Rooms?tab=Phòng+trọ&maxPrice=1" className='hover:text-gray-500'>Dưới 1 triệu</Link>,
+                                    <Link to="/Rooms?tab=Phòng+trọ&minPrice=1&maxPrice=3" className='hover:text-gray-500'>1 - 3 triệu</Link>,
+                                    <Link to="/Rooms?tab=Phòng+trọ&minPrice=3&maxPrice=5" className='hover:text-gray-500'>3 - 5 triệu</Link>,
+                                    <Link to="/Rooms?tab=Phòng+trọ&minPrice=5&maxPrice=10" className='hover:text-gray-500'>5 - 10 triệu</Link>,
+                                    <Link to="/Rooms?tab=Phòng+trọ&minPrice=10&maxPrice=20" className='hover:text-gray-500'>10 - 20 triệu</Link>,
+                                    <Link to="/Rooms?tab=Phòng+trọ&minPrice=20&maxPrice=40" className='hover:text-gray-500'>20 - 40 triệu</Link>,
+                                    <Link to="/Rooms?tab=Phòng+trọ&minPrice=40&maxPrice=70" className='hover:text-gray-500'>40 - 70 triệu</Link>,
+                                    <Link to="/Rooms?tab=Phòng+trọ&minPrice=70" className='hover:text-gray-500'>Trên 70 triệu</Link>,
                                 ].map((item, index) => (
                                     <li key={index}>{item}</li>
                                 ))}
@@ -560,16 +559,16 @@ const RoomsList = () => {
                             <h3 className="font-bold mb-2">Lọc theo diện tích</h3>
                             <ul>
                                 {[
-                                    "Dưới 30 m²",
-                                    "30 - 50 m²",
-                                    "50 - 80 m²",
-                                    "80 - 100 m²",
-                                    "100 - 150 m²",
-                                    "150 - 200 m²",
-                                    "200 - 250 m²",
-                                    "250 - 300 m²",
-                                    "300 - 500 m²",
-                                    "Trên 500 m²",
+                                    <Link to="/Rooms?tab=Phòng+trọ&maxArea=30" className='hover:text-gray-500'>Dưới 30 m²</Link>,
+                                    <Link to="/Rooms?tab=Phòng+trọ&minArea=30&maxArea=50" className='hover:text-gray-500'>30 - 50 m²</Link>,
+                                    <Link to="/Rooms?tab=Phòng+trọ&minArea=50&maxArea=80" className='hover:text-gray-500'>50 - 80 m²</Link>,
+                                    <Link to="/Rooms?tab=Phòng+trọ&minArea=80&maxArea=100" className='hover:text-gray-500'>80 - 100 m²</Link>,
+                                    <Link to="/Rooms?tab=Phòng+trọ&minArea=100&maxArea=150" className='hover:text-gray-500'>100 - 150 m²</Link>,
+                                    <Link to="/Rooms?tab=Phòng+trọ&minArea=150&maxArea=200" className='hover:text-gray-500'>150 - 200 m²</Link>,
+                                    <Link to="/Rooms?tab=Phòng+trọ&minArea=200&maxArea=250" className='hover:text-gray-500'>200 - 250 m²</Link>,
+                                    <Link to="/Rooms?tab=Phòng+trọ&minArea=250&maxArea=300" className='hover:text-gray-500'>250 - 300 m²</Link>,
+                                    <Link to="/Rooms?tab=Phòng+trọ&minArea=300&maxArea=500" className='hover:text-gray-500'>300 - 500 m²</Link>,
+                                    <Link to="/Rooms?tab=Phòng+trọ&minArea=500" className='hover:text-gray-500'>Trên 500 m²</Link>,
                                 ].map((item, index) => (
                                     <li key={index}>{item}</li>
                                 ))}

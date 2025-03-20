@@ -16,8 +16,13 @@ const RoomService = {
     updateRoom: (roomId, room) => {
         return axios.put(`${API_URL}/${roomId}`, room).then((res) => res.data);
     },
+
     deleteRoom: (roomId) =>
         axios.delete(`${API_URL}/${roomId}`).then((res) => res.data),
+
+    // Thêm API mới để lấy thông tin hợp đồng của phòng
+    getRoomContract: (roomId) =>
+        axios.get(`${API_URL}/${roomId}/contract`).then((res) => res.data),
 };
 
 export default RoomService;

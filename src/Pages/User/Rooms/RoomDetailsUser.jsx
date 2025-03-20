@@ -19,6 +19,7 @@ import {
     FaAngleLeft,
     FaAngleRight,
     FaHeart,
+    FaTimes,
 } from 'react-icons/fa';
 import { FaPhoneVolume } from 'react-icons/fa6';
 import { BsExclamationTriangle } from 'react-icons/bs';
@@ -28,9 +29,6 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
 import 'swiper/css/free-mode';
 import { useAuth } from '../../../Context/AuthProvider';
-
-// Thêm import mới
-import { FaTimes } from 'react-icons/fa';
 
 const RoomDetailsUser = () => {
     const { roomId } = useParams();
@@ -47,22 +45,42 @@ const RoomDetailsUser = () => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [previewImage, setPreviewImage] = useState(null);
     const [showFullPhone, setShowFullPhone] = useState(false);
-    // Thêm state mới cho modal
     const [showRentModal, setShowRentModal] = useState(false);
+    const [moveInDate, setMoveInDate] = useState('');
+    const [duration, setDuration] = useState('');
+    const [expirationDate, setExpirationDate] = useState('');
 
     const getUserName = () => {
         if (user && user.name) return user.name;
         try {
-            const token = user.token || localStorage.getItem("token");
+            const token = user?.token || localStorage.getItem("token");
             if (token) {
                 const payload = token.split('.')[1];
-                const decoded = JSON.parse(atob(payload));
-                return decoded["http://schemas.xmlsoap.org/ws/2005/identity/claims/name"];
+                const decodedPayload = decodeURIComponent(escape(atob(payload)));
+                const decoded = JSON.parse(decodedPayload);
+                const name = decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"] || "Anonymous";
+                return name;
             }
         } catch (e) {
             console.error("Error decoding token:", e);
         }
         return "Anonymous";
+    };
+
+    const getUserPhone = () => {
+        if (user && user.phone) return user.phone;
+        try {
+            const token = user?.token || localStorage.getItem("token");
+            if (token) {
+                const payload = token.split('.')[1];
+                const decodedPayload = decodeURIComponent(escape(atob(payload)));
+                const decoded = JSON.parse(decodedPayload);
+                return decoded["phone"] || "Chưa có thông tin";
+            }
+        } catch (e) {
+            console.error("Error decoding token for phone:", e);
+        }
+        return "Chưa có thông tin";
     };
 
     useEffect(() => {
@@ -91,7 +109,7 @@ const RoomDetailsUser = () => {
                             categoryRoomId: data.categoryRoomId || 1,
                             image: data.image || '',
                             note: data.note || '',
-                            userId: data.userId
+                            userId: data.userId,
                         };
                         return UserService.getUserById(data.userId)
                             .then((userData) => ({ ...roomData, User: userData }))
@@ -107,19 +125,38 @@ const RoomDetailsUser = () => {
                         console.error('Error fetching room details:', error);
                         showCustomNotification("error", "Không thể tải thông tin phòng!");
                     })
-                : Promise.resolve()
+                : Promise.resolve(),
         ]).finally(() => {
             setLoading(false);
         });
     }, [roomId]);
 
+    useEffect(() => {
+        if (moveInDate && duration) {
+            const moveIn = new Date(moveInDate);
+            const months = parseInt(duration, 10);
+            if (!isNaN(months) && months > 0) {
+                const expiration = new Date(moveIn);
+                expiration.setMonth(expiration.getMonth() + months);
+                const day = String(expiration.getDate()).padStart(2, '0');
+                const month = String(expiration.getMonth() + 1).padStart(2, '0');
+                const year = expiration.getFullYear();
+                setExpirationDate(`${day}/${month}/${year}`);
+            } else {
+                setExpirationDate('');
+            }
+        } else {
+            setExpirationDate('');
+        }
+    }, [moveInDate, duration]);
+
     const getBuildingName = (buildingId) => {
-        const found = buildings.find(b => b.buildingId === buildingId);
-        return found ? (found.buildingName || found.name) : 'N/A';
+        const found = buildings.find((b) => b.buildingId === buildingId);
+        return found ? found.buildingName || found.name : 'N/A';
     };
 
     const getCategoryName = (categoryRoomId) => {
-        const found = categoryRooms.find(c => c.categoryRoomId === categoryRoomId);
+        const found = categoryRooms.find((c) => c.categoryRoomId === categoryRoomId);
         return found ? found.categoryName : 'N/A';
     };
 
@@ -144,15 +181,28 @@ const RoomDetailsUser = () => {
                     return [...prev, parseInt(roomId)];
                 }
             });
-
         } catch (error) {
             console.error("❌ Lỗi khi lưu / xóa bài:", error);
         }
     };
 
-    const handleRentRoom = async () => {
-        if (!room) {
-            console.log("room không hợp lệ:", room);
+    const handleSubmitRentForm = async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const rentDetails = {
+            fullName: formData.get('fullName'),
+            phone: formData.get('phone'),
+            moveInDate: formData.get('moveInDate'),
+            duration: formData.get('duration'),
+            expirationDate: expirationDate,
+        };
+        setShowRentModal(false);
+        await handleRentRoom(rentDetails);
+    };
+
+    const handleRentRoom = async (details) => {
+        if (!room || !user) {
+            console.log("room hoặc user không hợp lệ:", room, user);
             showCustomNotification("error", "Vui lòng đăng nhập để tiếp tục!");
             return;
         }
@@ -177,13 +227,17 @@ const RoomDetailsUser = () => {
 
             const rentPayload = {
                 RoomId: parseInt(roomId),
-                RenterID: user.userId
+                RenterID: user.userId,
+                RentDate: details.moveInDate ? new Date(details.moveInDate).toISOString() : new Date().toISOString(),
+                MonthForRent: details.duration ? parseInt(details.duration) : 1,
             };
             console.log("Đang gửi payload thuê phòng:", rentPayload);
             const rentResponse = await fetch("https://localhost:8000/api/RoomManagement/rent-room", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(rentPayload)
+                headers: {
+                    "Content-Type": "application/json; charset=UTF-8",
+                },
+                body: JSON.stringify(rentPayload),
             });
             console.log("rentResponse status:", rentResponse.status);
             if (!rentResponse.ok) {
@@ -191,22 +245,22 @@ const RoomDetailsUser = () => {
                 throw new Error(rentErrorData.message || "Lỗi khi thực hiện thuê phòng");
             }
 
-            const renterName = getUserName();
-            console.log("RenterName được sử dụng:", renterName);
-
+            const renterName = details.fullName || getUserName();
+            const additionalInfo = `Tên người thuê: ${renterName}, Số điện thoại: ${details.phone}, Ngày dọn vào: ${details.moveInDate || 'Không có thông tin'}, Thời gian thuê: ${details.duration ? details.duration + ' tháng' : 'Không có thông tin'}, Ngày kết thúc: ${details.expirationDate || 'Không có thông tin'}`;
             const sendMailPayload = {
                 userIdLandlord: room.User.userId,
                 roomId: parseInt(roomId),
-                renterName: renterName || "Anonymous"
+                renterName: renterName,
+                additionalInfo: additionalInfo,
             };
             console.log("Đang gửi payload send-mail:", sendMailPayload);
             const sendMailResponse = await fetch("https://localhost:8000/api/RoomManagement/send-mail", {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
+                    "Content-Type": "application/json; charset=UTF-8",
+                    "Authorization": `Bearer ${token}`,
                 },
-                body: JSON.stringify(sendMailPayload)
+                body: JSON.stringify(sendMailPayload),
             });
             console.log("sendMailResponse status:", sendMailResponse.status);
             if (!sendMailResponse.ok) {
@@ -224,94 +278,113 @@ const RoomDetailsUser = () => {
         }
     };
 
-    // Thêm hàm xử lý submit form mới
-    const handleSubmitRentForm = (e) => {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        const rentDetails = {
-            name: formData.get('fullName'),
-            phoneNumber: formData.get('phone'),
-            moveInDate: formData.get('moveInDate'),
-            duration: formData.get('duration')
-        };
-        console.log('Rent details:', rentDetails);
-        setShowRentModal(false);
-        handleRentRoom();
-    };
+    const RentModal = () => {
+        const today = new Date().toISOString().split('T')[0];
 
-    // Thêm component Modal mới
-    const RentModal = () => (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-white p-6 rounded-lg w-full max-w-md">
-                <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-xl font-semibold">Thông tin thuê phòng</h3>
-                    <button
-                        onClick={() => setShowRentModal(false)}
-                        className="text-gray-600 hover:text-gray-800"
-                    >
-                        <FaTimes size={20} />
-                    </button>
-                </div>
-                <form onSubmit={handleSubmitRentForm}>
-                    <div className="mb-4">
-                        <label className="block text-gray-700 mb-2">Họ và tên</label>
-                        <input
-                            type="text"
-                            name="fullName"
-                            required
-                            className="w-full p-2 border rounded-md"
-                            placeholder="Nhập họ và tên"
-                        />
-                    </div>
-                    <div className="mb-4">
-                        <label className="block text-gray-700 mb-2">Số điện thoại</label>
-                        <input
-                            type="tel"
-                            name="phone"
-                            required
-                            className="w-full p-2 border rounded-md"
-                            placeholder="Nhập số điện thoại"
-                        />
-                    </div>
-                    <div className="mb-4">
-                        <label className="block text-gray-700 mb-2">Ngày dọn vào</label>
-                        <input
-                            type="date"
-                            name="moveInDate"
-                            required
-                            className="w-full p-2 border rounded-md"
-                        />
-                    </div>
-                    <div className="mb-4">
-                        <label className="block text-gray-700 mb-2">Thời gian thuê (tháng)</label>
-                        <input
-                            type="number"
-                            name="duration"
-                            min="1"
-                            required
-                            className="w-full p-2 border rounded-md"
-                            placeholder="Số tháng muốn thuê"
-                        />
-                    </div>
-                    <div className="flex justify-end gap-4">
+        return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                <div className="bg-white p-6 rounded-lg w-full max-w-md">
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-xl font-semibold">Thông tin thuê phòng</h3>
                         <button
-                            type="button"
                             onClick={() => setShowRentModal(false)}
-                            className="px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400"
+                            className="text-gray-600 hover:text-gray-800"
                         >
-                            Hủy
-                        </button>
-                        <button
-                            type="submit"
-                            className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
-                        >
-                            Xác nhận
+                            <FaTimes size={20} />
                         </button>
                     </div>
-                </form>
+                    <form onSubmit={handleSubmitRentForm}>
+                        <div className="mb-4">
+                            <label className="block text-gray-700 mb-2 font-semibold" style={{ fontFamily: 'Arial, sans-serif' }}>
+                                Họ và tên
+                            </label>
+                            <input
+                                type="text"
+                                name="fullName"
+                                required
+                                readOnly
+                                className="w-full p-2 border rounded-md bg-gray-100"
+                                defaultValue={getUserName()}
+                                style={{ fontFamily: 'Arial, sans-serif' }}
+                            />
+                        </div>
+                        <div className="mb-4">
+                            <label className="block text-gray-700 mb-2 font-semibold" style={{ fontFamily: 'Arial, sans-serif' }}>
+                                Số điện thoại
+                            </label>
+                            <input
+                                type="tel"
+                                name="phone"
+                                required
+                                readOnly
+                                className="w-full p-2 border rounded-md bg-gray-100"
+                                defaultValue={getUserPhone()}
+                                style={{ fontFamily: 'Arial, sans-serif' }}
+                            />
+                        </div>
+                        <div className="mb-4">
+                            <label className="block text-gray-700 mb-2 font-semibold" style={{ fontFamily: 'Arial, sans-serif' }}>
+                                Ngày dọn vào
+                            </label>
+                            <input
+                                type="date"
+                                name="moveInDate"
+                                required
+                                min={today}
+                                className="w-full p-2 border rounded-md"
+                                value={moveInDate}
+                                onChange={(e) => setMoveInDate(e.target.value)}
+                                style={{ fontFamily: 'Arial, sans-serif' }}
+                            />
+                        </div>
+                        <div className="mb-4">
+                            <label className="block text-gray-700 mb-2 font-semibold" style={{ fontFamily: 'Arial, sans-serif' }}>
+                                Thời gian thuê (tháng)
+                            </label>
+                            <input
+                                type="number"
+                                name="duration"
+                                min="1"
+                                required
+                                className="w-full p-2 border rounded-md"
+                                placeholder="Số tháng muốn thuê"
+                                value={duration}
+                                onChange={(e) => setDuration(e.target.value)}
+                                style={{ fontFamily: 'Arial, sans-serif' }}
+                            />
+                        </div>
+                        <div className="mb-4">
+                            <label className="block text-gray-700 mb-2 font-semibold" style={{ fontFamily: 'Arial, sans-serif' }}>
+                                Ngày kết thúc
+                            </label>
+                            <input
+                                type="text"
+                                value={expirationDate}
+                                readOnly
+                                className="w-full p-2 border rounded-md bg-gray-100"
+                                style={{ fontFamily: 'Arial, sans-serif' }}
+                            />
+                        </div>
+                        <div className="flex justify-end gap-4">
+                            <button
+                                type="button"
+                                onClick={() => setShowRentModal(false)}
+                                className="px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400"
+                            >
+                                Hủy
+                            </button>
+                            <button
+                                type="submit"
+                                className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
+                            >
+                                Xác nhận
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
-        </div>
-    );
+        );
+    };
 
     if (loading) {
         return (
@@ -365,6 +438,12 @@ const RoomDetailsUser = () => {
             ? userPhone.slice(0, userPhone.length - 3) + '***'
             : 'N/A';
 
+    // Kiểm tra xem người dùng có phải là chủ phòng không
+    const isLandlord = user && room && String(user.userId) === String(room.User.userId);
+    console.log("Current user ID:", user?.userId);
+    console.log("Room owner ID:", room?.User?.userId);
+    console.log("Is landlord:", isLandlord);
+
     return (
         <div className="max-w-6xl mx-auto p-4 bg-white">
             <div className="flex flex-col md:flex-row gap-4">
@@ -408,7 +487,7 @@ const RoomDetailsUser = () => {
                                         <img
                                             src={img}
                                             alt={`Thumbnail-${idx}`}
-                                            className={`w-full h-20 object-cover rounded-md ${idx === currentIndex ? 'border-2 border-red-500' : ''}`}
+                                            className={`w-full h-20 object-cover rounded-md ${idx === currentIndex ? 'border-2 border-blue-500' : ''}`}
                                             onClick={() => setCurrentIndex(idx)}
                                         />
                                     </SwiperSlide>
@@ -497,14 +576,14 @@ const RoomDetailsUser = () => {
                                     state: {
                                         partnerId: room.User.userId,
                                         partnerName: room.User.name,
-                                        partnerAvatar: room.User.profilePicture
-                                    }
+                                        partnerAvatar: room.User.profilePicture,
+                                    },
                                 });
                             }}
                         >
-                            Nhắn Tin
+                            Nhắn Tin&nbsp;
                         </button>
-                        &nbsp;giúp mình nhé.
+                        giúp mình nhé.
                     </p>
                     <div>
                         <h2 className='text-xl font-semibold mb-5'>Chi tiết</h2>
@@ -574,58 +653,57 @@ const RoomDetailsUser = () => {
                             </button>
                         </div>
                     </div>
-                    <div className='flex justify-center'>
-                        <button
-                            onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                // Kiểm tra user đã đăng nhập hay chưa
-                                if (!user) {
-                                    showCustomNotification("error", "Vui lòng đăng nhập để tiếp tục!");
-                                    return;
-                                }
-                                // Nếu đã đăng nhập, hiển thị form đặt phòng
-                                setShowRentModal(true);
-                            }}
-                            className='w-52 bg-red-500 text-white font-medium px-5 py-1 rounded-xl hover:bg-red-400'
-                        >
-                            Đặt Phòng
-                        </button>
-                    </div>
+                    {/* Ẩn nút Đặt phòng nếu người dùng là chủ phòng */}
+                    {!isLandlord && (
+                        <div>
+                            <div className='flex justify-center'>
+                                <button
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        setShowRentModal(true);
+                                    }}
+                                    className='w-52 bg-red-500 text-white font-medium px-5 py-1 rounded-xl hover:bg-red-400'
+                                >
+                                    Đặt Phòng
+                                </button>
+                            </div>
+                            <div className="bg-gray-100 py-3 rounded-md text-sm text-justify text-gray-600 leading-6">
+                                <span className="inline">
+                                    <span className="font-medium">Lưu ý: </span>
+                                    Sau khi bạn nhấn vào&nbsp;
+                                    <span className="font-medium text-red-500">Đặt phòng</span>, thông tin của bạn sẽ được gửi đến chủ nhà để xem xét.
+                                    Chủ nhà có thể chấp nhận hoặc từ chối yêu cầu của bạn.
+                                </span>
+                            </div>
+                            <div className="bg-gray-100 py-3 rounded-md text-justify text-sm text-gray-600 leading-6">
+                                Hãy cho chủ nhà biết bạn thấy phòng này hoặc đã đặt phòng trên <strong>DUVAS </strong>
+                                bằng cách
+                                <button
+                                    className="text-red-500 hover:underline font-medium ml-1"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        navigate('/Message', {
+                                            state: {
+                                                partnerId: room.User.userId,
+                                                partnerName: room.User.name,
+                                                partnerAvatar: room.User.profilePicture,
+                                            },
+                                        });
+                                    }}
+                                >
+                                    Nhắn Tin
+                                </button> để nhận ưu đãi tốt nhất.
+                                <br />
+                            </div>
+                        </div>
 
-                    <div className="bg-gray-100 py-3 rounded-md text-sm text-justify text-gray-600 leading-6">
-                        <span className="inline">
-                            <span className="font-medium">Lưu ý:&nbsp;</span>
-                            Sau khi bạn nhấn vào nút&nbsp;
-                            <span className="font-medium text-red-500">Đặt phòng</span>, thông tin của bạn sẽ được gửi đến chủ nhà để xem xét.
-                            Chủ nhà có thể chấp nhận hoặc từ chối yêu cầu của bạn.
-                        </span>
-                    </div>
+                    )}
 
-                    <div className="bg-gray-100 py-3 rounded-md text-justify text-sm text-gray-600 leading-6">
-                        Hãy cho chủ nhà biết bạn thấy phòng này hoặc đã đặt phòng trên <strong>DUVAS </strong>
-                        bằng cách
-                        <button
-                            className="text-red-500 hover:underline font-medium ml-1"
-                            onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                navigate('/Message', {
-                                    state: {
-                                        partnerId: room.User.userId,
-                                        partnerName: room.User.name,
-                                        partnerAvatar: room.User.profilePicture
-                                    }
-                                });
-                            }}
-                        >
-                            Nhắn Tin
-                        </button> để nhận ưu đãi tốt nhất.
-                        <br />
-                    </div>
+
+
                 </div>
             </div>
-            {/* Thêm render modal mới */}
             {showRentModal && <RentModal />}
             {previewImage && (
                 <div

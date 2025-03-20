@@ -89,7 +89,10 @@ const RoomList = () => {
                 // Ưu tiên status 2 (Chờ giao dịch) lên đầu
                 if (a.status === 2 && b.status !== 2) return -1;
                 if (a.status !== 2 && b.status === 2) return 1;
-                return 0; // Giữ nguyên thứ tự cho các trạng thái khác
+                // Nếu status giống nhau, sắp xếp theo CreatedDate giảm dần (mới nhất lên đầu)
+                const dateA = new Date(a.createdDate || a.CreatedDate || 0);
+                const dateB = new Date(b.createdDate || b.CreatedDate || 0);
+                return dateB - dateA;
             });
             setRooms(sortedRooms);
         } catch (error) {
@@ -105,7 +108,13 @@ const RoomList = () => {
         try {
             const response = await RoomLandlordService.getRoomsByStatus(status);
             console.log('fetchRoomsByStatus response:', response);
-            setRooms(response.rooms || []);
+            const sortedRooms = [...(response.rooms || [])].sort((a, b) => {
+                // Sắp xếp theo CreatedDate giảm dần (mới nhất lên đầu)
+                const dateA = new Date(a.createdDate || a.CreatedDate || 0);
+                const dateB = new Date(b.createdDate || b.CreatedDate || 0);
+                return dateB - dateA;
+            });
+            setRooms(sortedRooms);
         } catch (error) {
             console.error('Lỗi khi lấy phòng theo trạng thái:', error);
             setRooms([]);
@@ -210,9 +219,9 @@ const RoomList = () => {
                                                     <FaChartArea className="mr-1" />
                                                     Diện tích:
                                                     <span className="text-gray-800">
-                                                        &nbsp;{room.acreage || 'N/A'}
+                                                        {room.acreage || 'N/A'}
                                                     </span>
-                                                    &nbsp;m²
+                                                    m²
                                                 </p>
                                                 <p className="text-red-500 font-medium text-base mt-1">
                                                     {room.price ? `${room.price.toLocaleString('vi-VN')} đ/tháng` : 'Thỏa thuận'}

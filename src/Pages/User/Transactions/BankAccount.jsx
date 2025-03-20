@@ -82,7 +82,7 @@ const BankAccount = () => {
             );
             setChangingBankAccount(null);
             setIsEnteringOtp(false);
-            showCustomNotification("success", "Thành công!");
+            showCustomNotification("success", "Kích hoạt thành công!");
 
         } catch (error) {
             console.error("Error activating account:", error);
@@ -169,7 +169,7 @@ const BankAccount = () => {
                                 <table className="w-full border border-gray-300 shadow-md rounded-lg">
                                     <thead className="bg-gray-100">
                                         <tr>
-                                            <th className="px-4 py-2 border">ID</th>
+                                            <th className="px-4 py-2 border max-w-[10px]">ID</th>
                                             <th className="px-4 py-2 border">Số tài khoản</th>
                                             <th className="px-4 py-2 border">Tên tài khoản</th>
                                             <th className="px-4 py-2 border">Mã ngân hàng</th>

@@ -479,7 +479,7 @@ const RoomForm = () => {
                                     </select>
                                 </div>
                                 <div className="w-full flex items-center">
-                                    <label className="block text-sm font-medium text-gray-700 w-1/3 ml-20">
+                                    <label className="block text-sm font-medium text-gray-700 w-1/3">
                                         Phòng tắm <span className="text-red-500">*</span>
                                     </label>
                                     <div className="flex-1 flex items-center space-x-2">
@@ -503,7 +503,7 @@ const RoomForm = () => {
                                 </div>
 
                                 <div className="w-full flex items-center">
-                                    <label className="block text-sm font-medium text-gray-700 w-1/3 ml-30">
+                                    <label className="block text-sm font-medium text-gray-700">
                                         Giường ngủ <span className="text-red-500">*</span>
                                     </label>
                                     <div className="flex-1 flex items-center space-x-2">

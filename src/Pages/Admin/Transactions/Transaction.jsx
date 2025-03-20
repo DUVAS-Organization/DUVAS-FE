@@ -248,7 +248,7 @@ const AdminTransaction = () => {
                     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
                         <div className="bg-white p-4 rounded-lg shadow-lg text-center">
                             <h2 className="text-xl font-bold mb-2">Mã QR Chuyển Tiền</h2>
-                            <img src={qrCode} alt="QR Code" className="mx-auto" />
+                            <img src={qrCode} alt="QR Code" className="mx-auto max-h-[550px]" />
                             <button className="mt-4 px-4 py-2 bg-red-500 text-white rounded" onClick={() => setIsModalOpen(false)}>
                                 Đóng
                             </button>

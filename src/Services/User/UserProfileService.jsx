@@ -15,7 +15,7 @@ export const getUserProfile = async (userId) => {
 // Chỉnh sửa hồ sơ người dùng (không cần token)
 export const editProfile = async (userId, updatedUser) => {
     try {
-        const response = await axios.put(`${API_URL}/${userId}/EditProfile`, updatedUser);
+        const response = await axios.put(`${API_URL}/edit-profile/${userId}`, updatedUser);
         return response.data;
     } catch (error) {
         throw error.response?.data || { message: 'Lỗi khi chỉnh sửa hồ sơ' };

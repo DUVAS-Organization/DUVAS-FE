@@ -15,6 +15,7 @@ import {
     getUserProfile,
     editProfile,
     changePassword,
+    addPassword,
 } from "../../../Services/User/UserProfileService";
 import { showCustomNotification } from '../../../Components/Notification'
 
@@ -70,15 +71,16 @@ const Profile = () => {
         Sex: "",
         ProfilePicture: "https://www.gravatar.com/avatar/?d=mp",
         Money: 0,
+        Password: null,
     });
 
     const location = useLocation();
     const navigate = useNavigate();
 
     // Lấy và kiểm tra token
-    const storedToken = localStorage.getItem("token") || localStorage.getItem("authToken"); // Kiểm tra cả "authToken" nếu cần
+    const storedToken = localStorage.getItem("token") || localStorage.getItem("authToken");
     const decodedToken = storedToken ? parseJwt(storedToken) : null;
-    const currentUserId = decodedToken ? (decodedToken.UserId || decodedToken.sub) : null; // Thử lấy từ UserId hoặc sub
+    const currentUserId = decodedToken ? (decodedToken.UserId || decodedToken.sub) : null;
 
     // Debug
     useEffect(() => {
@@ -110,8 +112,8 @@ const Profile = () => {
                     Sex: userData.sex || "",
                     ProfilePicture: userData.profilePicture || "https://www.gravatar.com/avatar/?d=mp",
                     Money: userData.money || 0,
+                    Password: userData.password || null,
                 });
-                // showCustomNotification("error", null);
             } catch (error) {
                 showCustomNotification("error", "Lỗi khi lấy thông tin người dùng.");
             }
@@ -139,24 +141,29 @@ const Profile = () => {
         }
 
         const updatedUser = {
-            UserId: parseInt(currentUserId),
-            UserName: profileData.UserName || null,
-            Name: profileData.Name.trim(),
-            Gmail: profileData.Gmail || null,
-            Phone: profileData.Phone || null,
-            Address: profileData.Address || null,
-            Sex: profileData.Sex || null,
-            ProfilePicture: profileData.ProfilePicture,
-            Money: profileData.Money,
+            userName: profileData.UserName || null,
+            name: profileData.Name.trim(),
+            address: profileData.Address || null,
+            phone: profileData.Phone || null,
+            sex: profileData.Sex || null,
+            profilePicture: profileData.ProfilePicture,
         };
 
         try {
-            // showCustomNotification("error", null);
-            // showCustomNotification("success", null);
             await editProfile(currentUserId, updatedUser);
             showCustomNotification("success", "Cập nhật thông tin thành công!");
+            setProfileData((prev) => ({
+                ...prev,
+                UserName: updatedUser.userName,
+                Name: updatedUser.name,
+                Address: updatedUser.address,
+                Phone: updatedUser.phone,
+                Sex: updatedUser.sex,
+                ProfilePicture: updatedUser.profilePicture,
+            }));
         } catch (error) {
             showCustomNotification("error", "Lỗi khi cập nhật thông tin.");
+            console.error("Error updating profile:", error);
         }
     };
 
@@ -174,40 +181,81 @@ const Profile = () => {
             return;
         }
 
-        if (currentPassword === newPassword) {
-            showCustomNotification("error", "Mật khẩu đã được sử dụng!");
+        // Kiểm tra nếu OldPassword chứa dấu cách hoặc khoảng trống (chỉ áp dụng khi đã có mật khẩu)
+        if (profileData.Password !== null && /\s/.test(currentPassword)) {
+            showCustomNotification("error", "Mật khẩu hiện tại không được chứa dấu cách hoặc khoảng trống.");
             return;
         }
 
         const passwordRegex = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
-        if (!passwordRegex.test(newPassword)) {
-            // showCustomNotification("error", "Mật khẩu phải có ít nhất 8 ký tự, chứa ít nhất một chữ hoa và một số.");
-            setError("Mật khẩu phải có ít nhất 8 ký tự, chứa ít nhất một chữ hoa và một số.");
-            return;
+
+        // Nếu chưa có mật khẩu (Password = null), gọi API addPassword
+        if (profileData.Password === null) {
+            // Kiểm tra ô "Mật khẩu hiện tại" phải để trống
+            if (currentPassword !== "") {
+                showCustomNotification("error", "Sai mật khẩu cũ!");
+                return;
+            }
+
+            if (!passwordRegex.test(newPassword)) {
+                setError("Mật khẩu phải có ít nhất 8 ký tự, chứa ít nhất một chữ hoa và một số.");
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                showCustomNotification("error", "Mật khẩu mới không khớp với phần nhập lại!");
+                return;
+            }
+
+            const passwordData = {
+                OldPassword: "", // Chuỗi rỗng để thỏa mãn validation backend
+                NewPassword: newPassword,
+                ConfirmNewPassword: confirmPassword,
+            };
+
+            try {
+                await addPassword(passwordData);
+                showCustomNotification("success", "Đổi mật khẩu thành công!");
+                setProfileData((prev) => ({ ...prev, Password: "hashed" }));
+                setNewPassword("");
+                setConfirmPassword("");
+            } catch (error) {
+                showCustomNotification("error", "Lỗi khi thêm mật khẩu.");
+                console.error("Error adding password:", error);
+            }
         }
+        // Nếu đã có mật khẩu, giữ nguyên logic changePassword cũ
+        else {
+            if (currentPassword === newPassword) {
+                showCustomNotification("error", "Mật khẩu đã được sử dụng!");
+                return;
+            }
 
-        if (newPassword !== confirmPassword) {
-            showCustomNotification("error", "Mật khẩu mới không khớp với phần nhập lại!");
-            // setError("Không khớp với mật khẩu mới!");
-            return;
-        }
+            if (!passwordRegex.test(newPassword)) {
+                setError("Mật khẩu phải có ít nhất 8 ký tự, chứa ít nhất một chữ hoa và một số.");
+                return;
+            }
 
-        const passwordData = {
-            OldPassword: currentPassword,
-            NewPassword: newPassword,
-            ConfirmNewPassword: confirmPassword,
-        };
+            if (newPassword !== confirmPassword) {
+                showCustomNotification("error", "Mật khẩu mới không khớp với phần nhập lại!");
+                return;
+            }
 
-        try {
-            // showCustomNotification("error", null);
-            // showCustomNotification("success", null);
-            const result = await changePassword(passwordData);
-            showCustomNotification("success", "Đổi mật khẩu thành công!");
-            setCurrentPassword("");
-            setNewPassword("");
-            setConfirmPassword("");
-        } catch (error) {
-            showCustomNotification("error", "Sai mật khẩu cũ");
+            const passwordData = {
+                OldPassword: currentPassword,
+                NewPassword: newPassword,
+                ConfirmNewPassword: confirmPassword,
+            };
+
+            try {
+                const result = await changePassword(passwordData);
+                showCustomNotification("success", "Đổi mật khẩu thành công!");
+                setCurrentPassword("");
+                setNewPassword("");
+                setConfirmPassword("");
+            } catch (error) {
+                showCustomNotification("error", "Sai mật khẩu cũ");
+            }
         }
     };
 
@@ -244,9 +292,6 @@ const Profile = () => {
                     <h1 className="text-2xl font-bold mb-5 border-b-2 pb-2 border-gray-700">
                         Quản lý tài khoản
                     </h1>
-
-                    {/* {error && <div className="text-red-500 text-center mb-4">{error}</div>} */}
-                    {/* {successMessage && <div className="text-green-500 text-center mb-4">{successMessage}</div>} */}
 
                     <div className="border-b border-gray-200 mb-4">
                         <ul className="flex space-x-4">
@@ -471,7 +516,6 @@ const Profile = () => {
                                                     onChange={(e) => setConfirmPassword(e.target.value)}
                                                     required
                                                 />
-                                                {/* {error && <div className="text-red-500">{error}</div>} */}
                                                 <button
                                                     type="button"
                                                     className="absolute right-3 top-5 transform -translate-y-1/2 text-gray-500 text-xl"

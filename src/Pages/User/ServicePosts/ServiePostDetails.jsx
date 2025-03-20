@@ -411,14 +411,14 @@ const ServicePostDetails = () => {
                             </button>
                         </div>
                     </div>
-                    <div className="flex justify-center">
+                    {/* <div className="flex justify-center">
                         <button
                             onClick={handleRequestService}
                             className="w-52 bg-red-500 text-white font-medium px-5 py-1 rounded-xl hover:bg-red-400"
                         >
                             Yêu cầu dịch vụ
                         </button>
-                    </div>
+                    </div> */}
                     <div className="bg-gray-100 py-3 rounded-md text-sm text-gray-600 leading-6">
                         Hãy cho nhà cung cấp biết bạn thấy dịch vụ này trên <strong>DUVAS </strong>
                         bằng cách

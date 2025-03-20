@@ -48,7 +48,7 @@ const WithdrawTransaction = () => {
                                                 <td className="p-3 border text-left">{transaction.bankCode}</td>
                                                 <td className="p-3 border text-left whitespace-nowrap">{new Date(transaction.createdAt).toLocaleString()}</td>
                                                 <td className="p-3 border text-left whitespace-nowrap">{new Date(transaction.updatedAt).toLocaleString()}</td>
-                                                <td className="p-3 border text-left">
+                                                <td className="p-3 border text-left w-32">
                                                     <span className={`px-2 py-1 rounded text-white ${transaction.status === "Pending" ? "bg-yellow-500" : "bg-green-500"}`}>
                                                         {transaction.status === "Pending" ? "Đang xử lý" : "Thành Công"}
                                                     </span>
