@@ -48,6 +48,7 @@ import RoomRentalConfirmation from '../Pages/Landlord/Rooms/RoomRentalConfirmati
 
 import ServicePostDetailsUser from '../Pages/User/ServicePosts/ServiePostDetails'
 import Wiki from '../Pages/Wiki'
+import RentalList from '../Pages/User/Profiles/RentalList'
 import Transactions from '../Pages/User/Profiles/Transactions';
 const RoutesConfig = () => {
     const { user } = useAuth();
@@ -57,6 +58,7 @@ const RoutesConfig = () => {
 
             {/* Routes dành cho tất cả người dùng (User hoặc Admin) */}
             <Route path="/" element={<Home />} />
+            <Route path="/RentalList" element={<RentalList />} />
             <Route path="/Rooms" element={<RoomsList />} />
             <Route path="/Logins" element={<Login />} />
             <Route path="/Message" element={<Message />} />
