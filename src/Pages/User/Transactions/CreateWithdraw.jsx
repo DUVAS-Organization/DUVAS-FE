@@ -17,7 +17,9 @@ const CreateWithdraw = () => {
             try {
                 const response = await UserService.getBankAccounts();
                 if (response.status === 200) {
-                    setBankAccounts(response.data);
+                    
+                    const activeBanks = response.data.filter(bank => bank.status === "Active");
+                setBankAccounts(activeBanks);
                 }
             } catch (error) {
                 setError("Failed to fetch bank accounts.");
@@ -40,11 +42,11 @@ const CreateWithdraw = () => {
         try {
             const response = await UserService.withdraw(amount, selectedBank);
             if (response.status === 200) {
-                setMessage("Withdraw request created successfully!");
+                showCustomNotification("success", "Tạo đơn rút tiền thành công!");
                 setAmount("");
                 setSelectedBank("");
             } else {
-                setError("Withdraw request failed. Please try again.");
+                showCustomNotification("error", "Vui lòng kiểm tra lại đơn rút tiềntiền!");
             }
         } catch (err) {
             setError("An error occurred while processing your request.");
@@ -91,7 +93,7 @@ const CreateWithdraw = () => {
                                 {bankAccounts.length > 0 ? (
                                     bankAccounts.map((bank) => (
                                         <option key={bank.id} value={bank.id}>
-                                            {bank.accountName} - {bank.accountNumber}
+                                            {bank.bankCode} - {bank.accountName} - {bank.accountNumber} 
                                         </option>
                                     ))
                                 ) :

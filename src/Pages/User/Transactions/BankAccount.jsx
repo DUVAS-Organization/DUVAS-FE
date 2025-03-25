@@ -34,26 +34,43 @@ const BankAccount = () => {
 
     const handleAddBank = async () => {
         try {
-            let data = { accountNumber, accountName , bankCode: selectedBankCode };
+            // Kiểm tra xem accountNumber và bankCode đã tồn tại chưa
+            const isDuplicate = userBankAccounts.some(
+                acc => acc.accountNumber === accountNumber && acc.bankCode === selectedBankCode
+            );
+
+            if (isDuplicate) {
+                showCustomNotification("error", "Có lỗi xảy ra! Vui lòng kiểm tra lại thông tin");
+                return; // Dừng hàm nếu tài khoản đã tồn tại
+            }
+
+            // Nếu không trùng, thêm tài khoản mới
+            let data = { accountNumber, accountName, bankCode: selectedBankCode };
             let resp = await UserService.addNewBank(data, otp);
             setUserBankAccounts(prev => [...prev, resp.data]);
             showCustomNotification("success", "Thêm tài khoản thanh toán thành công!");
             setIsEnteringOtp(false);
         } catch (error) {
             console.error(error);
-            showCustomNotification("error", "Có lỗi xảy ra!");
+            showCustomNotification("error", "Có lỗi xảy ra! Vui lòng kiểm tra lại thông tin");
         }
-
     };
 
     const genOtp = async () => {
-        let exists = userBankAccounts.some(acc => acc.accountNumber === accountNumber);
-        if (!exists) {
-            UserService.genOtp();
-            setIsEnteringOtp(true);
-        } else {
-            alert("Số tài khoản đã được thêm.");
+        // Kiểm tra xem accountNumber và bankCode đã tồn tại chưa
+        const isDuplicate = userBankAccounts.some(
+            acc => acc.accountNumber === accountNumber && acc.bankCode === selectedBankCode
+        );
+
+        if (isDuplicate) {
+            showCustomNotification("error", "Tài khoản đã có sẵn!");
+            return; // Dừng hàm nếu tài khoản đã tồn tại
         }
+
+        // Nếu không trùng, gửi OTP
+        UserService.genOtp();
+        setIsEnteringOtp(true);
+        showCustomNotification("success", "OTP đã được gửi qua email!");
     };
 
     const handleChangeStatus = async (accountId, currentStatus) => {
@@ -69,6 +86,7 @@ const BankAccount = () => {
             setChangingBankAccount(accountId);
             UserService.genOtp();
             setIsEnteringOtp(true);
+            showCustomNotification("success", "OTP đã được gửi qua email!");
         }
     };
 
@@ -87,7 +105,6 @@ const BankAccount = () => {
         } catch (error) {
             console.error("Error activating account:", error);
             showCustomNotification("error", "Có lỗi xảy ra!");
-
         }
     };
 
@@ -101,48 +118,47 @@ const BankAccount = () => {
 
                     <div className="flex">
                         {!isEnteringOtp ? (
-                            <div className="w-1/3 bg-white p-6 rounded-lg shadow-md
-                            ">
-                            <h1 className="font-bold mb-1 text-center">Tạo tài khoản ngân hàng</h1>
-                            <form className="">
-                                <label className="block text-sm font-medium text-gray-700">Nhập số tài khoản</label>
-                                <input
-                                    type="text"
-                                    value={accountNumber}
-                                    onChange={(e) => setAccountNumber(e.target.value)}
-                                    className="mt-1 p-2 w-full border border-gray-300 rounded-md"
-                                />
+                            <div className="w-1/3 bg-white p-6 rounded-lg shadow-md">
+                                <h1 className="font-bold mb-1 text-center">Tạo tài khoản ngân hàng</h1>
+                                <form className="">
+                                    <label className="block text-sm font-medium text-gray-700">Nhập số tài khoản</label>
+                                    <input
+                                        type="text"
+                                        value={accountNumber}
+                                        onChange={(e) => setAccountNumber(e.target.value)}
+                                        className="mt-1 p-2 w-full border border-gray-300 rounded-md"
+                                    />
 
-                                <label className="block text-sm font-medium text-gray-700">Nhập tên chủ tài khoản</label>
-                                <input
-                                    type="text"
-                                    value={accountName}
-                                    onChange={(e) => setAccountName(e.target.value)}
-                                    className="mt-1 p-2 w-full border border-gray-300 rounded-md"
-                                />
+                                    <label className="block text-sm font-medium text-gray-700">Nhập tên chủ tài khoản</label>
+                                    <input
+                                        type="text"
+                                        value={accountName}
+                                        onChange={(e) => setAccountName(e.target.value)}
+                                        className="mt-1 p-2 w-full border border-gray-300 rounded-md"
+                                    />
 
-                                <label className="block text-sm font-medium text-gray-700">Chọn ngân hàng</label>
-                                <select
-                                    onChange={(e) => setSelectedBankCode(e.target.value)}
-                                    value={selectedBankCode}
-                                    className="mt-1 p-2 w-full border border-gray-300 rounded-md"
-                                >
-                                    <option disabled value="0">Chọn ngân hàng</option>
-                                    {bankCodes.map((bank) => (
-                                        <option key={bank.id} value={bank.code}>
-                                            {bank.shortName} ({bank.name})
-                                        </option>
-                                    ))}
-                                </select>
+                                    <label className="block text-sm font-medium text-gray-700">Chọn ngân hàng</label>
+                                    <select
+                                        onChange={(e) => setSelectedBankCode(e.target.value)}
+                                        value={selectedBankCode}
+                                        className="mt-1 p-2 w-full border border-gray-300 rounded-md"
+                                    >
+                                        <option disabled value="0">Chọn ngân hàng</option>
+                                        {bankCodes.map((bank) => (
+                                            <option key={bank.id} value={bank.code}>
+                                                {bank.shortName} ({bank.name})
+                                            </option>
+                                        ))}
+                                    </select>
 
-                                <button
-                                    onClick={() => genOtp()}
-                                    type="button"
-                                    className="mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-md"
-                                >
-                                    Lấy mã OTP
-                                </button>
-                            </form>
+                                    <button
+                                        onClick={() => genOtp()}
+                                        type="button"
+                                        className="mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-md"
+                                    >
+                                        Lấy mã OTP
+                                    </button>
+                                </form>
                             </div>
                         ) : (
                             <div className="w-1/3 bg-white p-6 rounded-lg shadow-md">
@@ -169,18 +185,18 @@ const BankAccount = () => {
                                 <table className="w-full border border-gray-300 shadow-md rounded-lg">
                                     <thead className="bg-gray-100">
                                         <tr>
-                                            <th className="px-4 py-2 border">ID</th>
-                                            <th className="px-4 py-2 border">Account Number</th>
-                                            <th className="px-4 py-2 border">Account Name</th>
-                                            <th className="px-4 py-2 border">Bank Code</th>
-                                            <th className="px-4 py-2 border">Status</th>
-                                            <th className="px-4 py-2 border">Action</th>
+                                            <th className="px-4 py-2 border">STT</th> {/* Thêm cột STT */}
+                                            <th className="px-4 py-2 border">Số tài khoản</th>
+                                            <th className="px-4 py-2 border">Tên tài khoản</th>
+                                            <th className="px-4 py-2 border">Ngân hàng</th>
+                                            <th className="px-4 py-2 border">Trạng thái</th>
+                                            <th className="px-4 py-2 border"></th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {userBankAccounts.map((account) => (
+                                        {userBankAccounts.map((account, index) => (
                                             <tr key={account.id} className="text-center hover:bg-gray-50">
-                                                <td className="px-4 py-2 border">{account.id}</td>
+                                                <td className="px-4 py-2 border text-center">{index + 1}</td> {/* Hiển thị STT */}
                                                 <td className="px-4 py-2 border">{account.accountNumber}</td>
                                                 <td className="px-4 py-2 border">{account.accountName}</td>
                                                 <td className="px-4 py-2 border uppercase">{account.bankCode}</td>
