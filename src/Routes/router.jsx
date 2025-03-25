@@ -55,6 +55,8 @@ import Withdraw from '../Pages/User/Transactions/Withdraw';
 import CreateWithdraw from '../Pages/User/Transactions/CreateWithdraw';
 import AdminTransaction from '../Pages/Admin/Transactions/Transaction';
 
+
+import RentalList from '../Pages/User/Profiles/RentalList'
 const RoutesConfig = () => {
     const { user } = useAuth();
 
@@ -102,6 +104,10 @@ const RoutesConfig = () => {
             <Route
                 path="/Withdraw/Create"
                 element={user ? <CreateWithdraw /> : <Navigate to="/" />}
+            />
+            <Route
+                path="/RentalList"
+                element={user ? <RentalList /> : <Navigate to="/" />}
             />
 
             <Route

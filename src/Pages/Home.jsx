@@ -29,7 +29,7 @@ const Home = () => {
     const nextSlide = () => setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
 
     return (
-        <div>
+        <div className="bg-white">
             {/* Carousel */}
             <div className="relative w-full">
                 <img className="w-full max-h-[380px] object-cover brightness-90 transition-all duration-700" src={images[currentIndex].src} alt="carousel" />
