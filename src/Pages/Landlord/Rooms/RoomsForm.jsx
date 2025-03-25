@@ -5,7 +5,7 @@ import BuildingServices from '../../../Services/Admin/BuildingServices';
 import CategoryRooms from '../../../Services/Admin/CategoryRooms';
 import { showCustomNotification } from '../../../Components/Notification';
 import { useAuth } from '../../../Context/AuthProvider';
-import { FaArrowLeft, FaTimes, FaPlus, FaMinus } from "react-icons/fa";
+import { FaArrowLeft, FaTimes, FaPlus, FaMinus, FaChevronUp, FaChevronDown } from "react-icons/fa";
 import Loading from '../../../Components/Loading';
 import PriceInput from '../../../Components/Layout/Range/PriceInput';
 import SidebarUser from '../../../Components/Layout/SidebarUser';
@@ -16,13 +16,14 @@ const RoomForm = () => {
     const [buildings, setBuildings] = useState([]);
     const { roomId } = useParams();
     const navigate = useNavigate();
-    const { user } = useAuth();
+    const { user } = useAuth(); // Lấy thông tin người dùng từ context
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState({});
     const [existingImages, setExistingImages] = useState([]);
     const [newFiles, setNewFiles] = useState([]);
     const [newPreviews, setNewPreviews] = useState([]);
     const [previewImage, setPreviewImage] = useState(null);
+    const [isDropOpen, setIsDropOpen] = useState(false);
 
     useEffect(() => {
         CategoryRooms.getCategoryRooms()
@@ -60,6 +61,14 @@ const RoomForm = () => {
                         deposit: data.deposit || 0,
                         isPermission: data.isPermission || 1,
                         reputation: data.reputation || 0,
+                        // Thêm các trường chi phí khác
+                        dien: data.dien || 0,
+                        nuoc: data.nuoc || 0,
+                        internet: data.internet || 0,
+                        rac: data.rac || 0,
+                        guiXe: data.guiXe || 0,
+                        quanLy: data.quanLy || 0,
+                        chiPhiKhac: data.chiPhiKhac || 0,
                     });
                     setExistingImages(images);
                 })
@@ -86,6 +95,14 @@ const RoomForm = () => {
                 deposit: 0,
                 isPermission: 1,
                 reputation: 0,
+                // Thêm các trường chi phí khác
+                dien: 0,
+                nuoc: 0,
+                internet: 0,
+                rac: 0,
+                guiXe: 0,
+                quanLy: 0,
+                chiPhiKhac: 0,
             });
         }
     }, [roomId, navigate]);
@@ -183,9 +200,18 @@ const RoomForm = () => {
                 deposit: Number(room.deposit || 0),
                 isPermission: room.isPermission || 1,
                 reputation: room.reputation || 0,
+                // Thêm các trường chi phí khác
+                dien: Number(room.dien || 0),
+                nuoc: Number(room.nuoc || 0),
+                internet: Number(room.internet || 0),
+                rac: Number(room.rac || 0),
+                guiXe: Number(room.guiXe || 0),
+                quanLy: Number(room.quanLy || 0),
+                chiPhiKhac: Number(room.chiPhiKhac || 0),
+
             };
 
-            console.log("Dữ liệu gửi đi:", roomData);
+            // console.log("Dữ liệu gửi đi:", roomData);
 
             if (roomId) {
                 await RoomLandlordService.updateRoom(roomId, roomData);
@@ -275,31 +301,45 @@ const RoomForm = () => {
         }));
     };
 
-    // New function to handle the "Tạo với AI" button click
+    // Hàm xử lý tạo tiêu đề và mô tả với AI
     const handleGenerateWithAI = async () => {
         setLoading(true);
         try {
             // Chuẩn bị dữ liệu phòng để gửi lên API
             const roomData = {
-                // Các trường bắt buộc (không nullable) trong RoomDTO
+                // Các trường bắt buộc trong RoomDTO
                 Title: room.title || '',
                 Description: room.description || '',
                 LocationDetail: room.locationDetail || '',
-                Image: room.image || '',
+                Image: room.image || JSON.stringify(existingImages) || '',
                 Acreage: Number(room.acreage) || 0,
                 Furniture: room.furniture || 'Không nội thất',
                 NumberOfBedroom: Number(room.numberOfBedroom) || 0,
                 NumberOfBathroom: Number(room.numberOfBathroom) || 0,
                 Price: Number(room.price) || 0,
                 Note: room.note || '',
-                UserId: room.userId || null,
+                UserId: user?.UserId || 3, // Lấy UserId từ useAuth, mặc định là 3 nếu không có
                 BuildingId: room.buildingId || null,
                 CategoryRoomId: room.categoryRoomId || 1,
                 Garret: room.garret || false,
                 IsPermission: room.isPermission || 1,
-                Deposit: room.deposit || 0,
+                Deposit: Number(room.deposit) || 0,
                 status: room.status || 1,
                 reputation: room.reputation || 0,
+                // Thêm các trường chi phí khác
+                Dien: Number(room.dien || 0),
+                Nuoc: Number(room.nuoc || 0),
+                Internet: Number(room.internet || 0),
+                Rac: Number(room.rac || 0),
+                GuiXe: Number(room.guiXe || 0),
+                QuanLy: Number(room.quanLy || 0),
+                ChiPhiKhac: Number(room.chiPhiKhac || 0),
+                // Bổ sung hai trường bắt buộc trong RoomDTO
+                User: {
+                    UserId: user?.UserId || 3, // Lấy từ useAuth
+                    UserName: user?.["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"] || "Dang Huu Tu (K16 DN)" // Tên từ token
+                },
+                RentalLists: [] // Mảng rỗng vì chưa có danh sách thuê
             };
 
             // Kiểm tra dữ liệu trước khi gửi
@@ -313,13 +353,11 @@ const RoomForm = () => {
             if (!validFurnitureValues.includes(roomData.Furniture)) {
                 throw new Error('Vui lòng chọn nội thất hợp lệ (Đầy đủ, Cơ bản, hoặc Không nội thất).');
             }
-            // Kiểm tra các trường bắt buộc không nullable
             if (!roomData.LocationDetail) {
                 throw new Error('Địa chỉ không được để trống.');
             }
-            // Image có thể để trống (vì chưa upload ảnh), nhưng không được null
-            if (roomData.Image === null) {
-                roomData.Image = '';
+            if (!roomData.User.UserId) {
+                throw new Error('UserId không được để trống.');
             }
 
             // Gọi API generateRoomDescription
@@ -335,12 +373,10 @@ const RoomForm = () => {
             showCustomNotification("success", "Tạo tiêu đề và mô tả thành công với AI!");
         } catch (error) {
             console.error('Lỗi khi tạo mô tả với AI:', error);
-            // Xử lý lỗi và hiển thị thông báo chi tiết
             let errorMessage = "Lỗi khi tạo tiêu đề và mô tả với AI!";
             try {
                 const parsedError = JSON.parse(error.message);
                 if (parsedError.validationErrors) {
-                    // Lấy và định dạng thông báo lỗi validation
                     const validationMessages = Object.values(parsedError.validationErrors).flat().join(' ');
                     errorMessage = validationMessages || parsedError.message || errorMessage;
                 } else {
@@ -354,7 +390,9 @@ const RoomForm = () => {
             setLoading(false);
         }
     };
-
+    const toggleDropOpen = () => {
+        setIsDropOpen(prev => !prev);
+    };
     return (
         <div className="flex min-h-screen bg-white">
             {loading && <Loading />}
@@ -465,7 +503,7 @@ const RoomForm = () => {
                             <div className="grid grid-cols-3 gap-4">
                                 <div className="w-full">
                                     <label className="block text-sm font-medium text-gray-700">
-                                        Nội Thất <span className="text-red-500">*</span>
+                                        Nội Thất
                                     </label>
                                     <select
                                         value={room.furniture}
@@ -501,7 +539,6 @@ const RoomForm = () => {
                                     </div>
                                     {errors.numberOfBathroom && <p className="text-red-500 text-sm mt-1">{errors.numberOfBathroom}</p>}
                                 </div>
-
                                 <div className="w-full flex items-center">
                                     <label className="block text-sm font-medium text-gray-700">
                                         Giường ngủ <span className="text-red-500">*</span>
@@ -525,11 +562,73 @@ const RoomForm = () => {
                                     </div>
                                     {errors.numberOfBedroom && <p className="text-red-500 text-sm mt-1">{errors.numberOfBedroom}</p>}
                                 </div>
-                                {/* Empty div to maintain grid alignment */}
-                                <div className="w-full"></div>
-
                             </div>
-
+                            <div className="w-full">
+                                <div
+                                    className="flex items-center justify-between cursor-pointer select-none"
+                                    onClick={toggleDropOpen}
+                                >
+                                    <h3 className="text-lg font-semibold text-gray-800 mb-2">Chi phí khác</h3>
+                                    {isDropOpen ? (
+                                        <FaChevronUp className="text-gray-600" />
+                                    ) : (
+                                        <FaChevronDown className="text-gray-600" />
+                                    )}
+                                </div>
+                                {isDropOpen && (
+                                    <div className="grid grid-cols-4 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700">Điện (đ/kWh)</label>
+                                            <PriceInput
+                                                value={room.dien || 0}
+                                                onChange={(val) => setRooms({ ...room, dien: Number(val) || 0 })}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700">Nước (đ/m³)</label>
+                                            <PriceInput
+                                                value={room.nuoc || 0}
+                                                onChange={(val) => setRooms({ ...room, nuoc: Number(val) || 0 })}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700">Internet (đ/tháng)</label>
+                                            <PriceInput
+                                                value={room.internet || 0}
+                                                onChange={(val) => setRooms({ ...room, internet: Number(val) || 0 })}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700">Rác (đ/tháng)</label>
+                                            <PriceInput
+                                                value={room.rac || 0}
+                                                onChange={(val) => setRooms({ ...room, rac: Number(val) || 0 })}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700">Gửi xe (đ/tháng)</label>
+                                            <PriceInput
+                                                value={room.guiXe || 0}
+                                                onChange={(val) => setRooms({ ...room, guiXe: Number(val) || 0 })}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700">Quản lý (đ/tháng)</label>
+                                            <PriceInput
+                                                value={room.quanLy || 0}
+                                                onChange={(val) => setRooms({ ...room, quanLy: Number(val) || 0 })}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700">Chi phí khác (đ/tháng)</label>
+                                            <PriceInput
+                                                value={room.chiPhiKhac || 0}
+                                                onChange={(val) => setRooms({ ...room, chiPhiKhac: Number(val) || 0 })}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                             {/* Tiêu đề & Mô tả Section */}
                             <div className="w-full rounded-lg bg-white shadow-sm">
                                 <h3 className="text-lg font-semibold text-gray-800 mb-2">Tiêu đề & Mô tả</h3>

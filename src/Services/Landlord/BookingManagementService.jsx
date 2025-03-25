@@ -1,55 +1,146 @@
+// src/Services/Landlord/BookingManagementService.jsx
 import axios from "axios";
 
-// Tạo instance của axios với base URL của BE
-const api = axios.create({
-    baseURL: "http://localhost:8000", // Đảm bảo BE chạy trên port này
-});
+const API_URL = "https://localhost:8000/api/landlord/BookingManagement"; // Đảm bảo đúng với backend
 
 const BookingManagementService = {
-    confirmReservation: async (roomId, data, token) => {
+    // Get rooms for the landlord
+    getRooms: async (token) => {
         try {
-            const response = await api.put(
-                `/api/landlord/BookingManagement/confirm-reservation/${roomId}`,
-                data, // Gửi dữ liệu dưới dạng JSON
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        "Content-Type": "application/json", // Đổi thành JSON
-                    },
-                }
-            );
+            const response = await axios.get(`${API_URL}/rooms`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
             return response.data;
         } catch (error) {
-            if (error.response) {
-                throw new Error(error.response.data || "Lỗi khi xác nhận yêu cầu thuê phòng. Vui lòng kiểm tra dữ liệu gửi lên.");
-            } else if (error.request) {
-                throw new Error("Không nhận được phản hồi từ server. Vui lòng kiểm tra xem server có đang chạy không.");
-            } else {
-                throw new Error("Lỗi khi gửi yêu cầu: " + error.message);
-            }
+            throw new Error(
+                error.response?.data?.message || "Không thể lấy danh sách phòng"
+            );
         }
     },
 
-    cancelReservation: async (rentalId, token) => {
+    // Confirm a reservation
+    confirmReservation: async (roomId, data, token) => {
+        if (!token) {
+            throw new Error("Token không tồn tại. Vui lòng đăng nhập lại.");
+        }
         try {
-            const response = await api.put(
-                `/api/landlord/BookingManagement/cancel-reservation/${rentalId}`,
-                {},
+            const response = await axios.put(
+                `${API_URL}/confirm-reservation/${roomId}`,
+                data,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
                     },
                 }
             );
             return response.data;
         } catch (error) {
-            if (error.response) {
-                throw new Error(error.response.data || "Lỗi khi hủy yêu cầu thuê phòng. Vui lòng kiểm tra lại.");
-            } else if (error.request) {
-                throw new Error("Không nhận được phản hồi từ server. Vui lòng kiểm tra xem server có đang chạy không.");
-            } else {
-                throw new Error("Lỗi khi gửi yêu cầu: " + error.message);
+            const errorData = error.response?.data;
+            let errorMessage = "Không thể xác nhận yêu cầu thuê phòng";
+            if (errorData) {
+                if (typeof errorData === "string") {
+                    errorMessage = errorData;
+                } else if (errorData.message) {
+                    errorMessage = errorData.message;
+                } else if (errorData.errors) {
+                    errorMessage = JSON.stringify(errorData.errors);
+                } else {
+                    errorMessage = JSON.stringify(errorData);
+                }
             }
+            throw new Error(errorMessage);
+        }
+    },
+
+    // Cancel a reservation
+    cancelReservation: async (rentalId, token) => {
+        if (!token) {
+            throw new Error("Token không tồn tại. Vui lòng đăng nhập lại.");
+        }
+        try {
+            const response = await axios.put(
+                `${API_URL}/cancel-reservation/${rentalId}`,
+                {},
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                }
+            );
+            return response.data;
+        } catch (error) {
+            const errorMessage =
+                error.response?.data?.message ||
+                error.response?.data ||
+                "Không thể hủy yêu cầu thuê phòng";
+            throw new Error(errorMessage);
+        }
+    },
+
+    // Check user balance
+    checkBalance: async (data, token) => {
+        try {
+            const response = await axios.post(`${API_URL}/check-balance`, data, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+            });
+            return response.data;
+        } catch (error) {
+            throw new Error(error.response?.data || "Không thể kiểm tra số dư");
+        }
+    },
+
+    // Update user balance
+    updateBalance: async (data, token) => {
+        try {
+            const response = await axios.put(`${API_URL}/update-balance`, data, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+            });
+            return response.data;
+        } catch (error) {
+            throw new Error(error.response?.data || "Không thể cập nhật số dư");
+        }
+    },
+
+    // Create insider trading (nếu cần)
+    createInsiderTrading: async (data, type, token) => {
+        try {
+            const response = await axios.post(
+                `${API_URL}/create-insider-trading?type=${type}`,
+                data,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
+            return response.data;
+        } catch (error) {
+            throw new Error(
+                error.response?.data || "Không thể tạo giao dịch nội bộ"
+            );
+        }
+    },
+
+    // Get insider trading by ID (nếu cần)
+    getInsiderTradingById: async (id, token) => {
+        try {
+            const response = await axios.get(
+                `${API_URL}/get-insider-trading-by-id${id}`,
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                }
+            );
+            return response.data;
+        } catch (error) {
+            throw new Error(
+                error.response?.data || "Không thể lấy thông tin giao dịch nội bộ"
+            );
         }
     },
 };

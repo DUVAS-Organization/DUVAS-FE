@@ -8,9 +8,11 @@ import BookingManagementService from "../../../Services/Landlord/BookingManageme
 import Loading from "../../../Components/Loading";
 import SidebarUser from "../../../Components/Layout/SidebarUser";
 import { FaPlus, FaTimes } from "react-icons/fa";
+import { useAuth } from "../../../Context/AuthProvider";
 
 const RoomRentalConfirmation = () => {
     const { roomId } = useParams();
+    const { user } = useAuth(); // Lấy thông tin user từ AuthContext
     const [categoryRooms, setCategoryRooms] = useState([]);
     const [buildings, setBuildings] = useState([]);
     const [roomData, setRoomData] = useState(null);
@@ -34,12 +36,14 @@ const RoomRentalConfirmation = () => {
     const [newPreviews, setNewPreviews] = useState([]);
     const [previewImage, setPreviewImage] = useState(null);
 
+    // Thiết lập ngày hiện tại
     useEffect(() => {
         const now = new Date();
         const isoDate = now.toISOString().split("T")[0];
         setToday(isoDate);
     }, []);
 
+    // Lấy dữ liệu từ API
     useEffect(() => {
         const fetchAllData = async () => {
             try {
@@ -144,24 +148,28 @@ const RoomRentalConfirmation = () => {
         fetchAllData();
     }, [roomId, today]);
 
+    // Cập nhật giá phòng mặc định
     useEffect(() => {
         if (roomData && typeof roomData.price === "number") {
             setFormData((prev) => ({ ...prev, price: roomData.price.toString() }));
         }
     }, [roomData]);
 
+    // Cập nhật ngày kết thúc
     useEffect(() => {
         if (calculatedEndDate) {
             setFormData((prev) => ({ ...prev, endDate: calculatedEndDate }));
         }
     }, [calculatedEndDate]);
 
+    // Lấy tên loại phòng
     const getCategoryName = (categoryRoomId) => {
         if (!categoryRoomId) return "Không có";
         const found = categoryRooms.find((c) => c.categoryRoomId === categoryRoomId);
         return found ? found.categoryName : "Không có";
     };
 
+    // Lấy trạng thái thuê
     const getRentalStatus = (status) => {
         switch (status) {
             case 0: return "Đang trống";
@@ -171,6 +179,7 @@ const RoomRentalConfirmation = () => {
         }
     };
 
+    // Xác thực form
     const validateForm = () => {
         const newErrors = {};
         const price = parseFloat(formData.price);
@@ -189,6 +198,7 @@ const RoomRentalConfirmation = () => {
         return Object.keys(newErrors).length === 0;
     };
 
+    // Xử lý thay đổi input
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         if (name === "price" || name === "deposit") {
@@ -205,6 +215,7 @@ const RoomRentalConfirmation = () => {
         }
     };
 
+    // Xử lý thêm file
     const handleFileChange = (e) => {
         const selectedFiles = Array.from(e.target.files);
         if (selectedFiles.length > 0) {
@@ -218,6 +229,7 @@ const RoomRentalConfirmation = () => {
         }
     };
 
+    // Xóa file
     const handleRemoveFile = (index) => {
         setNewFiles((prev) => prev.filter((_, i) => i !== index));
         setNewPreviews((prev) => prev.filter((_, i) => i !== index));
@@ -227,6 +239,7 @@ const RoomRentalConfirmation = () => {
         }));
     };
 
+    // Upload file lên server
     const uploadFile = async (file) => {
         const formData = new FormData();
         formData.append("file", file);
@@ -237,34 +250,51 @@ const RoomRentalConfirmation = () => {
             });
             if (!response.ok) throw new Error("Upload failed");
             const data = await response.json();
-            return data.imageUrl;
+            return data.imageUrl; // Giả định backend trả về imageUrl
         } catch (error) {
             console.error("Error uploading file:", error);
             throw error;
         }
     };
 
+    // Xử lý xác nhận
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!validateForm()) return;
         setIsLoading(true);
         try {
-            const token = localStorage.getItem("token");
+            const token = user?.token;
+            if (!token) {
+                throw new Error("Bạn chưa đăng nhập. Vui lòng đăng nhập lại.");
+            }
 
-            // Upload file hợp đồng và lấy URL
+            if (user.role !== "Landlord") {
+                throw new Error("Bạn không có quyền xác nhận yêu cầu này. Chỉ Landlord mới có thể thực hiện.");
+            }
+
+            // Upload contract file and get URL
             const uploadedImageUrls = await Promise.all(newFiles.map((file) => uploadFile(file)));
 
-            // Tạo dữ liệu JSON để gửi
+            // Prepare data for the backend
             const dataToSend = {
-                price: parseFloat(formData.price),
-                deposit: parseFloat(formData.deposit),
-                rentalDateTimeStart: formData.startDate, // BE không sử dụng, nhưng gửi để tránh lỗi
-                rentalDateTimeEnd: formData.endDate,
-                contractFile: uploadedImageUrls.length > 0 ? uploadedImageUrls[0] : "", // Lấy URL đầu tiên
-                roomId: parseInt(roomId),
+                roomId: roomId,
+                rentalDateTimeStart: formData.startDate, // Đảm bảo định dạng "YYYY-MM-DD"
+                rentalDateTimeEnd: formData.endDate,     // Đảm bảo định dạng "YYYY-MM-DD"
+                contractFile: uploadedImageUrls.length > 0 ? uploadedImageUrls[0] : "",
+                deposit: parseFloat(formData.deposit) || 0,
+                price: parseFloat(formData.price) || 0,
             };
 
-            const response = await BookingManagementService.confirmReservation(roomId, dataToSend, token);
+            // Kiểm tra dữ liệu trước khi gửi
+            console.log("Data gửi đi:", dataToSend);
+
+            // Gọi API xác nhận
+            const response = await BookingManagementService.confirmReservation(
+                roomId,
+                dataToSend,
+                token
+            );
+
             Swal.fire({
                 title: "Thành công!",
                 text: response || "Yêu cầu thuê phòng đã được xác nhận",
@@ -274,29 +304,19 @@ const RoomRentalConfirmation = () => {
                 window.location.reload();
             });
         } catch (error) {
-            console.error("Lỗi khi xác nhận yêu cầu:", error);
-            try {
-                const updatedRoomContract = await RoomService.getRoomContract(roomId);
-                if (updatedRoomContract?.rentalLists?.[0]?.contractId) {
-                    Swal.fire({
-                        title: "Thành công!",
-                        text: "Yêu cầu thuê phòng đã được xác nhận, nhưng có lỗi khi nhận phản hồi từ server.",
-                        icon: "success",
-                        confirmButtonText: "Đồng ý",
-                    }).then(() => {
-                        window.location.reload();
-                    });
-                } else {
-                    Swal.fire("Lỗi", error.message || "Không thể xác nhận yêu cầu thuê phòng. Vui lòng kiểm tra lại.", "error");
-                }
-            } catch (checkError) {
-                Swal.fire("Lỗi", error.message || "Không thể xác nhận yêu cầu thuê phòng. Vui lòng kiểm tra lại.", "error");
-            }
+            console.error("Lỗi xác nhận yêu cầu:", error.message);
+            Swal.fire({
+                title: "Lỗi",
+                text: error.message || "Không thể xác nhận yêu cầu thuê phòng. Vui lòng kiểm tra lại.",
+                icon: "error",
+                confirmButtonText: "Đồng ý",
+            });
         } finally {
             setIsLoading(false);
         }
     };
 
+    // Hủy yêu cầu
     const handleCancelRequest = async () => {
         const result = await Swal.fire({
             title: "Hủy Yêu cầu thuê phòng?",
@@ -309,20 +329,41 @@ const RoomRentalConfirmation = () => {
         });
         if (result.isConfirmed) {
             try {
-                const token = localStorage.getItem("token");
+                const token = user?.token;
+                if (!token) {
+                    throw new Error("Bạn chưa đăng nhập. Vui lòng đăng nhập lại.");
+                }
+
+                if (user.role !== "Landlord") {
+                    throw new Error("Bạn không có quyền hủy yêu cầu này. Chỉ Landlord mới có thể thực hiện.");
+                }
+
                 const rentalId = occupantRental?.rentalId;
                 if (!rentalId) throw new Error("Không tìm thấy Rental ID");
+
                 const response = await BookingManagementService.cancelReservation(rentalId, token);
-                Swal.fire("Đã hủy", response || "Yêu cầu thuê phòng đã bị hủy.", "success").then(() => {
+
+                Swal.fire({
+                    title: "Đã hủy",
+                    text: response || "Yêu cầu thuê phòng đã bị hủy.",
+                    icon: "success",
+                    confirmButtonText: "Đồng ý",
+                }).then(() => {
                     window.location.reload();
                 });
             } catch (error) {
-                console.error("Lỗi khi hủy yêu cầu:", error);
-                Swal.fire("Lỗi", error.message || "Không thể hủy yêu cầu. Vui lòng kiểm tra lại.", "error");
+                console.error("Lỗi hủy yêu cầu:", error.message);
+                Swal.fire({
+                    title: "Lỗi",
+                    text: error.message || "Không thể hủy yêu cầu. Vui lòng kiểm tra lại.",
+                    icon: "error",
+                    confirmButtonText: "Đồng ý",
+                });
             }
         }
     };
 
+    // Hiển thị loading khi đang tải dữ liệu
     if (dataLoading || !roomData) {
         return (
             <div className="min-h-screen flex items-center justify-center">
@@ -331,6 +372,7 @@ const RoomRentalConfirmation = () => {
         );
     }
 
+    // Giao diện chính
     return (
         <div>
             <SidebarUser />
@@ -475,7 +517,7 @@ const RoomRentalConfirmation = () => {
                                                                 <img
                                                                     src={url}
                                                                     alt={`Contract ${index}`}
-                                                                    className="w-full h-20 object-cover rounded-md cursor-pointer"
+                                                                    class efecto="w-full h-20 object-cover rounded-md cursor-pointer"
                                                                     onClick={() => setPreviewImage(url)}
                                                                 />
                                                             </div>

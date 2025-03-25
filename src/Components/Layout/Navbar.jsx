@@ -230,7 +230,7 @@ const Navbar = () => {
                                     )}
                                 </div>
                                 <NavLink
-                                    to="/Posts"
+                                    to="/Room/Create"
                                     className="text-red-500 px-3 py-2 rounded-md text-base font-medium border border-red-400 hover:bg-red-500 hover:text-white transition-colors duration-150"
                                 >
                                     Đăng Tin
