@@ -677,7 +677,7 @@ const Profile = () => {
                                             </form>
                                         )}
 
-                                        <div className="flex justify-between">
+                                        {/* <div className="flex justify-between">
                                             <h2
                                                 className="text-xl font-bold mb-4 cursor-pointer select-none"
                                                 onClick={toggleDeleteForm}
@@ -704,7 +704,7 @@ const Profile = () => {
                                                     Yêu cầu xóa tài khoản
                                                 </button>
                                             </form>
-                                        )}
+                                        )} */}
                                     </div>
                                 </div>
                             </div>

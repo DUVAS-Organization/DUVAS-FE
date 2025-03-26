@@ -12,6 +12,7 @@ import {
 import { useAuth } from "../../Context/AuthProvider";
 import { useLocation } from "react-router-dom";
 import UserService from "../../Services/User/UserService";
+import Loading from "../../Components/Loading";
 
 // Hàm hiển thị avatar
 const renderAvatar = (avatar, name, size = 40) => {
@@ -307,7 +308,7 @@ const MessageAdmin = () => {
         {/* Danh sách hội thoại */}
         <div className="flex-1 overflow-y-auto p-2">
           {isLoading && (
-            <div className="text-center py-2 text-gray-500">Loading...</div>
+            <Loading />
           )}
           {filteredConversations.length > 0 ? (
             filteredConversations.map((conv, index) => (
