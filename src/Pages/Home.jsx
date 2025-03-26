@@ -59,7 +59,7 @@ const Home = () => {
                 {/* Tin dịch vụ */}
                 <div className="flex justify-between items-center p-4">
                     <h2 className="text-xl text-gray-800 font-bold">Tin dịch vụ</h2>
-                    <Link to="/ServicePosts" className="text-red-600 font-semibold flex items-center hover:scale-105 transition duration-100">
+                    <Link to="/ServicePosts?tab=Dịch%20vụ%20sửa%20chữa" className="text-red-600 font-semibold flex items-center hover:scale-105 transition duration-100">
                         Xem thêm <FaArrowRight className="ml-1 text-sm mt-1" />
                     </Link>
                 </div>

@@ -17,10 +17,12 @@ const CreateWithdraw = () => {
             try {
                 const response = await UserService.getBankAccounts();
                 if (response.status === 200) {
-                    setBankAccounts(response.data);
+
+                    const activeBanks = response.data.filter(bank => bank.status === "Active");
+                    setBankAccounts(activeBanks);
                 }
             } catch (error) {
-                setError("Không thể lấy được tài khoản ngân hàng.");
+                setError("Failed to fetch bank accounts.");
                 showCustomNotification("error", "Có lỗi xảy ra!");
             }
         };
@@ -30,7 +32,7 @@ const CreateWithdraw = () => {
     const handleWithdraw = async (e) => {
         e.preventDefault();
         if (!amount || !selectedBank) {
-            setError("Vui lòng nhập số tiền và chọn ngân hàng.");
+            setError("Please enter an amount and select a bank.");
             return;
         }
         setLoading(true);
@@ -40,14 +42,14 @@ const CreateWithdraw = () => {
         try {
             const response = await UserService.withdraw(amount, selectedBank);
             if (response.status === 200) {
-                setMessage("Yêu cầu rút tiền đã được tạo thành công!");
+                showCustomNotification("success", "Tạo đơn rút tiền thành công!");
                 setAmount("");
                 setSelectedBank("");
             } else {
-                setError("Yêu cầu rút tiền không thành công. Vui lòng thử lại.");
+                showCustomNotification("error", "Vui lòng kiểm tra lại đơn rút tiềntiền!");
             }
         } catch (err) {
-            setError("Đã xảy ra lỗi khi xử lý yêu cầu của bạn.");
+            setError("An error occurred while processing your request.");
         } finally {
             setLoading(false);
         }
@@ -71,7 +73,7 @@ const CreateWithdraw = () => {
                                 type="number"
                                 value={amount}
                                 onChange={(e) => setAmount(e.target.value)}
-                                className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-black"
                                 placeholder="Nhập số tiền"
                                 min="1000"
                                 required
@@ -84,20 +86,20 @@ const CreateWithdraw = () => {
                             <select
                                 value={selectedBank}
                                 onChange={(e) => setSelectedBank(e.target.value)}
-                                className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-black"
                                 required
                             >
                                 <option value="">Chọn tài khoản</option>
                                 {bankAccounts.length > 0 ? (
                                     bankAccounts.map((bank) => (
                                         <option key={bank.id} value={bank.id}>
-                                            {bank.accountName} - {bank.accountNumber}
+                                            {bank.bankCode} - {bank.accountName} - {bank.accountNumber}
                                         </option>
                                     ))
                                 ) :
                                     (
                                         <option>
-                                            Không có tài khoản ngân hàng
+                                            No bank account
                                         </option>
                                     )}
                             </select>
@@ -106,7 +108,7 @@ const CreateWithdraw = () => {
                         {/* Submit Button */}
                         <button
                             type="submit"
-                            className="w-full bg-red-500 hover:bg-red-400 text-white py-2 px-4 rounded-lg transition duration-200"
+                            className="w-full bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg transition duration-200"
                             disabled={loading}
                         >
                             {loading ? "Processing..." : "Rút tiền"}
