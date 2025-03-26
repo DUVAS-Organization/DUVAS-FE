@@ -26,7 +26,7 @@ const BankAccount = () => {
                 setBankCodes(response.data.data);
             } catch (error) {
                 console.error("Error fetching data:", error);
-                // showCustomNotification("error", "Có lỗi xảy ra!");
+                showCustomNotification("error", "Có lỗi xảy ra!");
             }
         };
         fetchData();
@@ -34,6 +34,17 @@ const BankAccount = () => {
 
     const handleAddBank = async () => {
         try {
+            // Kiểm tra xem accountNumber và bankCode đã tồn tại chưa
+            const isDuplicate = userBankAccounts.some(
+                acc => acc.accountNumber === accountNumber && acc.bankCode === selectedBankCode
+            );
+
+            if (isDuplicate) {
+                showCustomNotification("error", "Có lỗi xảy ra! Vui lòng kiểm tra lại thông tin");
+                return; // Dừng hàm nếu tài khoản đã tồn tại
+            }
+
+            // Nếu không trùng, thêm tài khoản mới
             let data = { accountNumber, accountName, bankCode: selectedBankCode };
             let resp = await UserService.addNewBank(data, otp);
             setUserBankAccounts(prev => [...prev, resp.data]);
@@ -41,19 +52,25 @@ const BankAccount = () => {
             setIsEnteringOtp(false);
         } catch (error) {
             console.error(error);
-            showCustomNotification("error", "Có lỗi xảy ra!");
+            showCustomNotification("error", "Có lỗi xảy ra! Vui lòng kiểm tra lại thông tin");
         }
-
     };
 
     const genOtp = async () => {
-        let exists = userBankAccounts.some(acc => acc.accountNumber === accountNumber);
-        if (!exists) {
-            UserService.genOtp();
-            setIsEnteringOtp(true);
-        } else {
-            alert("Số tài khoản đã được thêm.");
+        // Kiểm tra xem accountNumber và bankCode đã tồn tại chưa
+        const isDuplicate = userBankAccounts.some(
+            acc => acc.accountNumber === accountNumber && acc.bankCode === selectedBankCode
+        );
+
+        if (isDuplicate) {
+            showCustomNotification("error", "Tài khoản đã có sẵn!");
+            return; // Dừng hàm nếu tài khoản đã tồn tại
         }
+
+        // Nếu không trùng, gửi OTP
+        UserService.genOtp();
+        setIsEnteringOtp(true);
+        showCustomNotification("success", "OTP đã được gửi qua email!");
     };
 
     const handleChangeStatus = async (accountId, currentStatus) => {
@@ -69,6 +86,7 @@ const BankAccount = () => {
             setChangingBankAccount(accountId);
             UserService.genOtp();
             setIsEnteringOtp(true);
+            showCustomNotification("success", "OTP đã được gửi qua email!");
         }
     };
 
@@ -82,12 +100,11 @@ const BankAccount = () => {
             );
             setChangingBankAccount(null);
             setIsEnteringOtp(false);
-            showCustomNotification("success", "Kích hoạt thành công!");
+            showCustomNotification("success", "Thành công!");
 
         } catch (error) {
             console.error("Error activating account:", error);
             showCustomNotification("error", "Có lỗi xảy ra!");
-
         }
     };
 
@@ -101,8 +118,7 @@ const BankAccount = () => {
 
                     <div className="flex">
                         {!isEnteringOtp ? (
-                            <div className="w-1/3 bg-white p-6 rounded-lg shadow-md
-                            ">
+                            <div className="w-1/3 bg-white p-6 rounded-lg shadow-md">
                                 <h1 className="font-bold mb-1 text-center">Tạo tài khoản ngân hàng</h1>
                                 <form className="">
                                     <label className="block text-sm font-medium text-gray-700">Nhập số tài khoản</label>
@@ -138,7 +154,7 @@ const BankAccount = () => {
                                     <button
                                         onClick={() => genOtp()}
                                         type="button"
-                                        className="mt-4 w-full bg-red-500 hover:bg-red-400 text-white font-medium py-2 px-4 rounded-md"
+                                        className="mt-4 w-full bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-md"
                                     >
                                         Lấy mã OTP
                                     </button>
@@ -169,18 +185,18 @@ const BankAccount = () => {
                                 <table className="w-full border border-gray-300 shadow-md rounded-lg">
                                     <thead className="bg-gray-100">
                                         <tr>
-                                            <th className="px-4 py-2 border max-w-[10px]">ID</th>
+                                            <th className="px-4 py-2 border">STT</th> {/* Thêm cột STT */}
                                             <th className="px-4 py-2 border">Số tài khoản</th>
                                             <th className="px-4 py-2 border">Tên tài khoản</th>
-                                            <th className="px-4 py-2 border">Mã ngân hàng</th>
+                                            <th className="px-4 py-2 border">Ngân hàng</th>
                                             <th className="px-4 py-2 border">Trạng thái</th>
-                                            <th className="px-4 py-2 border">Hành động</th>
+                                            <th className="px-4 py-2 border"></th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {userBankAccounts.map((account) => (
+                                        {userBankAccounts.map((account, index) => (
                                             <tr key={account.id} className="text-center hover:bg-gray-50">
-                                                <td className="px-4 py-2 border">{account.id}</td>
+                                                <td className="px-4 py-2 border text-center">{index + 1}</td> {/* Hiển thị STT */}
                                                 <td className="px-4 py-2 border">{account.accountNumber}</td>
                                                 <td className="px-4 py-2 border">{account.accountName}</td>
                                                 <td className="px-4 py-2 border uppercase">{account.bankCode}</td>
@@ -192,7 +208,7 @@ const BankAccount = () => {
                                                         onClick={() => handleChangeStatus(account.id, account.status)}
                                                         className="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-white rounded"
                                                     >
-                                                        {account.status === "Active" ? "Hủy kích hoạt" : "Kích hoạt"}
+                                                        {account.status === "Active" ? "Deactivate" : "Activate"}
                                                     </button>
                                                 </td>
                                             </tr>
