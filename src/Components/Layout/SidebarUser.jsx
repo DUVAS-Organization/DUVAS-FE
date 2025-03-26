@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { FaBook, FaUserTie, FaGlobe } from 'react-icons/fa';
+import { FaBook, FaUserTie, FaGlobe, FaDoorClosed } from 'react-icons/fa';
 import { FaHandHoldingDollar } from "react-icons/fa6";
 import { MdBedroomParent, MdCleaningServices } from 'react-icons/md';
 import { useAuth } from '../../Context/AuthProvider';
@@ -31,7 +31,7 @@ const SidebarUser = () => {
     }
 
     return (
-        <div className="fixed flex flex-col h-screen pt-5 overflow-y-auto text-black bg-white border-r-2 w-52">
+        <div className="fixed flex flex-col h-screen pt-5 overflow-y-auto text-black bg-white border-r-2 w-52 select-none">
             <ul className="text-base font-medium text-justify">
                 <li>
                     <NavLink
@@ -118,7 +118,18 @@ const SidebarUser = () => {
                         </li>
                     </ul>
                 </li>
-
+                {/* Phòng đã thuê */}
+                <li>
+                    <NavLink
+                        to="/RentalList"
+                        className={({ isActive }) =>
+                            `block py-2 px-4 hover:bg-red-400 hover:text-white rounded-3xl ${isActive ? 'bg-red-500 text-white' : ''}`
+                        }
+                    >
+                        <FaDoorClosed className="inline-block mb-1 mr-2" />
+                        Phòng đã thuê
+                    </NavLink>
+                </li>
                 {/* Tài chính */}
                 <li>
                     <div className="block px-4 py-2 rounded-3xl">

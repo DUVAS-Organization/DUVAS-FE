@@ -10,6 +10,7 @@ import {
     FaLock,
     FaSignOutAlt,
     FaFacebookMessenger,
+    FaDoorClosed,
 } from 'react-icons/fa';
 import { FaHandHoldingDollar, FaHouse } from "react-icons/fa6";
 import BellNotifications from './UIContext/BellNotifications';
@@ -116,6 +117,13 @@ const Navbar = () => {
                         <span>Quản lý Dịch vụ</span>
                     </NavLink>
                 )}
+                <NavLink
+                    to="/RentalList"
+                    className="flex items-center space-x-2 px-4 py-2 rounded hover:bg-red-500 hover:text-white text-gray-800 whitespace-nowrap"
+                >
+                    <FaDoorClosed />
+                    <span>Phòng đã thuê</span>
+                </NavLink>
                 <NavLink
                     to="/Profile?tab=edit"
                     className="flex items-center space-x-2 px-4 py-2 rounded hover:bg-red-500 hover:text-white text-gray-800 whitespace-nowrap"
