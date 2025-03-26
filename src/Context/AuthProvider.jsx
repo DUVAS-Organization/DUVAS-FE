@@ -14,7 +14,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     // Lấy token từ localStorage
     const token = localStorage.getItem('authToken');
-
+    // console.log("Current Token:", token);
     if (token) {
       try {
         const decodedToken = jwtDecode(token); // Giải mã token

@@ -20,6 +20,13 @@ import {
     FaAngleRight,
     FaHeart,
     FaTimes,
+    FaBolt,
+    FaWater,
+    FaWifi,
+    FaTrash,
+    FaCar,
+    FaUserTie,
+    FaMoneyBill,
 } from 'react-icons/fa';
 import { FaPhoneVolume } from 'react-icons/fa6';
 import { BsExclamationTriangle } from 'react-icons/bs';
@@ -110,6 +117,13 @@ const RoomDetailsUser = () => {
                             image: data.image || '',
                             note: data.note || '',
                             userId: data.userId,
+                            dien: data.dien || 0,
+                            nuoc: data.nuoc || 0,
+                            internet: data.internet || 0,
+                            rac: data.rac || 0,
+                            guiXe: data.guiXe || 0,
+                            quanLy: data.quanLy || 0,
+                            chiPhiKhac: data.chiPhiKhac || 0,
                         };
                         return UserService.getUserById(data.userId)
                             .then((userData) => ({ ...roomData, User: userData }))
@@ -619,6 +633,50 @@ const RoomDetailsUser = () => {
                                 <FaRegListAlt className="text-lg text-gray-500" />
                                 <strong>Loại Phòng:</strong> {getCategoryName(room.categoryRoomId)}
                             </div>
+
+                            {/* Thêm các trường chi phí khác, chỉ hiển thị nếu giá trị > 0 */}
+                            {room.dien > 0 && (
+                                <div className="flex gap-x-1 items-center">
+                                    <FaBolt className="text-lg text-gray-600" />
+                                    <strong>Điện: </strong>{room.dien.toLocaleString('vi-VN')} đ/kWh
+                                </div>
+                            )}
+                            {room.nuoc > 0 && (
+                                <div className="flex gap-x-1 items-center">
+                                    <FaWater className="text-lg text-gray-600" />
+                                    <strong>Nước: </strong>{room.nuoc.toLocaleString('vi-VN')} đ/m³
+                                </div>
+                            )}
+                            {room.internet > 0 && (
+                                <div className="flex gap-x-1 items-center">
+                                    <FaWifi className="text-lg text-gray-600" />
+                                    <strong>Internet: </strong>{room.internet.toLocaleString('vi-VN')} đ/tháng
+                                </div>
+                            )}
+                            {room.rac > 0 && (
+                                <div className="flex gap-x-1 items-center">
+                                    <FaTrash className="text-lg text-gray-600" />
+                                    <strong>Rác: </strong>{room.rac.toLocaleString('vi-VN')} đ/tháng
+                                </div>
+                            )}
+                            {room.guiXe > 0 && (
+                                <div className="flex gap-x-1 items-center">
+                                    <FaCar className="text-lg text-gray-600" />
+                                    <strong>Gửi xe: </strong>{room.guiXe.toLocaleString('vi-VN')} đ/tháng
+                                </div>
+                            )}
+                            {room.quanLy > 0 && (
+                                <div className="flex gap-x-1 items-center">
+                                    <FaUserTie className="text-lg text-gray-600" />
+                                    <strong>Quản lý: </strong>{room.quanLy.toLocaleString('vi-VN')} đ/tháng
+                                </div>
+                            )}
+                            {room.chiPhiKhac > 0 && (
+                                <div className="flex gap-x-1 items-center">
+                                    <FaMoneyBill className="text-lg text-gray-600" />
+                                    <strong>Chi phí khác: </strong>{room.chiPhiKhac.toLocaleString('vi-VN')} đ/tháng
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -669,7 +727,7 @@ const RoomDetailsUser = () => {
                             </div>
                             <div className="bg-gray-100 py-3 rounded-md text-sm text-justify text-gray-600 leading-6">
                                 <span className="inline">
-                                    <span className="font-medium">Lưu ý: </span>
+                                    <span className="font-medium">Lưu ý: </span>
                                     Sau khi bạn nhấn vào&nbsp;
                                     <span className="font-medium text-red-500">Đặt phòng</span>, thông tin của bạn sẽ được gửi đến chủ nhà để xem xét.
                                     Chủ nhà có thể chấp nhận hoặc từ chối yêu cầu của bạn.
@@ -688,6 +746,7 @@ const RoomDetailsUser = () => {
                                                 partnerId: room.User.userId,
                                                 partnerName: room.User.name,
                                                 partnerAvatar: room.User.profilePicture,
+                                                partnerIsActive: room.User.isActive || false,
                                             },
                                         });
                                     }}
@@ -697,11 +756,7 @@ const RoomDetailsUser = () => {
                                 <br />
                             </div>
                         </div>
-
                     )}
-
-
-
                 </div>
             </div>
             {showRentModal && <RentModal />}
