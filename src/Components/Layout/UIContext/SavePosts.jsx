@@ -4,17 +4,64 @@ import { MdClose } from "react-icons/md";
 import { BiBookHeart } from "react-icons/bi";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../../Context/AuthProvider";
-// Nếu bạn có context UI riêng để mở dropdown, import vào. 
-// Hoặc bỏ qua nếu bạn không dùng:
 import { useUI } from "./UIContext";
+import { useRealtime } from "../../../Context/RealtimeProvider";
 
 const SavedPostList = () => {
-    const { openDropdown, toggleDropdown } = useUI(); // nếu không dùng, bỏ dòng này
+    const { openDropdown, toggleDropdown } = useUI();
     const [isOpen, setIsOpen] = useState(false);
     const { user } = useAuth();
     const navigate = useNavigate();
     const [savedPosts, setSavedPosts] = useState([]);
     const dropdownRef = useRef(null);
+    const { connectSocket, onEvent, offEvent, isConnected } = useRealtime();
+
+    // Kết nối SignalR và lắng nghe sự kiện
+    useEffect(() => {
+        if (user) {
+            connectSocket(user.userId);
+
+            const handleSavedPostAdded = (message) => {
+                const { data } = message;
+                if (String(data.userId) === String(user.userId)) { // Chuyển cả hai thành chuỗi
+                    setSavedPosts((prev) => {
+                        const exists = prev.some(
+                            (p) =>
+                                (p.roomId && p.roomId === data.roomId) ||
+                                (p.servicePostId && p.servicePostId === data.servicePostId)
+                        );
+                        if (!exists) {
+                            return [...prev, data];
+                        }
+                        return prev;
+                    });
+                }
+            };
+
+            const handleSavedPostRemoved = (message) => {
+                const { data } = message;
+                if (String(data.userId) === String(user.userId)) { // Chuyển cả hai thành chuỗi
+                    setSavedPosts((prev) =>
+                        prev.filter(
+                            (p) =>
+                                !(
+                                    (p.roomId && p.roomId === data.roomId) ||
+                                    (p.servicePostId && p.servicePostId === data.servicePostId)
+                                )
+                        )
+                    );
+                }
+            };
+
+            onEvent("savedPostAdded", handleSavedPostAdded);
+            onEvent("savedPostRemoved", handleSavedPostRemoved);
+
+            return () => {
+                onEvent("savedPostAdded", handleSavedPostAdded);
+                onEvent("savedPostRemoved", handleSavedPostRemoved);
+            };
+        }
+    }, [user, connectSocket, onEvent, offEvent]);
 
     // Đóng dropdown khi click bên ngoài
     useEffect(() => {
@@ -45,16 +92,14 @@ const SavedPostList = () => {
         }
     };
 
-    // Xoá bài đã lưu (toggle)
     const removeSavedPost = async (post, e) => {
         e.stopPropagation();
         try {
-            // Tạo payload tương ứng với kiểu bài đăng
             const payload = { userId: user.userId };
             if (post.room) {
-                payload.roomId = post.roomId;          // Giữ logic cũ cho Room
+                payload.roomId = post.roomId;
             } else if (post.servicePost) {
-                payload.servicePostId = post.servicePostId; // Bổ sung cho ServicePost
+                payload.servicePostId = post.servicePostId;
             }
 
             const response = await fetch("https://localhost:8000/api/SavedPosts", {
@@ -65,7 +110,6 @@ const SavedPostList = () => {
             const data = await response.json();
 
             if (data.status === "removed") {
-                // Lọc bỏ bài vừa xoá khỏi state
                 setSavedPosts((prev) =>
                     prev.filter(
                         (p) =>
@@ -81,7 +125,6 @@ const SavedPostList = () => {
         }
     };
 
-    // Hàm format thời gian hiển thị
     const formatTimeAgo = (savedAt) => {
         const savedTime = new Date(savedAt);
         const now = new Date();
@@ -96,9 +139,7 @@ const SavedPostList = () => {
         return savedTime.toLocaleString("vi-VN");
     };
 
-    // Toggle dropdown
     const handleToggleDropdown = () => {
-        // Nếu có dùng context UI
         if (openDropdown !== "savedPosts") {
             toggleDropdown("savedPosts");
         } else {
@@ -109,7 +150,6 @@ const SavedPostList = () => {
 
     return (
         <div className="relative flex flex-col items-center" ref={dropdownRef}>
-            {/* Nút mở dropdown */}
             <button onClick={handleToggleDropdown} className="relative">
                 <FaRegHeart className="text-2xl text-black" />
                 {savedPosts.length > 0 && (
@@ -119,7 +159,6 @@ const SavedPostList = () => {
                 )}
             </button>
 
-            {/* Nội dung dropdown */}
             {isOpen && (
                 <div className="absolute left-1/2 -translate-x-1/2 mt-10 w-96 h-80 bg-white shadow-lg rounded-md border border-gray-200 flex flex-col">
                     <div className="px-4 py-2 border-b text-lg font-semibold text-center">
@@ -129,38 +168,30 @@ const SavedPostList = () => {
                     <div className="flex-1 overflow-y-auto">
                         {savedPosts.length > 0 ? (
                             savedPosts.map((post, index) => {
-                                // Tách dữ liệu
                                 let title = "";
                                 let location = "";
                                 let image = "";
                                 let detailLink = "#";
 
-                                // Bài đăng là Room
                                 if (post.room) {
                                     title = post.room.title || "Không có tiêu đề";
                                     location = post.room.locationDetail || "Không xác định";
-                                    image = post.room.image;  // mảng JSON hoặc URL
+                                    image = post.room.image;
                                     detailLink = `/Rooms/Details/${post.roomId}`;
-                                }
-                                // Bài đăng là ServicePost
-                                else if (post.servicePost) {
+                                } else if (post.servicePost) {
                                     title = post.servicePost.title || "Không có tiêu đề";
                                     location = post.servicePost.location || "Không xác định";
                                     image = post.servicePost.image;
                                     detailLink = `/ServicePosts/Details/${post.servicePostId}`;
-                                }
-                                else {
-                                    // Nếu cả room và servicePost đều null => Không hiển thị
+                                } else {
                                     return null;
                                 }
 
-                                // Parse ảnh
                                 let images = [];
                                 if (typeof image === "string") {
                                     try {
-                                        images = JSON.parse(image); // nếu là chuỗi JSON
+                                        images = JSON.parse(image);
                                     } catch (err) {
-                                        // Nếu parse lỗi, coi như 1 URL
                                         images = [image];
                                     }
                                 }
