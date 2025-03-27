@@ -89,7 +89,8 @@ const RoomLandlordService = {
             const response = await api.post('', roomData);
             return response.data; // { message, room }
         } catch (error) {
-            handleError(error);
+            // Ném lỗi lại để FE có thể xử lý chính xác message, status,...
+            throw error;
         }
     },
 
