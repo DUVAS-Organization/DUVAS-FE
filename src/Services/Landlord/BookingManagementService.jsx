@@ -41,7 +41,7 @@ const BookingManagementService = {
                     headers: { Authorization: `Bearer ${token}` },
                 }
             );
-            return response.data.rentalList; // Trả về rentalList trực tiếp
+            return response.data.rentalList;
         } catch (error) {
             const errorMessage = error.response?.data?.message ||
                 error.response?.data ||
@@ -50,7 +50,6 @@ const BookingManagementService = {
         }
     },
 
-    // Confirm a reservation
     confirmReservation: async (roomId, data, token) => {
         if (!token) {
             throw new Error("Token không tồn tại. Vui lòng đăng nhập lại.");
@@ -85,7 +84,6 @@ const BookingManagementService = {
         }
     },
 
-    // Cancel a reservation
     cancelReservation: async (rentalId, token) => {
         if (!token) {
             throw new Error("Token không tồn tại. Vui lòng đăng nhập lại.");
@@ -108,37 +106,82 @@ const BookingManagementService = {
         }
     },
 
-    // Check user balance
     checkBalance: async (data, token) => {
         try {
+            console.log("[Service] Gửi kiểm tra số dư:", data);
             const response = await axios.post(`${API_URL}/check-balance`, data, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
+                headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
             });
+            console.log("[Service] Phản hồi kiểm tra số dư:", response.data);
             return response.data;
         } catch (error) {
+            console.error("[Service] Lỗi kiểm tra số dư:", error.response?.data || error.message);
             throw new Error(error.response?.data || "Không thể kiểm tra số dư");
         }
     },
 
-    // Update user balance
     updateBalance: async (data, token) => {
         try {
+            console.log("[Service] Gửi cập nhật số dư:", data);
             const response = await axios.put(`${API_URL}/update-balance`, data, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
+                headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
             });
+            console.log("[Service] Phản hồi cập nhật số dư:", response.data);
             return response.data;
         } catch (error) {
+            console.error("[Service] Lỗi cập nhật số dư:", error.response?.data || error.message);
             throw new Error(error.response?.data || "Không thể cập nhật số dư");
         }
     },
 
-    // Create insider trading
+    firstMonthInsiderTrading: async (data, token) => {
+        try {
+            console.log("[Service] Gửi first-month-insider-trading:", data);
+            const response = await axios.post(`${API_URL}/first-month-insider-trading`, data, {
+                headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+            });
+            console.log("[Service] Phản hồi first-month-insider-trading:", response.data);
+            return response.data;
+        } catch (error) {
+            console.error("[Service] Lỗi firstMonthInsiderTrading:", error.response?.data || error.message);
+            throw new Error(error.response?.data?.Message || "Không thể tạo giao dịch nội bộ tháng đầu");
+        }
+    },
+
+    scheduleAction: async (actionDate, landlordId, money, insiderTradingId, token) => {
+        try {
+            console.log("[Service] Gửi schedule-action:", { actionDate, landlordId, money, insiderTradingId });
+            const response = await axios.post(
+                `${API_URL}/schedule-action?landlordId=${landlordId}&money=${money}&insiderTradingId=${insiderTradingId}`,
+                `"${actionDate}"`, // Gửi actionDate trong body dưới dạng chuỗi ISO
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
+            console.log("[Service] Phản hồi schedule-action:", response.data);
+            return response.data;
+        } catch (error) {
+            console.error("[Service] Lỗi scheduleAction:", error.response?.data || error.message);
+            throw new Error(error.response?.data?.Message || "Không thể lên lịch hành động");
+        }
+    },
+
+    cancelScheduledAction: async (data, token) => {
+        try {
+            console.log("[Service] Gửi cancel-scheduled-action:", data);
+            const response = await axios.post(`${API_URL}/cancel-scheduled-action`, data, {
+                headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+            });
+            console.log("[Service] Phản hồi cancel-scheduled-action:", response.data);
+            return response.data;
+        } catch (error) {
+            console.error("[Service] Lỗi cancelScheduledAction:", error.response?.data || error.message);
+            throw new Error(error.response?.data?.Message || "Không thể hủy lịch hành động");
+        }
+    },
     createInsiderTrading: async (data, type, token) => {
         try {
             const response = await axios.post(
@@ -159,11 +202,10 @@ const BookingManagementService = {
         }
     },
 
-    // Get insider trading by ID
     getInsiderTradingById: async (id, token) => {
         try {
             const response = await axios.get(
-                `${API_URL}/get-insider-trading-by-id${id}`,
+                `${API_URL}/get-insider-trading-by-id/${id}`,
                 {
                     headers: { Authorization: `Bearer ${token}` },
                 }

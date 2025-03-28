@@ -61,7 +61,7 @@ const getStatusOverlay = (status) => {
             return (
                 <div className="absolute top-2 left-2 bg-white bg-opacity-80 px-2 py-1 rounded flex items-center">
                     <FaHourglassHalf className="text-orange-500 mr-1" />
-                    <span className="text-orange-500 font-bold text-sm">Chờ Người dùng xác nhận</span>
+                    <span className="text-orange-500 font-bold text-sm">Chờ Người thuê xác nhận</span>
                 </div>
             );
         default:
@@ -289,7 +289,7 @@ const RoomList = () => {
                         onClick={() => handleFilterByStatus(4)}
                         className={`px-4 py-2 rounded ${activeStatus === 4 ? 'bg-red-500 text-white' : 'bg-gray-200'}`}
                     >
-                        Phòng chờ Người dùng xác nhận
+                        Phòng chờ xác nhận
                     </button>
                     <button
                         onClick={() => handleFilterByStatus(3)}
