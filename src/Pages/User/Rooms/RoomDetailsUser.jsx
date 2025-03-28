@@ -36,6 +36,7 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
 import 'swiper/css/free-mode';
 import { useAuth } from '../../../Context/AuthProvider';
+import UserRentRoomService from '../../../Services/User/UserRentRoomService';
 
 const RoomDetailsUser = () => {
     const { roomId } = useParams();
@@ -56,6 +57,7 @@ const RoomDetailsUser = () => {
     const [moveInDate, setMoveInDate] = useState('');
     const [duration, setDuration] = useState('');
     const [expirationDate, setExpirationDate] = useState('');
+    const [showPhoneAlert, setShowPhoneAlert] = useState(false);
 
     const getUserName = () => {
         if (user && user.name) return user.name;
@@ -202,6 +204,25 @@ const RoomDetailsUser = () => {
 
     const handleSubmitRentForm = async (e) => {
         e.preventDefault();
+
+        // Lấy token của user
+        const token = user.token || localStorage.getItem("token");
+
+        try {
+            // Sử dụng hàm checkUserPhone cục bộ để gọi API kiểm tra số điện thoại của user
+            const phoneCheckResponse = await UserRentRoomService.checkUserPhone(user.userId, token);
+            // Kiểm tra thuộc tính "hasValidPhone" thay vì "HasValidPhone"
+            if (!phoneCheckResponse.hasValidPhone) {
+                // Hiển thị popup giữa màn hình nếu số điện thoại không hợp lệ
+                setShowPhoneAlert(true);
+                return; // Dừng xử lý nếu số điện thoại không hợp lệ
+            }
+        } catch (error) {
+            console.error("Lỗi khi kiểm tra số điện thoại:", error);
+            return;
+        }
+
+        // Nếu số điện thoại hợp lệ, tiếp tục xử lý form thuê phòng
         const formData = new FormData(e.target);
         const rentDetails = {
             fullName: formData.get('fullName'),
@@ -210,9 +231,12 @@ const RoomDetailsUser = () => {
             duration: formData.get('duration'),
             expirationDate: expirationDate,
         };
+
         setShowRentModal(false);
         await handleRentRoom(rentDetails);
     };
+
+
 
     const handleRentRoom = async (details) => {
         if (!room || !user) {
@@ -291,7 +315,26 @@ const RoomDetailsUser = () => {
             setIsRenting(false);
         }
     };
-
+    const PhoneAlertPopup = () => {
+        return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                <div className="bg-white p-6 rounded-lg max-w-sm w-full text-center">
+                    <p className="text-gray-800 mb-4">
+                        Bạn chưa cập nhật số điện thoại hợp lệ. Vui lòng cập nhật số điện thoại trước khi đặt phòng.
+                    </p>
+                    <button
+                        onClick={() => {
+                            setShowPhoneAlert(false);
+                            navigate('/Profile?tab=edit');
+                        }}
+                        className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                    >
+                        OK
+                    </button>
+                </div>
+            </div>
+        );
+    };
     const RentModal = () => {
         const today = new Date().toISOString().split('T')[0];
 
@@ -772,6 +815,7 @@ const RoomDetailsUser = () => {
                     />
                 </div>
             )}
+            {showPhoneAlert && <PhoneAlertPopup />}
             <div>
                 <RoomsHome />
             </div>

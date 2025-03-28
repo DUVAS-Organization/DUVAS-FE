@@ -96,6 +96,18 @@ const UserRentRoomService = {
             throw error;
         }
     },
+    checkUserPhone: async (userId, token) => {
+        try {
+            const response = await axios.get(`${API_BASE_URL}/check-phone/${userId}`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            console.log("📌 API Response (Check Phone):", response.data);
+            return response.data;
+        } catch (error) {
+            console.error("❌ Error checking user phone:", error);
+            throw error;
+        }
+    },
 };
 
 export default UserRentRoomService;

@@ -274,10 +274,10 @@ const RoutesConfig = () => {
                 element={user && user.role === "Landlord" ? <RoomListLandlord /> : <Navigate to="/" />}
             />
             {/* Profile */}
-            <Route
+            {/* <Route
                 path="/ViewProfiles"
                 element={user && user.role === "Landlord" ? <ViewProfile /> : <Navigate to="/" />}
-            />
+            /> */}
             <Route
                 path="/Rooms/Contract/:roomId"
                 element={user ? <RoomRentalConfirmation /> : <Navigate to="/" />}
