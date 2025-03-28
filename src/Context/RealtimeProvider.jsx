@@ -24,7 +24,7 @@ export const RealtimeProvider = ({ children }) => {
 
         const token = localStorage.getItem("authToken");
         if (!token) {
-            console.error("No token found in localStorage. Cannot connect to SignalR.");
+            // console.error("No token found in localStorage. Cannot connect to SignalR.");
             return;
         }
 
@@ -38,21 +38,21 @@ export const RealtimeProvider = ({ children }) => {
             savedPostConnectionRef.current
                 .start()
                 .then(() => {
-                    console.log(`SignalR connected to SavedPostHub for user ${uid}`);
+                    // console.log(`SignalR connected to SavedPostHub for user ${uid}`);
                     setIsSavedPostConnected(true);
                     setUserId(uid);
                 })
                 .catch((err) => {
-                    console.error("SignalR connection error (SavedPostHub):", err);
+                    // console.error("SignalR connection error (SavedPostHub):", err);
                 });
 
             savedPostConnectionRef.current.onclose((err) => {
                 setIsSavedPostConnected(false);
                 setUserId(null);
                 if (err) {
-                    console.error("SignalR connection closed with error (SavedPostHub):", err);
+                    // console.error("SignalR connection closed with error (SavedPostHub):", err);
                 } else {
-                    console.log("SignalR connection closed (SavedPostHub).");
+                    // console.log("SignalR connection closed (SavedPostHub).");
                 }
             });
         }
@@ -67,21 +67,21 @@ export const RealtimeProvider = ({ children }) => {
             chatConnectionRef.current
                 .start()
                 .then(() => {
-                    console.log(`SignalR connected to ChatHub for user ${uid}`);
+                    // console.log(`SignalR connected to ChatHub for user ${uid}`);
                     setIsChatConnected(true);
                     setUserId(uid);
                 })
                 .catch((err) => {
-                    console.error("SignalR connection error (ChatHub):", err);
+                    // console.error("SignalR connection error (ChatHub):", err);
                 });
 
             chatConnectionRef.current.onclose((err) => {
                 setIsChatConnected(false);
                 setUserId(null);
                 if (err) {
-                    console.error("SignalR connection closed with error (ChatHub):", err);
+                    // console.error("SignalR connection closed with error (ChatHub):", err);
                 } else {
-                    console.log("SignalR connection closed (ChatHub).");
+                    // console.log("SignalR connection closed (ChatHub).");
                 }
             });
         }

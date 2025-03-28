@@ -152,7 +152,7 @@ const RoutesConfig = () => {
             />
             <Route
                 path="/ServicePost/Creates"
-                element={user && user.role === "User" ? <ServicePostForm /> : <Navigate to="/Logins" />}
+                element={user ? <ServicePostForm /> : <Navigate to="/Logins" />}
             />
 
 
