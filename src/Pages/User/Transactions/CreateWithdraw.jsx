@@ -22,8 +22,8 @@ const CreateWithdraw = () => {
                     setBankAccounts(activeBanks);
                 }
             } catch (error) {
-                setError("Failed to fetch bank accounts.");
-                showCustomNotification("error", "Có lỗi xảy ra!");
+                // setError("Failed to fetch bank accounts.");
+                // showCustomNotification("error", "Có lỗi xảy ra!");
             }
         };
         fetchBankAccounts();
@@ -46,7 +46,7 @@ const CreateWithdraw = () => {
                 setAmount("");
                 setSelectedBank("");
             } else {
-                showCustomNotification("error", "Vui lòng kiểm tra lại đơn rút tiềntiền!");
+                showCustomNotification("error", "Vui lòng kiểm tra lại đơn rút tiền!");
             }
         } catch (err) {
             setError("An error occurred while processing your request.");

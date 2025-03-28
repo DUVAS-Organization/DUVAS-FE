@@ -85,39 +85,40 @@ const SidebarUser = () => {
                     </ul>
                 </li>
 
-                {/* Bài đăng / Phòng / Dịch vụ */}
-                <li>
-                    <div className="block px-4 py-2 rounded-3xl">
-                        {user.role === "Landlord" ? (
-                            <MdBedroomParent className="inline-block mb-1 mr-2" />
-                        ) : user.role === "Service" ? (
-                            <MdCleaningServices className="inline-block mb-1 mr-2" />
-                        ) : (
-                            <FaBook className="inline-block mb-1 mr-2" />
-                        )}
-                        {postTitle}
-                    </div>
-                    <ul className="pl-4">
-                        <li>
-                            <NavLink
-                                to={createLink}
-                                className={`block py-2 px-4 mb-0.5 hover:bg-red-400 hover:text-white rounded-3xl ${currentPath === createLink ? "bg-red-500 text-white" : ""
-                                    }`}
-                            >
-                                Đăng mới
-                            </NavLink>
-                        </li>
-                        <li>
-                            <NavLink
-                                to={listLink}
-                                className={`block py-2 px-4 hover:bg-red-400 hover:text-white rounded-3xl ${currentPath === listLink ? "bg-red-500 text-white" : ""
-                                    }`}
-                            >
-                                {user.role === "Landlord" ? "Quản Lý Phòng" : user.role === "Service" ? "Quản Lý Dịch vụ" : "Quản Lý Tin"}
-                            </NavLink>
-                        </li>
-                    </ul>
-                </li>
+                {/* Bài đăng / Phòng / Dịch vụ - Chỉ hiển thị cho Landlord và Service */}
+                {(user.role === "Landlord" || user.role === "Service") && (
+                    <li>
+                        <div className="block px-4 py-2 rounded-3xl">
+                            {user.role === "Landlord" ? (
+                                <MdBedroomParent className="inline-block mb-1 mr-2" />
+                            ) : user.role === "Service" ? (
+                                <MdCleaningServices className="inline-block mb-1 mr-2" />
+                            ) : (
+                                <FaBook className="inline-block mb-1 mr-2" />
+                            )}
+                            {postTitle}
+                        </div>
+                        <ul className="pl-4">
+                            <li>
+                                <NavLink
+                                    to={createLink}
+                                    className={`block py-2 px-4 mb-0.5 hover:bg-red-400 hover:text-white rounded-3xl ${currentPath === createLink ? "bg-red-500 text-white" : ""}`}
+                                >
+                                    Đăng mới
+                                </NavLink>
+                            </li>
+                            <li>
+                                <NavLink
+                                    to={listLink}
+                                    className={`block py-2 px-4 hover:bg-red-400 hover:text-white rounded-3xl ${currentPath === listLink ? "bg-red-500 text-white" : ""}`}
+                                >
+                                    {user.role === "Landlord" ? "Quản Lý Phòng" : user.role === "Service" ? "Quản Lý Dịch vụ" : "Quản Lý Tin"}
+                                </NavLink>
+                            </li>
+                        </ul>
+                    </li>
+                )}
+
                 {/* Phòng đã thuê */}
                 <li>
                     <NavLink
@@ -130,6 +131,7 @@ const SidebarUser = () => {
                         Phòng đã thuê
                     </NavLink>
                 </li>
+
                 {/* Tài chính */}
                 <li>
                     <div className="block px-4 py-2 rounded-3xl">

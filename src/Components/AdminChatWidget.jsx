@@ -58,9 +58,9 @@ const AdminChatWidget = () => {
         const fetchAdminInfo = async () => {
             try {
                 const allUsers = await UserService.getUsers();
-                console.log("All Users from API:", allUsers);
+                // console.log("All Users from API:", allUsers);
                 const foundAdmin = allUsers.find((u) => u.roleAdmin === 1);
-                console.log("Found Admin:", foundAdmin);
+                // console.log("Found Admin:", foundAdmin);
                 if (foundAdmin) {
                     setAdminUser(foundAdmin);
                 } else {
@@ -145,7 +145,7 @@ const AdminChatWidget = () => {
 
         // Lắng nghe sự kiện ReceiveMessage
         const handleReceiveMessage = (message) => {
-            console.log("Received new message:", message);
+            // console.log("Received new message:", message);
             // Kiểm tra xem tin nhắn có thuộc về cuộc trò chuyện với Admin không
             if (
                 (message.userSendID === adminUser.userId &&

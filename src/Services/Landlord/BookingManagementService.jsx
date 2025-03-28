@@ -1,7 +1,6 @@
-// src/Services/Landlord/BookingManagementService.jsx
 import axios from "axios";
 
-const API_URL = "https://localhost:8000/api/landlord/BookingManagement"; // Đảm bảo đúng với backend
+const API_URL = "https://localhost:8000/api/landlord/BookingManagement";
 
 const BookingManagementService = {
     // Get rooms for the landlord
@@ -15,6 +14,39 @@ const BookingManagementService = {
             throw new Error(
                 error.response?.data?.message || "Không thể lấy danh sách phòng"
             );
+        }
+    },
+
+    getRentalListOfLandlord: async (landlordId, token) => {
+        try {
+            const response = await axios.get(
+                `${API_URL}/rentalList-of-landlord?landlordId=${landlordId}`,
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                }
+            );
+            return response.data;
+        } catch (error) {
+            throw new Error(
+                error.response?.data?.message || "Không thể lấy danh sách thuê của landlord"
+            );
+        }
+    },
+
+    getRentalListOfUser: async (userId, token) => {
+        try {
+            const response = await axios.get(
+                `${API_URL}/rentalList-of-user?userId=${userId}`,
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                }
+            );
+            return response.data.rentalList; // Trả về rentalList trực tiếp
+        } catch (error) {
+            const errorMessage = error.response?.data?.message ||
+                error.response?.data ||
+                "Không thể lấy danh sách thuê của người dùng";
+            throw new Error(errorMessage);
         }
     },
 
@@ -106,7 +138,7 @@ const BookingManagementService = {
         }
     },
 
-    // Create insider trading (nếu cần)
+    // Create insider trading
     createInsiderTrading: async (data, type, token) => {
         try {
             const response = await axios.post(
@@ -127,7 +159,7 @@ const BookingManagementService = {
         }
     },
 
-    // Get insider trading by ID (nếu cần)
+    // Get insider trading by ID
     getInsiderTradingById: async (id, token) => {
         try {
             const response = await axios.get(
