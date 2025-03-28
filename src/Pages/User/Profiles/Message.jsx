@@ -11,7 +11,7 @@ import { useLocation } from "react-router-dom";
 import UserService from "../../../Services/User/UserService";
 import Loading from "../../../Components/Loading";
 
-// Hàm hiển thị avatar: nếu có ảnh thì hiển thị, nếu không thì hiển thị chữ cái đầu
+// Hàm hiển thị avatar: nếu có ảnh thì hiển thị, nếu không thì hiển thị chữ cái đầuaaa
 const renderAvatar = (avatar, name, size = 40) => {
   if (avatar) {
     return (
