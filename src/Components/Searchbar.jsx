@@ -7,7 +7,7 @@ import RangeInput from '../Components/Layout/Range/RangeInput';
 import CategoryRoomService from '../Services/User/CategoryRoomService';
 import CategoryServiceService from '../Services/User/CategoryServices';
 
-const Searchbar = () => {
+const Searchbar = (props) => {
     const [priceDropdownOpen, setPriceDropdownOpen] = useState(false);
     const [minPrice, setMinPrice] = useState(0);
     const [maxPrice, setMaxPrice] = useState(100);
@@ -27,6 +27,7 @@ const Searchbar = () => {
 
     const [activeTab, setActiveTab] = useState("rooms");
     const navigate = useNavigate();
+    const { isManagementRoom } = props;
 
     useEffect(() => {
         const fetchCategories = async () => {
@@ -125,7 +126,7 @@ const Searchbar = () => {
     };
 
     return (
-        <div className="bg-red-500 p-4">
+        (!isManagementRoom ? <div className="bg-red-500 p-4">
             <div className="mx-auto max-w-6xl">
                 <div className="flex gap-0.5">
                     <div
@@ -309,7 +310,48 @@ const Searchbar = () => {
                     </div>
                 </div>
             </div>
-        </div>
+
+        </div> :
+            <div className="bg-red-500 p-4">
+                <div className="mx-auto max-w-6xl">
+                    <div className="shadow-lg rounded-b-lg p-4">
+                        <div className="bg-white flex items-center space-x-2 rounded-lg">
+                            <div className="relative flex-1">
+                                <input
+                                    className="w-full bg-gray-100 rounded-lg pl-10 pr-28 py-2"
+                                    
+                                    type="text"
+                                />
+                                <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+                                <button
+                                    onClick={handleSearch}
+                                    className="absolute right-0 top-1/2 transform -translate-y-1/2 h-8 bg-red-600 text-white rounded-lg px-4 mx-2"
+                                >
+                                    Tìm kiếm
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="w-1/3 relative">
+  <select
+    className="w-full bg-red-800 text-white text-left rounded-lg px-4 py-2 appearance-none cursor-pointer focus:outline-none"
+    value={selectedCategoryId}
+    onChange={handleCategoryChange}
+  >
+    <option value="">-- Danh sách Phòng --</option>
+    {/* Các tùy chọn phòng */}
+    <option value="available">Phòng Đang trống</option>
+    <option value="pending">Phòng đang chờ giao dịch</option>
+    <option value="rented">Phòng Đang cho thuê</option>
+  </select>
+  <FaChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white pointer-events-none" />
+</div>
+
+                </div>
+                
+            </div>)
+            
 
     );
 };
