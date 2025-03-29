@@ -19,11 +19,11 @@ jobs:
         with:
           submodules: true
           lfs: false
-          
+
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '20'
+          node-version: '18'
 
       - name: Cache node modules
         uses: actions/cache@v3
@@ -47,9 +47,11 @@ jobs:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_GREEN_HILL_062F0FC00 }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
-          app_location: "/"
+          app_location: "/"  # Vị trí mã nguồn
           api_location: ""
-          output_location: "build"
+          output_location: "build"  # Vị trí thư mục build
+          skip_app_build: true  # Bỏ qua build tự động của Oryx
+          app_artifact_location: "build"  # Sử dụng thư mục build đã tạo từ bước Build
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
