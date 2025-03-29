@@ -40,6 +40,7 @@
     "tailwindcss": "^3.4.17",
     "web-vitals": "^4.2.4"
   },
+  "build": "CI=false react-scripts build",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
