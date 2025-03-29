@@ -45,7 +45,7 @@ import RoomListLandlord from '../Pages/Landlord/Rooms/RoomList'
 import RoomRentalConfirmation from '../Pages/Landlord/Rooms/RoomRentalConfirmation'
 import ViewProfile from '../Pages/Landlord/ViewProfile'
 import RoomsFormLandlord from '../Pages/Landlord/Rooms/RoomsForm';
-import RoomRentalConfirmation from '../Pages/Landlord/Rooms/RoomRentalConfirmation';
+
 
 import ServicePostDetailsUser from '../Pages/User/ServicePosts/ServiePostDetails'
 import Wiki from '../Pages/Wiki'

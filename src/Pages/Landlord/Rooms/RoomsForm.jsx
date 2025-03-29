@@ -365,23 +365,43 @@ const RoomForm = () => {
 
             showCustomNotification("success", "Tạo tiêu đề và mô tả thành công với AI!");
         } catch (error) {
-            console.error('Lỗi khi tạo mô tả với AI:', error);
-            // Xử lý lỗi và hiển thị thông báo chi tiết
-            let errorMessage = "Lỗi khi tạo tiêu đề và mô tả với AI!";
-            try {
-                const parsedError = JSON.parse(error.message);
-                if (parsedError.validationErrors) {
-                    // Lấy và định dạng thông báo lỗi validation
-                    const validationMessages = Object.values(parsedError.validationErrors).flat().join(' ');
-                    errorMessage = validationMessages || parsedError.message || errorMessage;
-                } else {
-                    errorMessage = parsedError.message || error.message || errorMessage;
-                }
-            } catch (e) {
-                errorMessage = error.message || errorMessage;
+            console.error('Error in handleSubmit:', error);
+        
+            const apiMessage = error?.response?.data?.message || error.message;
+        
+            // Check 409 Conflict - mô tả bị trùng với phòng khác
+            if (error?.response?.status === 409 && apiMessage.includes("Mô tả phòng đã từng được sử dụng")) {
+                showCustomNotification("error", "Mô tả này đã bị trùng với phòng khác trong hệ thống. Vui lòng chỉnh sửa.");
+                return;
             }
-            showCustomNotification("error", errorMessage);
-        } finally {
+        
+            // Check 409 Conflict - phòng đã tồn tại (trùng title + location)
+            if (error?.response?.status === 409 && apiMessage.includes("tiêu đề và địa chỉ")) {
+                showCustomNotification("error", "Phòng với tiêu đề và địa chỉ này đã được đăng. Hãy kiểm tra lại.");
+                return;
+            }
+        
+            // Check 409 Conflict - location trùng toàn hệ thống
+            if (error?.response?.status === 409 && apiMessage.includes("Địa chỉ phòng đã được sử dụng")) {
+                showCustomNotification("error", "Địa chỉ phòng đã được dùng trong hệ thống. Vui lòng nhập địa chỉ khác.");
+                return;
+            }
+        
+            // Check 400 BadRequest - mô tả bị AI phát hiện là spam
+            if (error?.response?.status === 400 && apiMessage.includes("spam")) {
+                showCustomNotification("error", "Mô tả có thể bị spam hoặc trùng với AI. Hãy chỉnh sửa để khác biệt hơn.");
+                return;
+            }
+        
+            // Trường hợp lỗi khác
+            showCustomNotification("error", apiMessage || "Đã xảy ra lỗi, vui lòng thử lại!");
+        
+            if (apiMessage.includes("Unauthorized")) {
+                localStorage.removeItem('authToken');
+                navigate('/login');
+            }
+        }
+        finally {
             setLoading(false);
         }
     };

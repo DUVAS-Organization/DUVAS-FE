@@ -1,9 +1,4 @@
-
 import React, { useEffect, useState } from 'react';
-
-import axios from 'axios';
-import * as React from 'react';
-
 import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
@@ -15,6 +10,8 @@ import { FaMapMarkerAlt, FaCheckCircle, FaHourglassHalf, FaTimesCircle } from 'r
 import { FaChartArea } from 'react-icons/fa6';
 import Footer from '../../../Components/Layout/Footer';
 import RoomLandlordService from '../../../Services/Landlord/RoomLandlordService';
+import BookingManagementService from '../../../Services/Landlord/BookingManagementService';
+import { useAuth } from '../../../Context/AuthProvider';
 
 const Item = styled(Paper)(({ theme }) => ({
     backgroundColor: '#fff',
@@ -60,20 +57,28 @@ const getStatusOverlay = (status) => {
                     <span className="text-red-500 font-bold text-sm">Đã được thuê</span>
                 </div>
             );
+        case 4:
+            return (
+                <div className="absolute top-2 left-2 bg-white bg-opacity-80 px-2 py-1 rounded flex items-center">
+                    <FaHourglassHalf className="text-orange-500 mr-1" />
+                    <span className="text-orange-500 font-bold text-sm">Chờ Người thuê xác nhận</span>
+                </div>
+            );
         default:
             return null;
     }
 };
 
-// Hàm chuyển đổi activeStatus thành tên trạng thái
 const getStatusName = (status) => {
     switch (status) {
         case 1:
             return 'Trống';
         case 2:
-            return 'Chờ giao dịch';
+            return 'Chờ Landlord xác nhận';
         case 3:
             return 'Được thuê';
+        case 4:
+            return 'Chờ Người dùng xác nhận';
         default:
             return 'Tất cả';
     }
@@ -84,22 +89,103 @@ const RoomList = () => {
     const [rooms, setRooms] = useState([]);
     const [loading, setLoading] = useState(true);
     const [activeStatus, setActiveStatus] = useState(null);
+    const { user } = useAuth();
+
+    const determineDisplayStatus = (room, rental) => {
+        const rentalStatus = rental?.rentalStatus;
+        const roomStatus = room.status;
+        const contractStatus = rental?.contractStatus ?? null;
+
+        // Log để kiểm tra dữ liệu
+        console.log(`📌 Room ${room.roomId} - Rental:`, rental);
+        console.log(`📌 Room ${room.roomId} - RentalStatus:`, rentalStatus);
+        console.log(`📌 Room ${room.roomId} - RoomStatus:`, roomStatus);
+        console.log(`📌 Room ${room.roomId} - ContractStatus:`, contractStatus);
+
+        // Ưu tiên kiểm tra nếu có RentalStatus (tức là có yêu cầu thuê)
+        if (rentalStatus !== undefined) {
+            // Đang chờ giao dịch: RentalStatus = 1, status(Room) = 1
+            if (rentalStatus === 1 && roomStatus === 1) {
+                console.log(`📌 Room ${room.roomId} - Status: Đang chờ giao dịch`);
+                return 2;
+            }
+            // Chờ Người dùng xác nhận: RentalStatus = 1, status(Room) = 2, status(Contract) = 4
+            if (rentalStatus === 1 && roomStatus === 2 && contractStatus === 4) {
+                console.log(`📌 Room ${room.roomId} - Status: Chờ Người dùng xác nhận`);
+                return 4;
+            }
+            // Đã hủy: RentalStatus = 2, status(Room) = 2, status(Contract) = 2
+            if (rentalStatus === 2 && roomStatus === 2 && contractStatus === 2) {
+                console.log(`📌 Room ${room.roomId} - Status: Đã hủy (trả về Còn trống)`);
+                return 1; // Đã hủy -> "Còn trống"
+            }
+            // Đang cho thuê: RentalStatus = 1, status(Room) = 3, status(Contract) = 1
+            if (rentalStatus === 1 && roomStatus === 3 && contractStatus === 1) {
+                console.log(`📌 Room ${room.roomId} - Status: Đang cho thuê`);
+                return 3;
+            }
+            // Nếu RentalStatus = 2 nhưng không thỏa mãn điều kiện "Đã hủy", coi như yêu cầu thuê không còn hiệu lực
+            if (rentalStatus === 2) {
+                console.log(`📌 Room ${room.roomId} - Status: Yêu cầu thuê đã hủy (trả về Còn trống)`);
+                return 1; // Yêu cầu thuê đã hủy -> "Còn trống"
+            }
+        }
+
+        // Nếu không có RentalStatus, kiểm tra status(Room)
+        console.log(`📌 Room ${room.roomId} - No RentalStatus, checking Room Status`);
+        if (roomStatus === 1) {
+            console.log(`📌 Room ${room.roomId} - Status: Còn trống`);
+            return 1; // Còn trống
+        }
+        if (roomStatus === 2) {
+            console.log(`📌 Room ${room.roomId} - Status: Đã được đặt`);
+            return 2; // Đã được đặt
+        }
+        if (roomStatus === 3) {
+            console.log(`📌 Room ${room.roomId} - Status: Đang cho thuê`);
+            return 3; // Đang cho thuê
+        }
+
+        console.log(`📌 Room ${room.roomId} - Status: Không xác định`);
+        return 1; // Mặc định trả về "Còn trống" nếu không xác định
+    };
 
     const fetchAllRooms = async () => {
         setLoading(true);
         try {
-            const response = await RoomLandlordService.getRooms();
-            console.log('fetchAllRooms response:', response);
-            const sortedRooms = [...(response.rooms || [])].sort((a, b) => {
-                // Ưu tiên status 2 (Chờ giao dịch) lên đầu
+            if (!user?.token || !user?.userId) {
+                throw new Error('Không có token hoặc userId');
+            }
+            const roomResponse = await RoomLandlordService.getRooms();
+            const rentalResponse = await BookingManagementService.getRentalListOfLandlord(user.userId, user.token);
+
+            console.log("📌 API Response (Rooms):", roomResponse);
+            console.log("📌 API Response (Rentals):", rentalResponse);
+
+            const allRooms = (roomResponse.rooms || []).map(room => {
+                const rental = (rentalResponse || []).find(r => r.roomId === room.roomId);
+                const displayStatus = determineDisplayStatus(room, rental);
+                return {
+                    roomId: room.roomId,
+                    status: displayStatus,
+                    createdDate: room.createdDate || room.CreatedDate,
+                    title: room.title || `Phòng ${room.roomId}`,
+                    image: room.image || '[]',
+                    locationDetail: room.locationDetail || 'Chưa xác định',
+                    acreage: room.acreage || 0,
+                    price: room.price || 0,
+                };
+            }).sort((a, b) => {
                 if (a.status === 2 && b.status !== 2) return -1;
                 if (a.status !== 2 && b.status === 2) return 1;
-                // Nếu status giống nhau, sắp xếp theo CreatedDate giảm dần (mới nhất lên đầu)
-                const dateA = new Date(a.createdDate || a.CreatedDate || 0);
-                const dateB = new Date(b.createdDate || b.CreatedDate || 0);
+                if (a.status === 4 && b.status !== 4) return -1;
+                if (a.status !== 4 && b.status === 4) return 1;
+                const dateA = new Date(a.createdDate || 0);
+                const dateB = new Date(b.createdDate || 0);
                 return dateB - dateA;
             });
-            setRooms(sortedRooms);
+
+            setRooms(allRooms);
         } catch (error) {
             console.error('Lỗi khi lấy danh sách phòng:', error);
             setRooms([]);
@@ -111,15 +197,37 @@ const RoomList = () => {
     const fetchRoomsByStatus = async (status) => {
         setLoading(true);
         try {
-            const response = await RoomLandlordService.getRoomsByStatus(status);
-            console.log('fetchRoomsByStatus response:', response);
-            const sortedRooms = [...(response.rooms || [])].sort((a, b) => {
-                // Sắp xếp theo CreatedDate giảm dần (mới nhất lên đầu)
-                const dateA = new Date(a.createdDate || a.CreatedDate || 0);
-                const dateB = new Date(b.createdDate || b.CreatedDate || 0);
-                return dateB - dateA;
-            });
-            setRooms(sortedRooms);
+            if (!user?.token || !user?.userId) {
+                throw new Error('Không có token hoặc userId');
+            }
+            const roomResponse = await RoomLandlordService.getRooms();
+            const rentalResponse = await BookingManagementService.getRentalListOfLandlord(user.userId, user.token);
+
+            console.log("📌 API Response (Rooms by Status):", roomResponse);
+            console.log("📌 API Response (Rentals by Status):", rentalResponse);
+
+            const filteredRooms = (roomResponse.rooms || []).map(room => {
+                const rental = (rentalResponse || []).find(r => r.roomId === room.roomId);
+                const displayStatus = determineDisplayStatus(room, rental);
+                return {
+                    roomId: room.roomId,
+                    status: displayStatus,
+                    createdDate: room.createdDate || room.CreatedDate,
+                    title: room.title || `Phòng ${room.roomId}`,
+                    image: room.image || '[]',
+                    locationDetail: room.locationDetail || 'Chưa xác định',
+                    acreage: room.acreage || 0,
+                    price: room.price || 0,
+                };
+            })
+                .filter(room => room.status === status)
+                .sort((a, b) => {
+                    const dateA = new Date(a.createdDate || 0);
+                    const dateB = new Date(b.createdDate || 0);
+                    return dateB - dateA;
+                });
+
+            setRooms(filteredRooms);
         } catch (error) {
             console.error('Lỗi khi lấy phòng theo trạng thái:', error);
             setRooms([]);
@@ -129,8 +237,13 @@ const RoomList = () => {
     };
 
     useEffect(() => {
-        fetchAllRooms();
-    }, []);
+        if (user?.token && user?.userId) {
+            fetchAllRooms();
+        } else {
+            console.error('Thiếu token hoặc userId từ AuthContext');
+            setLoading(false);
+        }
+    }, [user]);
 
     const handleFilterByStatus = (status) => {
         setActiveStatus(status);
@@ -171,6 +284,12 @@ const RoomList = () => {
                         className={`px-4 py-2 rounded ${activeStatus === 2 ? 'bg-red-500 text-white' : 'bg-gray-200'}`}
                     >
                         Phòng chờ giao dịch
+                    </button>
+                    <button
+                        onClick={() => handleFilterByStatus(4)}
+                        className={`px-4 py-2 rounded ${activeStatus === 4 ? 'bg-red-500 text-white' : 'bg-gray-200'}`}
+                    >
+                        Phòng chờ xác nhận
                     </button>
                     <button
                         onClick={() => handleFilterByStatus(3)}
