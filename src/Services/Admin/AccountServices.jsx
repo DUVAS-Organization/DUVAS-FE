@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'https://localhost:8000/api/Users';
+const API_URL = 'http://apiduvas1.runasp.net/api/Users';
 
 const AccountsService = {
 

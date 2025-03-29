@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'https://localhost:8000/api/Buildings';
+const API_URL = 'http://apiduvas1.runasp.net/api/Buildings';
 
 const BuildingServices = {
     getBuildings: (searchTerm) =>

@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'https://localhost:8000/api/Users';
+const API_URL = 'http://apiduvas1.runasp.net/api/Users';
 
 const UserService = {
     getUsers: () =>
@@ -31,7 +31,7 @@ const UserService = {
 
     deposit: (amount) => {
         const token = localStorage.getItem("authToken");
-        return axios.post('https://localhost:8000/api/Transaction', { "amount": amount }, {
+        return axios.post('http://apiduvas1.runasp.net/api/Transaction', { "amount": amount }, {
             headers: {
                 Authorization: `Bearer ${token}`,
                 "Content-Type": "application/json",
@@ -41,7 +41,7 @@ const UserService = {
 
     checkTransactionStatus: (description) => {
         const token = localStorage.getItem("authToken");
-        return axios.get('https://localhost:8000/api/Transaction?description=' + description, {
+        return axios.get('http://apiduvas1.runasp.net/api/Transaction?description=' + description, {
             headers: {
                 Authorization: `Bearer ${token}`,
                 "Content-Type": "application/json",
@@ -51,7 +51,7 @@ const UserService = {
 
     getBankAccounts: () => {
         const token = localStorage.getItem("authToken");
-        return axios.get('https://localhost:8000/api/UserProfile/BankAccount', {
+        return axios.get('http://apiduvas1.runasp.net/api/UserProfile/BankAccount', {
             headers: {
                 Authorization: `Bearer ${token}`,
                 "Content-Type": "application/json",
@@ -65,7 +65,7 @@ const UserService = {
 
     genOtp: () => {
         const token = localStorage.getItem("authToken");
-        return axios.get('https://localhost:8000/api/UserProfile/otp', {
+        return axios.get('http://apiduvas1.runasp.net/api/UserProfile/otp', {
             headers: {
                 Authorization: `Bearer ${token}`,
                 "Content-Type": "application/json",
@@ -75,7 +75,7 @@ const UserService = {
 
     addNewBank: (data, otp) => {
         const token = localStorage.getItem("authToken");
-        return axios.post('https://localhost:8000/api/UserProfile/BankAccount?otp=' + otp, data, {
+        return axios.post('http://apiduvas1.runasp.net/api/UserProfile/BankAccount?otp=' + otp, data, {
             headers: {
                 Authorization: `Bearer ${token}`,
                 "Content-Type": "application/json",
@@ -85,7 +85,7 @@ const UserService = {
 
     getTransactions: () => {
         const token = localStorage.getItem("authToken");
-        return axios.get('https://localhost:8000/api/Transaction/GetTransactions', {
+        return axios.get('http://apiduvas1.runasp.net/api/Transaction/GetTransactions', {
             headers: {
                 Authorization: `Bearer ${token}`,
                 "Content-Type": "application/json",
@@ -101,7 +101,7 @@ const UserService = {
             }
 
             const response = await axios.post(
-                'https://localhost:8000/api/Withdraw',
+                'http://apiduvas1.runasp.net/api/Withdraw',
                 {
                     amount: parseFloat(amount),
                     bankAccountId: bankAccountId,
@@ -123,7 +123,7 @@ const UserService = {
 
     updateBankAccountStatus: (bankAccountId, active, otp = "0") => {
         const token = localStorage.getItem("authToken");
-        const url = `https://localhost:8000/api/UserProfile/BankAccount`;
+        const url = `http://apiduvas1.runasp.net/api/UserProfile/BankAccount`;
         const data = { bankAccountId, active, otp };
 
         return axios.put(url, data, {
@@ -136,7 +136,7 @@ const UserService = {
 
     getCurrentUserWithdrawRequest: () => {
         const token = localStorage.getItem("authToken");
-        const url = `https://localhost:8000/api/WithDraw/user`;
+        const url = `http://apiduvas1.runasp.net/api/WithDraw/user`;
         return axios.get(url, {
             headers: {
                 Authorization: `Bearer ${token}`,

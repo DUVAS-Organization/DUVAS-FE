@@ -101,7 +101,7 @@ const MessageAdmin = () => {
     const formData = new FormData();
     formData.append("file", file);
     try {
-      const response = await fetch("https://localhost:8000/api/Upload/upload-image", {
+      const response = await fetch("http://apiduvas1.runasp.net/api/Upload/upload-image", {
         method: "POST",
         body: formData,
       });
@@ -138,7 +138,7 @@ const MessageAdmin = () => {
   useEffect(() => {
     if (!currentUserId) return;
     setIsLoading(true);
-    fetch(`https://localhost:8000/api/Message/conversations/${currentUserId}`)
+    fetch(`http://apiduvas1.runasp.net/api/Message/conversations/${currentUserId}`)
       .then((res) => res.json())
       .then(async (data) => {
         const newConversations = await Promise.all(
@@ -167,7 +167,7 @@ const MessageAdmin = () => {
   const fetchConversationMessages = (partnerId) => {
     if (!currentUserId) return;
     setIsLoading(true);
-    fetch(`https://localhost:8000/api/Message/user/${currentUserId}/${partnerId}`)
+    fetch(`http://apiduvas1.runasp.net/api/Message/user/${currentUserId}/${partnerId}`)
       .then((res) => res.json())
       .then((data) => {
         setConversationMessages(data);
@@ -263,7 +263,7 @@ const MessageAdmin = () => {
     setAttachedFiles([]);
     setAttachedPreviews([]);
 
-    fetch("https://localhost:8000/api/Message", {
+    fetch("http://apiduvas1.runasp.net/api/Message", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(newMsg),

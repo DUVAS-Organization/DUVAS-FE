@@ -182,7 +182,7 @@ const RoomDetailsUser = () => {
             return;
         }
         try {
-            const response = await fetch("https://localhost:8000/api/SavedPosts", {
+            const response = await fetch("http://apiduvas1.runasp.net/api/SavedPosts", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ userId: user.userId, roomId: parseInt(roomId) }),
@@ -248,7 +248,7 @@ const RoomDetailsUser = () => {
         try {
             const token = user.token || localStorage.getItem("token");
 
-            const trackRoomResponse = await fetch(`https://localhost:8000/api/RoomManagement/track-room/${roomId}`, {
+            const trackRoomResponse = await fetch(`http://apiduvas1.runasp.net/api/RoomManagement/track-room/${roomId}`, {
                 method: "GET",
                 headers: { "Authorization": `Bearer ${token}` },
             });
@@ -270,7 +270,7 @@ const RoomDetailsUser = () => {
                 MonthForRent: details.duration ? parseInt(details.duration) : 1,
             };
             console.log("Đang gửi payload thuê phòng:", rentPayload);
-            const rentResponse = await fetch("https://localhost:8000/api/RoomManagement/rent-room", {
+            const rentResponse = await fetch("http://apiduvas1.runasp.net/api/RoomManagement/rent-room", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json; charset=UTF-8",
@@ -292,7 +292,7 @@ const RoomDetailsUser = () => {
                 additionalInfo: additionalInfo,
             };
             console.log("Đang gửi payload send-mail:", sendMailPayload);
-            const sendMailResponse = await fetch("https://localhost:8000/api/RoomManagement/send-mail", {
+            const sendMailResponse = await fetch("http://apiduvas1.runasp.net/api/RoomManagement/send-mail", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json; charset=UTF-8",
