@@ -59,6 +59,10 @@
   "scripts": {
   "build": "webpack --mode production"
 },
+  "devDependencies": {
+  "webpack": "^5.91.0",
+  "webpack-cli": "^5.1.4"
+},
   "browserslist": {
     "production": [
       ">0.2%",
