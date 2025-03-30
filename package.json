@@ -56,6 +56,9 @@
   "scripts": {
   "test": "react-scripts test --forceExit"
   },
+  "scripts": {
+  "build": "webpack --mode production"
+},
   "browserslist": {
     "production": [
       ">0.2%",
