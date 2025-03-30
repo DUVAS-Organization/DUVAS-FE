@@ -40,7 +40,7 @@ const Money = () => {
                             <input
                                 type="number"
                                 id="amount"
-                                name="amount"
+                                name="amount" font
                                 min="1000"
                                 step="1000"
                                 required
