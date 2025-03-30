@@ -19,7 +19,7 @@ const SavedPostList = () => {
     // Gọi API lấy danh sách tin đã lưu
     const fetchSavedPosts = async () => {
         try {
-            const response = await fetch(`http://apiduvas1.runasp.net/api/SavedPosts/${user.userId}`);
+            const response = await fetch(`https://apiduvas1.runasp.net/api/SavedPosts/${user.userId}`);
             if (!response.ok) throw new Error("Lỗi khi lấy danh sách bài đăng đã lưu!");
 
             const data = await response.json();
@@ -70,7 +70,7 @@ const SavedPostList = () => {
             } else {
                 payload.servicePostId = id;
             }
-            const response = await fetch("http://apiduvas1.runasp.net/api/SavedPosts", {
+            const response = await fetch("https://apiduvas1.runasp.net/api/SavedPosts", {
                 method: "DELETE",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload),

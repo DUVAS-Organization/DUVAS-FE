@@ -98,7 +98,7 @@ const ServicePostForm = () => {
         const formData = new FormData();
         formData.append('file', file);
         try {
-            const response = await fetch('http://apiduvas1.runasp.net/api/Upload/upload-image', {
+            const response = await fetch('https://apiduvas1.runasp.net/api/Upload/upload-image', {
                 method: 'POST',
                 body: formData,
             });

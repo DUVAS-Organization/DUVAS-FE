@@ -105,7 +105,7 @@ const ServicePostDetails = () => {
             return;
         }
         try {
-            const response = await fetch("http://apiduvas1.runasp.net/api/SavedPosts", {
+            const response = await fetch("https://apiduvas1.runasp.net/api/SavedPosts", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ userId: user.userId, servicePostId: parseInt(servicePostId) }),
@@ -138,7 +138,7 @@ const ServicePostDetails = () => {
                 ServicePostId: parseInt(servicePostId),
                 RequesterId: user.userId,
             };
-            const requestResponse = await fetch("http://apiduvas1.runasp.net/api/ServiceManagement/rent-service", {
+            const requestResponse = await fetch("https://apiduvas1.runasp.net/api/ServiceManagement/rent-service", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(requestPayload),
@@ -154,7 +154,7 @@ const ServicePostDetails = () => {
                 servicePostId: parseInt(servicePostId),
                 requesterName: requesterName,
             };
-            const sendMailResponse = await fetch("http://apiduvas1.runasp.net/api/ServiceManagement/send-mail", {
+            const sendMailResponse = await fetch("https://apiduvas1.runasp.net/api/ServiceManagement/send-mail", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

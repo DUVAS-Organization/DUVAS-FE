@@ -83,7 +83,7 @@ const AdminChatWidget = () => {
         const fetchMessages = async () => {
             try {
                 const response = await fetch(
-                    `http://apiduvas1.runasp.net/api/Message/user/${user.userId}/${adminUser.userId}`,
+                    `https://apiduvas1.runasp.net/api/Message/user/${user.userId}/${adminUser.userId}`,
                     {
                         headers: { "Content-Type": "application/json" },
                     }
@@ -222,7 +222,7 @@ const AdminChatWidget = () => {
         setInputMsg("");
 
         try {
-            const response = await fetch("http://apiduvas1.runasp.net/api/Message", {
+            const response = await fetch("https://apiduvas1.runasp.net/api/Message", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(newMessage),

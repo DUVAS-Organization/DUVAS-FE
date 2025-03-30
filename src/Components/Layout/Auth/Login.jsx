@@ -23,7 +23,7 @@ const LoginPage = () => {
         setLoading(true);
         setErrorMessage("");
 
-        const loginApiUrl = "http://apiduvas1.runasp.net/api/Auth/login";
+        const loginApiUrl = "https://apiduvas1.runasp.net/api/Auth/login";
 
         const payload = {
             username: username.trim(),
@@ -69,14 +69,14 @@ const LoginPage = () => {
 
     // Đăng nhập với Google
     const handleGoogleLogin = () => {
-        const googleLoginApiUrl = "http://apiduvas1.runasp.net/api/Auth/google";
+        const googleLoginApiUrl = "https://apiduvas1.runasp.net/api/Auth/google";
         // Điều hướng tới trang đăng nhập Google
         window.location.href = googleLoginApiUrl;
     };
 
     // Xử lý luồng sau khi login Google thành công
     const handleGoogleCallback = async (code) => {
-        const tokenExchangeApiUrl = `http://apiduvas1.runasp.net/api/Auth/token-exchange?code=${code}`;
+        const tokenExchangeApiUrl = `https://apiduvas1.runasp.net/api/Auth/token-exchange?code=${code}`;
 
         try {
             const res = await fetch(tokenExchangeApiUrl, {

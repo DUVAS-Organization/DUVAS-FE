@@ -41,7 +41,7 @@ const ForgotPasswords = () => {
         setSuccessMessage("");
 
         // Tạo liên kết gửi OTP với email đã nhập
-        const forgotPasswordUrl = `http://apiduvas1.runasp.net/api/Auth/forgot-password?emailOrPhone=${email}`;
+        const forgotPasswordUrl = `https://apiduvas1.runasp.net/api/Auth/forgot-password?emailOrPhone=${email}`;
 
         try {
             const response = await fetch(forgotPasswordUrl, {
@@ -90,7 +90,7 @@ const ForgotPasswords = () => {
             return;
         }
 
-        const resetpasswordApiUrl = "http://apiduvas1.runasp.net/api/Auth/reset-password";
+        const resetpasswordApiUrl = "https://apiduvas1.runasp.net/api/Auth/reset-password";
 
         const payload = {
             otp,

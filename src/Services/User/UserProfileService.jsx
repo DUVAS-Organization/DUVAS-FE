@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://apiduvas1.runasp.net/api/UserProfile';
+const API_URL = 'https://apiduvas1.runasp.net/api/UserProfile';
 
 // Lấy thông tin người dùng (không cần token)
 export const getUserProfile = async (userId) => {

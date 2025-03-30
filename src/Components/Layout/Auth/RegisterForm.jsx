@@ -31,7 +31,7 @@ const RegisterForm = () => {
         setIsEmailValid(emailPattern.test(emailInput));
     };
     const handleGoogleLogin = () => {
-        const googleLoginApiUrl = "http://apiduvas1.runasp.net/api/Auth/google";
+        const googleLoginApiUrl = "https://apiduvas1.runasp.net/api/Auth/google";
         window.location.href = googleLoginApiUrl; // Chuyển hướng đến API login bằng Google
     };
     const handleSendOtp = async () => {
@@ -44,7 +44,7 @@ const RegisterForm = () => {
         setErrorMessage("");
         setSuccessMessage("");
 
-        const sendOtpApiUrl = "http://apiduvas1.runasp.net/api/Auth/verify";
+        const sendOtpApiUrl = "https://apiduvas1.runasp.net/api/Auth/verify";
 
         try {
             const response = await fetch(sendOtpApiUrl, {
@@ -103,7 +103,7 @@ const RegisterForm = () => {
             return;
         }
 
-        const registerApiUrl = "http://apiduvas1.runasp.net/api/Auth/register";
+        const registerApiUrl = "https://apiduvas1.runasp.net/api/Auth/register";
 
         const payload = {
             otp,

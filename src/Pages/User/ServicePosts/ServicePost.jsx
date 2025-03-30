@@ -85,7 +85,7 @@ const ServicePostList = () => {
 
     const fetchSavedPosts = async () => {
         try {
-            const response = await fetch(`http://apiduvas1.runasp.net/api/SavedPosts/${user.userId}`);
+            const response = await fetch(`https://apiduvas1.runasp.net/api/SavedPosts/${user.userId}`);
             if (!response.ok) throw new Error('Lỗi khi lấy danh sách bài đã lưu!');
             const data = await response.json();
             const savedPostIds = data.map(item => Number(item.servicePostId));
@@ -105,7 +105,7 @@ const ServicePostList = () => {
         }
         try {
             const servicePostIdNum = Number(servicePostId);
-            const response = await fetch('http://apiduvas1.runasp.net/api/SavedPosts', {
+            const response = await fetch('https://apiduvas1.runasp.net/api/SavedPosts', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userId: user.userId, servicePostId: servicePostIdNum }),
