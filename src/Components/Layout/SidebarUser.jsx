@@ -115,17 +115,6 @@ const SidebarUser = () => {
                         </li>
                         <li>
                             <NavLink
-                                to="/Withdraw"
-                                className={({ isActive }) =>
-                                    `block mb-1 py-2 px-4 hover:bg-red-500 hover:text-white rounded-3xl ${isActive ? 'bg-red-500 text-white' : ''
-                                    }`
-                                }
-                            >
-                                Lịch sử rút tiền
-                            </NavLink>
-                        </li>
-                        <li>
-                            <NavLink
                                 to="/Moneys"
                                 className={({ isActive }) =>
                                     `block py-2 px-4 hover:bg-red-500 hover:text-white rounded-3xl ${isActive ? 'bg-red-500 text-white' : ''

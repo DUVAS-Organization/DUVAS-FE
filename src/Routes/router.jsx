@@ -41,7 +41,6 @@ import Message from '../Pages/User/Profiles/Message';
 import Money from '../Pages/User/Transactions/Money';
 import BankAccount from '../Pages/User/Transactions/BankAccount'
 import Transaction from '../Pages/User/Transactions/Transaction'
-import Withdraw from '../Pages/User/Transactions/Withdraw';
 import CreateWithdraw from '../Pages/User/Transactions/CreateWithdraw';
 import AdminTransaction from '../Pages/Admin/Transactions/Transaction';
 const RoutesConfig = () => {
@@ -62,7 +61,6 @@ const RoutesConfig = () => {
             <Route path="/Moneys" element={<Money />} />
             <Route path="/BankAccounts" element={<BankAccount />} />
             <Route path="/Transaction" element={<Transaction />} />
-            <Route path="/Withdraw" element={<Withdraw />} />
             <Route path="/Withdraw/Create" element={<CreateWithdraw/>}/>
 
 

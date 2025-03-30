@@ -116,7 +116,7 @@ const BankAccount = () => {
                         Quản lý tài khoản rút tiền của bạn
                     </h1>
 
-                    <div className="flex">
+                    <div className="flex ">
                         {!isEnteringOtp ? (
                             <div className="w-1/3 bg-white p-6 rounded-lg shadow-md">
                                 <h1 className="font-bold mb-1 text-center">Tạo tài khoản ngân hàng</h1>
