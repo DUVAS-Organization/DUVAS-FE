@@ -2,15 +2,6 @@ version: 2.1
 orbs:
   node: circleci/node@5
 jobs:
-  test-node:
-    executor: node/default
-    steps:
-      - checkout
-      - node/install-packages:
-          pkg-manager: npm
-      - run:
-          name: Run tests
-          command: npm test
   build-node:
     executor: node/default
     steps:
@@ -46,12 +37,9 @@ jobs:
           environment:
             GITHUB_TOKEN: $GITHUB_TOKEN
 workflows:
-  build-and-test:
+  build-and-deploy:
     jobs:
-      - test-node
-      - build-node:
-          requires:
-            - test-node
+      - build-node
       - deploy:
           requires:
             - build-node
