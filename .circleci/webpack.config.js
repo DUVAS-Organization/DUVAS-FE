@@ -1,7 +1,7 @@
 const path = require('path');
 
 module.exports = {
-  entry: './src/index.js', // Điểm vào, thay bằng src/App.jsx nếu cần
+  entry: './src/App.jsx', // Điểm vào, thay bằng src/App.jsx nếu cần
   output: {
     path: path.resolve(__dirname, 'build'),
     filename: 'bundle.js',
