@@ -114,7 +114,7 @@ const Searchbar = () => {
             navigate(`/Rooms?${queryString}`);
         } else if (activeTab === "services") {
             const selectedCategory = categoriesService.find(c => c.categoryServiceId.toString() === selectedCategoryId);
-            queryParams.tab = selectedCategory ? selectedCategory.categoryServiceName : "Vệ sinh";
+            queryParams.tab = selectedCategory ? selectedCategory.categoryServiceName : "Dịch vụ vệ sinh";
             if (selectedCategoryId) queryParams.categoryServiceId = selectedCategoryId;
             if (minPrice !== 0) queryParams.minPrice = minPrice;
             if (maxPrice !== 100) queryParams.maxPrice = maxPrice;

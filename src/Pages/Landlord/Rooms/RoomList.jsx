@@ -12,8 +12,6 @@ import Footer from '../../../Components/Layout/Footer';
 import RoomLandlordService from '../../../Services/Landlord/RoomLandlordService';
 import BookingManagementService from '../../../Services/Landlord/BookingManagementService';
 import { useAuth } from '../../../Context/AuthProvider';
-import { format } from 'date-fns';
-import { vi } from 'date-fns/locale';
 
 const Item = styled(Paper)(({ theme }) => ({
     backgroundColor: '#fff',
@@ -36,7 +34,6 @@ const Item = styled(Paper)(({ theme }) => ({
     }),
 }));
 
-// Hàm hiển thị overlay (góc trên trái) dựa trên status
 const getStatusOverlay = (status) => {
     switch (status) {
         case 1:
@@ -64,7 +61,7 @@ const getStatusOverlay = (status) => {
             return (
                 <div className="absolute top-2 left-2 bg-white bg-opacity-80 px-2 py-1 rounded flex items-center">
                     <FaHourglassHalf className="text-orange-500 mr-1" />
-                    <span className="text-orange-500 font-bold text-sm">Chờ Người dùng xác nhận</span>
+                    <span className="text-orange-500 font-bold text-sm">Chờ Người thuê xác nhận</span>
                 </div>
             );
         default:
@@ -72,124 +69,88 @@ const getStatusOverlay = (status) => {
     }
 };
 
-// Hàm chuyển status -> tên
 const getStatusName = (status) => {
     switch (status) {
         case 1:
-            return 'trống';
+            return 'Trống';
         case 2:
-            return 'chờ giao dịch';
+            return 'Chờ Landlord xác nhận';
         case 3:
-            return 'được thuê';
+            return 'Được thuê';
         case 4:
-            return 'chờ xác nhận';
+            return 'Chờ Người dùng xác nhận';
         default:
-            return 'không xác định';
+            return 'Tất cả';
     }
 };
-
-// Hàm xác định status cho card dựa trên room + booking
-// - booking: { rentalStatus, contractStatus, ... }
-// - room: { status, ... }
-const determineDisplayStatus = (room, booking) => {
-    if (!booking) {
-        return 1; // Không có booking -> Còn trống
-    }
-    const { rentalStatus, contractStatus } = booking;
-    const roomStatus = room.status;
-
-    // Nếu booking chưa bị hủy (rentalStatus === 1)
-    if (rentalStatus === 1 && roomStatus === 1) {
-        return 2; // Đang chờ giao dịch
-    }
-    if (rentalStatus === 1 && roomStatus === 2 && contractStatus === 4) {
-        return 4; // Chờ Người dùng xác nhận
-    }
-    if (rentalStatus === 1 && roomStatus === 3 && contractStatus === 1) {
-        return 3; // Đang cho thuê
-    }
-    return 1;
-};
-
-// Thứ tự sắp xếp: status 2 -> 4 -> 3 -> 1
-const sortOrder = { 2: 1, 4: 2, 3: 3, 1: 4 };
 
 const RoomList = () => {
     const navigate = useNavigate();
-    const [cards, setCards] = useState([]);
+    const [rooms, setRooms] = useState([]);
     const [loading, setLoading] = useState(true);
     const [activeStatus, setActiveStatus] = useState(null);
     const { user } = useAuth();
 
-    // Fetch toàn bộ dữ liệu
-    const fetchAllCards = async () => {
-        setLoading(true);
-        try {
-            if (!user?.token || !user?.userId) {
-                throw new Error('Không có token hoặc userId');
+    const determineDisplayStatus = (room, rental) => {
+        const rentalStatus = rental?.rentalStatus;
+        const roomStatus = room.status;
+        const contractStatus = rental?.contractStatus ?? null;
+
+        // Log để kiểm tra dữ liệu
+        console.log(`📌 Room ${room.roomId} - Rental:`, rental);
+        console.log(`📌 Room ${room.roomId} - RentalStatus:`, rentalStatus);
+        console.log(`📌 Room ${room.roomId} - RoomStatus:`, roomStatus);
+        console.log(`📌 Room ${room.roomId} - ContractStatus:`, contractStatus);
+
+        // Ưu tiên kiểm tra nếu có RentalStatus (tức là có yêu cầu thuê)
+        if (rentalStatus !== undefined) {
+            // Đang chờ giao dịch: RentalStatus = 1, status(Room) = 1
+            if (rentalStatus === 1 && roomStatus === 1) {
+                console.log(`📌 Room ${room.roomId} - Status: Đang chờ giao dịch`);
+                return 2;
             }
-            const roomResponse = await RoomLandlordService.getRooms();
-            const rentalResponse = await BookingManagementService.getRentalListOfLandlord(user.userId, user.token);
-            const roomsData = roomResponse.rooms || [];
-            const bookingsData = rentalResponse || [];
-            const newCards = [];
-
-            roomsData.forEach((room) => {
-                const roomBookings = bookingsData.filter((bk) => bk.roomId === room.roomId);
-                const validBookings = roomBookings.filter((bk) => bk.rentalStatus === 1);
-
-                if (validBookings.length === 0) {
-                    newCards.push({
-                        roomId: room.roomId,
-                        title: room.title || `Phòng ${room.roomId}`,
-                        image: room.image || '[]',
-                        locationDetail: room.locationDetail || 'Chưa xác định',
-                        acreage: room.acreage || 0,
-                        price: room.price || 0,
-                        createdDate: room.createdDate || room.CreatedDate,
-                        status: 1,
-                        booking: null,
-                    });
-                } else {
-                    validBookings.forEach((bk) => {
-                        const displayStatus = determineDisplayStatus(room, bk);
-                        newCards.push({
-                            roomId: room.roomId,
-                            title: room.title || `Phòng ${room.roomId}`,
-                            image: room.image || '[]',
-                            locationDetail: room.locationDetail || 'Chưa xác định',
-                            acreage: room.acreage || 0,
-                            price: room.price || 0,
-                            createdDate: room.createdDate || room.CreatedDate,
-                            status: displayStatus,
-                            booking: bk,
-                        });
-                    });
-                }
-            });
-
-            newCards.sort((a, b) => {
-                const orderA = sortOrder[a.status] || 5;
-                const orderB = sortOrder[b.status] || 5;
-                if (orderA !== orderB) {
-                    return orderA - orderB;
-                } else {
-                    const dateA = new Date(a.createdDate || 0);
-                    const dateB = new Date(b.createdDate || 0);
-                    return dateB - dateA;
-                }
-            });
-
-            setCards(newCards);
-        } catch (error) {
-            console.error('Lỗi khi lấy danh sách phòng:', error);
-            setCards([]);
-        } finally {
-            setLoading(false);
+            // Chờ Người dùng xác nhận: RentalStatus = 1, status(Room) = 2, status(Contract) = 4
+            if (rentalStatus === 1 && roomStatus === 2 && contractStatus === 4) {
+                console.log(`📌 Room ${room.roomId} - Status: Chờ Người dùng xác nhận`);
+                return 4;
+            }
+            // Đã hủy: RentalStatus = 2, status(Room) = 2, status(Contract) = 2
+            if (rentalStatus === 2 && roomStatus === 2 && contractStatus === 2) {
+                console.log(`📌 Room ${room.roomId} - Status: Đã hủy (trả về Còn trống)`);
+                return 1; // Đã hủy -> "Còn trống"
+            }
+            // Đang cho thuê: RentalStatus = 1, status(Room) = 3, status(Contract) = 1
+            if (rentalStatus === 1 && roomStatus === 3 && contractStatus === 1) {
+                console.log(`📌 Room ${room.roomId} - Status: Đang cho thuê`);
+                return 3;
+            }
+            // Nếu RentalStatus = 2 nhưng không thỏa mãn điều kiện "Đã hủy", coi như yêu cầu thuê không còn hiệu lực
+            if (rentalStatus === 2) {
+                console.log(`📌 Room ${room.roomId} - Status: Yêu cầu thuê đã hủy (trả về Còn trống)`);
+                return 1; // Yêu cầu thuê đã hủy -> "Còn trống"
+            }
         }
+
+        // Nếu không có RentalStatus, kiểm tra status(Room)
+        console.log(`📌 Room ${room.roomId} - No RentalStatus, checking Room Status`);
+        if (roomStatus === 1) {
+            console.log(`📌 Room ${room.roomId} - Status: Còn trống`);
+            return 1; // Còn trống
+        }
+        if (roomStatus === 2) {
+            console.log(`📌 Room ${room.roomId} - Status: Đã được đặt`);
+            return 2; // Đã được đặt
+        }
+        if (roomStatus === 3) {
+            console.log(`📌 Room ${room.roomId} - Status: Đang cho thuê`);
+            return 3; // Đang cho thuê
+        }
+
+        console.log(`📌 Room ${room.roomId} - Status: Không xác định`);
+        return 1; // Mặc định trả về "Còn trống" nếu không xác định
     };
 
-    const fetchCardsByStatus = async (status) => {
+    const fetchAllRooms = async () => {
         setLoading(true);
         try {
             if (!user?.token || !user?.userId) {
@@ -197,58 +158,79 @@ const RoomList = () => {
             }
             const roomResponse = await RoomLandlordService.getRooms();
             const rentalResponse = await BookingManagementService.getRentalListOfLandlord(user.userId, user.token);
-            const roomsData = roomResponse.rooms || [];
-            const bookingsData = rentalResponse || [];
-            const filteredCards = [];
 
-            roomsData.forEach((room) => {
-                const roomBookings = bookingsData.filter((bk) => bk.roomId === room.roomId);
-                const validBookings = roomBookings.filter((bk) => bk.rentalStatus === 1);
+            console.log("📌 API Response (Rooms):", roomResponse);
+            console.log("📌 API Response (Rentals):", rentalResponse);
 
-                if (validBookings.length === 0) {
-                    if (status === 1) {
-                        filteredCards.push({
-                            roomId: room.roomId,
-                            title: room.title || `Phòng ${room.roomId}`,
-                            image: room.image || '[]',
-                            locationDetail: room.locationDetail || 'Chưa xác định',
-                            acreage: room.acreage || 0,
-                            price: room.price || 0,
-                            createdDate: room.createdDate || room.CreatedDate,
-                            status: 1,
-                            booking: null,
-                        });
-                    }
-                } else {
-                    validBookings.forEach((bk) => {
-                        const displayStatus = determineDisplayStatus(room, bk);
-                        if (displayStatus === status) {
-                            filteredCards.push({
-                                roomId: room.roomId,
-                                title: room.title || `Phòng ${room.roomId}`,
-                                image: room.image || '[]',
-                                locationDetail: room.locationDetail || 'Chưa xác định',
-                                acreage: room.acreage || 0,
-                                price: room.price || 0,
-                                createdDate: room.createdDate || room.CreatedDate,
-                                status: displayStatus,
-                                booking: bk,
-                            });
-                        }
-                    });
-                }
-            });
-
-            filteredCards.sort((a, b) => {
+            const allRooms = (roomResponse.rooms || []).map(room => {
+                const rental = (rentalResponse || []).find(r => r.roomId === room.roomId);
+                const displayStatus = determineDisplayStatus(room, rental);
+                return {
+                    roomId: room.roomId,
+                    status: displayStatus,
+                    createdDate: room.createdDate || room.CreatedDate,
+                    title: room.title || `Phòng ${room.roomId}`,
+                    image: room.image || '[]',
+                    locationDetail: room.locationDetail || 'Chưa xác định',
+                    acreage: room.acreage || 0,
+                    price: room.price || 0,
+                };
+            }).sort((a, b) => {
+                if (a.status === 2 && b.status !== 2) return -1;
+                if (a.status !== 2 && b.status === 2) return 1;
+                if (a.status === 4 && b.status !== 4) return -1;
+                if (a.status !== 4 && b.status === 4) return 1;
                 const dateA = new Date(a.createdDate || 0);
                 const dateB = new Date(b.createdDate || 0);
                 return dateB - dateA;
             });
 
-            setCards(filteredCards);
+            setRooms(allRooms);
+        } catch (error) {
+            console.error('Lỗi khi lấy danh sách phòng:', error);
+            setRooms([]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchRoomsByStatus = async (status) => {
+        setLoading(true);
+        try {
+            if (!user?.token || !user?.userId) {
+                throw new Error('Không có token hoặc userId');
+            }
+            const roomResponse = await RoomLandlordService.getRooms();
+            const rentalResponse = await BookingManagementService.getRentalListOfLandlord(user.userId, user.token);
+
+            console.log("📌 API Response (Rooms by Status):", roomResponse);
+            console.log("📌 API Response (Rentals by Status):", rentalResponse);
+
+            const filteredRooms = (roomResponse.rooms || []).map(room => {
+                const rental = (rentalResponse || []).find(r => r.roomId === room.roomId);
+                const displayStatus = determineDisplayStatus(room, rental);
+                return {
+                    roomId: room.roomId,
+                    status: displayStatus,
+                    createdDate: room.createdDate || room.CreatedDate,
+                    title: room.title || `Phòng ${room.roomId}`,
+                    image: room.image || '[]',
+                    locationDetail: room.locationDetail || 'Chưa xác định',
+                    acreage: room.acreage || 0,
+                    price: room.price || 0,
+                };
+            })
+                .filter(room => room.status === status)
+                .sort((a, b) => {
+                    const dateA = new Date(a.createdDate || 0);
+                    const dateB = new Date(b.createdDate || 0);
+                    return dateB - dateA;
+                });
+
+            setRooms(filteredRooms);
         } catch (error) {
             console.error('Lỗi khi lấy phòng theo trạng thái:', error);
-            setCards([]);
+            setRooms([]);
         } finally {
             setLoading(false);
         }
@@ -256,7 +238,7 @@ const RoomList = () => {
 
     useEffect(() => {
         if (user?.token && user?.userId) {
-            fetchAllCards();
+            fetchAllRooms();
         } else {
             console.error('Thiếu token hoặc userId từ AuthContext');
             setLoading(false);
@@ -266,9 +248,9 @@ const RoomList = () => {
     const handleFilterByStatus = (status) => {
         setActiveStatus(status);
         if (status === null) {
-            fetchAllCards();
+            fetchAllRooms();
         } else {
-            fetchCardsByStatus(status);
+            fetchRoomsByStatus(status);
         }
     };
 
@@ -316,63 +298,57 @@ const RoomList = () => {
                         Phòng đang cho thuê
                     </button>
                 </div>
-                {cards.length === 0 ? (
+                {rooms.length === 0 ? (
                     <p className="text-black font-semibold text-center">
                         {activeStatus === null
                             ? "Bạn hiện không có phòng nào trong hệ thống."
-                            : `Không có phòng nào đang ${getStatusName(activeStatus)}.`}
+                            : `Không có phòng nào đang ${getStatusName(activeStatus).toLowerCase()}.`}
                     </p>
                 ) : (
                     <Grid className="mt-4" container spacing={2}>
-                        {cards.map((card) => {
+                        {rooms.map((room) => {
                             let images;
                             try {
-                                images = JSON.parse(card.image || '[]');
+                                images = JSON.parse(room.image || '[]');
                             } catch (error) {
-                                console.error(`Lỗi parse image phòng ${card.roomId}:`, error);
-                                images = card.image ? [card.image] : [];
+                                console.error(`Lỗi parse image phòng ${room.roomId}:`, error);
+                                images = room.image ? [room.image] : [];
                             }
                             if (!Array.isArray(images)) images = [images];
-                            const firstImage = images[0] || 'https://via.placeholder.com/250x350';
+                            const firstImage = images[0] || 'https://storage.googleapis.com/a1aa/image/DEtIGStEO_sg24yKvGcjViznxp5GVEZmRfoqAcQ5GHI.jpg';
 
                             return (
-                                <Grid key={`${card.roomId}-${card.booking ? card.booking.rentalId : 'null'}`} size={3}>
-                                    <Item onClick={() => navigate(`/Rooms/Contract/${card.roomId}/${card.booking ? card.booking.rentalId : 'null'}`)}>
+                                <Grid key={room.roomId} size={3}>
+                                    <Item onClick={() => navigate(`/Rooms/Contract/${room.roomId}`)}>
                                         <div className="flex flex-col h-full">
                                             <div className="relative">
                                                 <img
                                                     className="rounded-t-lg shadow-md overflow-hidden w-full h-48 object-cover"
-                                                    alt={card.title || 'Image of a room'}
+                                                    alt={room.title || 'Image of a room'}
                                                     src={firstImage}
                                                 />
-                                                {getStatusOverlay(card.status)}
+                                                {getStatusOverlay(room.status)}
                                             </div>
-                                            <div className="flex flex-col flex-grow p-2 justify-between max-h-[355px]">
+                                            <div className="flex flex-col flex-grow p-2 justify-between">
                                                 <p className="text-black text-base font-semibold truncate max-w-[250px]">
-                                                    {card.title}
+                                                    {room.title || 'Tiêu đề phòng'}
                                                 </p>
                                                 <p className="text-gray-600 flex items-center mt-1 text-sm truncate max-w-[250px]">
                                                     <FaMapMarkerAlt className="absolute" />
                                                     <span className="ml-5">
-                                                        {card.locationDetail || 'Vị trí không xác định'}
+                                                        {room.locationDetail || 'Vị trí không xác định'}
                                                     </span>
                                                 </p>
                                                 <p className="text-gray-600 text-sm mt-1 flex items-center">
                                                     <FaChartArea className="mr-1" />
-                                                    Diện tích: <span className="text-gray-800">{card.acreage || 'N/A'}</span> m²
+                                                    Diện tích:
+                                                    <span className="text-gray-800">
+                                                        {room.acreage || 'N/A'}
+                                                    </span>
+                                                    m²
                                                 </p>
                                                 <p className="text-red-500 font-medium text-base mt-1">
-                                                    {card.price ? `${card.price.toLocaleString('vi-VN')} đ/tháng` : 'Thỏa thuận'}
-                                                </p>
-                                                <p >
-                                                    {card.booking && (
-                                                        <div>
-                                                            <p className="font-semibold">Người đặt: {card.booking.renterName || 'N/A'}</p>
-                                                            <p>
-                                                                Ngày đặt: {format(new Date(card.booking.createdDate), 'dd-MM-yyyy HH:mm', { locale: vi })}
-                                                            </p>
-                                                        </div>
-                                                    )}
+                                                    {room.price ? `${room.price.toLocaleString('vi-VN')} đ/tháng` : 'Thỏa thuận'}
                                                 </p>
                                             </div>
                                         </div>

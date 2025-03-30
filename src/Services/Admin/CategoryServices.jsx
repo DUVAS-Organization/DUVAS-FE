@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'https://localhost:8000/api/CategoryServices';
+const API_URL = 'http://apiduvas1.runasp.net/api/CategoryServices';
 
 const CategoryServices = {
     getCategoryServices: () =>

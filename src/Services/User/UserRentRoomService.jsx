@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'https://localhost:8000/api/RentRoom';
+const API_BASE_URL = 'http://apiduvas1.runasp.net/api/RentRoom';
 
 const UserRentRoomService = {
     // Lấy danh sách phòng "Đang chờ giao dịch" (contract.status = 4)

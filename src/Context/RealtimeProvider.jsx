@@ -29,7 +29,7 @@ export const RealtimeProvider = ({ children }) => {
         }
 
         if (hubType === "savedPost" && !savedPostConnectionRef.current) {
-            const hubUrl = `https://localhost:8000/savedPostHub?access_token=${token}`;
+            const hubUrl = `http://apiduvas1.runasp.net/savedPostHub?access_token=${token}`;
             savedPostConnectionRef.current = new HubConnectionBuilder()
                 .withUrl(hubUrl, { withCredentials: true })
                 .withAutomaticReconnect()
@@ -58,7 +58,7 @@ export const RealtimeProvider = ({ children }) => {
         }
 
         if (hubType === "chat" && !chatConnectionRef.current) {
-            const hubUrl = `https://localhost:8000/chathub?access_token=${token}`;
+            const hubUrl = `http://apiduvas1.runasp.net/chathub?access_token=${token}`;
             chatConnectionRef.current = new HubConnectionBuilder()
                 .withUrl(hubUrl, { withCredentials: true })
                 .withAutomaticReconnect()

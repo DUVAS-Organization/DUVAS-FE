@@ -80,7 +80,7 @@ const ServicePostsHome = () => {
 
     const fetchSavedPosts = async () => {
         try {
-            const response = await fetch(`https://localhost:8000/api/SavedPosts/${user.userId}`);
+            const response = await fetch(`http://apiduvas1.runasp.net/api/SavedPosts/${user.userId}`);
             if (!response.ok) throw new Error("Lỗi khi lấy danh sách bài đã lưu!");
             const data = await response.json();
             const savedServicePostIds = new Set(data.map(item => item.servicePostId));
@@ -98,7 +98,7 @@ const ServicePostsHome = () => {
             return;
         }
         try {
-            const response = await fetch("https://localhost:8000/api/SavedPosts/", {
+            const response = await fetch("http://apiduvas1.runasp.net/api/SavedPosts/", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ userId: user.userId, servicePostId: parseInt(servicePostId) }),

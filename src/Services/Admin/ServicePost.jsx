@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'https://localhost:8000/api/ServicePosts';
+const API_URL = 'http://apiduvas1.runasp.net/api/ServicePosts';
 
 const ServicePost = {
     getServicePosts: (searchTerm) =>

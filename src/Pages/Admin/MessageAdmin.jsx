@@ -12,7 +12,7 @@ import {
 import { useAuth } from "../../Context/AuthProvider";
 import { useLocation } from "react-router-dom";
 import UserService from "../../Services/User/UserService";
-// import Loading from "../../Components/Loading";
+import Loading from "../../Components/Loading";
 
 // Hàm hiển thị avatar
 const renderAvatar = (avatar, name, size = 40) => {
@@ -58,7 +58,7 @@ const MessageAdmin = () => {
   const [showSearchBox, setShowSearchBox] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [conversationSearchTerm, setConversationSearchTerm] = useState("");
-  // const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [isSending, setIsSending] = useState(false);
 
   // Upload ảnh
@@ -101,7 +101,7 @@ const MessageAdmin = () => {
     const formData = new FormData();
     formData.append("file", file);
     try {
-      const response = await fetch("https://localhost:8000/api/Upload/upload-image", {
+      const response = await fetch("http://apiduvas1.runasp.net/api/Upload/upload-image", {
         method: "POST",
         body: formData,
       });
@@ -137,8 +137,8 @@ const MessageAdmin = () => {
   // Fetch hội thoại
   useEffect(() => {
     if (!currentUserId) return;
-    // setIsLoading(true);
-    fetch(`https://localhost:8000/api/Message/conversations/${currentUserId}`)
+    setIsLoading(true);
+    fetch(`http://apiduvas1.runasp.net/api/Message/conversations/${currentUserId}`)
       .then((res) => res.json())
       .then(async (data) => {
         const newConversations = await Promise.all(
@@ -160,20 +160,20 @@ const MessageAdmin = () => {
         setConversations(newConversations);
       })
       .catch((err) => console.error("Error fetching conversations:", err))
-    // .finally(() => setIsLoading(false));
+      .finally(() => setIsLoading(false));
   }, [currentUserId]);
 
   // Fetch tin nhắn
   const fetchConversationMessages = (partnerId) => {
     if (!currentUserId) return;
-    // setIsLoading(true);
-    fetch(`https://localhost:8000/api/Message/user/${currentUserId}/${partnerId}`)
+    setIsLoading(true);
+    fetch(`http://apiduvas1.runasp.net/api/Message/user/${currentUserId}/${partnerId}`)
       .then((res) => res.json())
       .then((data) => {
         setConversationMessages(data);
       })
       .catch((err) => console.error("Error fetching messages:", err))
-    // .finally(() => setIsLoading(false));
+      .finally(() => setIsLoading(false));
   };
 
   // Chọn hội thoại
@@ -263,7 +263,7 @@ const MessageAdmin = () => {
     setAttachedFiles([]);
     setAttachedPreviews([]);
 
-    fetch("https://localhost:8000/api/Message", {
+    fetch("http://apiduvas1.runasp.net/api/Message", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(newMsg),
@@ -307,9 +307,9 @@ const MessageAdmin = () => {
 
         {/* Danh sách hội thoại */}
         <div className="flex-1 overflow-y-auto p-2">
-          {/* {isLoading && (
+          {isLoading && (
             <Loading />
-          )} */}
+          )}
           {filteredConversations.length > 0 ? (
             filteredConversations.map((conv, index) => (
               <div
