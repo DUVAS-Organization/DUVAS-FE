@@ -1,11 +1,8 @@
-# This config was automatically generated from your source code
-# Stacks detected: deps:node:.
 version: 2.1
 orbs:
   node: circleci/node@5
 jobs:
   test-node:
-    # Install node dependencies and run tests
     executor: node/default
     steps:
       - checkout
@@ -13,35 +10,41 @@ jobs:
           pkg-manager: npm
       - run:
           name: Run tests
-          command: npm test --passWithNoTests
+          command: npm test
   build-node:
-    # Build node project
     executor: node/default
     steps:
       - checkout
       - node/install-packages:
           pkg-manager: npm
       - run:
+          name: Build project
           command: npm run build
       - run:
-          name: Create the ~/artifacts directory if it doesn't exist
+          name: Create artifacts directory
           command: mkdir -p ~/artifacts
-      # Copy output to artifacts dir
       - run:
           name: Copy artifacts
-          command: cp -R build dist public .output .next .docusaurus ~/artifacts 2>/dev/null || true
+          command: cp -R build ~/artifacts
       - store_artifacts:
           path: ~/artifacts
           destination: node-build
   deploy:
-    # This is an example deploy job, not actually used by the workflow
-    docker:
-      - image: cimg/base:stable
+    executor: node/default
     steps:
-      # Replace this with steps to deploy to users
+      - checkout
+      - node/install-packages:
+          pkg-manager: npm
       - run:
-          name: deploy
-          command: '#e.g. ./deploy.sh'
+          name: Build project
+          command: npm run build
+      - run:
+          name: Deploy to GitHub Pages
+          command: |
+            npm install -g gh-pages
+            gh-pages -d build
+          environment:
+            GITHUB_TOKEN: $GITHUB_TOKEN
 workflows:
   build-and-test:
     jobs:
@@ -49,6 +52,10 @@ workflows:
       - build-node:
           requires:
             - test-node
-    # - deploy:
-    #     requires:
-    #       - build-node
+      - deploy:
+          requires:
+            - build-node
+          filters:
+            branches:
+              only:
+                - circleci-project-setup  # Chỉ deploy khi push lên nhánh main

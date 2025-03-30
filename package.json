@@ -4,14 +4,14 @@
   "private": true,
   "dependencies": {
     "@cometchat/calls-sdk-javascript": "^4.0.11",
-    "@cometchat/chat-uikit-react": "^5.0.0",
+    "@cometchat/chat-uikit-react": "^5.0.6",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@fortawesome/free-solid-svg-icons": "^6.7.2",
     "@fortawesome/react-fontawesome": "^0.2.2",
     "@heroicons/react": "^2.2.0",
     "@mantine/core": "^7.15.3",
-    "@mantine/notifications": "^7.15.3",
+    "@mantine/notifications": "^7.17.3",
     "@microsoft/signalr": "^8.0.7",
     "@mui/material": "^6.4.7",
     "@mui/system": "^6.4.7",
@@ -34,7 +34,7 @@
     "react-indiana-drag-scroll": "^2.2.1",
     "react-modal": "^3.16.3",
     "react-number-format": "^5.4.3",
-    "react-router-dom": "^7.1.1",
+    "react-router-dom": "^7.4.1",
     "react-scripts": "5.0.1",
     "sweetalert2": "^11.15.3",
     "swiper": "^8.4.6",
@@ -53,6 +53,9 @@
       "react-app/jest"
     ]
   },
+  "scripts": {
+  "test": "react-scripts test --forceExit"
+  },
   "browserslist": {
     "production": [
       ">0.2%",
@@ -67,6 +70,7 @@
   },
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
-    "@testing-library/jest-dom": "^6.6.3"
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.2.0"
   }
 }
