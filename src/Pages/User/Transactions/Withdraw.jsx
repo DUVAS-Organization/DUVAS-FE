@@ -75,7 +75,7 @@ const WithdrawTransaction = () => {
                                     ) : (
                                         <tr>
                                             <td colSpan="8" className="p-4 text-center text-gray-500">
-                                                No transactions available.
+                                                Không có giao dịch nào
                                             </td>
                                         </tr>
                                     )}

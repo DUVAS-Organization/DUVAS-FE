@@ -149,14 +149,14 @@ const SidebarUser = () => {
                                 Lịch sử giao dịch
                             </NavLink>
                         </li>
-                        <li>
+                        {/* <li>
                             <NavLink
                                 to="/Withdraw"
                                 className={`block py-2 px-4 hover:bg-red-400 hover:text-white rounded-3xl ${isWithdrawActive ? 'bg-red-500 text-white' : ''}`}
                             >
                                 Lịch sử rút tiền
                             </NavLink>
-                        </li>
+                        </li> */}
                         <li>
                             <NavLink
                                 to="/Moneys"
