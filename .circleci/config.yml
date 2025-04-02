@@ -8,18 +8,22 @@ jobs:
     executor: node/default
     steps:
       - checkout
-      - node/install-packages:
-          pkg-manager: npm
       - run:
           name: Setup Node.js 20
           command: |
             nvm install 20
             nvm use 20
       - run:
+          name: Install dependencies and update lockfile
+          command: npm install # Chạy npm install để đồng bộ package-lock.json
+      - run:
+          name: Clean install dependencies
+          command: npm ci # Sau đó chạy npm ci để cài đặt chính xác
+      - run:
           name: Build project
           command: npm run build
           environment:
-            CI: false # Bỏ qua các cảnh báo ESLint, tương tự GitHub Actions
+            CI: false # Bỏ qua các cảnh báo ESLint
       - run:
           name: Deploy to Azure Static Web Apps
           command: |
@@ -35,4 +39,4 @@ workflows:
           filters:
             branches:
               only:
-                - circleci-project-setup # Tương ứng với branch trong GitHub Actions
+                - circleci-project-setup
