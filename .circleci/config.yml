@@ -1,49 +1,38 @@
 version: 2.1
+
 orbs:
   node: circleci/node@5
+
 jobs:
-  build-node:
+  build-and-deploy:
     executor: node/default
     steps:
       - checkout
       - node/install-packages:
           pkg-manager: npm
       - run:
-          name: Build project
-          command: npm run build
-      - run:
-          name: Create artifacts directory
-          command: mkdir -p ~/artifacts
-      - run:
-          name: Copy artifacts
-          command: cp -R build ~/artifacts
-      - store_artifacts:
-          path: ~/artifacts
-          destination: node-build
-  deploy:
-    executor: node/default
-    steps:
-      - checkout
-      - node/install-packages:
-          pkg-manager: npm
-      - run:
-          name: Build project
-          command: npm run build
-      - run:
-          name: Deploy to GitHub Pages
+          name: Setup Node.js 20
           command: |
-            npm install -g gh-pages
-            gh-pages -d build
+            nvm install 20
+            nvm use 20
+      - run:
+          name: Build project
+          command: npm run build
           environment:
-            GITHUB_TOKEN: $GITHUB_TOKEN
+            CI: false # Bỏ qua các cảnh báo ESLint, tương tự GitHub Actions
+      - run:
+          name: Deploy to Azure Static Web Apps
+          command: |
+            npm install -g @azure/static-web-apps-cli
+            swa deploy ./build --api-token $AZURE_STATIC_WEB_APPS_API_TOKEN
+          environment:
+            AZURE_STATIC_WEB_APPS_API_TOKEN: $AZURE_STATIC_WEB_APPS_API_TOKEN
+
 workflows:
   build-and-deploy:
     jobs:
-      - build-node
-      - deploy:
-          requires:
-            - build-node
+      - build-and-deploy:
           filters:
             branches:
               only:
-                - main
+                - circleci-project-setup # Tương ứng với branch trong GitHub Actions
