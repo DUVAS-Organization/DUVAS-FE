@@ -30,6 +30,7 @@ const Navbar = () => {
     const { user, logout, loading } = useAuth();
     const [dropdownOpen, setDropdownOpen] = useState(false); // Dropdown của user profile
     const [userProfile, setUserProfile] = useState(null); // State để lưu thông tin chi tiết người dùng
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false); // Mobile menu open state
     const dropdownRef = useRef(null);
     const location = useLocation();
     const queryParams = new URLSearchParams(location.search);
@@ -261,8 +262,47 @@ const Navbar = () => {
                             </>
                         )}
                     </div>
+                    {/* Mobile menu */}
+                    <div className="sm:hidden ml-auto">
+                        <button
+                            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                            className="text-gray-800 px-3 py-2 rounded-md text-base font-medium"
+                        >
+                            {mobileMenuOpen ? 'Đóng' : 'Menu'}
+                        </button>
+                    </div>
                 </div>
             </div>
+
+            {/* Mobile Menu */}
+            {mobileMenuOpen && (
+                <div className="sm:hidden bg-white shadow-md p-4">
+                    <NavLink to="/" className="block px-3 py-2 text-gray-800">
+                        Trang Chủ
+                    </NavLink>
+                    <RoomDropdown />
+                    <ServiceDropdown />
+                    {navLinks.slice(1).map(({ name, path }) => (
+                        <NavLink key={name} to={path} className="block px-3 py-2 text-gray-800">
+                            {name}
+                        </NavLink>
+                    ))}
+                    {user ? (
+                        <div className="mt-4">
+                            {renderDropdownItems()}
+                        </div>
+                    ) : (
+                        <div className="mt-4">
+                            <NavLink to="/Logins" className="block px-3 py-2 text-gray-800">
+                                Đăng Nhập
+                            </NavLink>
+                            <NavLink to="/Registers" className="block px-3 py-2 text-gray-800">
+                                Đăng Ký
+                            </NavLink>
+                        </div>
+                    )}
+                </div>
+            )}
         </nav>
     );
 };

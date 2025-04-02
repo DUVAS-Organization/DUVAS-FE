@@ -12,6 +12,7 @@ import {
 import { useAuth } from "../../Context/AuthProvider";
 import { useLocation } from "react-router-dom";
 import UserService from "../../Services/User/UserService";
+import OtherService from "../../Services/User/OtherService";
 // import Loading from "../../Components/Loading";
 
 // Hàm hiển thị avatar
@@ -101,12 +102,7 @@ const MessageAdmin = () => {
     const formData = new FormData();
     formData.append("file", file);
     try {
-      const response = await fetch("https://localhost:8000/api/Upload/upload-image", {
-        method: "POST",
-        body: formData,
-      });
-      if (!response.ok) throw new Error("Upload failed");
-      const data = await response.json();
+      const data = await OtherService.uploadImage(formData);
       return data.imageUrl;
     } catch (error) {
       console.error("Error uploading file:", error);

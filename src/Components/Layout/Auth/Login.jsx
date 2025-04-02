@@ -2,9 +2,10 @@ import React, { useState, useEffect } from "react";
 import { FaEye, FaEyeSlash, FaEnvelope, FaKey, FaLock, FaLockOpen } from "react-icons/fa";
 import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../../../Context/AuthProvider';
-import logo from '../../../Assets/Images/logo1.png'
-import image2 from '../../../Assets/Images/image2.png'
+import logo from '../../../Assets/Images/logo1.png';
+import image2 from '../../../Assets/Images/image2.png';
 import { jwtDecode } from 'jwt-decode';
+import OtherService from '../../../Services/User/OtherService';
 
 const LoginPage = () => {
     const [username, setUsername] = useState("");
@@ -23,28 +24,8 @@ const LoginPage = () => {
         setLoading(true);
         setErrorMessage("");
 
-        const loginApiUrl = "https://localhost:8000/api/Auth/login";
-
-        const payload = {
-            username: username.trim(),
-            password: password.trim(),
-        };
-
         try {
-            const response = await fetch(loginApiUrl, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(payload),
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error("Sai Tên đăng nhập hoặc Mật khẩu.");
-            }
-
-            const data = await response.json();
+            const data = await OtherService.login(username, password);
             const token = data.message; // Lấy token từ message
 
             if (token) {
@@ -61,7 +42,7 @@ const LoginPage = () => {
                 }
             }
         } catch (error) {
-            setErrorMessage(error.message); // Hiển thị thông báo lỗi
+            setErrorMessage("Sai Tên đăng nhập hoặc Mật khẩu."); // Hiển thị thông báo lỗi
         } finally {
             setLoading(false);
         }
@@ -69,31 +50,19 @@ const LoginPage = () => {
 
     // Đăng nhập với Google
     const handleGoogleLogin = () => {
-        const googleLoginApiUrl = "https://localhost:8000/api/Auth/google";
-        // Điều hướng tới trang đăng nhập Google
-        window.location.href = googleLoginApiUrl;
+        OtherService.googleLogin();
     };
 
     // Xử lý luồng sau khi login Google thành công
     const handleGoogleCallback = async (code) => {
-        const tokenExchangeApiUrl = `https://localhost:8000/api/Auth/token-exchange?code=${code}`;
-
         try {
-            const res = await fetch(tokenExchangeApiUrl, {
-                method: "GET",
-            });
-
-            if (!res.ok) {
-                throw new Error("Lỗi khi đổi token từ Google.");
-            }
-
-            const data = await res.json();
+            const data = await OtherService.exchangeGoogleToken(code); // Sử dụng OtherService thay vì fetch
             const token = data.access_token; // Lấy token từ response
 
             if (token) {
-                login(token)
+                login(token);
                 // localStorage.setItem("authToken", token);
-                // window.location.href = "/"; // Chuyển hướn   g sang trang Rooms
+                // window.location.href = "/";
             }
         } catch (error) {
             console.error("Lỗi khi đăng nhập Google:", error);
@@ -137,7 +106,7 @@ const LoginPage = () => {
                             <input
                                 type="text"
                                 id="username"
-                                className={`shadow appearance-none border rounded w-full py-2 px-10 text-gray-700 leading-tight focus:outline-none focus:shadow-outline `}
+                                className={`shadow appearance-none border rounded w-full py-2 px-10 text-gray-700 leading-tight focus:outline-none focus:shadow-outline`}
                                 value={username}
                                 placeholder="Nhập tên đăng nhập hoặc email"
                                 onChange={handleUsernameChange}
@@ -194,8 +163,7 @@ const LoginPage = () => {
                         <h3 className="text-gray-600">Hoặc</h3>
                         <button
                             onClick={handleGoogleLogin}
-                            className="flex w-full items-center justify-center bg-white border-2
-                             text-black font-medium py-2 px-4 rounded-md mt-2 hover:bg-gray-100"
+                            className="flex w-full items-center justify-center bg-white border-2 text-black font-medium py-2 px-4 rounded-md mt-2 hover:bg-gray-100"
                         >
                             <img
                                 src="https://static-00.iconduck.com/assets.00/google-icon-256x256-67qgou6b.png"
