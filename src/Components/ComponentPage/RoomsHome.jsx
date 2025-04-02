@@ -5,6 +5,7 @@ import { useAuth } from '../../Context/AuthProvider';
 import RoomManagementService from '../../Services/User/RoomManagementService';
 import { showCustomNotification } from '../Notification';
 import { styled } from '@mui/material/styles';
+import OtherService from '../../Services/User/OtherService';
 
 const CardItem = styled('div')(({ theme }) => ({
     backgroundColor: '#fff',
@@ -38,7 +39,6 @@ const RoomsHome = () => {
     const minAreaQuery = queryParams.get("minArea") ? Number(queryParams.get("minArea")) : 0;
     const maxAreaQuery = queryParams.get("maxArea") ? Number(queryParams.get("maxArea")) : Infinity;
 
-    // Ánh xạ categoryRoomId sang tên danh mục
     const categoryMap = {
         1: "Phòng trọ",
         2: "Căn hộ",
@@ -67,12 +67,11 @@ const RoomsHome = () => {
 
     const fetchSavedPosts = async () => {
         try {
-            const response = await fetch(`https://localhost:8000/api/SavedPosts/${user.userId}`);
+            const response = await OtherService.getSavedPosts(user.userId);
             if (!response.ok) throw new Error("Lỗi khi lấy danh sách bài đã lưu!");
             const data = await response.json();
             const savedRoomIds = new Set(data.map(item => item.roomId));
             setSavedPosts(savedRoomIds);
-
         } catch (error) {
             console.error("Lỗi khi lấy danh sách bài đã lưu:", error);
         }
@@ -86,15 +85,7 @@ const RoomsHome = () => {
             return;
         }
         try {
-            const response = await fetch("https://localhost:8000/api/SavedPosts/", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ userId: user.userId, roomId: parseInt(roomId) }),
-            });
-            if (!response.ok) {
-                throw new Error("Lỗi khi lưu/xóa bài đăng");
-            }
-            const result = await response.json();
+            const result = await OtherService.toggleSavePost(user.userId, roomId);
             setSavedPosts((prevSaved) => {
                 const newSaved = new Set(prevSaved);
                 if (result.status === "removed") {
@@ -102,7 +93,6 @@ const RoomsHome = () => {
                 } else if (result.status === "saved") {
                     newSaved.add(parseInt(roomId));
                 }
-
                 return newSaved;
             });
             if (result.status === "saved") {
@@ -114,7 +104,6 @@ const RoomsHome = () => {
         }
     };
 
-    // Lọc phòng theo query param
     const filteredRooms = rooms.filter(room => {
         const categoryMatch = categoryQuery ? String(room.categoryRoomId) === categoryQuery : true;
         const priceMatch = room.price >= minPriceQuery && room.price <= maxPriceQuery;
@@ -122,7 +111,6 @@ const RoomsHome = () => {
         return categoryMatch && priceMatch && areaMatch;
     });
 
-    // Nhóm phòng theo categoryRoomId thay vì categoryName
     let groupedRooms;
     if (categoryQuery) {
         const groupName = categoryMap[filteredRooms[0]?.categoryRoomId] || "Khác";
@@ -148,16 +136,13 @@ const RoomsHome = () => {
 
     return (
         <div className="bg-white mt-2">
-            <div className="container mx-auto">
+            <div className="container mx-auto px-4">
                 {Object.entries(groupedRooms).map(([category, roomsInCategory]) => {
                     const visibleCount = visibleRoomsByCategory[category] || defaultVisible;
                     return (
                         <div key={category} className="mb-8">
                             <h1 className="text-xl font-bold mb-4 text-gray-800">{category}</h1>
-                            <div
-                                className="grid gap-6 max-w-6xl mx-auto"
-                                style={{ gridTemplateColumns: `repeat(4, minmax(0, 1fr))` }}
-                            >
+                            <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
                                 {roomsInCategory.slice(0, visibleCount).map((room) => {
                                     let images;
                                     try {
@@ -168,7 +153,7 @@ const RoomsHome = () => {
                                     const imageCount = Array.isArray(images) ? images.length : 1;
                                     const firstImage = Array.isArray(images) ? images[0] : images;
                                     const isSaved = savedPosts.has(room.roomId);
-                                    const categoryName = categoryMap[room.categoryRoomId] || "Khác"; // Ánh xạ để hiển thị trên UI
+                                    const categoryName = categoryMap[room.categoryRoomId] || "Khác";
                                     return (
                                         <Link key={room.roomId} to={`/Rooms/Details/${room.roomId}`} className="block">
                                             <CardItem className="bg-white rounded-lg shadow-md overflow-hidden h-[400px] flex flex-col">

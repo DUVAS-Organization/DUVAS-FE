@@ -6,6 +6,7 @@ import { useAuth } from '../../Context/AuthProvider';
 import ServicePost from '../../Services/Admin/ServicePost';
 import { showCustomNotification } from '../Notification';
 import Loading from '../Loading';
+import OtherService from '../../Services/User/OtherService'
 
 const Item = styled('div')(({ theme, $vertical }) => ({
     backgroundColor: '#fff',
@@ -80,7 +81,7 @@ const ServicePostsHome = () => {
 
     const fetchSavedPosts = async () => {
         try {
-            const response = await fetch(`https://localhost:8000/api/SavedPosts/${user.userId}`);
+            const response = await OtherService.getSavedPosts(user.userId);
             if (!response.ok) throw new Error("Lỗi khi lấy danh sách bài đã lưu!");
             const data = await response.json();
             const savedServicePostIds = new Set(data.map(item => item.servicePostId));
@@ -98,15 +99,7 @@ const ServicePostsHome = () => {
             return;
         }
         try {
-            const response = await fetch("https://localhost:8000/api/SavedPosts/", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ userId: user.userId, servicePostId: parseInt(servicePostId) }),
-            });
-            if (!response.ok) {
-                throw new Error("Lỗi khi lưu/xóa bài đăng");
-            }
-            const result = await response.json();
+            const result = await OtherService.toggleSavePost(user.userId, servicePostId);
             setSavedPosts(prevSaved => {
                 const newSaved = new Set(prevSaved);
                 if (result.status === "removed") {

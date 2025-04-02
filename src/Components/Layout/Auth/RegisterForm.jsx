@@ -3,6 +3,7 @@ import { FaEye, FaEyeSlash, FaEnvelope, FaKey, FaLock, FaLockOpen, FaUser, FaUse
 import { Link } from 'react-router-dom';
 import logo from '../../../Assets/Images/logo1.png'
 import image2 from '../../../Assets/Images/image2.png'
+import OtherService from "../../../Services/User/OtherService";
 
 const RegisterForm = () => {
     const [userName, setUserName] = useState("");
@@ -31,8 +32,7 @@ const RegisterForm = () => {
         setIsEmailValid(emailPattern.test(emailInput));
     };
     const handleGoogleLogin = () => {
-        const googleLoginApiUrl = "https://localhost:8000/api/Auth/google";
-        window.location.href = googleLoginApiUrl; // Chuyển hướng đến API login bằng Google
+        OtherService.googleLogin();
     };
     const handleSendOtp = async () => {
         if (!isEmailValid) {
@@ -44,29 +44,14 @@ const RegisterForm = () => {
         setErrorMessage("");
         setSuccessMessage("");
 
-        const sendOtpApiUrl = "https://localhost:8000/api/Auth/verify";
-
         try {
-            const response = await fetch(sendOtpApiUrl, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ emailOrPhone: email }),
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                setErrorMessage(errorData.message || "Gửi OTP thất bại.");
-                console.error("Error from server:", errorData);
-                return;
-            }
-
+            await OtherService.sendOtp(email); // Sử dụng OtherService để gửi OTP
             setSentOtp(true);
             setSuccessMessage("OTP đã được gửi!");
         } catch (error) {
-            setErrorMessage("Lỗi kết nối: " + error.message);
-            console.error("Connection error:", error);
+            const errorData = error.response?.data;
+            setErrorMessage(errorData?.message || "Gửi OTP thất bại.");
+            console.error("Error from server:", errorData);
         } finally {
             setLoading(false);
         }
@@ -103,38 +88,14 @@ const RegisterForm = () => {
             return;
         }
 
-        const registerApiUrl = "https://localhost:8000/api/Auth/register";
-
-        const payload = {
-            otp,
-            userName,
-            name,
-            password,
-            rePassword,
-            address,
-            sex,
-            email, // Gửi email trong payload
-        };
 
         try {
-            const response = await fetch(registerApiUrl, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(payload),
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || "Đăng ký thất bại.");
-            }
-
-            const data = await response.json();
+            const data = await OtherService.register(otp, userName, name, password, rePassword, address, sex, email); // Sử dụng OtherService để đăng ký
             setSuccessMessage(data.message || "Đăng ký thành công!");
             window.location.href = "/Logins";
         } catch (error) {
-            setErrorMessage(error.message);
+            const errorData = error.response?.data;
+            setErrorMessage(errorData?.message || "Đăng ký thất bại.");
         } finally {
             setLoading(false);
         }

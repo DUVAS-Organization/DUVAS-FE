@@ -7,6 +7,7 @@ import { useAuth } from '../../../Context/AuthProvider';
 import { FaArrowLeft, FaTimes, FaPlus } from "react-icons/fa";
 import PriceInput from '../../../Components/Layout/Range/PriceInput';
 import Loading from '../../../Components/Loading';
+import OtherService from '../../../Services/User/OtherService';
 
 const ServicePostForm = () => {
     const [servicePost, setServicePosts] = useState({});
@@ -98,14 +99,7 @@ const ServicePostForm = () => {
         const formData = new FormData();
         formData.append('file', file);
         try {
-            const response = await fetch('https://localhost:8000/api/Upload/upload-image', {
-                method: 'POST',
-                body: formData,
-            });
-            if (!response.ok) {
-                throw new Error('Upload failed');
-            }
-            const data = await response.json();
+            const data = await OtherService.uploadImage(formData);
             return data.imageUrl;
         } catch (error) {
             console.error("Error uploading file:", error);

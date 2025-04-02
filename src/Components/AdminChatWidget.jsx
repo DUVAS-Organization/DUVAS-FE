@@ -3,6 +3,7 @@ import { FaComments, FaPaperPlane, FaTimes } from "react-icons/fa";
 import { useAuth } from "../Context/AuthProvider";
 import { useRealtime } from "../Context/RealtimeProvider";
 import UserService from "../Services/User/UserService";
+import OtherService from "../Services/User/OtherService";
 
 // Hàm hiển thị avatar
 const renderAvatar = (avatar, name, size = 30) => {
@@ -82,14 +83,7 @@ const AdminChatWidget = () => {
 
         const fetchMessages = async () => {
             try {
-                const response = await fetch(
-                    `https://localhost:8000/api/Message/user/${user.userId}/${adminUser.userId}`,
-                    {
-                        headers: { "Content-Type": "application/json" },
-                    }
-                );
-                if (!response.ok) throw new Error("Lấy tin nhắn thất bại");
-                const data = await response.json();
+                const data = await OtherService.getMessages(user.userId, adminUser.userId);
                 // console.log("Initial Messages from API:", data);
 
                 // Chuyển đổi dữ liệu API thành định dạng phù hợp
@@ -222,12 +216,7 @@ const AdminChatWidget = () => {
         setInputMsg("");
 
         try {
-            const response = await fetch("https://localhost:8000/api/Message", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(newMessage),
-            });
-            if (!response.ok) throw new Error("Gửi tin nhắn thất bại");
+            await OtherService.sendMessage(newMessage);
         } catch (error) {
             console.error("Error sending message:", error);
         } finally {

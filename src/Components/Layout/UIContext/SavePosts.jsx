@@ -6,6 +6,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../../Context/AuthProvider";
 import { useUI } from "./UIContext";
 import { useRealtime } from "../../../Context/RealtimeProvider";
+import OtherService from "../../../Services/User/OtherService";
 
 const SavedPostList = () => {
     const { openDropdown, toggleDropdown } = useUI();
@@ -83,9 +84,7 @@ const SavedPostList = () => {
 
     const fetchSavedPosts = async () => {
         try {
-            const response = await fetch(`https://localhost:8000/api/SavedPosts/${user.userId}`);
-            if (!response.ok) throw new Error("Lỗi khi lấy danh sách bài đã lưu");
-            const data = await response.json();
+            const data = await OtherService.getSavedPosts(user.userId);
             setSavedPosts(data);
         } catch (error) {
             console.error("❌ Lỗi khi lấy danh sách bài đã lưu:", error);
@@ -95,27 +94,17 @@ const SavedPostList = () => {
     const removeSavedPost = async (post, e) => {
         e.stopPropagation();
         try {
-            const payload = { userId: user.userId };
-            if (post.room) {
-                payload.roomId = post.roomId;
-            } else if (post.servicePost) {
-                payload.servicePostId = post.servicePostId;
-            }
-
-            const response = await fetch("https://localhost:8000/api/SavedPosts", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
-            });
-            const data = await response.json();
+            const roomId = post.room ? post.roomId : null;
+            const servicePostId = post.servicePost ? post.servicePostId : null;
+            const data = await OtherService.toggleSavePostRemove(user.userId, roomId, servicePostId);
 
             if (data.status === "removed") {
                 setSavedPosts((prev) =>
                     prev.filter(
                         (p) =>
                             !(
-                                (p.room && payload.roomId && p.roomId === payload.roomId) ||
-                                (p.servicePost && payload.servicePostId && p.servicePostId === payload.servicePostId)
+                                (p.room && roomId && p.roomId === roomId) ||
+                                (p.servicePost && servicePostId && p.servicePostId === servicePostId)
                             )
                     )
                 );

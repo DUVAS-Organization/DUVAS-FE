@@ -10,6 +10,7 @@ import Loading from "../../../Components/Loading";
 import SidebarUser from "../../../Components/Layout/SidebarUser";
 import { FaPlus, FaTimes } from "react-icons/fa";
 import { useAuth } from "../../../Context/AuthProvider";
+import OtherService from "../../../Services/User/OtherService";
 
 const RoomRentalConfirmation = () => {
     const { roomId, rentalId } = useParams();
@@ -173,7 +174,7 @@ const RoomRentalConfirmation = () => {
         if (rentalStatus === 1 && roomStatus === 1) {
             return cStatus === 3 ? "Phòng này đang cho thuê" : "Đang chờ giao dịch";
         }
-        if (rentalStatus === 1 && roomStatus === 2 && cStatus === 4) return "Chờ Người dùng xác nhận";
+        if (rentalStatus === 1 && roomStatus === 2 && cStatus === 4) return "Chờ Người thuê xác nhận";
         if (rentalStatus === 2 && roomStatus === 2 && cStatus === 2) return "Đã hủy";
         return "Không xác định";
     };
@@ -246,12 +247,7 @@ const RoomRentalConfirmation = () => {
         const formDataFile = new FormData();
         formDataFile.append("file", file);
         try {
-            const response = await fetch("https://localhost:8000/api/Upload/upload-image", {
-                method: "POST",
-                body: formDataFile,
-            });
-            if (!response.ok) throw new Error("Upload failed");
-            const data = await response.json();
+            const data = await OtherService.uploadImage(formData);
             return data.imageUrl;
         } catch (error) {
             console.error("Error uploading file:", error);
@@ -472,17 +468,26 @@ const RoomRentalConfirmation = () => {
                                 <h2 className="text-xl font-bold">Thông tin Thuê</h2>
                                 {occupantRental ? (
                                     <div className="rounded-md shadow-sm">
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <div className="font-semibold">Mã Rental:</div>
-                                            <div>{occupantRental.rentalId}</div>
-                                            <div className="font-semibold">Tháng thuê:</div>
-                                            <div>{occupantRental.monthForRent}</div>
-                                            <div className="font-semibold">Ngày thuê:</div>
-                                            <div>{new Date(occupantRental.rentDate).toLocaleDateString()}</div>
-                                            <div className="font-semibold">Trạng thái:</div>
-                                            <div>{getRoomStatus()}</div>
+                                        <div className="space-y-1">
+                                            <div className="flex">
+                                                <div className="font-semibold min-w-[100px]">Mã Rental:</div>
+                                                <div>{occupantRental.rentalId}</div>
+                                            </div>
+                                            <div className="flex">
+                                                <div className="font-semibold min-w-[100px]">Tháng thuê:</div>
+                                                <div>{occupantRental.monthForRent}</div>
+                                            </div>
+                                            <div className="flex">
+                                                <div className="font-semibold min-w-[100px]">Ngày thuê:</div>
+                                                <div>{new Date(occupantRental.rentDate).toLocaleDateString()}</div>
+                                            </div>
+                                            <div className="flex">
+                                                <div className="font-semibold min-w-[100px]">Trạng thái:</div>
+                                                <div>{getRoomStatus()}</div>
+                                            </div>
                                         </div>
                                     </div>
+
                                 ) : (
                                     <p>Phòng này chưa có yêu cầu thuê nào.</p>
                                 )}
@@ -495,7 +500,7 @@ const RoomRentalConfirmation = () => {
                             <p className="text-lg text-gray-700 font-semibold">Phòng này đang cho thuê</p>
                         </div>
                     ) :
-                        getRoomStatus() === "Chờ Người dùng xác nhận" ? (
+                        getRoomStatus() === "Chờ Người thuê xác nhận" ? (
                             <div className="bg-white shadow-xl rounded-lg overflow-hidden p-6">
                                 <p className="text-lg text-gray-700 font-semibold">Phòng này đang chờ người thuê xác nhận</p>
                             </div>

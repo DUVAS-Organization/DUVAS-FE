@@ -98,7 +98,6 @@ const Searchbar = () => {
     };
 
     const handleSearch = () => {
-        // Tạo queryParams cho URL điều hướng
         const queryParams = {};
 
         if (activeTab === "rooms") {
@@ -110,7 +109,6 @@ const Searchbar = () => {
             if (minArea !== 0) queryParams.minArea = minArea;
             if (maxArea !== 1000) queryParams.maxArea = maxArea;
             const queryString = new URLSearchParams(queryParams).toString();
-            // console.log("Navigating to Rooms:", `/Rooms?${queryString}`);
             navigate(`/Rooms?${queryString}`);
         } else if (activeTab === "services") {
             const selectedCategory = categoriesService.find(c => c.categoryServiceId.toString() === selectedCategoryId);
@@ -119,15 +117,14 @@ const Searchbar = () => {
             if (minPrice !== 0) queryParams.minPrice = minPrice;
             if (maxPrice !== 100) queryParams.maxPrice = maxPrice;
             const queryString = new URLSearchParams(queryParams).toString();
-            // console.log("Navigating to ServicePosts:", `/ServicePosts?${queryString}`);
             navigate(`/ServicePosts?${queryString}`);
         }
     };
 
     return (
-        <div className="bg-red-500 p-4">
+        <div className="bg-red-500 p-2 md:p-4">
             <div className="mx-auto max-w-6xl">
-                <div className="flex gap-0.5">
+                <div className="flex flex-col md:flex-row gap-0.5">
                     <div
                         className={`rounded-t-lg px-4 py-2 cursor-pointer ${activeTab === "rooms" ? "bg-red-800 text-white" : "bg-gray-100 text-black"}`}
                         onClick={() => setActiveTab("rooms")}
@@ -143,13 +140,13 @@ const Searchbar = () => {
                 </div>
 
                 <div className="shadow-lg rounded-b-lg p-4">
-                    <div className="bg-white flex items-center space-x-2 rounded-lg">
-                        <div className="flex items-center bg-gray-100 px-4 py-2 flex-shrink-0">
+                    <div className="bg-white flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-2 rounded-lg">
+                        <div className="flex items-center bg-gray-100 px-4 py-2 flex-shrink-0 w-full md:w-auto">
                             <FaMapMarkerAlt className="text-gray-500" />
                             <span className="mx-2">Đà Nẵng</span>
                         </div>
-                        <h1 className="font-medium text-gray-500 flex-shrink-0">|</h1>
-                        <div className="relative flex-1">
+                        <h1 className="font-medium text-gray-500 flex-shrink-0 hidden md:block">|</h1>
+                        <div className="relative flex-1 w-full">
                             <input
                                 className="w-full bg-gray-100 rounded-lg pl-10 pr-28 py-2"
                                 placeholder="Nhập tối đa 3 địa điểm."
@@ -166,8 +163,8 @@ const Searchbar = () => {
                         </div>
                     </div>
 
-                    <div className="flex space-x-2 mt-2">
-                        <div className="w-1/3 relative">
+                    <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2 mt-2">
+                        <div className="w-full md:w-1/3 relative">
                             <select
                                 className="w-full bg-red-800 text-white text-left rounded-lg px-4 py-2 appearance-none cursor-pointer focus:outline-none"
                                 value={selectedCategoryId}
@@ -187,7 +184,7 @@ const Searchbar = () => {
                             <FaChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white pointer-events-none" />
                         </div>
 
-                        <div className="w-1/3 relative">
+                        <div className="w-full md:w-1/3 relative">
                             <button
                                 onClick={() => { setPriceDropdownOpen(prev => !prev); setAreaDropdownOpen(false); }}
                                 className="w-full bg-red-800 text-white text-left rounded-lg px-4 py-2 select-none flex justify-between items-center"
@@ -247,7 +244,7 @@ const Searchbar = () => {
                         </div>
 
                         {activeTab === "rooms" && (
-                            <div className="w-1/3 relative">
+                            <div className="w-full md:w-1/3 relative">
                                 <button
                                     onClick={() => { setAreaDropdownOpen(prev => !prev); setPriceDropdownOpen(false); }}
                                     className="w-full bg-red-800 text-white text-left rounded-lg px-4 py-2 select-none flex justify-between items-center"
@@ -310,7 +307,6 @@ const Searchbar = () => {
                 </div>
             </div>
         </div>
-
     );
 };
 
