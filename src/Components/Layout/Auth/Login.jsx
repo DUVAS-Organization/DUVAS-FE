@@ -75,8 +75,8 @@ const LoginPage = () => {
     };
 
     // Xử lý luồng sau khi login Google thành công
-    const handleGoogleCallback = async (token) => {
-        const tokenExchangeApiUrl = `https://apiduvas1.runasp.net/api/Auth/token-exchange?token=${token}`;
+    const handleGoogleCallback = async (code) => {
+        const tokenExchangeApiUrl = `https://apiduvas1.runasp.net/api/Auth/token-exchange?code=${code}`;
 
         try {
             const res = await fetch(tokenExchangeApiUrl, {
@@ -104,9 +104,9 @@ const LoginPage = () => {
     // Hook để kiểm tra URL sau khi Google callback
     useEffect(() => {
         const query = new URLSearchParams(window.location.search);
-        const token = query.get("token"); // Lấy mã token từ URL
-        if (token) {
-            handleGoogleCallback(token); // Thực hiện đổi token
+        const code = query.get("token"); // Lấy mã token từ URL
+        if (code) {
+            handleGoogleCallback(code); // Thực hiện đổi token
         }
     }, []);
 
