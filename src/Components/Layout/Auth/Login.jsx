@@ -75,8 +75,8 @@ const LoginPage = () => {
     };
 
     // Xử lý luồng sau khi login Google thành công
-    const handleGoogleCallback = async (token) => {
-        const tokenExchangeApiUrl = `https://apiduvas1.runasp.net/api/Auth/token-exchange?token=${token}`;
+    const handleGoogleCallback = async (code) => {
+        const tokenExchangeApiUrl = `https://apiduvas1.runasp.net/api/Auth/token-exchange?code=${code}`;
 
         try {
             const res = await fetch(tokenExchangeApiUrl, {
