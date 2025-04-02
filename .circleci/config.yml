@@ -7,7 +7,7 @@ jobs:
   build-and-deploy:
     executor:
       name: node/default
-      tag: "20" # Specify Node.js version 20 directly via the executor
+      tag: "20.12.2" # Use a specific, valid Node.js 20 version
     steps:
       - checkout
       - run:
