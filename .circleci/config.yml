@@ -7,20 +7,20 @@ jobs:
   build-and-deploy:
     executor:
       name: node/default
-      tag: "20.12.2" # Use a specific, valid Node.js 20 version
+      tag: "20.12.2"
     steps:
       - checkout
       - run:
           name: Install dependencies and update lockfile
-          command: npm install # Chạy npm install để đồng bộ package-lock.json
+          command: npm install
       - run:
           name: Clean install dependencies
-          command: npm ci # Sau đó chạy npm ci để cài đặt chính xác
+          command: npm ci
       - run:
           name: Build project
           command: npm run build
           environment:
-            CI: false # Bỏ qua các cảnh báo ESLint
+            CI: false # Đảm bảo bỏ qua cảnh báo ESLint
       - run:
           name: Deploy to Azure Static Web Apps
           command: |
