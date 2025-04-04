@@ -138,10 +138,7 @@ const Message = () => {
     if (!currentUserId) return;
     setIsLoading(true);
     try {
-      const response = await fetch(
-        `https://localhost:8000/api/Message/conversations/${currentUserId}`
-      );
-      const data = await response.json();
+      const data = await OtherService.getConversations(currentUserId);
       const newConversations = await Promise.all(
         data.map(async (conv) => {
           try {
@@ -171,10 +168,7 @@ const Message = () => {
     if (!currentUserId) return;
     setIsLoading(true);
     try {
-      const response = await fetch(
-        `https://localhost:8000/api/Message/user/${currentUserId}/${partnerId}`
-      );
-      const data = await response.json();
+      const data = await OtherService.getMessages(currentUserId, partnerId);
       setConversationMessages(data);
     } catch (error) {
       console.error("Error fetching conversation messages:", error);
@@ -318,14 +312,7 @@ const Message = () => {
     setAttachedPreviews([]);
 
     try {
-      const response = await fetch("https://localhost:8000/api/Message", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newMsg),
-      });
-      if (!response.ok) throw new Error("Gửi tin nhắn thất bại");
-      await response.json();
-
+      await OtherService.sendMessage(newMsg);
       // Cập nhật ngay trên client
       setConversationMessages((prev) => [...prev, newMsg]);
     } catch (error) {

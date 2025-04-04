@@ -10,6 +10,7 @@ import FAQList from '../../../Components/FAQ/FAQList';
 import Loading from '../../../Components/Loading';
 import { showCustomNotification } from '../../../Components/Notification';
 import { FaPhoneVolume } from 'react-icons/fa6';
+import OtherService from '../../../Services/User/OtherService';
 
 const ServicePostList = () => {
     const [servicePosts, setServicePosts] = useState([]);
@@ -85,47 +86,40 @@ const ServicePostList = () => {
 
     const fetchSavedPosts = async () => {
         try {
-            const response = await fetch(`https://localhost:8000/api/SavedPosts/${user.userId}`);
-            if (!response.ok) throw new Error('Lỗi khi lấy danh sách bài đã lưu!');
+            const response = await OtherService.getSavedPosts(user.userId);
+            if (!response.ok) throw new Error("Lỗi khi lấy danh sách bài đã lưu!");
             const data = await response.json();
-            const savedPostIds = data.map(item => Number(item.servicePostId));
-            setSavedPosts(savedPostIds);
-            localStorage.setItem('savedPosts', JSON.stringify(savedPostIds));
+            const savedRoomIds = new Set(data.map(item => item.roomId));
+            setSavedPosts(savedRoomIds);
         } catch (error) {
-            console.error('Lỗi khi lấy danh sách bài đã lưu:', error);
+            console.error("Lỗi khi lấy danh sách bài đã lưu:", error);
         }
     };
 
-    const toggleSavePost = async (servicePostId, e) => {
+    const toggleSavePost = async (roomId, e) => {
         e.preventDefault();
         e.stopPropagation();
-        if (!user || !servicePostId) {
-            showCustomNotification('error', 'Bạn cần đăng nhập để lưu tin!');
+        if (!user || !roomId) {
+            showCustomNotification("error", "Bạn cần đăng nhập để lưu tin!");
             return;
         }
         try {
-            const servicePostIdNum = Number(servicePostId);
-            const response = await fetch('https://localhost:8000/api/SavedPosts', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: user.userId, servicePostId: servicePostIdNum }),
+            const result = await OtherService.toggleSavePost(user.userId, roomId);
+            setSavedPosts((prevSaved) => {
+                const newSaved = new Set(prevSaved);
+                if (result.status === "removed") {
+                    newSaved.delete(parseInt(roomId));
+                } else if (result.status === "saved") {
+                    newSaved.add(parseInt(roomId));
+                }
+                return newSaved;
             });
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(errorText || 'Lỗi khi lưu/xóa bài đăng');
+            if (result.status === "saved") {
+                showCustomNotification("success", "Lưu tin thành công!");
             }
-            const text = await response.text();
-            const result = text ? JSON.parse(text) : {};
-            if (result.status === 'removed') {
-                setSavedPosts(prev => prev.filter(id => id !== servicePostIdNum));
-            } else if (result.status === 'saved') {
-                setSavedPosts(prev => [...prev, servicePostIdNum]);
-                showCustomNotification('success', 'Lưu tin thành công!');
-            }
-            localStorage.setItem('savedPosts', JSON.stringify(savedPosts));
         } catch (error) {
-            console.error('Lỗi khi lưu / xóa bài:', error);
-            showCustomNotification('error', 'Đã xảy ra lỗi, vui lòng thử lại.');
+            console.error("Lỗi khi lưu / xóa bài:", error);
+            showCustomNotification("error", "Đã xảy ra lỗi, vui lòng thử lại!");
         }
     };
 

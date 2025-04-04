@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { FaHeart, FaMapMarkerAlt } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../Context/AuthProvider";
+import OtherService from "../../../Services/User/OtherService";
 
 const SavedPostList = () => {
     const { user } = useAuth(); // Lấy user từ context
@@ -19,15 +20,9 @@ const SavedPostList = () => {
     // Gọi API lấy danh sách tin đã lưu
     const fetchSavedPosts = async () => {
         try {
-            const response = await fetch(`https://localhost:8000/api/SavedPosts/${user.userId}`);
-            if (!response.ok) throw new Error("Lỗi khi lấy danh sách bài đăng đã lưu!");
-
-            const data = await response.json();
-            // Cập nhật thời gian theo múi giờ VN (+7h) và parse ảnh (chỉ xử lý với tin phòng)
+            const data = await OtherService.getSavedPosts(user.userId);
             const updatedPosts = data.map((post) => {
-                // Convert savedAt về múi giờ VN
                 const localSavedAt = new Date(new Date(post.savedAt).getTime() + 7 * 60 * 60 * 1000);
-                // Nếu là tin phòng, parse ảnh và tính price/m²
                 if (post.room) {
                     let images = [];
                     try {
@@ -45,13 +40,12 @@ const SavedPostList = () => {
                         room: {
                             ...post.room,
                             images,
-                            pricePerM2
-                        }
+                            pricePerM2,
+                        },
                     };
                 }
                 return { ...post, savedAt: localSavedAt };
             });
-
             setSavedPosts(updatedPosts);
         } catch (error) {
             console.error("❌ Lỗi khi lấy danh sách bài đăng:", error);
@@ -70,14 +64,7 @@ const SavedPostList = () => {
             } else {
                 payload.servicePostId = id;
             }
-            const response = await fetch("https://localhost:8000/api/SavedPosts", {
-                method: "DELETE",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
-            });
-
-            if (!response.ok) throw new Error("Lỗi khi xóa bài đăng!");
-
+            await OtherService.removeSavedPost(payload);
             setSavedPosts((prev) =>
                 prev.filter((post) => {
                     if (isRoom) {

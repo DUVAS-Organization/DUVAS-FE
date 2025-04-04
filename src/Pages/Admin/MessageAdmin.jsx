@@ -13,7 +13,6 @@ import { useAuth } from "../../Context/AuthProvider";
 import { useLocation } from "react-router-dom";
 import UserService from "../../Services/User/UserService";
 import OtherService from "../../Services/User/OtherService";
-// import Loading from "../../Components/Loading";
 
 // Hàm hiển thị avatar
 const renderAvatar = (avatar, name, size = 40) => {
@@ -44,7 +43,6 @@ const MessageAdmin = () => {
   const { user } = useAuth();
   const currentUserId = user ? user.userId : null;
 
-  // State tin nhắn, hội thoại
   const [message, setMessage] = useState("");
   const [conversations, setConversations] = useState([]);
   const [selectedConversation, setSelectedConversation] = useState(null);
@@ -54,50 +52,35 @@ const MessageAdmin = () => {
   const [conversationMessages, setConversationMessages] = useState([]);
   const [pollingInterval, setPollingInterval] = useState(null);
 
-  // Tìm kiếm, mute, loading
   const [isMuted, setIsMuted] = useState(false);
   const [showSearchBox, setShowSearchBox] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [conversationSearchTerm, setConversationSearchTerm] = useState("");
-  // const [isLoading, setIsLoading] = useState(false);
   const [isSending, setIsSending] = useState(false);
 
-  // Upload ảnh
   const [attachedFiles, setAttachedFiles] = useState([]);
   const [attachedPreviews, setAttachedPreviews] = useState([]);
   const [previewImage, setPreviewImage] = useState(null);
 
-  // Refs
   const messagesContainerRef = useRef(null);
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
 
-  // Lọc tin nhắn theo searchTerm
   const displayedMessages = searchTerm
-    ? conversationMessages.filter((msg) =>
-      msg.content.toLowerCase().includes(searchTerm.toLowerCase())
-    )
+    ? conversationMessages.filter((msg) => msg.content.toLowerCase().includes(searchTerm.toLowerCase()))
     : conversationMessages;
 
-  // Lọc hội thoại theo conversationSearchTerm
   const filteredConversations = conversations.filter((conv) => {
     const name = conv.partnerName || `User ${conv.userGetID}`;
     return name.toLowerCase().includes(conversationSearchTerm.toLowerCase());
   });
 
-  // Toggle mute
-  const handleToggleMute = () => {
-    setIsMuted((prev) => !prev);
-    // Gọi API nếu cần
-  };
-
-  // Toggle search box
+  const handleToggleMute = () => setIsMuted((prev) => !prev);
   const handleToggleSearch = () => {
     setShowSearchBox((prev) => !prev);
     setSearchTerm("");
   };
 
-  // Upload file
   const uploadFile = async (file) => {
     const formData = new FormData();
     formData.append("file", file);
@@ -124,61 +107,47 @@ const MessageAdmin = () => {
     setAttachedPreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleUploadClick = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
+  const handleUploadClick = () => fileInputRef.current?.click();
+
+  // Fetch hội thoại
+  const fetchConversations = async () => {
+    if (!currentUserId) return;
+    try {
+      const data = await OtherService.getConversations(currentUserId);
+      const newConversations = await Promise.all(
+        data.map(async (conv) => {
+          try {
+            const userInfo = await UserService.getUserById(conv.userGetID);
+            conv.partnerName = userInfo.name;
+            conv.partnerPicture = userInfo.profilePicture;
+            conv.partnerIsActive = userInfo.isActive || false;
+          } catch (error) {
+            console.error("Error fetching user info:", error);
+            conv.partnerName = `User ${conv.userGetID}`;
+            conv.partnerPicture = "";
+            conv.partnerIsActive = false;
+          }
+          return conv;
+        })
+      );
+      setConversations(newConversations);
+    } catch (err) {
+      console.error("Error fetching conversations:", err);
     }
   };
 
-  // Fetch hội thoại
-  useEffect(() => {
-    if (!currentUserId) return;
-    // setIsLoading(true);
-    fetch(`https://localhost:8000/api/Message/conversations/${currentUserId}`)
-      .then((res) => res.json())
-      .then(async (data) => {
-        const newConversations = await Promise.all(
-          data.map(async (conv) => {
-            try {
-              const userInfo = await UserService.getUserById(conv.userGetID);
-              conv.partnerName = userInfo.name;
-              conv.partnerPicture = userInfo.profilePicture;
-              conv.partnerIsActive = userInfo.isActive || false;
-            } catch (error) {
-              console.error("Error fetching user info:", error);
-              conv.partnerName = `User ${conv.userGetID}`;
-              conv.partnerPicture = "";
-              conv.partnerIsActive = false;
-            }
-            return conv;
-          })
-        );
-        setConversations(newConversations);
-      })
-      .catch((err) => console.error("Error fetching conversations:", err))
-    // .finally(() => setIsLoading(false));
-  }, [currentUserId]);
-
   // Fetch tin nhắn
-  const fetchConversationMessages = (partnerId) => {
+  const fetchConversationMessages = async (partnerId) => {
     if (!currentUserId) return;
-    // setIsLoading(true);
-    fetch(`https://localhost:8000/api/Message/user/${currentUserId}/${partnerId}`)
-      .then((res) => res.json())
-      .then((data) => {
-        setConversationMessages(data);
-      })
-      .catch((err) => console.error("Error fetching messages:", err))
-    // .finally(() => setIsLoading(false));
+    try {
+      const data = await OtherService.getMessages(currentUserId, partnerId);
+      setConversationMessages(data);
+    } catch (err) {
+      console.error("Error fetching messages:", err);
+    }
   };
 
-  // Chọn hội thoại
-  const handleSelectConversation = (
-    partnerId,
-    partnerName = "",
-    partnerAvatar = "",
-    partnerIsActive = false
-  ) => {
+  const handleSelectConversation = (partnerId, partnerName = "", partnerAvatar = "", partnerIsActive = false) => {
     setSelectedConversation(partnerId);
     setSelectedPartnerName(partnerName);
     setSelectedPartnerAvatar(partnerAvatar);
@@ -188,13 +157,10 @@ const MessageAdmin = () => {
     fetchConversationMessages(partnerId);
 
     if (pollingInterval) clearInterval(pollingInterval);
-    const intervalId = setInterval(() => {
-      fetchConversationMessages(partnerId);
-    }, 3000);
+    const intervalId = setInterval(() => fetchConversationMessages(partnerId), 3000);
     setPollingInterval(intervalId);
   };
 
-  // Lấy partnerId từ state (nếu có)
   const locationState = useLocation();
   useEffect(() => {
     if (locationState.state?.partnerId) {
@@ -205,42 +171,32 @@ const MessageAdmin = () => {
         locationState.state.partnerIsActive || false
       );
     }
-    // eslint-disable-next-line
   }, [locationState.state]);
 
-  // Clear polling
   useEffect(() => {
+    if (currentUserId) fetchConversations();
     return () => {
       if (pollingInterval) clearInterval(pollingInterval);
     };
-  }, [pollingInterval]);
+  }, [currentUserId]);
 
-  // Auto-scroll
   useEffect(() => {
     if (messagesContainerRef.current && messagesEndRef.current) {
       const container = messagesContainerRef.current;
-      const distanceFromBottom =
-        container.scrollHeight - container.scrollTop - container.clientHeight;
-      if (distanceFromBottom < 50) {
-        messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-      }
+      const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+      if (distanceFromBottom < 50) messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [displayedMessages]);
 
-  // Gửi tin nhắn
   const handleSendMessage = async () => {
-    if (isSending) return;
-    if (!message.trim() && attachedFiles.length === 0) return;
-    if (!selectedConversation || !currentUserId) return;
+    if (isSending || (!message.trim() && attachedFiles.length === 0) || !selectedConversation || !currentUserId) return;
 
     setIsSending(true);
 
     let uploadedImageUrls = [];
     if (attachedFiles.length > 0) {
       try {
-        uploadedImageUrls = await Promise.all(
-          attachedFiles.map((file) => uploadFile(file))
-        );
+        uploadedImageUrls = await Promise.all(attachedFiles.map((file) => uploadFile(file)));
       } catch (error) {
         console.error("Error uploading files:", error);
       }
@@ -259,20 +215,16 @@ const MessageAdmin = () => {
     setAttachedFiles([]);
     setAttachedPreviews([]);
 
-    fetch("https://localhost:8000/api/Message", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(newMsg),
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("Gửi tin nhắn thất bại");
-        return res.json();
-      })
-      .catch((err) => console.error("Error sending message:", err))
-      .finally(() => setIsSending(false));
+    try {
+      await OtherService.sendMessage(newMsg);
+      fetchConversationMessages(selectedConversation); // Cập nhật lại tin nhắn sau khi gửi
+    } catch (err) {
+      console.error("Error sending message:", err);
+    } finally {
+      setIsSending(false);
+    }
   };
 
-  // Xử lý Enter
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -282,13 +234,9 @@ const MessageAdmin = () => {
 
   return (
     <div className="flex h-screen bg-gray-100">
-      {/* SIDEBAR TRÁI */}
       <div className="w-1/4 border-r bg-white flex flex-col">
-        {/* Header */}
         <div className="p-4 border-b">
-          <h2 className="text-2xl font-bold text-blue-600 mb-2">
-            Admin Messenger
-          </h2>
+          <h2 className="text-2xl font-bold text-blue-600 mb-2">Admin Messenger</h2>
           <div className="relative">
             <input
               className="w-full p-2 bg-gray-200 rounded-full pl-10 pr-10 text-black focus:outline-none"
@@ -300,12 +248,7 @@ const MessageAdmin = () => {
             <FaSearch className="absolute left-3 top-3 text-gray-500" />
           </div>
         </div>
-
-        {/* Danh sách hội thoại */}
         <div className="flex-1 overflow-y-auto p-2">
-          {/* {isLoading && (
-            <Loading />
-          )} */}
           {filteredConversations.length > 0 ? (
             filteredConversations.map((conv, index) => (
               <div
@@ -320,86 +263,42 @@ const MessageAdmin = () => {
                   )
                 }
               >
-                {renderAvatar(
-                  conv.partnerPicture,
-                  conv.partnerName || `User ${conv.userGetID}`,
-                  40
-                )}
+                {renderAvatar(conv.partnerPicture, conv.partnerName || `User ${conv.userGetID}`, 40)}
                 <div className="ml-3">
-                  <div className="font-semibold">
-                    {conv.partnerName
-                      ? conv.partnerName
-                      : `User ${conv.userGetID}`}
-                  </div>
-                  <div className="text-sm text-gray-500 truncate max-w-[160px]">
-                    {conv.latestMessageContent}
-                  </div>
+                  <div className="font-semibold">{conv.partnerName ? conv.partnerName : `User ${conv.userGetID}`}</div>
+                  <div className="text-sm text-gray-500 truncate max-w-[160px]">{conv.latestMessageContent}</div>
                 </div>
               </div>
             ))
           ) : (
-            <div className="text-gray-500 text-center mt-4">
-              Không có cuộc trò chuyện nào
-            </div>
+            <div className="text-gray-500 text-center mt-4">Không có cuộc trò chuyện nào</div>
           )}
         </div>
       </div>
-
-      {/* CỘT GIỮA: Khu vực chat */}
       <div className="flex-1 flex flex-col">
-        {/* Header chat */}
         <div className="flex items-center justify-between p-4 border-b bg-white">
           <div className="flex items-center space-x-3">
             {renderAvatar(selectedPartnerAvatar, selectedPartnerName, 40)}
             <div>
-              <div className="font-bold text-gray-700">
-                {selectedPartnerName || "Chọn cuộc trò chuyện"}
-              </div>
-              <div className="text-sm text-gray-500">
-                {selectedPartnerIsActive ? "Đang hoạt động" : "Không hoạt động"}
-              </div>
+              <div className="font-bold text-gray-700">{selectedPartnerName || "Chọn cuộc trò chuyện"}</div>
+              <div className="text-sm text-gray-500">{selectedPartnerIsActive ? "Đang hoạt động" : "Không hoạt động"}</div>
             </div>
           </div>
-          {/* <div className="flex items-center space-x-4 text-xl text-blue-600">
-            <button className="hover:text-red-600 transition">
-              <FaPhoneAlt />
-            </button>
-            <button className="hover:text-red-600 transition">
-              <FaVideo />
-            </button>
-          </div> */}
         </div>
-
-        {/* Nội dung chat */}
-        <div
-          ref={messagesContainerRef}
-          className="flex-1 p-4 overflow-y-auto bg-white"
-        >
+        <div ref={messagesContainerRef} className="flex-1 p-4 overflow-y-auto bg-white">
           {selectedConversation ? (
             displayedMessages.length > 0 ? (
               displayedMessages.map((msg, index) => {
                 const isCurrentUser = msg.userSendID === Number(currentUserId);
                 return (
-                  <div
-                    key={index}
-                    className={`flex ${isCurrentUser ? "justify-end" : "justify-start"
-                      } mb-3`}
-                  >
+                  <div key={index} className={`flex ${isCurrentUser ? "justify-end" : "justify-start"} mb-3`}>
                     <div
-                      className={`p-3 rounded-lg max-w-[70%] ${isCurrentUser
-                        ? "bg-blue-100 text-gray-700"
-                        : "bg-gray-200 text-gray-700"
-                        }`}
+                      className={`p-3 rounded-lg max-w-[70%] ${isCurrentUser ? "bg-blue-100 text-gray-700" : "bg-gray-200 text-gray-700"}`}
                     >
                       <div className="text-xs text-gray-500 mb-1">
-                        {new Date(msg.dateTime).toLocaleString("vi-VN", {
-                          dateStyle: "short",
-                          timeStyle: "short",
-                        })}
+                        {new Date(msg.dateTime).toLocaleString("vi-VN", { dateStyle: "short", timeStyle: "short" })}
                       </div>
-                      <div className="whitespace-pre-wrap break-words">
-                        {msg.content}
-                      </div>
+                      <div className="whitespace-pre-wrap break-words">{msg.content}</div>
                       {msg.image && (() => {
                         let images = [];
                         try {
@@ -426,20 +325,13 @@ const MessageAdmin = () => {
                 );
               })
             ) : (
-              <div className="text-center text-gray-500 mt-4">
-                Chưa có tin nhắn.
-              </div>
+              <div className="text-center text-gray-500 mt-4">Chưa có tin nhắn.</div>
             )
           ) : (
-            <div className="text-center text-gray-500 mt-4">
-              Chọn một cuộc trò chuyện để xem tin nhắn
-            </div>
+            <div className="text-center text-gray-500 mt-4">Chọn một cuộc trò chuyện để xem tin nhắn</div>
           )}
-
           <div ref={messagesEndRef} />
         </div>
-
-        {/* Thanh nhập tin nhắn */}
         <div className="border-t p-3 bg-white">
           <div className="flex items-center space-x-3">
             <button
@@ -473,8 +365,6 @@ const MessageAdmin = () => {
               <FaPaperPlane />
             </button>
           </div>
-
-          {/* Preview ảnh đính kèm */}
           {attachedPreviews.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-3">
               {attachedPreviews.map((preview, index) => (
@@ -497,32 +387,22 @@ const MessageAdmin = () => {
           )}
         </div>
       </div>
-
-      {/* SIDEBAR PHẢI: Admin Controls */}
       <div className="w-1/4 border-l bg-white flex flex-col">
-        {/* Thông tin đối phương */}
         <div className="p-4 border-b">
           <div className="flex items-center space-x-3 mb-3">
             {renderAvatar(selectedPartnerAvatar, selectedPartnerName, 50)}
             <div>
-              <div className="font-bold text-base text-gray-700">
-                {selectedPartnerName || "Người lạ"}
-              </div>
-              <div className="text-sm text-gray-500">
-                {selectedPartnerIsActive ? "Đang hoạt động" : "Không hoạt động"}
-              </div>
+              <div className="font-bold text-base text-gray-700">{selectedPartnerName || "Người lạ"}</div>
+              <div className="text-sm text-gray-500">{selectedPartnerIsActive ? "Đang hoạt động" : "Không hoạt động"}</div>
             </div>
           </div>
-
           <div className="flex flex-col space-y-2">
             <button
               className="flex items-center px-3 py-2 w-full rounded-full border text-gray-600 hover:bg-gray-100 transition"
               onClick={handleToggleMute}
             >
               <FaBell className="mr-2" />
-              <span className="text-base">
-                {isMuted ? "Bật thông báo" : "Tắt thông báo"}
-              </span>
+              <span className="text-base">{isMuted ? "Bật thông báo" : "Tắt thông báo"}</span>
             </button>
             <button
               className="flex items-center px-3 py-2 w-full rounded-full border text-gray-600 hover:bg-gray-100 transition"
@@ -543,38 +423,13 @@ const MessageAdmin = () => {
             )}
           </div>
         </div>
-
-        {/* Admin Tools */}
-        {/* <div className="flex-1 p-4">
-          <h3 className="font-bold text-gray-700 mb-3">Admin Tools</h3>
-          <div className="flex flex-col space-y-3">
-            <button className="flex items-center px-3 py-2 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 transition">
-              <FaUser className="mr-2" />
-              <span className="text-base">Quản lý người dùng</span>
-            </button>
-            <button className="flex items-center px-3 py-2 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 transition">
-              <FaBell className="mr-2" />
-              <span className="text-base">Báo cáo tin nhắn</span>
-            </button>
-            <button className="flex items-center px-3 py-2 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 transition">
-              <FaSearch className="mr-2" />
-              <span className="text-base">Thống kê tin nhắn</span>
-            </button>
-          </div>
-        </div> */}
       </div>
-
-      {/* Modal Preview Ảnh */}
       {previewImage && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
           onClick={() => setPreviewImage(null)}
         >
-          <img
-            src={previewImage}
-            alt="Enlarged Preview"
-            className="max-w-[90%] max-h-[90%] object-contain rounded-lg"
-          />
+          <img src={previewImage} alt="Enlarged Preview" className="max-w-[90%] max-h-[90%] object-contain rounded-lg" />
         </div>
       )}
     </div>
