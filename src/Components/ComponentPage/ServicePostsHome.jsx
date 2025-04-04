@@ -5,8 +5,7 @@ import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../Context/AuthProvider';
 import ServicePost from '../../Services/Admin/ServicePost';
 import { showCustomNotification } from '../Notification';
-import Loading from '../Loading';
-import OtherService from '../../Services/User/OtherService'
+import OtherService from '../../Services/User/OtherService';
 
 const Item = styled('div')(({ theme, $vertical }) => ({
     backgroundColor: '#fff',
@@ -15,7 +14,7 @@ const Item = styled('div')(({ theme, $vertical }) => ({
     transition: 'transform 0.2s, box-shadow 0.2s',
     cursor: 'pointer',
     display: 'flex',
-    flexDirection: $vertical ? 'column' : 'row', // nếu $vertical true => layout dọc, ngược lại row
+    flexDirection: $vertical ? 'column' : 'row',
     boxShadow: theme.shadows[3],
     '&:hover': {
         transform: 'scale(1.02)',
@@ -81,9 +80,7 @@ const ServicePostsHome = () => {
 
     const fetchSavedPosts = async () => {
         try {
-            const response = await OtherService.getSavedPosts(user.userId);
-            if (!response.ok) throw new Error("Lỗi khi lấy danh sách bài đã lưu!");
-            const data = await response.json();
+            const data = await OtherService.getSavedPosts(user.userId);
             const savedServicePostIds = new Set(data.map(item => item.servicePostId));
             setSavedPosts(savedServicePostIds);
         } catch (error) {
@@ -99,7 +96,7 @@ const ServicePostsHome = () => {
             return;
         }
         try {
-            const result = await OtherService.toggleSavePost(user.userId, servicePostId);
+            const result = await OtherService.toggleSaveServicePost(user.userId, servicePostId);
             setSavedPosts(prevSaved => {
                 const newSaved = new Set(prevSaved);
                 if (result.status === "removed") {
@@ -118,8 +115,6 @@ const ServicePostsHome = () => {
         }
     };
 
-    // Hàm render card
-    // isDoubleHeight = true: card hiển thị theo layout dọc, dành cho cột chính khi có 3 hoặc nhiều bài.
     const renderFullCard = (post, isDoubleHeight = false) => {
         let images;
         try {
@@ -140,7 +135,6 @@ const ServicePostsHome = () => {
                 <Item className={`mb-4 ${isDoubleHeight ? 'h-[417px]' : 'h-48'}`} $vertical={isDoubleHeight}>
                     {isDoubleHeight ? (
                         <>
-                            {/* Layout dọc: ảnh ở trên */}
                             <div className="relative w-full h-1/2">
                                 <img
                                     src={firstImage}
@@ -153,7 +147,6 @@ const ServicePostsHome = () => {
                                     </span>
                                 )}
                             </div>
-                            {/* Nội dung bên dưới, xếp theo chiều dọc */}
                             <div className="p-4 flex-1 flex flex-col">
                                 <h3 className="text-lg font-semibold mb-1 truncate">{post.title}</h3>
                                 <p className="text-gray-600 mb-1 flex items-center">
@@ -183,7 +176,6 @@ const ServicePostsHome = () => {
                         </>
                     ) : (
                         <>
-                            {/* Layout ngang: ảnh bên trái, nội dung bên phải */}
                             <div className="relative w-48 h-full flex-shrink-0">
                                 <img
                                     src={firstImage}
@@ -229,8 +221,6 @@ const ServicePostsHome = () => {
         );
     };
 
-    // Khi có 4 bài trở lên: chia lưới theo tỉ lệ 2/3 cho cột trái và 1/3 cho cột phải,
-    // cột trái hiển thị card chính với layout dọc, cột phải hiển thị danh sách link tiêu đề với text size lớn.
     const renderForFourOrMore = () => (
         <div className="grid grid-cols-3 gap-6">
             <div className="col-span-2">
@@ -292,7 +282,6 @@ const ServicePostsHome = () => {
                             </div>
                         </div>
                     ) : (
-                        // 4 bài trở lên: chia lưới theo tỉ lệ 2/3 - 1/3, cột trái cũng layout dọc
                         renderForFourOrMore()
                     )}
                 </div>

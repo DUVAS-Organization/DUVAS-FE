@@ -24,6 +24,11 @@ const OtherService = {
     getSavedPosts: async (userId) => {
         return axios.get(`${API_URL}/SavedPosts/${userId}`).then((res) => res.data);
     },
+    // hàm xử lý servicePostId
+    toggleSaveServicePost: async (userId, servicePostId) => {
+        const payload = { userId, servicePostId: parseInt(servicePostId) };
+        return axios.post(`${API_URL}/SavedPosts/`, payload).then((res) => res.data);
+    },
     toggleSavePost: async (userId, roomId) => {
         const payload = {
             userId: userId,
@@ -119,6 +124,23 @@ const OtherService = {
                 "Content-Type": "application/json",
             },
         }).then((res) => res.data);
+    },
+    // Hàm AICCCD:kiểm tra ảnh CCCD
+    AICCCD: async (file) => {
+        const formData = new FormData();
+        formData.append('File', file); // Tên 'File' phải khớp với tên trường trong DTO của backend
+
+        try {
+            const response = await axios.post(`${API_URL}/fptai/upload`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data', // Đảm bảo gửi dữ liệu file đúng định dạng
+                },
+            });
+            return response.data; // Trả về dữ liệu kết quả từ backend
+        } catch (error) {
+            console.error('Error uploading image:', error);
+            throw error; // Nếu có lỗi xảy ra trong quá trình upload, throw lỗi để xử lý ở component
+        }
     },
     savedPostHub: `${HUB_BASE_URL}/savedPostHub`,
     chatHub: `${HUB_BASE_URL}/chathub`,

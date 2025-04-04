@@ -198,7 +198,8 @@ const RoomsList = () => {
             filteredRooms = filteredRooms.filter((r) => r.categoryName === "Phòng trọ" || !r.categoryName);
         }
     }
-
+    // Loại bỏ các phòng có status = 2 hoặc 3
+    filteredRooms = filteredRooms.filter((r) => r.status !== 2 && r.status !== 3);
     // Lọc thêm theo giá và diện tích
     filteredRooms = filteredRooms.filter((r) => r.price >= minPrice && r.price <= maxPrice);
     filteredRooms = filteredRooms.filter((r) => r.acreage >= minArea && r.acreage <= maxArea);

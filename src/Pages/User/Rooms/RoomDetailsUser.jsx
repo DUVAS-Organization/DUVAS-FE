@@ -176,23 +176,62 @@ const RoomDetailsUser = () => {
         const found = categoryRooms.find((c) => c.categoryRoomId === categoryRoomId);
         return found ? found.categoryName : 'N/A';
     };
-
-    const toggleSavePost = async () => {
-        if (!user || !roomId) {
-            console.error("Lỗi: userId hoặc roomId không hợp lệ!", { user, roomId });
-            return;
+    useEffect(() => {
+        if (user && user.userId) {
+            fetchSavedPosts();
         }
+    }, [user]);
+    const fetchSavedPosts = async () => {
         try {
-            await OtherService.toggleSavePost(user.userId, parseInt(roomId));
-            setSavedPosts((prev) =>
-                prev.includes(parseInt(roomId))
-                    ? prev.filter((id) => id !== parseInt(roomId))
-                    : [...prev, parseInt(roomId)]
-            );
+            const data = await OtherService.getSavedPosts(user.userId);
+            const savedRoomIds = data.filter(item => item.roomId).map(item => item.roomId);
+            setSavedPosts(savedRoomIds);
+            localStorage.setItem("savedPosts", JSON.stringify(savedRoomIds));
         } catch (error) {
-            console.error("❌ Lỗi khi lưu / xóa bài:", error);
+            console.error("Lỗi khi lấy danh sách bài đã lưu:", error);
         }
     };
+    const toggleSavePost = async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (!user || !roomId) {
+            showCustomNotification("error", "Bạn cần đăng nhập để lưu tin!");
+            return;
+        }
+
+        try {
+            const result = await OtherService.toggleSavePost(user.userId, parseInt(roomId));
+
+            setSavedPosts((prevSaved) => {
+                const newSaved = new Set(prevSaved);
+                let message = "";
+
+                if (result.status === "removed") {
+                    newSaved.delete(parseInt(roomId));
+                    message = "Đã xóa tin khỏi danh sách lưu!";
+                } else if (result.status === "saved") {
+                    newSaved.add(parseInt(roomId));
+                    message = "Lưu tin thành công!";
+                }
+
+                const updatedSavedPosts = Array.from(newSaved);
+                localStorage.setItem("savedPosts", JSON.stringify(updatedSavedPosts));
+
+                return updatedSavedPosts;
+            });
+
+            if (result.status === "removed") {
+                showCustomNotification("success", "Đã xóa tin khỏi danh sách lưu!");
+            } else if (result.status === "saved") {
+                showCustomNotification("success", "Lưu tin thành công!");
+            }
+        } catch (error) {
+            console.error("Lỗi khi lưu / xóa bài:", error);
+            showCustomNotification("error", "Không thể lưu tin này!");
+        }
+    };
+
 
     const handleSubmitRentForm = async (e) => {
         e.preventDefault();
@@ -540,11 +579,9 @@ const RoomDetailsUser = () => {
                                     <BsExclamationTriangle />
                                 </button>
                                 <button
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        toggleSavePost();
-                                    }}
+                                    onClick={
+                                        toggleSavePost
+                                    }
                                     className="text-2xl"
                                 >
                                     {savedPosts.includes(parseInt(roomId)) ? (
