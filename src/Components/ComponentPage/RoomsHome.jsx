@@ -67,9 +67,7 @@ const RoomsHome = () => {
 
     const fetchSavedPosts = async () => {
         try {
-            const response = await OtherService.getSavedPosts(user.userId);
-            if (!response.ok) throw new Error("Lỗi khi lấy danh sách bài đã lưu!");
-            const data = await response.json();
+            const data = await OtherService.getSavedPosts(user.userId);
             const savedRoomIds = new Set(data.map(item => item.roomId));
             setSavedPosts(savedRoomIds);
         } catch (error) {
