@@ -6,6 +6,8 @@ import UserService from '../../Services/User/UserService';
 import { showCustomNotification } from '../../Components/Notification';
 import { IoClose } from "react-icons/io5";
 import { MdClose } from 'react-icons/md';
+import { FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
+import { AiOutlineLoading3Quarters } from 'react-icons/ai';
 
 const RegisterLandlord = ({
     selectedNeed,
@@ -32,6 +34,14 @@ const RegisterLandlord = ({
     const [address, setAddress] = useState("");
     const [cccdError, setCccdError] = useState("");
     const [previewImage, setPreviewImage] = useState(null);
+
+    // AI-CCCD verification states
+    const [frontImageValid, setFrontImageValid] = useState(null);
+    const [backImageValid, setBackImageValid] = useState(null);
+    const [validatingFront, setValidatingFront] = useState(false);
+    const [validatingBack, setValidatingBack] = useState(false);
+    const [frontIdInfo, setFrontIdInfo] = useState(null);
+    const [backIdInfo, setBackIdInfo] = useState(null);
 
     // Refs for file inputs
     const frontImageInputRef = useRef(null);
@@ -74,6 +84,78 @@ const RegisterLandlord = ({
         validateCccd(value);
     };
 
+    // Validate CCCD image with AI
+    const validateCCCDWithAI = async (image, isfront) => {
+        if (!image) return;
+
+        try {
+            if (isfront) {
+                setValidatingFront(true);
+            } else {
+                setValidatingBack(true);
+            }
+
+            const result = await OtherService.AICCCD(image);
+            console.log("AI CCCD Result:", result);
+
+            // Check if the result is valid
+            const isValid = result && result.isValid;
+
+            if (isfront) {
+                setFrontImageValid(isValid);
+                setValidatingFront(false);
+                if (isValid && result.info) {
+                    setFrontIdInfo(result.info);
+                    // Auto-fill information if available
+                    if (result.info.name) setName(result.info.name);
+                    if (result.info.sex) setSex(result.info.sex);
+                    if (result.info.address) setAddress(result.info.address);
+                    if (result.info.id) setCccdNumber(result.info.id);
+                }
+            } else {
+                setBackImageValid(isValid);
+                setValidatingBack(false);
+                if (isValid && result.info) {
+                    setBackIdInfo(result.info);
+                }
+            }
+
+            // Show notification based on validation result
+            if (isValid) {
+                showCustomNotification("success", `Ảnh CCCD ${isfront ? 'mặt trước' : 'mặt sau'} hợp lệ.`);
+            } else {
+                showCustomNotification("error", `Ảnh CCCD ${isfront ? 'mặt trước' : 'mặt sau'} không hợp lệ.`);
+            }
+
+        } catch (error) {
+            console.error("Lỗi khi xác thực ảnh CCCD:", error);
+            showCustomNotification("error", "Có lỗi xảy ra khi xác thực ảnh CCCD. Vui lòng thử lại.");
+            if (isfront) {
+                setValidatingFront(false);
+                setFrontImageValid(false);
+            } else {
+                setValidatingBack(false);
+                setBackImageValid(false);
+            }
+        }
+    };
+
+    const handleFrontImageChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setFrontImage(file);
+            validateCCCDWithAI(file, true);
+        }
+    };
+
+    const handleBackImageChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setBackImage(file);
+            validateCCCDWithAI(file, false);
+        }
+    };
+
     const uploadFile = async (file) => {
         if (!file) return null;
         const formData = new FormData();
@@ -88,10 +170,17 @@ const RegisterLandlord = ({
     };
 
     const handleConfirm = async () => {
+        // Check for CCCD validation
+        if (!frontImageValid || !backImageValid) {
+            showCustomNotification("error", "Vui lòng sử dụng ảnh CCCD hợp lệ.");
+            return;
+        }
+
         if (!userId || !token || !cccdNumber || !frontImage || !backImage || !name || !sex || !address || cccdError) {
             showCustomNotification("error", "Vui lòng điền đầy đủ và đúng thông tin cần thiết.");
             return;
         }
+
         setIsSubmitting(true);
         try {
             const frontImageUrl = await uploadFile(frontImage);
@@ -167,9 +256,29 @@ const RegisterLandlord = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 {/* Front ID */}
                 <div className="flex flex-col items-center">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Ảnh CCCD mặt trước:</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Ảnh CCCD mặt trước:
+                        {validatingFront && (
+                            <span className="ml-2 text-yellow-500 inline-flex items-center">
+                                <AiOutlineLoading3Quarters className="animate-spin mr-1" />
+                                Đang xác thực...
+                            </span>
+                        )}
+                        {!validatingFront && frontImageValid === true && (
+                            <span className="ml-2 text-green-500 inline-flex items-center">
+                                <FaCheckCircle className="mr-1" />
+                                Hợp lệ
+                            </span>
+                        )}
+                        {!validatingFront && frontImageValid === false && (
+                            <span className="ml-2 text-red-500 inline-flex items-center">
+                                <FaTimesCircle className="mr-1" />
+                                Không hợp lệ
+                            </span>
+                        )}
+                    </label>
                     <div
-                        className="w-[30rem] h-[15rem] border border-gray-300 rounded-lg flex items-center justify-center bg-gray-50 cursor-pointer"
+                        className="w-full h-40 border border-gray-300 rounded-lg flex items-center justify-center bg-gray-50 cursor-pointer"
                         onClick={() => frontImage && setPreviewImage(URL.createObjectURL(frontImage))}
                     >
                         {frontImage ? (
@@ -186,24 +295,53 @@ const RegisterLandlord = ({
                         type="button"
                         onClick={() => frontImageInputRef.current.click()}
                         className="mt-2 py-2 px-4 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors duration-200"
-                        disabled={isSubmitting}
+                        disabled={isSubmitting || validatingFront}
                     >
-                        Chọn ảnh
+                        {validatingFront ? "Đang xác thực..." : "Chọn ảnh"}
                     </button>
                     <input
                         type="file"
                         ref={frontImageInputRef}
-                        onChange={(e) => setFrontImage(e.target.files[0])}
+                        onChange={handleFrontImageChange}
                         className="hidden"
-                        disabled={isSubmitting}
+                        accept="image/*"
+                        disabled={isSubmitting || validatingFront}
                     />
+                    {frontIdInfo && (
+                        <div className="mt-2 text-sm text-gray-700 w-full">
+                            <p><strong>Tên:</strong> {frontIdInfo.name}</p>
+                            <p><strong>CCCD:</strong> {frontIdInfo.id}</p>
+                            <p><strong>Giới tính:</strong> {frontIdInfo.sex}</p>
+                            <p><strong>Địa chỉ:</strong> {frontIdInfo.address}</p>
+                        </div>
+                    )}
                 </div>
 
                 {/* Back ID */}
                 <div className="flex flex-col items-center">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Ảnh CCCD mặt sau:</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Ảnh CCCD mặt sau:
+                        {validatingBack && (
+                            <span className="ml-2 text-yellow-500 inline-flex items-center">
+                                <AiOutlineLoading3Quarters className="animate-spin mr-1" />
+                                Đang xác thực...
+                            </span>
+                        )}
+                        {!validatingBack && backImageValid === true && (
+                            <span className="ml-2 text-green-500 inline-flex items-center">
+                                <FaCheckCircle className="mr-1" />
+                                Hợp lệ
+                            </span>
+                        )}
+                        {!validatingBack && backImageValid === false && (
+                            <span className="ml-2 text-red-500 inline-flex items-center">
+                                <FaTimesCircle className="mr-1" />
+                                Không hợp lệ
+                            </span>
+                        )}
+                    </label>
                     <div
-                        className="w-[30rem] h-[15rem] border border-gray-300 rounded-lg flex items-center justify-center bg-gray-50 cursor-pointer"
+                        className="w-full h-40 border border-gray-300 rounded-lg flex items-center justify-center bg-gray-50 cursor-pointer"
                         onClick={() => backImage && setPreviewImage(URL.createObjectURL(backImage))}
                     >
                         {backImage ? (
@@ -220,17 +358,24 @@ const RegisterLandlord = ({
                         type="button"
                         onClick={() => backImageInputRef.current.click()}
                         className="mt-2 py-2 px-4 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors duration-200"
-                        disabled={isSubmitting}
+                        disabled={isSubmitting || validatingBack}
                     >
-                        Chọn ảnh
+                        {validatingBack ? "Đang xác thực..." : "Chọn ảnh"}
                     </button>
                     <input
                         type="file"
                         ref={backImageInputRef}
-                        onChange={(e) => setBackImage(e.target.files[0])}
+                        onChange={handleBackImageChange}
                         className="hidden"
-                        disabled={isSubmitting}
+                        accept="image/*"
+                        disabled={isSubmitting || validatingBack}
                     />
+                    {backIdInfo && (
+                        <div className="mt-2 text-sm text-gray-700 w-full">
+                            <p><strong>Ngày cấp:</strong> {backIdInfo.issueDate}</p>
+                            <p><strong>Nơi cấp:</strong> {backIdInfo.issuePlace}</p>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -242,7 +387,7 @@ const RegisterLandlord = ({
                     placeholder="Nhập số CCCD"
                     value={cccdNumber || ""}
                     onChange={handleCccdChange}
-                    className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${cccdError ? 'border-red-500' : 'border-gray-300'
+                    className={`w-full p-3 border rounded-lg ${cccdError ? 'border-red-500' : 'border-gray-300'
                         }`}
                     maxLength={12}
                     disabled={isSubmitting}
@@ -257,7 +402,7 @@ const RegisterLandlord = ({
                 <div className="flex flex-col items-center">
                     <label className="block text-sm font-medium text-gray-700 mb-2">Giấy phép kinh doanh:</label>
                     <div
-                        className="w-[30rem] h-[15rem] border border-gray-300 rounded-lg flex items-center justify-center bg-gray-50 cursor-pointer"
+                        className="w-full h-40 border border-gray-300 rounded-lg flex items-center justify-center bg-gray-50 cursor-pointer"
                         onClick={() => businessLicense && setPreviewImage(URL.createObjectURL(businessLicense))}
                     >
                         {businessLicense ? (
@@ -283,6 +428,7 @@ const RegisterLandlord = ({
                         ref={businessLicenseInputRef}
                         onChange={(e) => setBusinessLicense(e.target.files[0])}
                         className="hidden"
+                        accept="image/*"
                         disabled={isSubmitting}
                     />
                 </div>
@@ -292,7 +438,7 @@ const RegisterLandlord = ({
                     <div className="flex flex-col items-center">
                         <label className="block text-sm font-medium text-gray-700 mb-2">Giấy phép chuyên môn:</label>
                         <div
-                            className="w-[30rem] h-[15rem] border border-gray-300 rounded-lg flex items-center justify-center bg-gray-50 cursor-pointer"
+                            className="w-full h-40 border border-gray-300 rounded-lg flex items-center justify-center bg-gray-50 cursor-pointer"
                             onClick={() => professionalLicense && setPreviewImage(URL.createObjectURL(professionalLicense))}
                         >
                             {professionalLicense ? (
@@ -318,6 +464,7 @@ const RegisterLandlord = ({
                             ref={professionalLicenseInputRef}
                             onChange={(e) => setProfessionalLicense(e.target.files[0])}
                             className="hidden"
+                            accept="image/*"
                             disabled={isSubmitting}
                         />
                     </div>
@@ -333,7 +480,9 @@ const RegisterLandlord = ({
                         !backImage ||
                         !businessLicense ||
                         (selectedNeed === 'Chủ dịch vụ' && !professionalLicense) ||
-                        cccdError
+                        cccdError ||
+                        frontImageValid !== true ||
+                        backImageValid !== true
                         ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                         : 'bg-red-500 text-white hover:bg-red-600'
                         }`}
@@ -345,7 +494,9 @@ const RegisterLandlord = ({
                         !backImage ||
                         !businessLicense ||
                         (selectedNeed === 'Chủ dịch vụ' && !professionalLicense) ||
-                        cccdError
+                        cccdError ||
+                        frontImageValid !== true ||
+                        backImageValid !== true
                     }
                 >
                     {isSubmitting ? "Đang xử lý..." : "Đăng ký thành chủ"}
@@ -357,10 +508,10 @@ const RegisterLandlord = ({
                 <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
                     <div className="relative bg-white p-4 rounded-lg shadow-lg max-w-3xl w-full">
                         <button
-                            className="absolute top-0 right-2 text-black font-bold hover:text-gray-800"
+                            className="absolute top-2 right-2 text-black font-bold hover:text-gray-800"
                             onClick={() => setPreviewImage(null)}
                         >
-                            ✕
+                            <MdClose className="text-xl" />
                         </button>
                         <img
                             src={previewImage}
@@ -387,7 +538,7 @@ const RegisterLandlord = ({
                                         <img
                                             src={URL.createObjectURL(frontImage)}
                                             alt="Ảnh CCCD mặt trước"
-                                            className="w-full h-auto max-h-[80px] object-contain rounded-lg cursor-pointer"
+                                            className="w-full h-auto max-h-20 object-contain rounded-lg cursor-pointer"
                                             onClick={() => {
                                                 setSelectedImage(URL.createObjectURL(frontImage));
                                                 setShowImagePreview(true);
@@ -404,7 +555,7 @@ const RegisterLandlord = ({
                                         <img
                                             src={URL.createObjectURL(backImage)}
                                             alt="Ảnh CCCD mặt sau"
-                                            className="w-full h-auto max-h-[80px] object-contain rounded-lg cursor-pointer"
+                                            className="w-full h-auto max-h-20 object-contain rounded-lg cursor-pointer"
                                             onClick={() => {
                                                 setSelectedImage(URL.createObjectURL(backImage));
                                                 setShowImagePreview(true);
@@ -424,7 +575,7 @@ const RegisterLandlord = ({
                                         <img
                                             src={URL.createObjectURL(businessLicense)}
                                             alt="Giấy phép kinh doanh"
-                                            className="w-full h-auto max-h-[80px] object-contain rounded-lg cursor-pointer"
+                                            className="w-full h-auto max-h-20 object-contain rounded-lg cursor-pointer"
                                             onClick={() => {
                                                 setSelectedImage(URL.createObjectURL(businessLicense));
                                                 setShowImagePreview(true);
@@ -442,7 +593,7 @@ const RegisterLandlord = ({
                                             <img
                                                 src={URL.createObjectURL(professionalLicense)}
                                                 alt="Giấy phép chuyên môn"
-                                                className="w-full h-auto max-h-[80px] object-contain rounded-lg cursor-pointer"
+                                                className="w-full h-auto max-h-20 object-contain rounded-lg cursor-pointer"
                                                 onClick={() => {
                                                     setSelectedImage(URL.createObjectURL(professionalLicense));
                                                     setShowImagePreview(true);
@@ -481,20 +632,18 @@ const RegisterLandlord = ({
 
             {/* Modal Preview Image */}
             {showImagePreview && (
-                <div className="fixed  inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
                     <div className="bg-white relative p-4 rounded-lg max-w-3xl max-h-[80vh] overflow-auto">
                         <img src={selectedImage} alt="Preview" className="w-full h-auto max-h-[70vh] object-contain" />
                         <button
                             onClick={() => setShowImagePreview(false)}
-                            className="absolute top-0 right-0 text-black font-bold hover:text-gray-800"
+                            className="absolute top-2 right-2 text-black font-bold hover:text-gray-800"
                         >
-                            <MdClose className='text-black text-2xl' />
+                            <MdClose className="text-2xl" />
                         </button>
                     </div>
                 </div>
             )}
-
-
 
         </div>
     );
