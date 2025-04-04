@@ -284,7 +284,7 @@ const RoomList = () => {
         <div>
             <SidebarUser />
             <Box className="max-w-7xl mx-auto ml-56" sx={{ flexGrow: 1 }}>
-                <div className="mt-6 mb-4 flex space-x-4">
+                <div className="mt-6 mb-4 flex flex-wrap space-x-4">
                     <button
                         onClick={() => handleFilterByStatus(null)}
                         className={`px-4 py-2 rounded ${activeStatus === null ? 'bg-red-500 text-white' : 'bg-gray-200'}`}
@@ -323,7 +323,7 @@ const RoomList = () => {
                             : `Không có phòng nào đang ${getStatusName(activeStatus)}.`}
                     </p>
                 ) : (
-                    <Grid className="mt-4" container spacing={2}>
+                    <Grid container spacing={2} className="mt-4">
                         {cards.map((card) => {
                             let images;
                             try {
@@ -336,7 +336,7 @@ const RoomList = () => {
                             const firstImage = images[0] || 'https://via.placeholder.com/250x350';
 
                             return (
-                                <Grid key={`${card.roomId}-${card.booking ? card.booking.rentalId : 'null'}`} size={3}>
+                                <Grid key={`${card.roomId}-${card.booking ? card.booking.rentalId : 'null'}`} item xs={12} sm={6} md={4}>
                                     <Item onClick={() => navigate(`/Rooms/Contract/${card.roomId}/${card.booking ? card.booking.rentalId : 'null'}`)}>
                                         <div className="flex flex-col h-full">
                                             <div className="relative">
@@ -364,7 +364,7 @@ const RoomList = () => {
                                                 <p className="text-red-500 font-medium text-base mt-1">
                                                     {card.price ? `${card.price.toLocaleString('vi-VN')} đ/tháng` : 'Thỏa thuận'}
                                                 </p>
-                                                <p >
+                                                <p>
                                                     {card.booking && (
                                                         <div>
                                                             <p className="font-semibold">Người đặt: {card.booking.renterName || 'N/A'}</p>
@@ -386,6 +386,7 @@ const RoomList = () => {
             <Footer />
         </div>
     );
+
 };
 
 export default RoomList;

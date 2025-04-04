@@ -83,6 +83,43 @@ const OtherService = {
     uploadImage: async (file) => {
         return axios.post(`${API_URL}/Upload/upload-image`, file).then((res) => res.data);
     },
+    //Thuê phòng
+    rentRoom: async (rentPayload, token) => {
+        return axios.post(`${API_URL}/RoomManagement/rent-room`, rentPayload, {
+            headers: {
+                "Content-Type": "application/json; charset=UTF-8",
+                Authorization: `Bearer ${token}`,
+            },
+        }).then((res) => res.data);
+    },
+    // Gửi email thông báo
+    sendMail: async (sendMailPayload, token) => {
+        return axios.post(`${API_URL}/RoomManagement/send-mail`, sendMailPayload, {
+            headers: {
+                "Content-Type": "application/json; charset=UTF-8",
+                Authorization: `Bearer ${token}`,
+            },
+        }).then((res) => res.data);
+    },
+    //Lấy danh sách hội thoại
+    getConversations: async (userId) => {
+        return axios.get(`${API_URL}/Message/conversations/${userId}`).then((res) => res.data);
+    },
+    // Xóa bài đăng đã lưu
+    removeSavedPost: async (payload) => {
+        return axios.delete(`${API_URL}/SavedPosts`, {
+            headers: { "Content-Type": "application/json" },
+            data: payload, // Gửi payload trong body của DELETE request
+        }).then((res) => res.data);
+    },
+    //Yêu cầu dịch vụ
+    rentService: async (requestPayload) => {
+        return axios.post(`${API_URL}/ServiceManagement/rent-service`, requestPayload, {
+            headers: {
+                "Content-Type": "application/json",
+            },
+        }).then((res) => res.data);
+    },
     savedPostHub: `${HUB_BASE_URL}/savedPostHub`,
     chatHub: `${HUB_BASE_URL}/chathub`,
 

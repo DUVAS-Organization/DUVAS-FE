@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { FaCalendarAlt, FaFileContract, FaMapMarkerAlt, FaMoneyBillWave } from "react-icons/fa";
 import UserRentRoomService from "../../../Services/User/UserRentRoomService";
 import { useNavigate } from "react-router-dom";
+import Loading from "../../../Components/Loading";
 
 export default function RentalList() {
     const [pendingRentals, setPendingRentals] = useState([]);
@@ -22,9 +23,6 @@ export default function RentalList() {
     const { user } = useAuth();
     const navigate = useNavigate();
 
-    useEffect(() => {
-        console.log("🔎 [FE] selectedRoom updated:", selectedRoom);
-    }, [selectedRoom]);
 
     useEffect(() => {
         if (!user?.userId || !user?.token) return;
@@ -33,7 +31,6 @@ export default function RentalList() {
             try {
                 setLoading(true);
                 const rentalList = await BookingManagementService.getRentalListOfUser(user.userId, user.token);
-                console.log("📌 [FE] API Response (Rental List):", rentalList);
 
                 const waitingLandlordFiltered = rentalList.filter(rental =>
                     rental.rentalStatus === 1 && rental.roomStatus === 1 && (!rental.contractStatus || rental.contractStatus !== 3)
@@ -95,12 +92,10 @@ export default function RentalList() {
         try {
             const rentalId = selectedRoom?.rentalList?.rentalId;
             const roomPrice = selectedRoom?.room?.price || 0;
-            const landlordId = selectedRoom?.room?.landlordId; // Receiver
-            console.log("➡️ [FE] Xác nhận thuê phòng với rentalId:", rentalId);
+            const landlordId = selectedRoom?.room?.landlordId;
 
             const checkBalanceData = { UserId: user.userId, Amount: roomPrice };
             const balanceResponse = await BookingManagementService.checkBalance(checkBalanceData, user.token);
-            console.log("🔍 [FE] Kiểm tra số dư:", balanceResponse);
 
             if (balanceResponse !== "Bạn đủ tiền.") {
                 setSuccessMessage("Bạn không đủ tiền. Vui lòng nạp thêm tiền để tiếp tục.");
@@ -111,7 +106,6 @@ export default function RentalList() {
 
             const updateBalanceData = { UserId: user.userId, Amount: -roomPrice };
             await BookingManagementService.updateBalance(updateBalanceData, user.token);
-            console.log("💸 [FE] Đã trừ tiền user:", roomPrice);
 
             const insiderTradingData = {
                 Remitter: user.userId, // User thuê phòng
@@ -119,16 +113,12 @@ export default function RentalList() {
                 Money: roomPrice
             };
             const insiderTradingResponse = await BookingManagementService.firstMonthInsiderTrading(insiderTradingData, user.token);
-            console.log("📝 [FE] Tạo giao dịch nội bộ tháng đầu:", insiderTradingResponse);
 
             const actionDate = new Date().toISOString();
-            const insiderTradingId = insiderTradingResponse.InsiderTradingId || 0; // Lấy từ phản hồi, nếu không có thì dùng 0
-            console.log("[FE] Dữ liệu lên lịch:", { actionDate, landlordId, money: roomPrice, insiderTradingId });
+            const insiderTradingId = insiderTradingResponse.InsiderTradingId || 0;
             await BookingManagementService.scheduleAction(actionDate, landlordId, roomPrice, insiderTradingId, user.token);
-            console.log("⏰ [FE] Đã lên lịch giữ tiền 3 ngày.");
 
             await UserRentRoomService.confirmRental(rentalId, user.token);
-            console.log("✅ [FE] Đã xác nhận thuê phòng.");
 
             setSelectedRoom(prev => ({
                 ...prev,
@@ -143,7 +133,6 @@ export default function RentalList() {
             updateRentalStates(rentalList);
             setSelectedRoom(null);
         } catch (error) {
-            console.error("❌ [FE] Error confirming rental:", error);
             setSuccessMessage("Có lỗi xảy ra khi xác nhận thuê phòng: " + error.message);
             setShowSuccessPopup(true);
             setShowConfirmPopup(false);
@@ -153,7 +142,6 @@ export default function RentalList() {
     const handleCancelRental = async () => {
         try {
             const rentalId = selectedRoom?.rentalList?.rentalId;
-            console.log("➡️ [FE] Hủy thuê phòng với rentalId:", rentalId);
 
             const actionDate = selectedRoom?.rentalList?.scheduledActionDate;
             if (!actionDate) {
@@ -166,8 +154,6 @@ export default function RentalList() {
             }
 
             await UserRentRoomService.cancelRental(rentalId, user.token);
-            console.log("✅ [FE] Đã hủy thuê phòng.");
-
             setSuccessMessage("Hủy thuê phòng thành công!");
             setShowSuccessPopup(true);
             setShowCancelPopup(false);
@@ -176,7 +162,6 @@ export default function RentalList() {
             updateRentalStates(rentalList);
             setSelectedRoom(null);
         } catch (error) {
-            console.error("❌ [FE] Error cancelling rental:", error);
             setSuccessMessage("Có lỗi xảy ra khi hủy thuê phòng: " + error.message);
             setShowSuccessPopup(true);
             setShowCancelPopup(false);
@@ -200,7 +185,6 @@ export default function RentalList() {
             rental.rentalStatus === 2 && rental.contractStatus === 2
         );
 
-        console.log("🔄 [FE] Updated rental states:", { waitingLandlordFiltered, pendingFiltered, rentingFiltered, rentedFiltered, cancelledFiltered });
         setWaitingLandlordRentals(waitingLandlordFiltered);
         setPendingRentals(pendingFiltered);
         setRentingRooms(rentingFiltered);
@@ -225,13 +209,15 @@ export default function RentalList() {
         return "Không xác định";
     };
 
-    if (loading) return <div className="flex justify-center items-center h-screen"><div>Loading...</div></div>;
+    if (loading) return <div className="flex justify-center items-center h-screen">
+        <Loading />
+    </div>;
 
     return (
         <div className="bg-white">
             <SidebarUser />
-            <div className="mx-auto ml-56 max-w-6xl">
-                <div className="grid grid-cols-3 gap-6">
+            <div className="mx-auto ml-56 max-w-6xl px-4 sm:px-6 lg:px-0">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div className="col-span-1 bg-white p-4 rounded-xl shadow-lg">
                         <h2 className="text-xl font-bold text-red-600 mb-4">Danh sách phòng</h2>
 
@@ -286,7 +272,7 @@ export default function RentalList() {
                         )) : <p className="text-gray-500">Không có phòng nào đã bị hủy.</p>}
                     </div>
 
-                    <div className="col-span-2 bg-white p-8 rounded-xl shadow-lg">
+                    <div className="col-span-1 sm:col-span-2 lg:col-span-2 bg-white p-8 rounded-xl shadow-lg">
                         {selectedRoom ? (
                             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                                 <img
@@ -330,9 +316,9 @@ export default function RentalList() {
 
                                 {selectedRoom.contract?.status === 4 && (
                                     <div className="mt-4 flex space-x-4">
-                                        <button onClick={() => { console.log("➡️ [FE] Click xác nhận"); setShowConfirmPopup(true); }}
+                                        <button onClick={() => { setShowConfirmPopup(true); }}
                                             className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">Xác nhận</button>
-                                        <button onClick={() => { console.log("➡️ [FE] Click hủy"); setShowCancelPopup(true); }}
+                                        <button onClick={() => { setShowCancelPopup(true); }}
                                             className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition">Hủy</button>
                                     </div>
                                 )}
@@ -344,13 +330,14 @@ export default function RentalList() {
                 </div>
             </div>
 
+            {/* Popups */}
             {showConfirmPopup && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
                     <div className="bg-white p-6 rounded-lg shadow-lg w-96">
                         <h3 className="text-lg font-bold mb-4">Xác nhận thuê phòng</h3>
                         <p className="mb-4">Bạn có chắc chắn muốn xác nhận thuê phòng này không?</p>
                         <div className="flex justify-between">
-                            <button onClick={() => { console.log("➡️ [FE] Đóng popup xác nhận"); setShowConfirmPopup(false); }}
+                            <button onClick={() => { setShowConfirmPopup(false); }}
                                 className="bg-gray-300 text-black px-6 py-2 rounded-lg hover:bg-gray-400 transition">Hủy</button>
                             <button onClick={handleConfirmRental}
                                 className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition">Xác nhận</button>
@@ -365,7 +352,7 @@ export default function RentalList() {
                         <h3 className="text-lg font-bold mb-4">Hủy thuê phòng</h3>
                         <p className="mb-4">Bạn có chắc chắn muốn hủy thuê phòng này không?</p>
                         <div className="flex justify-between">
-                            <button onClick={() => { console.log("➡️ [FE] Đóng popup hủy"); setShowCancelPopup(false); }}
+                            <button onClick={() => { setShowCancelPopup(false); }}
                                 className="bg-gray-300 text-black px-6 py-2 rounded-lg hover:bg-gray-400 transition">Hủy</button>
                             <button onClick={handleCancelRental}
                                 className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition">Xác nhận</button>
@@ -382,7 +369,7 @@ export default function RentalList() {
                         <div className="flex justify-center">
                             <button
                                 onClick={() => {
-                                    console.log("➡️ [FE] Đóng popup thành công");
+
                                     setShowSuccessPopup(false);
                                     if (successMessage.includes("không đủ tiền")) navigate("/Moneys");
                                 }}
@@ -396,4 +383,5 @@ export default function RentalList() {
             )}
         </div>
     );
+
 }

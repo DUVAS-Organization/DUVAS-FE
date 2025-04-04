@@ -247,7 +247,7 @@ const RoomRentalConfirmation = () => {
         const formDataFile = new FormData();
         formDataFile.append("file", file);
         try {
-            const data = await OtherService.uploadImage(formData);
+            const data = await OtherService.uploadImage(formDataFile);
             return data.imageUrl;
         } catch (error) {
             console.error("Error uploading file:", error);

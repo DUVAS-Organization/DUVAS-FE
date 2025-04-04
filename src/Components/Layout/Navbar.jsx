@@ -262,8 +262,10 @@ const Navbar = () => {
                             </>
                         )}
                     </div>
+
                     {/* Mobile menu */}
                     <div className="sm:hidden ml-auto">
+
                         <button
                             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                             className="text-gray-800 px-3 py-2 rounded-md text-base font-medium"
@@ -276,7 +278,14 @@ const Navbar = () => {
 
             {/* Mobile Menu */}
             {mobileMenuOpen && (
+
                 <div className="sm:hidden bg-white shadow-md p-4">
+                    <UIProvider>
+                        <div className="flex gap-3 items-center">
+                            <SavePosts />
+                            <BellNotifications />
+                        </div>
+                    </UIProvider>
                     <NavLink to="/" className="block px-3 py-2 text-gray-800">
                         Trang Chủ
                     </NavLink>
@@ -287,6 +296,7 @@ const Navbar = () => {
                             {name}
                         </NavLink>
                     ))}
+
                     {user ? (
                         <div className="mt-4">
                             {renderDropdownItems()}

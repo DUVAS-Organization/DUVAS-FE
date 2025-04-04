@@ -20,6 +20,7 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
 import 'swiper/css/free-mode';
 import { useAuth } from '../../../Context/AuthProvider';
+import OtherService from '../../../Services/User/OtherService';
 
 const ServicePostDetails = () => {
     const { servicePostId } = useParams();
@@ -99,29 +100,30 @@ const ServicePostDetails = () => {
         return found ? found.categoryServiceName : 'N/A';
     };
 
-    const toggleSavePost = async () => {
-        if (!user || !servicePostId) {
-            console.error("Lỗi: userId hoặc servicePostId không hợp lệ!", { user, servicePostId });
+    const toggleSavePost = async (roomId, e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!user || !roomId) {
+            showCustomNotification("error", "Bạn cần đăng nhập để lưu tin!");
             return;
         }
         try {
-            const response = await fetch("https://localhost:8000/api/SavedPosts", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ userId: user.userId, servicePostId: parseInt(servicePostId) }),
-            });
-            if (!response.ok) {
-                throw new Error("Lỗi khi lưu/xóa bài đăng");
-            }
-            setSavedPosts((prev) => {
-                if (prev.includes(parseInt(servicePostId))) {
-                    return prev.filter((id) => id !== parseInt(servicePostId));
-                } else {
-                    return [...prev, parseInt(servicePostId)];
+            const result = await OtherService.toggleSavePost(user.userId, roomId);
+            setSavedPosts((prevSaved) => {
+                const newSaved = new Set(prevSaved);
+                if (result.status === "removed") {
+                    newSaved.delete(parseInt(roomId));
+                } else if (result.status === "saved") {
+                    newSaved.add(parseInt(roomId));
                 }
+                return newSaved;
             });
+            if (result.status === "saved") {
+                showCustomNotification("success", "Lưu tin thành công!");
+            }
         } catch (error) {
-            console.error("❌ Lỗi khi lưu / xóa bài:", error);
+            console.error("Lỗi khi lưu / xóa bài:", error);
+            showCustomNotification("error", "Đã xảy ra lỗi, vui lòng thử lại!");
         }
     };
 
@@ -138,15 +140,7 @@ const ServicePostDetails = () => {
                 ServicePostId: parseInt(servicePostId),
                 RequesterId: user.userId,
             };
-            const requestResponse = await fetch("https://localhost:8000/api/ServiceManagement/rent-service", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(requestPayload),
-            });
-            if (!requestResponse.ok) {
-                const requestErrorData = await requestResponse.json();
-                throw new Error(requestErrorData.message || "Lỗi khi yêu cầu dịch vụ");
-            }
+            await OtherService.rentService(requestPayload);
 
             const requesterName = getUserName();
             const sendMailPayload = {
@@ -154,24 +148,13 @@ const ServicePostDetails = () => {
                 servicePostId: parseInt(servicePostId),
                 requesterName: requesterName,
             };
-            const sendMailResponse = await fetch("https://localhost:8000/api/ServiceManagement/send-mail", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`,
-                },
-                body: JSON.stringify(sendMailPayload),
-            });
-            if (!sendMailResponse.ok) {
-                const sendMailErrorData = await sendMailResponse.json();
-                throw new Error(sendMailErrorData.message || "Lỗi khi gửi email cho nhà cung cấp");
-            }
+            await OtherService.sendMail(sendMailPayload, token);
 
             showCustomNotification("success", "Yêu cầu dịch vụ và gửi mail thành công!");
             navigate('/Services/RequestSuccess');
         } catch (error) {
             console.log("Error in handleRequestService catch block:", error);
-            showCustomNotification("error", "Có lỗi xảy ra");
+            showCustomNotification("error", error.response?.data?.message || "Có lỗi xảy ra");
         } finally {
             setIsRequesting(false);
         }
