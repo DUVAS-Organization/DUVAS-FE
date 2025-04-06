@@ -38,6 +38,7 @@ import 'swiper/css/free-mode';
 import { useAuth } from '../../../Context/AuthProvider';
 import UserRentRoomService from '../../../Services/User/UserRentRoomService';
 import OtherService from '../../../Services/User/OtherService';
+import RoomService from '../../../Services/User/RoomManagementService';
 
 const RoomDetailsUser = () => {
     const { roomId } = useParams();
@@ -279,7 +280,7 @@ const RoomDetailsUser = () => {
             const token = user.token || localStorage.getItem("token");
 
             // Kiểm tra trạng thái phòng
-            const roomStatus = await OtherService.trackRoomStatus(roomId, token);
+            const roomStatus = await RoomService.trackRoomStatus(roomId, token);
             if (roomStatus.status === 2) {
                 showCustomNotification("error", "Phòng này đã được thuê!");
                 return;
@@ -292,7 +293,7 @@ const RoomDetailsUser = () => {
                 RentDate: details.moveInDate ? new Date(details.moveInDate).toISOString() : new Date().toISOString(),
                 MonthForRent: details.duration ? parseInt(details.duration) : 1,
             };
-            await OtherService.rentRoom(rentPayload, token);
+            await RoomService.rentRoom(rentPayload);
 
             // Gửi email thông báo
             const renterName = details.fullName || getUserName();
@@ -303,7 +304,7 @@ const RoomDetailsUser = () => {
                 renterName: renterName,
                 additionalInfo: additionalInfo,
             };
-            await OtherService.sendMail(sendMailPayload, token);
+            await RoomService.sendMail(sendMailPayload, token);
 
             showCustomNotification("success", "Yêu cầu thuê phòng và gửi mail thành công!");
             navigate('/Rooms/BookingSuccess');
