@@ -3,10 +3,14 @@ import SidebarUser from "../../../Components/Layout/SidebarUser";
 import BookingManagementService from "../../../Services/Landlord/BookingManagementService";
 import { useAuth } from "../../../Context/AuthProvider";
 import { motion } from "framer-motion";
-import { FaCalendarAlt, FaFileContract, FaMapMarkerAlt, FaMoneyBillWave } from "react-icons/fa";
+import { FaCalendarAlt, FaFileContract, FaMapMarkerAlt, FaMoneyBillWave, FaStar } from "react-icons/fa";
 import UserRentRoomService from "../../../Services/User/UserRentRoomService";
 import { useNavigate } from "react-router-dom";
 import Loading from "../../../Components/Loading";
+import { LogIn } from "react-feather";
+import UserService from "../../../Services/User/UserService";
+import { showCustomNotification } from "../../../Components/Notification";
+
 
 export default function RentalList() {
     const [pendingRentals, setPendingRentals] = useState([]);
@@ -22,6 +26,21 @@ export default function RentalList() {
     const [successMessage, setSuccessMessage] = useState("");
     const { user } = useAuth();
     const navigate = useNavigate();
+
+    const [showReviewModal, setShowReviewModal] = useState(false);
+    const [comment, setComment] = useState("");
+    const [rating, setRating] = useState(0);
+    const [hover, setHover] = useState(null);
+    const [selectedImages, setSelectedImages] = useState([]);
+    const [previewImages, setPreviewImages] = useState([]);
+    const [existingImages, setExistingImages] = useState([]);
+    const [roomId, setRoomId] = useState(null);
+    const [contractId, setContractId] = useState(null);
+    const [showReportPopup, setShowReportPopup] = useState(false);
+    const [reportContent, setReportContent] = useState("");
+    const [images, setImages] = useState([]);
+    // const [roomId, setRoomId] = useState(0);
+
 
 
     useEffect(() => {
@@ -63,6 +82,28 @@ export default function RentalList() {
         fetchRentals();
     }, [user?.userId, user?.token]);
 
+    const addReport = async () => {
+        console.log('add report called');
+        const uploadedImageUrls = await Promise.all(images.map(file => uploadFile(file)));
+        const report = {
+            'RoomId': roomId,
+            'Image': JSON.stringify(uploadedImageUrls),
+            'ReportContent': reportContent
+        }
+        if((await UserService.addReport(report)).status ==  200){
+            showCustomNotification("success", "Báo cáo thành công.")
+            setShowReportPopup(false);
+        }
+    }
+    const handleImageChange = (event) => {
+        const files = Array.from(event.target.files);
+        setImages(files);
+    };
+
+    const handleSubmit = () => {
+        addReport({ reportContent, images });
+        setShowReportPopup(false);
+    };
     const handleSelectRental = (rentalId) => {
         const rental = [...pendingRentals, ...waitingLandlordRentals, ...rentingRooms, ...rentedRooms, ...cancelledRooms]
             .find(r => r.rentalId === rentalId);
@@ -184,6 +225,11 @@ export default function RentalList() {
         const cancelledFiltered = rentalList.filter(rental =>
             rental.rentalStatus === 2 && rental.contractStatus === 2
         );
+        console.log('111111111111111111111111111111111111111');
+        
+        console.log(rentalList);
+        console.log('111111111111111111111111111111111111111');
+        
 
         setWaitingLandlordRentals(waitingLandlordFiltered);
         setPendingRentals(pendingFiltered);
@@ -208,6 +254,87 @@ export default function RentalList() {
         if (rentalStatus === 2 && cStatus === 2) return "Đã hủy";
         return "Không xác định";
     };
+    const handleImageSelection = (event) => {
+        const files = Array.from(event.target.files);
+
+        if (files.length + selectedImages.length > 3) {
+            alert("You can only upload up to 3 images.");
+            return;
+        }
+
+        const newPreviews = files.map(file => URL.createObjectURL(file));
+        setPreviewImages(prev => [...prev, ...newPreviews]);
+        setSelectedImages(prev => [...prev, ...files]);
+    };
+
+    const removeImage = (index) => {
+        setPreviewImages(prev => prev.filter((_, i) => i !== index));
+        setSelectedImages(prev => prev.filter((_, i) => i !== index));
+    };
+
+    const uploadFile = async (file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const response = await fetch('https://localhost:8000/api/Upload/upload-image', {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (!response.ok) {
+                throw new Error('Upload failed');
+            }
+
+            const data = await response.json();
+            return data.imageUrl;
+        } catch (error) {
+            console.error("Error uploading file:", error);
+            showCustomNotification("warning","Có lỗi khi upload ảnh!");
+            throw error;
+        }
+    };
+
+    const uploadImages = async () => {
+        const uploadPromises = selectedImages.map(file => uploadFile(file));
+        return await Promise.all(uploadPromises);
+    };
+
+
+    const submitReview = async () => {
+        try {
+            const uploadedUrls = await uploadImages(); // Upload all images first
+
+            const finalImage = JSON.stringify([...existingImages, ...uploadedUrls]); // Merge and stringify
+
+            const feedbackBody = {
+                comment,
+                star: rating,
+                image: finalImage, // Store as a stringified JSON array
+                roomId: selectedRoom.room.roomId,
+                contractId: selectedRoom.contract.contractId
+            };
+
+            await UserRentRoomService.sendFeedback(feedbackBody);
+            showCustomNotification("success", "Đánh giá của bạn đã được gửi");
+            setShowReviewModal(false);
+        } catch (error) {
+            console.error("❌ Lỗi khi gửi đánh giá:", error.response?.data || error.message);
+            showCustomNotification("error","Không thể gửi đánh giá, vui lòng thử lại!");
+        }
+    };
+
+    const openReviewModal = () => {
+        // Reset all states
+        setComment("");
+        setRating(0);
+        setPreviewImages([]);
+        setSelectedImages([]);
+    
+        // Show modal
+        setShowReviewModal(true);
+    };
+
 
     if (loading) return <div className="flex justify-center items-center h-screen">
         <Loading />
@@ -314,6 +441,16 @@ export default function RentalList() {
                                         <span className='text-gray-500 ml-0.5'>Chờ Chủ phòng tạo hợp đồng</span> : <span className='text-gray-500 ml-0.5'>Không có hợp đồng</span>}
                                 </p>
 
+                                {selectedRoom.contract?.status === 3 && (
+                                    <div className="mt-4 flex space-x-4">
+                                        <button onClick={openReviewModal}
+                                            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">Đánh Giá</button>
+                                        <button onClick={() => {console.log('test');setShowReportPopup(true); setRoomId(selectedRoom.room.roomId)}} type="button" className="text-red-500 px-3 py-2 rounded-md text-base font-medium border border-red-400 hover:bg-red-500 hover:text-white transition-colors duration-150">
+                                        Báo cáo!
+                                    </button>
+                                    </div>
+                                )}
+
                                 {selectedRoom.contract?.status === 4 && (
                                     <div className="mt-4 flex space-x-4">
                                         <button onClick={() => { setShowConfirmPopup(true); }}
@@ -321,6 +458,11 @@ export default function RentalList() {
                                         <button onClick={() => { setShowCancelPopup(true); }}
                                             className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition">Hủy</button>
                                     </div>
+                                )}
+                                {selectedRoom.contract?.status === 1 && (
+                                    <button onClick={() => {console.log('test');setShowReportPopup(true); setRoomId(selectedRoom.room.roomId)}} type="button" className="text-red-500 px-3 py-2 rounded-md text-base font-medium border border-red-400 hover:bg-red-500 hover:text-white transition-colors duration-150">
+                                        Báo cáo!
+                                    </button>
                                 )}
                             </motion.div>
                         ) : (
@@ -381,6 +523,123 @@ export default function RentalList() {
                     </div>
                 </div>
             )}
+
+{showReviewModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white p-6 rounded-lg shadow-xl w-96">
+                        <h3 className="text-xl font-bold mb-4">Đánh Giá Phòng</h3>
+
+                        {/* Star Rating */}
+                        <div className="flex mb-4">
+                            {[...Array(5)].map((_, index) => {
+                                const starValue = index + 1;
+                                return (
+                                    <FaStar
+                                        key={index}
+                                        className={`cursor-pointer text-2xl ${starValue <= (hover || rating) ? "text-yellow-500" : "text-gray-300"}`}
+                                        onMouseEnter={() => setHover(starValue)}
+                                        onMouseLeave={() => setHover(0)}
+                                        onClick={() => setRating(starValue)}
+                                    />
+                                );
+                            })}
+                        </div>
+
+                        {/* Comment Box */}
+                        <textarea
+                            className="w-full border rounded-lg p-2 mb-4 focus:ring focus:ring-green-300"
+                            rows="3"
+                            placeholder="Nhập đánh giá của bạn..."
+                            value={comment}
+                            onChange={(e) => setComment(e.target.value)}
+                        ></textarea>
+
+                        {/* Image Upload */}
+                        <input
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            className="mb-4"
+                            onChange={handleImageSelection}
+                        />
+
+                        {/* Image Previews */}
+                        <div className="flex gap-2 mb-4">
+                            {previewImages.map((img, index) => (
+                                <div key={index} className="relative">
+                                    <img src={img} alt="Uploaded" className="w-20 h-20 object-cover rounded-lg" />
+                                    <button
+                                        onClick={() => removeImage(index)}
+                                        className="absolute top-0 right-0 bg-red-500 text-white text-xs p-1 rounded-full"
+                                    >
+                                        ✕
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+
+
+                        {/* Buttons */}
+                        <div className="flex justify-between">
+                            <button
+                                onClick={() => setShowReviewModal(false)}
+                                className="bg-gray-300 text-black px-6 py-2 rounded-lg hover:bg-gray-400 transition"
+                            >
+                                Hủy
+                            </button>
+                            <button
+                                onClick={submitReview}
+                                className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition"
+                            >
+                                Xác nhận
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {showReportPopup && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                    <div className="bg-white p-6 rounded-lg shadow-lg min-w-[600px] max-w-[800px]">
+                        <h3 className="text-lg font-bold mb-4">Báo cáo</h3>
+                        <p className="mb-4">Báo cáo về những gì bạn gặp trong quá trình thuê phòng.</p>
+
+                        {/* Nội dung báo cáo */}
+                        <label className="block mb-2 font-medium">Nội dung:</label>
+                        <textarea
+                            className="w-full p-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-300"
+                            rows="4"
+                            placeholder="Nhập nội dung báo cáo..."
+                            value={reportContent}
+                            onChange={(e) => setReportContent(e.target.value)}
+                        ></textarea>
+                        {/* Upload ảnh */}
+                        <label className="block mt-4 mb-2 font-medium">Hình ảnh:</label>
+                        <input
+                            type="file"
+                            multiple
+                            accept="image/*"
+                            onChange={handleImageChange}
+                            className="w-full border p-2 rounded-md"
+                        />
+
+                        {/* Danh sách ảnh tải lên */}
+                        {images.length > 0 && (
+                            <div className="mt-3 space-y-2">
+                                {images.map((img, index) => (
+                                    <p key={index} className="text-sm text-gray-600">{img.name}</p>
+                                ))}
+                            </div>
+                        )}
+                        <div className="flex justify-between">
+                            <button onClick={() => setShowReportPopup(false)}
+                                className="bg-gray-300 text-black px-6 py-2 rounded-lg hover:bg-gray-400 transition">Hủy</button>
+                            <button onClick={addReport}
+                                className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition">Báo cáo</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
         </div>
     );
 

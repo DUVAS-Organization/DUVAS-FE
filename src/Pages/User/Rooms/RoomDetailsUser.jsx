@@ -6,6 +6,7 @@ import BuildingServices from '../../../Services/User/BuildingService';
 import UserService from '../../../Services/User/UserService';
 import { showCustomNotification } from '../../../Components/Notification';
 import RoomsHome from '../../../Components/ComponentPage/RoomsHome';
+import FeedbackList from '../../../Components/ComponentPage/FeedbackList';
 import {
     FaBath,
     FaBed,
@@ -798,6 +799,9 @@ const RoomDetailsUser = () => {
                         </div>
                     )}
                 </div>
+            </div>
+            <div className="flex flex-col md:flex-row gap-4 mt-2">
+                    <FeedbackList roomId={roomId}/>
             </div>
             {showRentModal && <RentModal />}
             {previewImage && (
