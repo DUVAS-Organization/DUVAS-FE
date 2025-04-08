@@ -39,6 +39,7 @@ import { useAuth } from '../../../Context/AuthProvider';
 import UserRentRoomService from '../../../Services/User/UserRentRoomService';
 import OtherService from '../../../Services/User/OtherService';
 import RoomService from '../../../Services/User/RoomManagementService';
+import FeedbackList from '../../../Components/ComponentPage/FeedbackList'
 
 const RoomDetailsUser = () => {
     const { roomId } = useParams();
@@ -799,6 +800,9 @@ const RoomDetailsUser = () => {
                         </div>
                     )}
                 </div>
+            </div>
+            <div className="flex flex-col md:flex-row gap-4 mt-2">
+                <FeedbackList roomId={roomId} />
             </div>
             {showRentModal && <RentModal />}
             {previewImage && (
