@@ -577,9 +577,9 @@ const RoomDetailsUser = () => {
                                 </div>
                             </div>
                             <div className="flex gap-4 text-2xl text-gray-600">
-                                <button>
+                                {/* <button>
                                     <BsExclamationTriangle />
-                                </button>
+                                </button> */}
                                 <button
                                     onClick={
                                         toggleSavePost

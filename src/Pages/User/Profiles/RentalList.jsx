@@ -87,19 +87,26 @@ export default function RentalList() {
             showCustomNotification("warning", "Vui lòng nhập nội dung báo cáo!");
             return;
         }
-        const uploadedImageUrls = await Promise.all(images.map(file => uploadFile(file)));
-        const report = {
-            'RoomId': roomId,
-            'Image': JSON.stringify(uploadedImageUrls),
-            'ReportContent': reportContent,
-        };
-        if ((await UserService.addReport(report)).status == 200) {
-            showCustomNotification("success", "Báo cáo thành công.")
-            setShowReportPopup(false);
-            setReportContent(""); // Reset content after successful submission
-            setImages([]); // Reset images after successful submission
+        setLoading(true);
+        try {
+            const uploadedImageUrls = await Promise.all(images.map(file => uploadFile(file)));
+            const report = {
+                'RoomId': roomId,
+                'Image': JSON.stringify(uploadedImageUrls),
+                'ReportContent': reportContent,
+            };
+            if ((await UserService.addReport(report)).status === 200) {
+                showCustomNotification("success", "Báo cáo thành công.");
+                setShowReportPopup(false);
+                setReportContent("");
+                setImages([]);
+            }
+        } catch (error) {
+            showCustomNotification("error", "Có lỗi xảy ra khi gửi báo cáo!");
+        } finally {
+            setLoading(false);
         }
-    }
+    };
     const handleImageChange = (event) => {
         const files = Array.from(event.target.files);
         setImages(files);
@@ -257,10 +264,10 @@ export default function RentalList() {
     const handleImageSelection = (event) => {
         const files = Array.from(event.target.files);
 
-        if (files.length + selectedImages.length > 3) {
-            alert("You can only upload up to 3 images.");
-            return;
-        }
+        // if (files.length + selectedImages.length > 3) {
+        //     alert("You can only upload up to 3 images.");
+        //     return;
+        // }
 
         const newPreviews = files.map(file => URL.createObjectURL(file));
         setPreviewImages(prev => [...prev, ...newPreviews]);
@@ -297,6 +304,7 @@ export default function RentalList() {
             showCustomNotification("warning", "Vui lòng chọn số sao để đánh giá!");
             return;
         }
+        setLoading(true);
         try {
             const uploadedUrls = await uploadImages();
 
@@ -321,6 +329,8 @@ export default function RentalList() {
         } catch (error) {
             console.error("❌ Lỗi khi gửi đánh giá:", error.response?.data || error.message);
             showCustomNotification("error", "Không thể gửi đánh giá, vui lòng thử lại!");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -537,7 +547,14 @@ export default function RentalList() {
             )}
             {showReviewModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white p-6 rounded-lg shadow-xl w-96">
+                    <div className="bg-white p-6 rounded-lg shadow-xl max-w-[500px] max-h-[600px] overflow-y-auto relative">
+                        {/* Hiển thị Loading overlay khi reviewLoading là true */}
+                        {loading && (
+                            <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
+                                <Loading />
+                            </div>
+                        )}
+
                         <h3 className="text-xl font-bold mb-4">Đánh Giá Phòng</h3>
 
                         {/* Star Rating */}
@@ -547,7 +564,8 @@ export default function RentalList() {
                                 return (
                                     <FaStar
                                         key={index}
-                                        className={`cursor-pointer text-2xl ${starValue <= (hover || rating) ? "text-yellow-500" : "text-gray-300"}`}
+                                        className={`cursor-pointer text-2xl ${starValue <= (hover || rating) ? "text-yellow-500" : "text-gray-300"
+                                            }`}
                                         onMouseEnter={() => setHover(starValue)}
                                         onMouseLeave={() => setHover(0)}
                                         onClick={() => setRating(starValue)}
@@ -556,9 +574,10 @@ export default function RentalList() {
                             })}
                         </div>
                         <p className="text-sm text-gray-500 mb-4">Vui lòng chọn số sao (bắt buộc)</p>
+
                         {/* Comment Box */}
                         <textarea
-                            className="w-full border rounded-lg p-2 mb-4 focus:ring focus:ring-green-300"
+                            className="w-full border rounded-lg p-2 mb-4"
                             rows="3"
                             placeholder="Nhập đánh giá của bạn... (không bắt buộc)"
                             value={comment}
@@ -566,35 +585,49 @@ export default function RentalList() {
                         ></textarea>
 
                         {/* Image Upload */}
-                        <input
-                            type="file"
-                            accept="image/*"
-                            multiple
-                            className="mb-4"
-                            onChange={handleImageSelection}
-                        />
-                        <p className="text-sm text-gray-500 mb-4">Tải ảnh lên (không bắt buộc, tối đa 3 ảnh)</p>
-                        {/* Image Previews */}
-                        <div className="flex gap-2 mb-4">
-                            {previewImages.map((img, index) => (
-                                <div key={index} className="relative">
-                                    <img src={img} alt="Uploaded" className="w-20 h-20 object-cover rounded-lg" />
-                                    <button
-                                        onClick={() => removeImage(index)}
-                                        className="absolute top-0 right-0 bg-red-500 text-white text-xs p-1 rounded-full"
-                                    >
-                                        ✕
-                                    </button>
-                                </div>
-                            ))}
+                        <label className="block mb-2 font-medium text-gray-700">Hình ảnh (không bắt buộc):</label>
+                        <div className="relative border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-green-400 transition">
+                            <input
+                                type="file"
+                                accept="image/*"
+                                multiple
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                onChange={handleImageSelection}
+                            />
+                            <p className="text-gray-500">
+                                Kéo và thả ảnh vào đây hoặc{" "}
+                                <span className="text-green-500 font-semibold">chọn ảnh</span>
+                            </p>
+                            <p className="text-sm text-gray-400 mt-1">.jpg, .png, .gif</p>
                         </div>
 
+                        {/* Image Previews */}
+                        {previewImages.length > 0 && (
+                            <div className="mt-4 grid grid-cols-3 gap-3 max-h-64 overflow-y-auto">
+                                {previewImages.map((img, index) => (
+                                    <div key={index} className="relative group">
+                                        <img
+                                            src={img}
+                                            alt="Uploaded"
+                                            className="w-full h-20 object-cover rounded-lg shadow-sm"
+                                        />
+                                        <button
+                                            onClick={() => removeImage(index)}
+                                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
+
+                                        >
+                                            ✕
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
 
                         {/* Buttons */}
-                        <div className="flex justify-between">
+                        <div className="flex justify-between mt-6 sticky bottom-0 bg-white pt-4">
                             <button
                                 onClick={() => setShowReviewModal(false)}
-                                className="bg-gray-300 text-black px-6 py-2 rounded-lg hover:bg-gray-400 transition"
+                                className="bg-gray-300 text-black px-6 py-2 rounded-lg hover:bg-gray-400 transition disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 Hủy
                             </button>
@@ -613,47 +646,87 @@ export default function RentalList() {
                 </div>
             )}
             {showReportPopup && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                    <div className="bg-white p-6 rounded-lg shadow-lg min-w-[600px] max-w-[800px]">
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white p-6 rounded-lg shadow-lg min-w-[600px] max-w-[800px] max-h-[80vh] overflow-y-auto relative">
+                        {/* Hiển thị Loading overlay khi loading là true */}
+                        {loading && (
+                            <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
+                                <Loading />
+                            </div>
+                        )}
+
                         <h3 className="text-lg font-bold mb-4">Báo cáo</h3>
-                        <p className="mb-4">Báo cáo về những gì bạn gặp trong quá trình thuê phòng.</p>
+                        <p className="mb-4 text-gray-600">Báo cáo về những gì bạn gặp trong quá trình thuê phòng.</p>
 
                         {/* Nội dung báo cáo */}
-                        <label className="block mb-2 font-medium">Nội dung (bắt buộc):</label>
+                        <label className="block mb-2 font-medium text-gray-700">Nội dung (bắt buộc):</label>
                         <textarea
-                            className="w-full p-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-300"
+                            className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-300 transition"
                             rows="4"
                             placeholder="Nhập nội dung báo cáo..."
                             value={reportContent}
                             onChange={(e) => setReportContent(e.target.value)}
+
                         ></textarea>
+
                         {/* Upload ảnh */}
-                        <label className="block mt-4 mb-2 font-medium">Hình ảnh (không bắt buộc):</label>
-                        <input
-                            type="file"
-                            multiple
-                            accept="image/*"
-                            onChange={handleImageChange}
-                            className="w-full border p-2 rounded-md"
-                        />
+                        <label className="block mt-4 mb-2 font-medium text-gray-700">Hình ảnh (không bắt buộc):</label>
+                        <div className="relative border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-blue-400 transition">
+                            <input
+                                type="file"
+                                multiple
+                                accept="image/*"
+                                onChange={handleImageChange}
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+
+                            />
+                            <p className="text-gray-500">
+                                Kéo và thả ảnh vào đây hoặc <span className="text-blue-500 font-semibold">chọn ảnh</span>
+                            </p>
+                            <p className="text-sm text-gray-400 mt-1">Hỗ trợ nhiều ảnh</p>
+                        </div>
 
                         {/* Danh sách ảnh tải lên */}
                         {images.length > 0 && (
-                            <div className="mt-3 space-y-2">
+                            <div className="mt-4 grid grid-cols-3 gap-3 max-h-64 overflow-y-auto">
                                 {images.map((img, index) => (
-                                    <p key={index} className="text-sm text-gray-600">{img.name}</p>
+                                    <div key={index} className="relative group">
+                                        <img
+                                            src={URL.createObjectURL(img)}
+                                            alt={img.name}
+                                            className="w-full h-24 object-cover rounded-md shadow-sm"
+                                        />
+                                        <button
+                                            onClick={() => setImages(prev => prev.filter((_, i) => i !== index))}
+                                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
+                                        >
+                                            ✕
+                                        </button>
+                                        <p className="text-xs text-gray-600 mt-1 truncate">{img.name}</p>
+                                    </div>
                                 ))}
                             </div>
                         )}
-                        <div className="flex justify-between">
-                            <button onClick={() => setShowReportPopup(false)}
-                                className="bg-gray-300 text-black px-6 py-2 rounded-lg hover:bg-gray-400 transition">Hủy</button>
-                            <button onClick={addReport}
-                                className={`px-6 py-2 rounded-lg text-white transition ${!reportContent.trim()
+
+                        {/* Nút điều khiển */}
+                        <div className="flex justify-between mt-6 sticky bottom-0 bg-white pt-4">
+                            <button
+                                onClick={() => setShowReportPopup(false)}
+                                className="bg-gray-300 text-black px-6 py-2 rounded-lg hover:bg-gray-400 transition disabled:opacity-50 disabled:cursor-not-allowed"
+
+                            >
+                                Hủy
+                            </button>
+                            <button
+                                onClick={addReport}
+                                className={`px-6 py-2 rounded-lg text-white transition flex items-center justify-center ${!reportContent.trim() || loading
                                     ? "bg-gray-400 cursor-not-allowed"
                                     : "bg-red-600 hover:bg-red-700"
                                     }`}
-                                disabled={!reportContent.trim()}>Báo cáo</button>
+                                disabled={!reportContent.trim()}
+                            >
+                                Báo cáo
+                            </button>
                         </div>
                     </div>
                 </div>
