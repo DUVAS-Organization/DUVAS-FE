@@ -11,7 +11,6 @@ import { LogIn } from "react-feather";
 import UserService from "../../../Services/User/UserService";
 import { showCustomNotification } from "../../../Components/Notification";
 
-
 export default function RentalList() {
     const [pendingRentals, setPendingRentals] = useState([]);
     const [waitingLandlordRentals, setWaitingLandlordRentals] = useState([]);
@@ -39,9 +38,10 @@ export default function RentalList() {
     const [showReportPopup, setShowReportPopup] = useState(false);
     const [reportContent, setReportContent] = useState("");
     const [images, setImages] = useState([]);
-    // const [roomId, setRoomId] = useState(0);
-
-
+    const [reviewedRooms, setReviewedRooms] = useState(() => {
+        const savedReviews = localStorage.getItem('reviewedRooms');
+        return savedReviews ? JSON.parse(savedReviews) : [];
+    });
 
     useEffect(() => {
         if (!user?.userId || !user?.token) return;
@@ -83,18 +83,26 @@ export default function RentalList() {
     }, [user?.userId, user?.token]);
 
     const addReport = async () => {
+        if (!reportContent.trim()) {
+            showCustomNotification("warning", "Vui lòng nhập nội dung báo cáo!");
+            return;
+        }
+
         console.log('add report called');
         const uploadedImageUrls = await Promise.all(images.map(file => uploadFile(file)));
         const report = {
             'RoomId': roomId,
             'Image': JSON.stringify(uploadedImageUrls),
             'ReportContent': reportContent
-        }
-        if((await UserService.addReport(report)).status ==  200){
-            showCustomNotification("success", "Báo cáo thành công.")
+        };
+        if ((await UserService.addReport(report)).status == 200) {
+            showCustomNotification("success", "Báo cáo thành công.");
             setShowReportPopup(false);
+            setReportContent(""); // Reset content after successful submission
+            setImages([]); // Reset images after successful submission
         }
-    }
+    };
+
     const handleImageChange = (event) => {
         const files = Array.from(event.target.files);
         setImages(files);
@@ -104,6 +112,7 @@ export default function RentalList() {
         addReport({ reportContent, images });
         setShowReportPopup(false);
     };
+
     const handleSelectRental = (rentalId) => {
         const rental = [...pendingRentals, ...waitingLandlordRentals, ...rentingRooms, ...rentedRooms, ...cancelledRooms]
             .find(r => r.rentalId === rentalId);
@@ -118,7 +127,7 @@ export default function RentalList() {
                     createdDate: rental.createdDate,
                     monthForRent: rental.monthForRent,
                     rentDate: rental.rentDate,
-                    scheduledActionDate: rental.scheduledActionDate // Lưu nếu có
+                    scheduledActionDate: rental.scheduledActionDate
                 },
                 room: rental.roomDetails,
                 contract: rental.contractDetails
@@ -149,8 +158,8 @@ export default function RentalList() {
             await BookingManagementService.updateBalance(updateBalanceData, user.token);
 
             const insiderTradingData = {
-                Remitter: user.userId, // User thuê phòng
-                Receiver: landlordId,  // Landlord
+                Remitter: user.userId,
+                Receiver: landlordId,
                 Money: roomPrice
             };
             const insiderTradingResponse = await BookingManagementService.firstMonthInsiderTrading(insiderTradingData, user.token);
@@ -225,11 +234,6 @@ export default function RentalList() {
         const cancelledFiltered = rentalList.filter(rental =>
             rental.rentalStatus === 2 && rental.contractStatus === 2
         );
-        console.log('111111111111111111111111111111111111111');
-        
-        console.log(rentalList);
-        console.log('111111111111111111111111111111111111111');
-        
 
         setWaitingLandlordRentals(waitingLandlordFiltered);
         setPendingRentals(pendingFiltered);
@@ -254,6 +258,7 @@ export default function RentalList() {
         if (rentalStatus === 2 && cStatus === 2) return "Đã hủy";
         return "Không xác định";
     };
+
     const handleImageSelection = (event) => {
         const files = Array.from(event.target.files);
 
@@ -290,7 +295,7 @@ export default function RentalList() {
             return data.imageUrl;
         } catch (error) {
             console.error("Error uploading file:", error);
-            showCustomNotification("warning","Có lỗi khi upload ảnh!");
+            showCustomNotification("warning", "Có lỗi khi upload ảnh!");
             throw error;
         }
     };
@@ -300,41 +305,48 @@ export default function RentalList() {
         return await Promise.all(uploadPromises);
     };
 
-
     const submitReview = async () => {
-        try {
-            const uploadedUrls = await uploadImages(); // Upload all images first
+        if (rating === 0) {
+            showCustomNotification("warning", "Vui lòng chọn số sao để đánh giá!");
+            return;
+        }
 
-            const finalImage = JSON.stringify([...existingImages, ...uploadedUrls]); // Merge and stringify
+        try {
+            const uploadedUrls = await uploadImages();
+
+            const finalImage = JSON.stringify([...existingImages, ...uploadedUrls]);
 
             const feedbackBody = {
                 comment,
                 star: rating,
-                image: finalImage, // Store as a stringified JSON array
+                image: finalImage,
                 roomId: selectedRoom.room.roomId,
                 contractId: selectedRoom.contract.contractId
             };
 
             await UserRentRoomService.sendFeedback(feedbackBody);
             showCustomNotification("success", "Đánh giá của bạn đã được gửi");
+
+            setReviewedRooms(prev => {
+                const updatedReviews = [...prev, selectedRoom.room.roomId];
+                localStorage.setItem('reviewedRooms', JSON.stringify(updatedReviews));
+                return updatedReviews;
+            });
+
             setShowReviewModal(false);
         } catch (error) {
             console.error("❌ Lỗi khi gửi đánh giá:", error.response?.data || error.message);
-            showCustomNotification("error","Không thể gửi đánh giá, vui lòng thử lại!");
+            showCustomNotification("error", "Không thể gửi đánh giá, vui lòng thử lại!");
         }
     };
 
     const openReviewModal = () => {
-        // Reset all states
         setComment("");
         setRating(0);
         setPreviewImages([]);
         setSelectedImages([]);
-    
-        // Show modal
         setShowReviewModal(true);
     };
-
 
     if (loading) return <div className="flex justify-center items-center h-screen">
         <Loading />
@@ -443,11 +455,24 @@ export default function RentalList() {
 
                                 {selectedRoom.contract?.status === 3 && (
                                     <div className="mt-4 flex space-x-4">
-                                        <button onClick={openReviewModal}
-                                            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">Đánh Giá</button>
-                                        <button onClick={() => {console.log('test');setShowReportPopup(true); setRoomId(selectedRoom.room.roomId)}} type="button" className="text-red-500 px-3 py-2 rounded-md text-base font-medium border border-red-400 hover:bg-red-500 hover:text-white transition-colors duration-150">
-                                        Báo cáo!
-                                    </button>
+                                        <button
+                                            onClick={openReviewModal}
+                                            className={`px-4 py-2 rounded-lg transition text-white ${
+                                                reviewedRooms.includes(selectedRoom.room.roomId)
+                                                    ? "bg-green-300 opacity-50 cursor-not-allowed"
+                                                    : "bg-green-600 hover:bg-green-700"
+                                            }`}
+                                            disabled={reviewedRooms.includes(selectedRoom.room.roomId)}
+                                        >
+                                            Đánh Giá
+                                        </button>
+                                        <button
+                                            onClick={() => { console.log('test'); setShowReportPopup(true); setRoomId(selectedRoom.room.roomId) }}
+                                            type="button"
+                                            className="text-red-500 px-3 py-2 rounded-md text-base font-medium border border-red-400 hover:bg-red-500 hover:text-white transition-colors duration-150"
+                                        >
+                                            Báo cáo!
+                                        </button>
                                     </div>
                                 )}
 
@@ -460,7 +485,11 @@ export default function RentalList() {
                                     </div>
                                 )}
                                 {selectedRoom.contract?.status === 1 && (
-                                    <button onClick={() => {console.log('test');setShowReportPopup(true); setRoomId(selectedRoom.room.roomId)}} type="button" className="text-red-500 px-3 py-2 rounded-md text-base font-medium border border-red-400 hover:bg-red-500 hover:text-white transition-colors duration-150">
+                                    <button
+                                        onClick={() => { console.log('test'); setShowReportPopup(true); setRoomId(selectedRoom.room.roomId) }}
+                                        type="button"
+                                        className="text-red-500 px-3 py-2 rounded-md text-base font-medium border border-red-400 hover:bg-red-500 hover:text-white transition-colors duration-150"
+                                    >
                                         Báo cáo!
                                     </button>
                                 )}
@@ -511,7 +540,6 @@ export default function RentalList() {
                         <div className="flex justify-center">
                             <button
                                 onClick={() => {
-
                                     setShowSuccessPopup(false);
                                     if (successMessage.includes("không đủ tiền")) navigate("/Moneys");
                                 }}
@@ -524,7 +552,7 @@ export default function RentalList() {
                 </div>
             )}
 
-{showReviewModal && (
+            {showReviewModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white p-6 rounded-lg shadow-xl w-96">
                         <h3 className="text-xl font-bold mb-4">Đánh Giá Phòng</h3>
@@ -544,12 +572,13 @@ export default function RentalList() {
                                 );
                             })}
                         </div>
+                        <p className="text-sm text-gray-500 mb-4">Vui lòng chọn số sao (bắt buộc)</p>
 
                         {/* Comment Box */}
                         <textarea
                             className="w-full border rounded-lg p-2 mb-4 focus:ring focus:ring-green-300"
                             rows="3"
-                            placeholder="Nhập đánh giá của bạn..."
+                            placeholder="Nhập đánh giá của bạn... (không bắt buộc)"
                             value={comment}
                             onChange={(e) => setComment(e.target.value)}
                         ></textarea>
@@ -562,6 +591,7 @@ export default function RentalList() {
                             className="mb-4"
                             onChange={handleImageSelection}
                         />
+                        <p className="text-sm text-gray-500 mb-4">Tải ảnh lên (không bắt buộc, tối đa 3 ảnh)</p>
 
                         {/* Image Previews */}
                         <div className="flex gap-2 mb-4">
@@ -578,7 +608,6 @@ export default function RentalList() {
                             ))}
                         </div>
 
-
                         {/* Buttons */}
                         <div className="flex justify-between">
                             <button
@@ -589,7 +618,12 @@ export default function RentalList() {
                             </button>
                             <button
                                 onClick={submitReview}
-                                className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition"
+                                className={`px-6 py-2 rounded-lg text-white transition ${
+                                    rating === 0
+                                        ? "bg-gray-400 cursor-not-allowed"
+                                        : "bg-green-600 hover:bg-green-700"
+                                }`}
+                                disabled={rating === 0}
                             >
                                 Xác nhận
                             </button>
@@ -597,6 +631,7 @@ export default function RentalList() {
                     </div>
                 </div>
             )}
+
             {showReportPopup && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
                     <div className="bg-white p-6 rounded-lg shadow-lg min-w-[600px] max-w-[800px]">
@@ -604,7 +639,7 @@ export default function RentalList() {
                         <p className="mb-4">Báo cáo về những gì bạn gặp trong quá trình thuê phòng.</p>
 
                         {/* Nội dung báo cáo */}
-                        <label className="block mb-2 font-medium">Nội dung:</label>
+                        <label className="block mb-2 font-medium">Nội dung (bắt buộc):</label>
                         <textarea
                             className="w-full p-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-300"
                             rows="4"
@@ -612,8 +647,9 @@ export default function RentalList() {
                             value={reportContent}
                             onChange={(e) => setReportContent(e.target.value)}
                         ></textarea>
+
                         {/* Upload ảnh */}
-                        <label className="block mt-4 mb-2 font-medium">Hình ảnh:</label>
+                        <label className="block mt-4 mb-2 font-medium">Hình ảnh (không bắt buộc):</label>
                         <input
                             type="file"
                             multiple
@@ -630,17 +666,23 @@ export default function RentalList() {
                                 ))}
                             </div>
                         )}
-                        <div className="flex justify-between">
+                        <div className="flex justify-between mt-4">
                             <button onClick={() => setShowReportPopup(false)}
                                 className="bg-gray-300 text-black px-6 py-2 rounded-lg hover:bg-gray-400 transition">Hủy</button>
                             <button onClick={addReport}
-                                className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition">Báo cáo</button>
+                                className={`px-6 py-2 rounded-lg text-white transition ${
+                                    !reportContent.trim()
+                                        ? "bg-gray-400 cursor-not-allowed"
+                                        : "bg-red-600 hover:bg-red-700"
+                                }`}
+                                disabled={!reportContent.trim()}
+                            >
+                                Báo cáo
+                            </button>
                         </div>
                     </div>
                 </div>
             )}
-
         </div>
     );
-
 }
