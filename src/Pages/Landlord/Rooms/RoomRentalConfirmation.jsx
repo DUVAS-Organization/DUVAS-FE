@@ -165,7 +165,7 @@ const RoomRentalConfirmation = () => {
     };
 
     const getRoomStatus = () => {
-        if (!occupantRental || !roomData) return "Không xác định";
+        if (!occupantRental || !roomData) return "Còn trống";
         const { rentalStatus } = occupantRental;
         const { status: roomStatus } = roomData;
         const { contractStatus: cStatus } = occupantRental;
@@ -176,7 +176,7 @@ const RoomRentalConfirmation = () => {
         }
         if (rentalStatus === 1 && roomStatus === 2 && cStatus === 4) return "Chờ Người thuê xác nhận";
         if (rentalStatus === 2 && roomStatus === 2 && cStatus === 2) return "Đã hủy";
-        return "Không xác định";
+        return "Còn trống";
     };
 
     const validateForm = () => {
@@ -438,7 +438,7 @@ const RoomRentalConfirmation = () => {
                                         </p>
                                     </>
                                 ) : (
-                                    <p>Không tìm thấy booking.</p>
+                                    <p>Phòng này chưa có người thuê nào.</p>
                                 )}
                             </div>
                             <div className="flex flex-col space-y-1 mr-5">
