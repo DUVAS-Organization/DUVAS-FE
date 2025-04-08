@@ -537,7 +537,7 @@ export default function RentalList() {
                                     setShowSuccessPopup(false);
                                     if (successMessage.includes("không đủ tiền")) navigate("/Moneys");
                                 }}
-                                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
+                                className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition"
                             >
                                 OK
                             </button>
@@ -547,7 +547,7 @@ export default function RentalList() {
             )}
             {showReviewModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white p-6 rounded-lg shadow-xl max-w-[500px] max-h-[600px] overflow-y-auto relative">
+                    <div className="bg-white p-6 rounded-lg shadow-xl max-w-[500px] max-h-[00px] overflow-y-auto relative">
                         {/* Hiển thị Loading overlay khi reviewLoading là true */}
                         {loading && (
                             <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">

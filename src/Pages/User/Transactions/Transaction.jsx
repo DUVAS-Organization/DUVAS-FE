@@ -62,7 +62,9 @@ const Transaction = () => {
                                                             ? new Date(transaction.createdAt).toLocaleString()
                                                             : "N/A"}
                                                 </td>
-                                                <td className="p-3 border text-center">{transaction.amount}</td>
+                                                <td className="p-3 border text-center">
+                                                    {transaction.amount.toLocaleString("vi-VN", { style: "decimal" })}
+                                                </td>
                                                 <td className="p-3 border">{transaction.bankName}</td>
                                                 <td className="p-3 border">{transaction.description || "N/A"}</td>
                                                 <td className="p-3 border text-center">

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../../Context/AuthProvider';
-import { Link, NavLink, useLocation } from 'react-router-dom';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'; // Thêm useNavigate
 import Image_Logo from '../../Assets/Images/logo2.png';
 import Sidebar from './Sidebar';
 import {
@@ -19,7 +19,7 @@ import { UIProvider } from './UIContext/UIContext';
 import RoomDropdown from './RoomDropdown';
 import ServiceDropdown from './ServiceDropdown';
 import { MdBedroomParent, MdCleaningServices } from 'react-icons/md';
-import { getUserProfile } from '../../Services/User/UserProfileService'; // Import UserService
+import { getUserProfile } from '../../Services/User/UserProfileService';
 
 const navLinks = [
     { name: "Trang Chủ", path: "/" },
@@ -28,11 +28,13 @@ const navLinks = [
 
 const Navbar = () => {
     const { user, logout, loading } = useAuth();
-    const [dropdownOpen, setDropdownOpen] = useState(false); // Dropdown của user profile
-    const [userProfile, setUserProfile] = useState(null); // State để lưu thông tin chi tiết người dùng
-    const [mobileMenuOpen, setMobileMenuOpen] = useState(false); // Mobile menu open state
+    const [dropdownOpen, setDropdownOpen] = useState(false);
+    const [userProfile, setUserProfile] = useState(null);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [showRolePopup, setShowRolePopup] = useState(false); // Trạng thái hiển thị popup
     const dropdownRef = useRef(null);
     const location = useLocation();
+    const navigate = useNavigate(); // Thêm useNavigate để điều hướng
     const queryParams = new URLSearchParams(location.search);
     const tab = queryParams.get("tab") || "";
 
@@ -47,10 +49,10 @@ const Navbar = () => {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, [dropdownRef]);
 
-    // Lấy thông tin chi tiết người dùng từ UserService khi user thay đổi
+    // Lấy thông tin chi tiết người dùng
     useEffect(() => {
         const fetchUserProfile = async () => {
-            if (user && user.userId) { // Giả định user có userId
+            if (user && user.userId) {
                 try {
                     const profileData = await getUserProfile(user.userId);
                     setUserProfile({
@@ -60,7 +62,6 @@ const Navbar = () => {
                     });
                 } catch (error) {
                     console.error("Error fetching user profile:", error);
-                    // Nếu lỗi, dùng dữ liệu mặc định hoặc từ user
                     setUserProfile({
                         userName: user.username || '',
                         name: '',
@@ -157,6 +158,15 @@ const Navbar = () => {
         );
     };
 
+    // Hàm xử lý khi nhấn nút "Đăng tin"
+    const handlePostClick = () => {
+        if (user?.role === "Landlord") {
+            navigate("/Room/Create"); // Chuyển hướng nếu là Landlord
+        } else {
+            setShowRolePopup(true); // Hiển thị popup nếu không phải Landlord
+        }
+    };
+
     return (
         <nav className="bg-white shadow-md font-sans sticky top-0 z-50 transition duration-500">
             <div className="max-w-full mx-auto px-2 sm:px-4 lg:px-8">
@@ -169,7 +179,6 @@ const Navbar = () => {
                     </Link>
                     {/* Menu chính */}
                     <div className="hidden sm:flex space-x-1">
-                        {/* Trang Chủ */}
                         <NavLink
                             to="/"
                             className={({ isActive }) =>
@@ -181,11 +190,8 @@ const Navbar = () => {
                         >
                             Trang Chủ
                         </NavLink>
-                        {/* Dropdown Phòng trọ */}
                         <RoomDropdown />
-                        {/* Dropdown Tin Dịch vụ */}
                         <ServiceDropdown />
-                        {/* Các link còn lại */}
                         {navLinks.slice(1).map(({ name, path }) => (
                             <NavLink
                                 key={name}
@@ -238,12 +244,13 @@ const Navbar = () => {
                                         </div>
                                     )}
                                 </div>
-                                <NavLink
-                                    to="/Room/Create"
+                                {/* Nút Đăng tin */}
+                                <button
+                                    onClick={handlePostClick}
                                     className="text-red-500 px-3 py-2 rounded-md text-base font-medium border border-red-400 hover:bg-red-500 hover:text-white transition-colors duration-150"
                                 >
                                     Đăng Tin
-                                </NavLink>
+                                </button>
                             </>
                         ) : (
                             <>
@@ -253,19 +260,19 @@ const Navbar = () => {
                                 <NavLink to="/Registers" className="text-gray-800 px-3 py-2 rounded-md text-base font-medium">
                                     Đăng Ký
                                 </NavLink>
-                                <NavLink
-                                    to="/ServicePost/Creates"
+                                {/* Nút Đăng tin cho người chưa đăng nhập */}
+                                <button
+                                    onClick={handlePostClick}
                                     className="text-red-500 px-3 py-2 rounded-md text-base font-medium border border-red-400 hover:bg-red-500 hover:text-white transition-colors duration-150"
                                 >
                                     Đăng Tin
-                                </NavLink>
+                                </button>
                             </>
                         )}
                     </div>
 
                     {/* Mobile menu */}
                     <div className="sm:hidden ml-auto">
-
                         <button
                             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                             className="text-gray-800 px-3 py-2 rounded-md text-base font-medium"
@@ -278,7 +285,6 @@ const Navbar = () => {
 
             {/* Mobile Menu */}
             {mobileMenuOpen && (
-
                 <div className="sm:hidden bg-white shadow-md p-4">
                     <UIProvider>
                         <div className="flex gap-3 items-center">
@@ -296,10 +302,15 @@ const Navbar = () => {
                             {name}
                         </NavLink>
                     ))}
-
                     {user ? (
                         <div className="mt-4">
                             {renderDropdownItems()}
+                            <button
+                                onClick={handlePostClick}
+                                className="block px-3 py-2 text-red-500 border border-red-400 rounded-md hover:bg-red-500 hover:text-white transition-colors duration-150"
+                            >
+                                Đăng Tin
+                            </button>
                         </div>
                     ) : (
                         <div className="mt-4">
@@ -309,8 +320,44 @@ const Navbar = () => {
                             <NavLink to="/Registers" className="block px-3 py-2 text-gray-800">
                                 Đăng Ký
                             </NavLink>
+                            <button
+                                onClick={handlePostClick}
+                                className="block px-3 py-2 text-red-500 border border-red-400 rounded-md hover:bg-red-500 hover:text-white transition-colors duration-150"
+                            >
+                                Đăng Tin
+                            </button>
                         </div>
                     )}
+                </div>
+            )}
+
+            {/* Popup thông báo vai trò */}
+            {showRolePopup && (
+                <div className="fixed inset-0 top-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+                        <h3 className="text-lg font-bold mb-4 text-red-600">Thông báo: Bạn chưa đủ vai trò</h3>
+
+                        <p className="mb-4 text-gray-700">
+                            Vui lòng đăng ký để thực hiện chức năng này.
+                        </p>
+                        <div className="flex justify-between">
+                            <button
+                                onClick={() => setShowRolePopup(false)}
+                                className="bg-gray-300 text-black px-6 py-2 rounded-lg hover:bg-gray-400 transition"
+                            >
+                                Đóng
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setShowRolePopup(false);
+                                    navigate("/Profile?tab=registerLandlord");
+                                }}
+                                className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition"
+                            >
+                                Đăng Ký
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
         </nav>
