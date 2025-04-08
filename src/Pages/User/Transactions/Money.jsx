@@ -4,11 +4,31 @@ import Layout from "../../../Components/Layout/Layout";
 import Footer from "../../../Components/Layout/Footer";
 import UserService from "../../../Services/User/UserService";
 import { showCustomNotification } from "../../../Components/Notification";
+
 const Money = () => {
     const location = useLocation();
     const navigate = useNavigate();
-    const [amount, setAmount] = useState(10000);
+    const [amount, setAmount] = useState(10000); // Giá trị thực tế (số)
+    const [displayAmount, setDisplayAmount] = useState("10,000"); // Giá trị hiển thị (định dạng VND)
     const [qrCode, setQrCode] = useState(null);
+
+    // Hàm định dạng số thành tiền Việt Nam
+    const formatVND = (value) => {
+        if (!value) return "";
+        return Number(value).toLocaleString("vi-VN", { style: "decimal" });
+    };
+
+    // Xử lý khi người dùng thay đổi giá trị input
+    const handleAmountChange = (e) => {
+        // Lấy giá trị nhập vào và loại bỏ dấu phẩy
+        const rawValue = e.target.value.replace(/[^0-9]/g, "");
+        const numericValue = rawValue ? parseInt(rawValue, 10) : 0;
+
+        // Cập nhật state
+        setAmount(numericValue);
+        setDisplayAmount(formatVND(numericValue));
+    };
+
     const handleDeposit = async (event) => {
         event.preventDefault();
         let qrCode = (await UserService.deposit(amount)).data.qrCode;
@@ -20,10 +40,10 @@ const Money = () => {
             status = (await UserService.checkTransactionStatus(addInfo)).data.isPaid;
             console.log(status);
             if (!status) {
-                await new Promise(resolve => setTimeout(resolve, 1000));
+                await new Promise((resolve) => setTimeout(resolve, 1000));
             }
         }
-        // thanh cong
+        // Thanh toán thành công
         showCustomNotification("success", "Thanh toán thành công!");
     };
 
@@ -38,19 +58,22 @@ const Money = () => {
                                 Số tiền nạp
                             </label>
                             <input
-                                type="number"
+                                type="text" // Đổi type thành text để hiển thị định dạng
                                 id="amount"
-                                name="amount" font
+                                name="amount"
                                 min="1000"
                                 step="1000"
                                 required
-                                value={amount}
-                                onChange={(e) => setAmount(e.target.value)}
+                                value={displayAmount} // Sử dụng giá trị hiển thị
+                                onChange={handleAmountChange} // Xử lý thay đổi
                                 className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                placeholder="Nhập số tiền (VND)"
                             />
 
-                            <button type="submit"
-                                className="mt-4 w-full bg-red-500 hover:bg-red-400 text-white font-medium py-2 px-4 rounded-md">
+                            <button
+                                type="submit"
+                                className="mt-4 w-full bg-red-500 hover:bg-red-400 text-white font-medium py-2 px-4 rounded-md"
+                            >
                                 Lấy mã thanh toán
                             </button>
                         </form>
@@ -68,6 +91,6 @@ const Money = () => {
             <Footer />
         </Layout>
     );
-}
+};
 
 export default Money;
