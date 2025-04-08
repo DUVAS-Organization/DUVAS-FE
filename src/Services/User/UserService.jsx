@@ -144,6 +144,16 @@ const UserService = {
             },
         });
     },
+    addReport: (report) => {
+        const token = localStorage.getItem("authToken");
+        const url = `https://localhost:8000/api/Report`;
+        return axios.post(url, report, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+            },
+        });
+    }
 };
 
 export default UserService;
