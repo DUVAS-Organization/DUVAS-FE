@@ -36,6 +36,13 @@ const OtherService = {
         };
         return axios.post(`${API_URL}/SavedPosts/`, payload).then((res) => res.data);
     },
+    toggleSavePostService: async (userId, servicePostId) => {
+        const payload = {
+            userId: userId,
+            roomId: parseInt(servicePostId),
+        };
+        return axios.post(`${API_URL}/SavedPosts/`, payload).then((res) => res.data);
+    },
     // Hàm gửi OTP
     sendOtp: async (emailOrPhone) => {
         return axios.get(`${API_URL}/Auth/forgot-password?emailOrPhone=${emailOrPhone}`).then((res) => res.data);
