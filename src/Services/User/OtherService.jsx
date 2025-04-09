@@ -36,6 +36,13 @@ const OtherService = {
         };
         return axios.post(`${API_URL}/SavedPosts/`, payload).then((res) => res.data);
     },
+    toggleSavePostService: async (userId, servicePostId) => {
+        const payload = {
+            userId: userId,
+            roomId: parseInt(servicePostId),
+        };
+        return axios.post(`${API_URL}/SavedPosts/`, payload).then((res) => res.data);
+    },
     // Hàm gửi OTP
     sendOtp: async (emailOrPhone) => {
         return axios.get(`${API_URL}/Auth/forgot-password?emailOrPhone=${emailOrPhone}`).then((res) => res.data);
@@ -140,6 +147,21 @@ const OtherService = {
         } catch (error) {
             console.error('Error uploading image:', error);
             throw error; // Nếu có lỗi xảy ra trong quá trình upload, throw lỗi để xử lý ở component
+        }
+    },
+    // Lấy toàn bộ báo cáo
+    getAllReports: async (token) => {
+        try {
+            const response = await axios.get(`${API_URL}/Report`, {
+                headers: {
+                    "Content-Type": "application/json; charset=UTF-8",
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            return response.data; // Trả về danh sách báo cáo
+        } catch (error) {
+            console.error('Error fetching reports:', error);
+            throw error; // Throw lỗi để xử lý ở component gọi hàm này
         }
     },
     savedPostHub: `${HUB_BASE_URL}/savedPostHub`,

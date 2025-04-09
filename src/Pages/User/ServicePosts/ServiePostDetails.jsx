@@ -100,25 +100,36 @@ const ServicePostDetails = () => {
         return found ? found.categoryServiceName : 'N/A';
     };
 
-    const toggleSavePost = async (roomId, e) => {
+    const toggleSavePost = async (e) => {
         e.preventDefault();
         e.stopPropagation();
-        if (!user || !roomId) {
+
+        if (!user || !servicePostId) {
             showCustomNotification("error", "Bạn cần đăng nhập để lưu tin!");
             return;
         }
         try {
-            const result = await OtherService.toggleSavePost(user.userId, roomId);
+            const result = await OtherService.toggleSavePostService(user.userId, parseInt(servicePostId));
             setSavedPosts((prevSaved) => {
                 const newSaved = new Set(prevSaved);
+                let message = "";
+
                 if (result.status === "removed") {
-                    newSaved.delete(parseInt(roomId));
+                    newSaved.delete(parseInt(servicePostId));
+                    message = "Đã xóa tin khỏi danh sách lưu!";
                 } else if (result.status === "saved") {
-                    newSaved.add(parseInt(roomId));
+                    newSaved.add(parseInt(servicePostId));
+                    message = "Lưu tin thành công!";
                 }
-                return newSaved;
+
+                const updatedSavedPosts = Array.from(newSaved);
+                localStorage.setItem("savedPosts", JSON.stringify(updatedSavedPosts));
+
+                return updatedSavedPosts;
             });
-            if (result.status === "saved") {
+            if (result.status === "removed") {
+                showCustomNotification("success", "Đã xóa tin khỏi danh sách lưu!");
+            } else if (result.status === "saved") {
                 showCustomNotification("success", "Lưu tin thành công!");
             }
         } catch (error) {
@@ -281,15 +292,10 @@ const ServicePostDetails = () => {
                                 </div>
                             </div>
                             <div className="flex gap-4 text-2xl text-gray-600">
-                                <button>
-                                    <BsExclamationTriangle />
-                                </button>
                                 <button
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        toggleSavePost();
-                                    }}
+                                    onClick={
+                                        toggleSavePost
+                                    }
                                     className="text-2xl"
                                 >
                                     {savedPosts.includes(parseInt(servicePostId)) ? (
