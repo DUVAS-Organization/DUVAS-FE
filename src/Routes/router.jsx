@@ -57,6 +57,7 @@ import AdminTransaction from '../Pages/Admin/Transactions/Transaction';
 
 
 import RentalList from '../Pages/User/Profiles/RentalList'
+import ReportList from '../Pages/Admin/Reports/ReportList';
 const RoutesConfig = () => {
     const { user } = useAuth();
 
@@ -262,6 +263,10 @@ const RoutesConfig = () => {
             <Route
                 path="/Admin/Withdraws"
                 element={user && user.role === "Admin" ? <AdminTransaction /> : <Navigate to="/Logins" />}
+            />
+            <Route
+                path="/Admin/Reports"
+                element={user && user.role === "Admin" ? <ReportList /> : <Navigate to="/Logins" />}
             />
 
             {/* Routes dành cho Landlord */}

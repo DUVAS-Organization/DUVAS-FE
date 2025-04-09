@@ -84,59 +84,44 @@ const RegisterLandlord = ({
         validateCccd(value);
     };
 
-    // Validate CCCD image with AI
+    // Validate CCCD image with AI (chỉ cho mặt trước)
     const validateCCCDWithAI = async (image, isfront) => {
         if (!image) return;
 
+        // Chỉ xác thực cho CCCD mặt trước
+        if (!isfront) return;
+
         try {
-            if (isfront) {
-                setValidatingFront(true);
-            } else {
-                setValidatingBack(true);
-            }
+            setValidatingFront(true);
 
             const result = await OtherService.AICCCD(image);
             console.log("AI CCCD Result:", result);
 
-            // Check if the result is valid
-            const isValid = result && result.isValid;
+            // Kiểm tra xem result có tồn tại và có dữ liệu hợp lệ không
+            const isValid = result && (result.isValid !== undefined ? result.isValid : !!result.cccd);
 
-            if (isfront) {
-                setFrontImageValid(isValid);
-                setValidatingFront(false);
-                if (isValid && result.info) {
-                    setFrontIdInfo(result.info);
-                    // Auto-fill information if available
-                    if (result.info.name) setName(result.info.name);
-                    if (result.info.sex) setSex(result.info.sex);
-                    if (result.info.address) setAddress(result.info.address);
-                    if (result.info.id) setCccdNumber(result.info.id);
-                }
-            } else {
-                setBackImageValid(isValid);
-                setValidatingBack(false);
-                if (isValid && result.info) {
-                    setBackIdInfo(result.info);
-                }
+            setFrontImageValid(isValid);
+            setValidatingFront(false);
+            if (isValid && result) {
+                setFrontIdInfo(result);
+                // Tự động điền thông tin từ result
+                if (result.name) setName(result.name);
+                if (result.sex) setSex(result.sex);
+                if (result.address) setAddress(result.address);
+                if (result.cccd) setCccdNumber(result.cccd);
             }
 
-            // Show notification based on validation result
+            // Hiển thị thông báo dựa trên kết quả xác thực
             if (isValid) {
-                showCustomNotification("success", `Ảnh CCCD ${isfront ? 'mặt trước' : 'mặt sau'} hợp lệ.`);
+                showCustomNotification("success", "Ảnh CCCD mặt trước hợp lệ.");
             } else {
-                showCustomNotification("error", `Ảnh CCCD ${isfront ? 'mặt trước' : 'mặt sau'} không hợp lệ.`);
+                showCustomNotification("error", "Ảnh CCCD mặt trước không hợp lệ.");
             }
-
         } catch (error) {
             console.error("Lỗi khi xác thực ảnh CCCD:", error);
             showCustomNotification("error", "Có lỗi xảy ra khi xác thực ảnh CCCD. Vui lòng thử lại.");
-            if (isfront) {
-                setValidatingFront(false);
-                setFrontImageValid(false);
-            } else {
-                setValidatingBack(false);
-                setBackImageValid(false);
-            }
+            setValidatingFront(false);
+            setFrontImageValid(false);
         }
     };
 
@@ -152,7 +137,7 @@ const RegisterLandlord = ({
         const file = e.target.files[0];
         if (file) {
             setBackImage(file);
-            validateCCCDWithAI(file, false);
+            // Không gọi validateCCCDWithAI cho mặt sau
         }
     };
 
@@ -170,13 +155,13 @@ const RegisterLandlord = ({
     };
 
     const handleConfirm = async () => {
-        // Check for CCCD validation
-        if (!frontImageValid || !backImageValid) {
-            showCustomNotification("error", "Vui lòng sử dụng ảnh CCCD hợp lệ.");
+        // Chỉ kiểm tra CCCD mặt trước
+        if (!frontImageValid) {
+            showCustomNotification("error", "Vui lòng sử dụng ảnh CCCD mặt trước hợp lệ.");
             return;
         }
 
-        if (!userId || !token || !cccdNumber || !frontImage || !backImage || !name || !sex || !address || cccdError) {
+        if (!userId || !token || !cccdNumber || !frontImage || !name || !sex || !address || cccdError) {
             showCustomNotification("error", "Vui lòng điền đầy đủ và đúng thông tin cần thiết.");
             return;
         }
@@ -184,7 +169,7 @@ const RegisterLandlord = ({
         setIsSubmitting(true);
         try {
             const frontImageUrl = await uploadFile(frontImage);
-            const backImageUrl = await uploadFile(backImage);
+            const backImageUrl = backImage ? await uploadFile(backImage) : null; // Vẫn upload nếu có ảnh mặt sau
             const businessLicenseUrl = businessLicense ? await uploadFile(businessLicense) : null;
             const professionalLicenseUrl = selectedNeed === 'Chủ dịch vụ' && professionalLicense
                 ? await uploadFile(professionalLicense)
@@ -250,7 +235,6 @@ const RegisterLandlord = ({
                 </div>
             </div>
 
-
             {/* Identity Verification */}
             <h2 className="text-lg font-semibold text-gray-800 mb-2">Xác minh danh tính</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -310,35 +294,16 @@ const RegisterLandlord = ({
                     {frontIdInfo && (
                         <div className="mt-2 text-sm text-gray-700 w-full">
                             <p><strong>Tên:</strong> {frontIdInfo.name}</p>
-                            <p><strong>CCCD:</strong> {frontIdInfo.id}</p>
                             <p><strong>Giới tính:</strong> {frontIdInfo.sex}</p>
                             <p><strong>Địa chỉ:</strong> {frontIdInfo.address}</p>
                         </div>
                     )}
                 </div>
 
-                {/* Back ID */}
+                {/* Back ID - Giữ nguyên giao diện nhưng không xác thực */}
                 <div className="flex flex-col items-center">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                         Ảnh CCCD mặt sau:
-                        {validatingBack && (
-                            <span className="ml-2 text-yellow-500 inline-flex items-center">
-                                <AiOutlineLoading3Quarters className="animate-spin mr-1" />
-                                Đang xác thực...
-                            </span>
-                        )}
-                        {!validatingBack && backImageValid === true && (
-                            <span className="ml-2 text-green-500 inline-flex items-center">
-                                <FaCheckCircle className="mr-1" />
-                                Hợp lệ
-                            </span>
-                        )}
-                        {!validatingBack && backImageValid === false && (
-                            <span className="ml-2 text-red-500 inline-flex items-center">
-                                <FaTimesCircle className="mr-1" />
-                                Không hợp lệ
-                            </span>
-                        )}
                     </label>
                     <div
                         className="w-full h-40 border border-gray-300 rounded-lg flex items-center justify-center bg-gray-50 cursor-pointer"
@@ -358,9 +323,9 @@ const RegisterLandlord = ({
                         type="button"
                         onClick={() => backImageInputRef.current.click()}
                         className="mt-2 py-2 px-4 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors duration-200"
-                        disabled={isSubmitting || validatingBack}
+                        disabled={isSubmitting}
                     >
-                        {validatingBack ? "Đang xác thực..." : "Chọn ảnh"}
+                        Chọn ảnh
                     </button>
                     <input
                         type="file"
@@ -368,7 +333,7 @@ const RegisterLandlord = ({
                         onChange={handleBackImageChange}
                         className="hidden"
                         accept="image/*"
-                        disabled={isSubmitting || validatingBack}
+                        disabled={isSubmitting}
                     />
                     {backIdInfo && (
                         <div className="mt-2 text-sm text-gray-700 w-full">
@@ -481,8 +446,7 @@ const RegisterLandlord = ({
                         !businessLicense ||
                         (selectedNeed === 'Chủ dịch vụ' && !professionalLicense) ||
                         cccdError ||
-                        frontImageValid !== true ||
-                        backImageValid !== true
+                        frontImageValid !== true
                         ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                         : 'bg-red-500 text-white hover:bg-red-600'
                         }`}
@@ -495,8 +459,7 @@ const RegisterLandlord = ({
                         !businessLicense ||
                         (selectedNeed === 'Chủ dịch vụ' && !professionalLicense) ||
                         cccdError ||
-                        frontImageValid !== true ||
-                        backImageValid !== true
+                        frontImageValid !== true
                     }
                 >
                     {isSubmitting ? "Đang xử lý..." : "Đăng ký thành chủ"}
@@ -644,7 +607,6 @@ const RegisterLandlord = ({
                     </div>
                 </div>
             )}
-
         </div>
     );
 };
