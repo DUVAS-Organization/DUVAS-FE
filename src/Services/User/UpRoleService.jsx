@@ -37,7 +37,7 @@ const UpRoleService = {
             const response = await axios.get(`${API_BASE_URL}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            console.log('📌 Lấy danh sách giấy phép chủ nhà:', response.data);
+            // console.log('📌 Lấy danh sách giấy phép chủ nhà:', response.data);
             return response.data;
         } catch (error) {
             console.error('❌ Lỗi khi lấy danh sách giấy phép chủ nhà:', error.response?.data || error.message);
@@ -130,7 +130,7 @@ const UpRoleService = {
             const response = await axios.get(`${API_BASE_URL}/service`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            console.log('📌 Lấy danh sách giấy phép dịch vụ:', response.data);
+            // console.log('📌 Lấy danh sách giấy phép dịch vụ:', response.data);
             return response.data;
         } catch (error) {
             console.error('❌ Lỗi khi lấy danh sách giấy phép dịch vụ:', error.response?.data || error.message);
