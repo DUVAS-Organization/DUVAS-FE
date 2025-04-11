@@ -12,7 +12,7 @@ import carousel3 from '../Assets/Images/carousel6.webp';
 const images = [
     { src: carousel1, title: "Phòng trọ sạch đẹp tại Đà Nẵng", btnText: "Xem phòng trọ", link: "/Rooms?tab=Phòng%20trọ" },
     { src: carousel2, title: "Căn hộ tiện nghi đầy đủ dịch vụ", btnText: "Xem căn hộ", link: "/Rooms?tab=Căn%20hộ" },
-    { src: carousel3, title: "Dịch vụ sinh viên giá rẻ", btnText: "Khám phá ngay", link: "/ServicePosts?tab=Dịch%20vụ%20vệ%20sinh" },
+    { src: carousel3, title: "Dịch vụ sinh viên giá rẻ", btnText: "Khám phá ngay", link: "/ServicePosts?tab=Vệ%20sinh" },
 ];
 
 const Home = () => {

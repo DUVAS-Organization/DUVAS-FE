@@ -5,12 +5,13 @@ import AccountServices from "../../../Services/Admin/AccountServices";
 import Counts from '../../../Components/Counts';
 import { FiFilter, FiPlus } from 'react-icons/fi';
 import { FaChevronDown, FaLock, FaUnlock } from "react-icons/fa";
+import UpRoleService from '../../../Services/User/UpRoleService';
 
 const UpLandlord = () => {
     const [accounts, setAccounts] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const navigate = useNavigate();
-
+    const token = localStorage.getItem("token");
     useEffect(() => {
         fetchData();
     }, [searchTerm]);
@@ -32,6 +33,16 @@ const UpLandlord = () => {
                 fetchData(); // Cập nhật lại dữ liệu sau khi thay đổi
             })
             .catch(error => console.error('Error updating status:', error));
+    };
+    const handleConfirmLandlord = (userId) => {
+        UpRoleService.updateRoleToLandlord(userId, token)
+            .then(() => {
+                console.log("🎉 Role updated successfully");
+                fetchData(); // Cập nhật lại danh sách sau khi xác nhận
+            })
+            .catch((error) => {
+                console.error("❌ Error updating role:", error);
+            });
     };
 
     return (

@@ -1,10 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, NavLink } from 'react-router-dom';
-import Icon from '../../../Components/Icon';
+import { useNavigate } from 'react-router-dom';
 import CategoryRooms from "../../../Services/Admin/CategoryRooms";
-import Counts from '../../../Components/Counts';
-import { FiFilter, FiPlus } from 'react-icons/fi';
-import { FaChevronDown, FaLock, FaUnlock } from "react-icons/fa";
+import { FiPlus } from 'react-icons/fi';
 
 const CategoryRoomList = () => {
     const [categoryRooms, setCategoryRooms] = useState([]);
@@ -20,7 +17,6 @@ const CategoryRoomList = () => {
                 setCategoryRooms(data);
             })
             .catch(error => console.error('Error fetching Category Room:', error));
-
     };
 
     const handleCreate = () => {
@@ -29,7 +25,6 @@ const CategoryRoomList = () => {
 
     const handleDelete = (categoryRoomId) => {
         const isConfirmed = window.confirm("Bạn có chắc chắn muốn xóa Loại Phòng này?");
-
         if (isConfirmed) {
             CategoryRooms.deleteCategoryRoom(categoryRoomId)
                 .then(() => fetchData())
@@ -37,10 +32,28 @@ const CategoryRoomList = () => {
         }
     };
 
+    const handleLock = (id) => {
+        const isConfirmed = window.confirm("Bạn có chắc chắn muốn KHÓA loại phòng này?");
+        if (isConfirmed) {
+            CategoryRooms.lockCategoryRoom(id)
+                .then(fetchData)
+                .catch((err) => console.error("Lỗi khi khóa:", err));
+        }
+    };
+
+    const handleUnlock = (id) => {
+        const isConfirmed = window.confirm("Bạn có chắc chắn muốn MỞ KHÓA loại phòng này?");
+        if (isConfirmed) {
+            CategoryRooms.unlockCategoryRoom(id)
+                .then(fetchData)
+                .catch((err) => console.error("Lỗi khi mở khóa:", err));
+        }
+    };
+
     return (
         <div className="p-6">
             <div className='font-bold text-6xl ml-3 my-8 text-blue-500 flex justify-between'>
-                <h1 >Loại Phòng</h1>
+                <h1>Loại Phòng</h1>
                 <button
                     onClick={handleCreate}
                     className='flex mr-2 items-center text-white bg-blue-500 rounded-3xl h-11 px-2'>
@@ -55,45 +68,66 @@ const CategoryRoomList = () => {
                         <tr className="bg-gray-100">
                             <th className="py-2 px-4 text-left font-semibold text-black">#</th>
                             <th className="py-2 px-4 text-left font-semibold text-black">Tên Loại Dịch Vụ</th>
-                            <th className="py-2 px-4 text-left font-semibold text-black"></th>
+                            <th className="py-2 px-4 text-center font-semibold text-black">Trạng Thái</th>
+                            <th className="py-2 px-4 text-center font-semibold text-black">Hành Động</th>
                         </tr>
                     </thead>
                     <tbody>
                         {categoryRooms.length === 0 ? (
                             <tr>
-                                <td colSpan="7" className="py-2 text-center text-gray-500">Không tìm thấy kết quả</td>
+                                <td colSpan="4" className="py-2 text-center text-gray-500">Không tìm thấy kết quả</td>
                             </tr>
                         ) : (
                             categoryRooms.map((categoryRoom, index) => (
-                                <tr key={categoryRoom.userId} className="hover:bg-gray-200 border-collapse border border-gray-300">
+                                <tr key={categoryRoom.categoryRoomId} className="hover:bg-gray-200 border-collapse border border-gray-300">
                                     <td className="py-2 px-4 text-gray-700 border-b">{index + 1}</td>
                                     <td className="py-2 px-4 text-gray-700 border-b">{categoryRoom.categoryName}</td>
 
-                                    <td className="py-2 px-4 border-b text-blue-600 text-center underline underline-offset-2 ">
-                                        <div className="flex justify-around">
+                                    <td className="py-2 px-4 text-center border-b">
+                                        <span className={`inline-block px-3 py-1 rounded-full text-white text-sm font-medium ${categoryRoom.status === 1 ? 'bg-green-500' : 'bg-red-500'
+                                            }`}>
+                                            {categoryRoom.status === 1 ? 'Hoạt động' : 'Đã khóa'}
+                                        </span>
+                                    </td>
+
+                                    <td className="py-2 px-4 text-center border-b">
+                                        <div className="flex justify-around gap-2">
                                             <button
-                                                className=" text-blue-600 hover:text-blue-700"
+                                                className="text-blue-600 hover:text-blue-700"
                                                 onClick={() => navigate(`/Admin/CategoryRooms/${categoryRoom.categoryRoomId}`)}
                                             >
                                                 Chỉnh Sửa
                                             </button>
                                             <button
-                                                className=" text-blue-600 hover:text-blue-700"
+                                                className="text-blue-600 hover:text-blue-700"
                                                 onClick={() => handleDelete(categoryRoom.categoryRoomId)}
                                             >
                                                 Xóa
                                             </button>
+                                            {categoryRoom.status === 1 ? (
+                                                <button
+                                                    className="text-red-600 hover:text-red-700"
+                                                    onClick={() => handleLock(categoryRoom.categoryRoomId)}
+                                                >
+                                                    Khóa
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    className="text-green-600 hover:text-green-700"
+                                                    onClick={() => handleUnlock(categoryRoom.categoryRoomId)}
+                                                >
+                                                    Mở Khóa
+                                                </button>
+                                            )}
                                         </div>
                                     </td>
-
                                 </tr>
                             ))
                         )}
                     </tbody>
                 </table>
             </div>
-
-        </div >
+        </div>
     );
 };
 

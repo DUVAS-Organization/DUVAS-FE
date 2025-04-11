@@ -2,181 +2,230 @@ import axios from 'axios';
 
 const API_BASE_URL = 'https://localhost:8000/api/UpdateRole';
 
+/**
+ * Service xử lý các yêu cầu liên quan đến cập nhật vai trò, giấy phép chủ nhà và dịch vụ
+ */
 const UpRoleService = {
-    // Tạo giấy phép chủ nhà (sử dụng DTO)
+    // ----- API giấy phép chủ nhà (Landlord License) -----
+
+    /**
+     * Tạo giấy phép chủ nhà mới
+     * @param {Object} data - Dữ liệu giấy phép (LandlordLicenseDTO)
+     * @param {string} token - Token xác thực
+     * @returns {Object} Dữ liệu giấy phép đã tạo
+     */
     createLandlordLicense: async (data, token) => {
         try {
             const response = await axios.post(`${API_BASE_URL}/Create-LandlordLicence`, data, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            console.log("📌 API Response (Create Landlord License):", response.data);
+            console.log('📌 Tạo giấy phép chủ nhà thành công:', response.data);
             return response.data;
         } catch (error) {
-            console.error("❌ Error creating landlord license:", error);
+            console.error('❌ Lỗi khi tạo giấy phép chủ nhà:', error.response?.data || error.message);
             throw error;
         }
     },
 
-    // Tạo giấy phép dịch vụ (sử dụng DTO)
-    createServiceLicense: async (data, token) => {
-        try {
-            const response = await axios.post(`${API_BASE_URL}/Create-ServiceLicence`, data, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            console.log("📌 API Response (Create Service License):", response.data);
-            return response.data;
-        } catch (error) {
-            console.error("❌ Error creating service license:", error);
-            throw error;
-        }
-    },
-
-    // Cập nhật role thành chủ nhà
-    updateRoleToLandlord: async (userId, token) => {
-        try {
-            await axios.put(`${API_BASE_URL}/${userId}/UpdateRoleLandlord`, null, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            console.log("✅ Role updated to Landlord");
-        } catch (error) {
-            console.error("❌ Error updating role to Landlord:", error);
-            throw error;
-        }
-    },
-
-    // Cập nhật role thành dịch vụ
-    updateRoleToService: async (userId, token) => {
-        try {
-            await axios.put(`${API_BASE_URL}/${userId}/UpdateRoleService`, null, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            console.log("✅ Role updated to Service Provider");
-        } catch (error) {
-            console.error("❌ Error updating role to Service Provider:", error);
-            throw error;
-        }
-    },
-
-    // Lấy danh sách giấy phép chủ nhà
+    /**
+     * Lấy danh sách tất cả giấy phép chủ nhà
+     * @param {string} token - Token xác thực
+     * @returns {Array} Danh sách giấy phép
+     */
     getLandlordLicenses: async (token) => {
         try {
             const response = await axios.get(`${API_BASE_URL}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            console.log("📌 Fetched Landlord Licenses:", response.data);
+            console.log('📌 Lấy danh sách giấy phép chủ nhà:', response.data);
             return response.data;
         } catch (error) {
-            console.error("❌ Error fetching landlord licenses:", error);
+            console.error('❌ Lỗi khi lấy danh sách giấy phép chủ nhà:', error.response?.data || error.message);
             throw error;
         }
     },
 
-    // Lấy chi tiết giấy phép chủ nhà theo ID
+    /**
+     * Lấy thông tin giấy phép chủ nhà theo ID
+     * @param {number} id - ID giấy phép
+     * @param {string} token - Token xác thực
+     * @returns {Object} Thông tin giấy phép
+     */
     getLandlordLicenseById: async (id, token) => {
         try {
             const response = await axios.get(`${API_BASE_URL}/${id}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            console.log("📌 Fetched Landlord License:", response.data);
+            console.log('📌 Lấy thông tin giấy phép chủ nhà:', response.data);
             return response.data;
         } catch (error) {
-            console.error("❌ Error fetching landlord license details:", error);
+            console.error('❌ Lỗi khi lấy thông tin giấy phép chủ nhà:', error.response?.data || error.message);
             throw error;
         }
     },
 
-    // Cập nhật thông tin giấy phép chủ nhà (khác với cập nhật role)
+    /**
+     * Cập nhật thông tin giấy phép chủ nhà
+     * @param {number} id - ID giấy phép
+     * @param {Object} data - Dữ liệu giấy phép cần cập nhật
+     * @param {string} token - Token xác thực
+     */
     updateLandlordLicense: async (id, data, token) => {
         try {
             await axios.put(`${API_BASE_URL}/${id}`, data, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            console.log("✅ Landlord License updated");
+            console.log('✅ Cập nhật giấy phép chủ nhà thành công');
         } catch (error) {
-            console.error("❌ Error updating landlord license:", error);
+            console.error('❌ Lỗi khi cập nhật giấy phép chủ nhà:', error.response?.data || error.message);
             throw error;
         }
     },
 
-    // Xóa giấy phép chủ nhà
+    /**
+     * Xóa giấy phép chủ nhà
+     * @param {number} id - ID giấy phép
+     * @param {string} token - Token xác thực
+     */
     deleteLandlordLicense: async (id, token) => {
         try {
             await axios.delete(`${API_BASE_URL}/${id}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            console.log("✅ Landlord License Deleted");
+            console.log('✅ Xóa giấy phép chủ nhà thành công');
         } catch (error) {
-            console.error("❌ Error deleting landlord license:", error);
+            console.error('❌ Lỗi khi xóa giấy phép chủ nhà:', error.response?.data || error.message);
             throw error;
         }
     },
 
-    // ---------------------------
-    // Các API liên quan đến Service License
-    // Lấy danh sách giấy phép dịch vụ
+    // ----- API giấy phép dịch vụ (Service License) -----
+
+    /**
+     * Tạo giấy phép dịch vụ mới
+     * @param {Object} data - Dữ liệu giấy phép (ServiceLicenseDTO)
+     * @param {string} token - Token xác thực
+     * @returns {Object} Dữ liệu giấy phép đã tạo
+     */
+    createServiceLicense: async (data, token) => {
+        try {
+            const response = await axios.post(`${API_BASE_URL}/Create-ServiceLicence`, data, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            console.log('📌 Tạo giấy phép dịch vụ thành công:', response.data);
+            return response.data;
+        } catch (error) {
+            console.error('❌ Lỗi khi tạo giấy phép dịch vụ:', error.response?.data || error.message);
+            throw error;
+        }
+    },
+
+    /**
+     * Lấy danh sách tất cả giấy phép dịch vụ
+     * @param {string} token - Token xác thực
+     * @returns {Array} Danh sách giấy phép
+     */
     getServiceLicenses: async (token) => {
         try {
             const response = await axios.get(`${API_BASE_URL}/service`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            console.log("📌 Fetched Service Licenses:", response.data);
+            console.log('📌 Lấy danh sách giấy phép dịch vụ:', response.data);
             return response.data;
         } catch (error) {
-            console.error("❌ Error fetching service licenses:", error);
+            console.error('❌ Lỗi khi lấy danh sách giấy phép dịch vụ:', error.response?.data || error.message);
             throw error;
         }
     },
 
-    // Lấy chi tiết giấy phép dịch vụ theo ID
+    /**
+     * Lấy thông tin giấy phép dịch vụ theo ID
+     * @param {number} id - ID giấy phép
+     * @param {string} token - Token xác thực
+     * @returns {Object} Thông tin giấy phép
+     */
     getServiceLicenseById: async (id, token) => {
         try {
             const response = await axios.get(`${API_BASE_URL}/service/${id}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            console.log("📌 Fetched Service License:", response.data);
+            console.log('📌 Lấy thông tin giấy phép dịch vụ:', response.data);
             return response.data;
         } catch (error) {
-            console.error("❌ Error fetching service license details:", error);
+            console.error('❌ Lỗi khi lấy thông tin giấy phép dịch vụ:', error.response?.data || error.message);
             throw error;
         }
     },
 
-    // Tạo giấy phép dịch vụ (sử dụng model, nếu cần tách riêng DTO và model)
-    createServiceLicenseModel: async (data, token) => {
-        try {
-            const response = await axios.post(`${API_BASE_URL}/service`, data, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            console.log("📌 API Response (Create Service License Model):", response.data);
-            return response.data;
-        } catch (error) {
-            console.error("❌ Error creating service license model:", error);
-            throw error;
-        }
-    },
-
-    // Cập nhật thông tin giấy phép dịch vụ
+    /**
+     * Cập nhật thông tin giấy phép dịch vụ
+     * @param {number} id - ID giấy phép
+     * @param {Object} data - Dữ liệu giấy phép cần cập nhật
+     * @param {string} token - Token xác thực
+     */
     updateServiceLicense: async (id, data, token) => {
         try {
             await axios.put(`${API_BASE_URL}/service/${id}`, data, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            console.log("✅ Service License updated");
+            console.log('✅ Cập nhật giấy phép dịch vụ thành công');
         } catch (error) {
-            console.error("❌ Error updating service license:", error);
+            console.error('❌ Lỗi khi cập nhật giấy phép dịch vụ:', error.response?.data || error.message);
             throw error;
         }
     },
 
-    // Xóa giấy phép dịch vụ
+    /**
+     * Xóa giấy phép dịch vụ
+     * @param {number} id - ID giấy phép
+     * @param {string} token - Token xác thực
+     */
     deleteServiceLicense: async (id, token) => {
         try {
             await axios.delete(`${API_BASE_URL}/service/${id}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            console.log("✅ Service License Deleted");
+            console.log('✅ Xóa giấy phép dịch vụ thành công');
         } catch (error) {
-            console.error("❌ Error deleting service license:", error);
+            console.error('❌ Lỗi khi xóa giấy phép dịch vụ:', error.response?.data || error.message);
+            throw error;
+        }
+    },
+
+    // ----- API cập nhật vai trò -----
+
+    /**
+     * Cập nhật vai trò thành chủ nhà (RoleLandlord = 2)
+     * @param {number} userId - ID người dùng
+     * @param {string} token - Token xác thực
+     */
+    updateRoleToLandlord: async (userId, token) => {
+        try {
+            const body = { UserId: userId }; // BE yêu cầu object User với UserId
+            await axios.put(`${API_BASE_URL}/${userId}/UpdateRoleLandlord`, body, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            console.log('✅ Cập nhật vai trò thành chủ nhà thành công');
+        } catch (error) {
+            console.error('❌ Lỗi khi cập nhật vai trò chủ nhà:', error.response?.data || error.message);
+            throw error;
+        }
+    },
+
+    /**
+     * Cập nhật vai trò thành nhà cung cấp dịch vụ (RoleLandlord = 2)
+     * @param {number} userId - ID người dùng
+     * @param {string} token - Token xác thực
+     */
+    updateRoleToService: async (userId, token) => {
+        try {
+            const body = { UserId: userId }; // BE yêu cầu object User với UserId
+            await axios.put(`${API_BASE_URL}/${userId}/UpdateRoleService`, body, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            console.log('✅ Cập nhật vai trò thành nhà cung cấp dịch vụ thành công');
+        } catch (error) {
+            console.error('❌ Lỗi khi cập nhật vai trò dịch vụ:', error.response?.data || error.message);
             throw error;
         }
     },
