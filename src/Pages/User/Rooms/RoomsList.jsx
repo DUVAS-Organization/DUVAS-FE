@@ -200,6 +200,8 @@ const RoomsList = () => {
     }
     // Loại bỏ các phòng có status = 2 hoặc 3
     filteredRooms = filteredRooms.filter((r) => r.status !== 2 && r.status !== 3);
+    // Loại bỏ các phòng có isPermission = 0
+    filteredRooms = filteredRooms.filter((r) => r.isPermission !== 0);
     // Lọc thêm theo giá và diện tích
     filteredRooms = filteredRooms.filter((r) => r.price >= minPrice && r.price <= maxPrice);
     filteredRooms = filteredRooms.filter((r) => r.acreage >= minArea && r.acreage <= maxArea);

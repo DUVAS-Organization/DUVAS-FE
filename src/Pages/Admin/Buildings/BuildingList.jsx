@@ -9,21 +9,36 @@ import Modal from 'react-modal';
 const BuildingList = () => {
     const [buildings, setBuildings] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
+    const [sortOrder, setSortOrder] = useState('asc');
     const [showAcceptModal, setShowAcceptModal] = useState(false);
     const [showRejectModal, setShowRejectModal] = useState(false);
     const [selectedBuilding, setSelectedBuilding] = useState(null);
     const [rejectReason, setRejectReason] = useState('');
     const navigate = useNavigate();
 
+    // Gọi fetchData khi searchTerm hoặc sortOrder thay đổi
     useEffect(() => {
         fetchData();
-    }, [searchTerm]);
+    }, [searchTerm, sortOrder]);
 
     const fetchData = () => {
         BuildingServices.getBuildings(searchTerm)
             .then(data => {
                 console.log("Fetched Buildings:", data);
-                setBuildings(data);
+                let sortedBuildings = [...data]; // Tạo bản sao của mảng dữ liệu
+
+                // Sắp xếp danh sách tòa nhà theo buildingName
+                sortedBuildings.sort((a, b) => {
+                    const nameA = a.buildingName.toLowerCase();
+                    const nameB = b.buildingName.toLowerCase();
+                    if (sortOrder === 'asc') {
+                        return nameA.localeCompare(nameB); // Sắp xếp A-Z
+                    } else {
+                        return nameB.localeCompare(nameA); // Sắp xếp Z-A
+                    }
+                });
+
+                setBuildings(sortedBuildings); // Cập nhật state với danh sách đã sắp xếp
             })
             .catch(error => console.error('Error fetching Building:', error));
     };
@@ -108,10 +123,16 @@ const BuildingList = () => {
                 </button>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center mb-4">
-                <button className="flex items-center border border-gray-400 rounded-md px-3 py-2 mb-2 sm:mb-0 sm:mr-4 hover:bg-gray-100 transition">
+            <div className="flex flex-col sm:flex-row items-center justify-between mb-4">
+                {/* Nút sắp xếp */}
+                <button
+                    onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')} // Chuyển đổi giữa A-Z và Z-A
+                    className="flex items-center border bg-white border-gray-400 rounded-md px-3 py-2 mb-2 sm:mb-0 sm:mr-4 hover:bg-gray-100 transition"
+                >
                     <FiFilter className="mr-2 text-lg" />
-                    <span className="font-medium text-sm">Tên (A-Z)</span>
+                    <span className="font-medium text-sm">
+                        Tên ({sortOrder === 'asc' ? 'A-Z' : 'Z-A'}) {/* Hiển thị trạng thái sắp xếp */}
+                    </span>
                 </button>
                 <div className="relative w-full sm:w-1/3">
                     <input
@@ -129,11 +150,10 @@ const BuildingList = () => {
                 <table className="min-w-full table-fixed bg-white">
                     <thead className="bg-gray-50">
                         <tr>
-                            <th className="w-[5%] px-2 py-2 text-left text-sm font-medium text-gray-600">#</th>
+                            <th className="w-[5%] px-2 py-2 text-center text-sm font-medium text-gray-600">#</th>
                             <th className="w-[20%] px-2 py-2 text-left text-sm font-medium text-gray-600">Tên Tòa Nhà</th>
-                            {/* <th className="w-[20%] px-2 py-2 text-left text-sm font-medium text-gray-600">Tên Chủ Sở Hữu</th> */}
                             <th className="w-[50%] px-2 py-2 text-left text-sm font-medium text-gray-600">Địa Chỉ</th>
-                            <th className="w-[10%] px-2 py-2 text-center  text-sm font-medium text-gray-600">Trạng Thái</th>
+                            <th className="w-[10%] px-2 py-2 text-center text-sm font-medium text-gray-600">Trạng Thái</th>
                             <th className="w-[15%] px-2 py-2 text-center text-sm font-medium text-gray-600">Hành Động</th>
                         </tr>
                     </thead>
@@ -153,39 +173,31 @@ const BuildingList = () => {
                                         className="border-t border-gray-200 hover:bg-gray-100 cursor-pointer"
                                         onClick={() => handleRowClick(building.buildingId)}
                                     >
-                                        <td className="px-2 py-2 text-sm text-gray-700">{index + 1}</td>
+                                        <td className="px-2 py-2 text-center text-sm text-gray-700">{index + 1}</td>
                                         <td className="px-2 py-2 text-sm text-gray-700 break-words">{building.buildingName}</td>
-                                        {/* <td className="px-2 py-2 text-sm text-gray-700 break-words">{building.name}</td> */}
                                         <td className="px-2 py-2 text-sm text-gray-700 break-words">{building.location}</td>
                                         <td className="px-2 py-2 text-sm text-center">
-                                            <span className={`inline-block px-3 py-1 rounded-full text-white text-sm font-medium ${building.status === 1 ? 'bg-green-500' : 'bg-red-500'
-                                                }`}>
+                                            <span className={`inline-block px-3 py-1 rounded-full text-white text-sm font-medium ${building.status === 1 ? 'bg-green-500' : 'bg-red-500'}`}>
                                                 {building.status === 1 ? 'Hoạt động' : 'Đã khóa'}
                                             </span>
                                         </td>
                                         <td className="px-2 py-2 text-center">
                                             <div className="flex justify-center gap-4 text-sm min-w-[250px]">
-                                                {/* Xác nhận */}
                                                 <button
                                                     onClick={(e) => openAcceptModal(building, e)}
                                                     className="text-blue-600 hover:underline w-[70px] text-center"
                                                 >
                                                     Xác nhận
                                                 </button>
-
-                                                {/* Từ chối */}
                                                 <button
                                                     onClick={(e) => openRejectModal(building, e)}
                                                     className="text-blue-600 hover:underline w-[60px] text-center"
                                                 >
                                                     Từ chối
                                                 </button>
-
-                                                {/* Khóa / Mở Khóa */}
                                                 <button
                                                     onClick={(e) => handleStatusChange(building.buildingId, building.status, e)}
-                                                    className={`hover:underline text-center font-semibold w-[70px] ${isActive ? 'text-red-600' : 'text-green-600'
-                                                        }`}
+                                                    className={`hover:underline text-center font-semibold w-[70px] ${isActive ? 'text-red-600' : 'text-green-600'}`}
                                                 >
                                                     {isActive ? 'Khóa' : 'Mở Khóa'}
                                                 </button>
@@ -198,7 +210,6 @@ const BuildingList = () => {
                     </tbody>
                 </table>
             </div>
-
 
             {/* Modal Xác Nhận */}
             <Modal
