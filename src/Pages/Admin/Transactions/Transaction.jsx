@@ -102,30 +102,19 @@ const AdminTransaction = () => {
             let params = new URLSearchParams(new URL(qrCode).search);
             const addInfo = params.get("addInfo");
 
+            await new Promise(resolve => setTimeout(resolve, 1000));
             if (!addInfo) {
-                await new Promise(resolve => setTimeout(resolve, 1000));
                 console.error("Invalid QR Code URL: missing addInfo");
                 showCustomNotification("error", "Thiếu thông tin trong QR code!");
                 return;
             }
 
             let status = false;
-            let retries = 0;
-            const maxRetries = 10;
-            await new Promise(resolve => setTimeout(resolve, 20000));
-            while (!status && retries < maxRetries) {
-                try {
-                    const response = await UserService.checkTransactionStatus(addInfo);
-                    status = response?.data?.isPaid || false;
-                    console.log("Payment Status:", status);
-
-                    if (!status) {
-                        retries++;
-                    }
-                } catch (error) {
-                    console.error("Error checking transaction status:", error);
-                    showCustomNotification("error", "Lỗi không kiểm tra được trạng thái thanh toán!");
-                    break;
+            while (!status) {
+                status = (await UserService.checkTransactionStatus(addInfo)).data.isPaid;
+                console.log("Payment Status:", status);
+                if (!status) {
+                    await new Promise(resolve => setTimeout(resolve, 1000));
                 }
             }
 
@@ -140,7 +129,6 @@ const AdminTransaction = () => {
             }
         } catch (error) {
             console.error("Error parsing QR Code URL:", error);
-            showCustomNotification("error", "Lỗi không xử lý được QR code!");
         }
     };
 

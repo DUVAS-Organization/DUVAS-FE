@@ -54,6 +54,39 @@ export const AuthProvider = ({ children }) => {
       token
     };
 
+    const login = (token) => {
+      try {
+          localStorage.setItem('authToken', token);
+          const decodedToken = jwtDecode(token);
+  
+          const newUser = {
+              username: decodedToken["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"],
+              role: decodedToken["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"],
+              ProfilePicture: decodedToken["ProfilePicture"],
+              userId: decodedToken["UserId"],
+              token
+          };
+  
+          setUser(newUser);
+  
+          // Kiểm tra role hợp lệ trước khi điều hướng
+          const validRoles = ['Admin', 'User', 'Landlord', 'Service'];
+          if (validRoles.includes(newUser.role)) {
+              if (newUser.role === 'Admin') {
+                  navigate('/Admin/Accounts');
+              } else {
+                  navigate('/');
+              }
+          } else {
+              throw new Error("Tài khoản không có quyền truy cập");
+          }
+      } catch (error) {
+          console.error("Lỗi đăng nhập:", error);
+          logout(); // Xóa token và reset state
+          navigate('/Logins', { state: { error: error.message } });
+      }
+  };
+
     setUser(newUser); // Cập nhật user vào trạng thái
 
     // Điều hướng dựa trên role của user

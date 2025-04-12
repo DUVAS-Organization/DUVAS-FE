@@ -95,6 +95,7 @@ export default function RentalList() {
             'Image': JSON.stringify(uploadedImageUrls),
             'ReportContent': reportContent
         };
+        console.log(roomId);
         if ((await UserService.addReport(report)).status == 200) {
             showCustomNotification("success", "Báo cáo thành công.");
             setShowReportPopup(false);

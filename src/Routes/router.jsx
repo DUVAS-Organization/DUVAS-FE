@@ -51,7 +51,6 @@ import Wiki from '../Pages/Wiki'
 import Money from '../Pages/User/Transactions/Money';
 import BankAccount from '../Pages/User/Transactions/BankAccount'
 import Transaction from '../Pages/User/Transactions/Transaction'
-import Withdraw from '../Pages/User/Transactions/Withdraw';
 import CreateWithdraw from '../Pages/User/Transactions/CreateWithdraw';
 import AdminTransaction from '../Pages/Admin/Transactions/Transaction';
 
@@ -96,10 +95,6 @@ const RoutesConfig = () => {
             <Route
                 path="/Transaction"
                 element={user ? <Transaction /> : <Navigate to="/" />}
-            />
-            <Route
-                path="/Withdraw"
-                element={user ? <Withdraw /> : <Navigate to="/" />}
             />
             <Route
                 path="/Withdraw/Create"

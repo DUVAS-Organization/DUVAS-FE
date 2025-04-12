@@ -56,17 +56,24 @@ const LoginPage = () => {
     // Xử lý luồng sau khi login Google thành công
     const handleGoogleCallback = async (code) => {
         try {
-            const data = await OtherService.exchangeGoogleToken(code); // Sử dụng OtherService thay vì fetch
-            const token = data.access_token; // Lấy token từ response
-
+            const data = await OtherService.exchangeGoogleToken(code);
+            const token = data.access_token;
+    
             if (token) {
                 login(token);
-                // localStorage.setItem("authToken", token);
-                // window.location.href = "/";
             }
         } catch (error) {
             console.error("Lỗi khi đăng nhập Google:", error);
-            setErrorMessage("Đăng nhập Google thất bại.");
+            
+            if (error.redirectToLogin) {
+                // Hiển thị thông báo lỗi và giữ người dùng ở trang login
+                setErrorMessage(error.message);
+                window.history.replaceState(null, "", "/Logins");
+            } else {
+                setErrorMessage(
+                    error.message || "Đăng nhập Google thất bại. Vui lòng thử lại."
+                );
+            }
         }
     };
 
@@ -74,7 +81,12 @@ const LoginPage = () => {
     useEffect(() => {
         const query = new URLSearchParams(window.location.search);
         const code = query.get("token"); // Lấy mã token từ URL
-        if (code) {
+        const error = query.get("error"); // Lấy error từ URL
+    
+        if (error) {
+            setErrorMessage(decodeURIComponent(error)); // Hiển thị thông báo lỗi
+            window.history.replaceState(null, "", "/Logins"); // Xóa query params khỏi URL
+        } else if (code) {
             handleGoogleCallback(code); // Thực hiện đổi token
         }
     }, []);
