@@ -51,13 +51,16 @@ import Wiki from '../Pages/Wiki'
 import Money from '../Pages/User/Transactions/Money';
 import BankAccount from '../Pages/User/Transactions/BankAccount'
 import Transaction from '../Pages/User/Transactions/Transaction'
-import Withdraw from '../Pages/User/Transactions/Withdraw';
 import CreateWithdraw from '../Pages/User/Transactions/CreateWithdraw';
 import AdminTransaction from '../Pages/Admin/Transactions/Transaction';
 
 
 import RentalList from '../Pages/User/Profiles/RentalList'
 import ReportList from '../Pages/Admin/Reports/ReportList';
+
+import LandlordDocuments from '../Pages/Admin/Accounts/LandlordDocuments';
+import ServiceDocuments from '../Pages/Admin/Accounts/ServiceDocuments';
+
 const RoutesConfig = () => {
     const { user } = useAuth();
 
@@ -97,10 +100,6 @@ const RoutesConfig = () => {
             <Route
                 path="/Transaction"
                 element={user ? <Transaction /> : <Navigate to="/" />}
-            />
-            <Route
-                path="/Withdraw"
-                element={user ? <Withdraw /> : <Navigate to="/" />}
             />
             <Route
                 path="/Withdraw/Create"
@@ -175,7 +174,8 @@ const RoutesConfig = () => {
                 path="/Admin/Service"
                 element={user && user.role === "Admin" ? <UpService /> : <Navigate to="/Logins" />}
             />
-
+            <Route path="/Admin/Landlord/Giayto/:landlordLicenseId" element={<LandlordDocuments />} />
+            <Route path="/Admin/Service/Giayto/:serviceLicenseId" element={<ServiceDocuments />} />
             {/* Service Posts */}
             <Route
                 path="/Admin/ServicePosts"

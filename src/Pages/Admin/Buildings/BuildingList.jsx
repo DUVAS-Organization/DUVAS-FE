@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, NavLink } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Icon from '../../../Components/Icon';
 import BuildingServices from "../../../Services/Admin/BuildingServices";
 import Counts from '../../../Components/Counts';
@@ -9,34 +9,61 @@ import Modal from 'react-modal';
 const BuildingList = () => {
     const [buildings, setBuildings] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
+    const [sortOrder, setSortOrder] = useState('asc');
     const [showAcceptModal, setShowAcceptModal] = useState(false);
     const [showRejectModal, setShowRejectModal] = useState(false);
     const [selectedBuilding, setSelectedBuilding] = useState(null);
     const [rejectReason, setRejectReason] = useState('');
     const navigate = useNavigate();
 
+    // Gọi fetchData khi searchTerm hoặc sortOrder thay đổi
     useEffect(() => {
         fetchData();
-    }, [searchTerm]);
+    }, [searchTerm, sortOrder]);
 
     const fetchData = () => {
         BuildingServices.getBuildings(searchTerm)
             .then(data => {
-                setBuildings(data);
+                console.log("Fetched Buildings:", data);
+                let sortedBuildings = [...data]; // Tạo bản sao của mảng dữ liệu
+
+                // Sắp xếp danh sách tòa nhà theo buildingName
+                sortedBuildings.sort((a, b) => {
+                    const nameA = a.buildingName.toLowerCase();
+                    const nameB = b.buildingName.toLowerCase();
+                    if (sortOrder === 'asc') {
+                        return nameA.localeCompare(nameB); // Sắp xếp A-Z
+                    } else {
+                        return nameB.localeCompare(nameA); // Sắp xếp Z-A
+                    }
+                });
+
+                setBuildings(sortedBuildings); // Cập nhật state với danh sách đã sắp xếp
             })
-            .catch(error => console.error('Error fetching Account:', error));
+            .catch(error => console.error('Error fetching Building:', error));
     };
 
-    const handleStatusChange = (userId, currentStatus, e) => {
-        // Ngăn chặn sự kiện nổi bọt lên row
-        e.stopPropagation();
+    // Hàm kiểm tra trạng thái hoạt động (active) của tòa nhà
+    const isActiveStatus = (status) => {
+        return status === 1 || status === true || status === "1" || status === "true";
+    };
 
-        const newStatus = !currentStatus; // Lật ngược trạng thái
-        BuildingServices.updateStatus(userId, newStatus)
-            .then(() => {
-                fetchData(); // Cập nhật lại dữ liệu sau khi thay đổi
-            })
-            .catch(error => console.error('Error updating status:', error));
+    const handleStatusChange = (buildingId, currentStatus, e) => {
+        e.stopPropagation();
+        const isActive = isActiveStatus(currentStatus);
+        if (isActive) {
+            if (window.confirm("Bạn có chắc chắn muốn khóa tòa nhà này?")) {
+                BuildingServices.lockBuilding(buildingId)
+                    .then(() => fetchData())
+                    .catch(error => console.error('Error locking building:', error));
+            }
+        } else {
+            if (window.confirm("Bạn có chắc chắn muốn mở khóa phòng này?")) {
+                BuildingServices.unlockBuilding(buildingId)
+                    .then(() => fetchData())
+                    .catch(error => console.error('Error unlocking building:', error));
+            }
+        }
     };
 
     const handleCreate = () => {
@@ -46,8 +73,9 @@ const BuildingList = () => {
     const handleRowClick = (buildingId) => {
         navigate(`/Admin/Buildings/Details/${buildingId}`);
     };
+
     const openAcceptModal = (building, e) => {
-        e.stopPropagation(); // Ngăn chặn sự kiện nổi bọt
+        e.stopPropagation();
         setSelectedBuilding(building);
         setShowAcceptModal(true);
     };
@@ -56,15 +84,14 @@ const BuildingList = () => {
         setShowAcceptModal(false);
         setSelectedBuilding(null);
     };
+
     const handleAcceptConfirm = () => {
-        // Thực hiện logic xác nhận tòa nhà ở đây
-        // Ví dụ: BuildingServices.acceptBuilding(selectedBuilding.buildingId)
-        // Sau đó đóng modal và cập nhật dữ liệu nếu cần
+        // Xử lý xác nhận (nếu có)
         closeAcceptModal();
     };
-    // Mở modal từ chối
+
     const openRejectModal = (building, e) => {
-        e.stopPropagation(); // Ngăn chặn sự kiện nổi bọt
+        e.stopPropagation();
         setSelectedBuilding(building);
         setShowRejectModal(true);
     };
@@ -76,117 +103,137 @@ const BuildingList = () => {
     };
 
     const handleRejectConfirm = () => {
-        // Thực hiện logic từ chối tòa nhà, truyền kèm rejectReason
-        // Ví dụ: BuildingServices.rejectBuilding(selectedBuilding.buildingId, rejectReason)
+        // Xử lý từ chối (nếu có)
         closeRejectModal();
     };
+
     return (
-        <div className="p-6">
+        <div className="container mx-auto px-4 py-6">
             <Counts />
-            <div className='font-bold text-6xl ml-3 my-8 text-blue-500 flex justify-between'>
-                <h1>Tòa Nhà</h1>
+            <div className="flex flex-col sm:flex-row justify-between items-center mb-6">
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-blue-500 mb-4 sm:mb-0">
+                    Tòa Nhà
+                </h1>
                 <button
                     onClick={handleCreate}
-                    className='flex mr-2 items-center text-white bg-blue-500 rounded-3xl h-11 px-2'
+                    className="flex items-center bg-blue-500 text-white px-4 py-2 rounded-full shadow hover:bg-blue-600 transition"
                 >
                     <FiPlus className="mr-2 text-xl" />
-                    <p className="font-semibold text-lg">Tạo Tòa Nhà</p>
+                    <span className="font-semibold">Tạo Tòa Nhà</span>
                 </button>
             </div>
-            <div className="flex items-center mb-6">
-                <button className="border-2 border-gray-500 flex items-center p-2 rounded-xl">
-                    <FiFilter className="mr-2 text-xl" />
-                    <p className="font-bold text-xl">Tên (A-Z)</p>
+
+            <div className="flex flex-col sm:flex-row items-center justify-between mb-4">
+                {/* Nút sắp xếp */}
+                <button
+                    onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')} // Chuyển đổi giữa A-Z và Z-A
+                    className="flex items-center border bg-white border-gray-400 rounded-md px-3 py-2 mb-2 sm:mb-0 sm:mr-4 hover:bg-gray-100 transition"
+                >
+                    <FiFilter className="mr-2 text-lg" />
+                    <span className="font-medium text-sm">
+                        Tên ({sortOrder === 'asc' ? 'A-Z' : 'Z-A'}) {/* Hiển thị trạng thái sắp xếp */}
+                    </span>
                 </button>
-                <div className="relative w-1/3 mx-2 ml-auto">
+                <div className="relative w-full sm:w-1/3">
                     <input
-                        className="border w-full h-11 border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
                         type="text"
-                        placeholder="  Search..."
+                        placeholder="Search..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full border border-gray-300 rounded-md pl-3 pr-10 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
                     />
-                    <Icon className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500" name="search" />
+                    <Icon name="search" className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
                 </div>
             </div>
 
-            <div className="overflow-x-auto">
-                <table className="min-w-full bg-white border-collapse border border-gray-300 rounded-lg shadow-md">
-                    <thead>
-                        <tr className="bg-gray-100">
-                            <th className="py-2 px-4 text-left font-semibold text-black">#</th>
-                            <th className="py-2 px-4 text-left font-semibold text-black">Tên Tòa Nhà</th>
-                            <th className="py-2 px-4 text-left font-semibold text-black">Tên Chủ Sở Hữu</th>
-                            <th className="py-2 px-4 text-left font-semibold text-black">Địa Chỉ</th>
-                            <th className="py-2 px-4 text-left font-semibold text-black">Trạng Thái</th>
-                            <th className="py-2 px-4 font-semibold text-black text-center">Xác Thực</th>
+            <div className="shadow rounded-lg border border-gray-200 overflow-hidden">
+                <table className="min-w-full table-fixed bg-white">
+                    <thead className="bg-gray-50">
+                        <tr>
+                            <th className="w-[5%] px-2 py-2 text-center text-sm font-medium text-gray-600">#</th>
+                            <th className="w-[20%] px-2 py-2 text-left text-sm font-medium text-gray-600">Tên Tòa Nhà</th>
+                            <th className="w-[50%] px-2 py-2 text-left text-sm font-medium text-gray-600">Địa Chỉ</th>
+                            <th className="w-[10%] px-2 py-2 text-center text-sm font-medium text-gray-600">Trạng Thái</th>
+                            <th className="w-[15%] px-2 py-2 text-center text-sm font-medium text-gray-600">Hành Động</th>
                         </tr>
                     </thead>
                     <tbody>
                         {buildings.length === 0 ? (
                             <tr>
-                                <td colSpan="7" className="py-2 text-center text-gray-500">
+                                <td colSpan="6" className="px-4 py-4 text-center text-gray-500 text-sm">
                                     Không tìm thấy kết quả
                                 </td>
                             </tr>
                         ) : (
-                            buildings.map((building, index) => (
-                                <tr
-                                    key={building.userId}
-                                    onClick={() => handleRowClick(building.buildingId)}
-                                    className="hover:bg-gray-200 border-collapse border border-gray-300"
-                                >
-                                    <td className="py-2 px-4 text-gray-700 border-b">{index + 1}</td>
-                                    <td className="py-2 px-4 text-gray-700 border-b">{building.buildingName}</td>
-                                    <td className="py-2 px-4 text-gray-700 border-b">{building.name}</td>
-                                    <td className="py-2 px-4 text-gray-700 border-b">{building.location}</td>
-                                    <td className="py-2 px-4 text-gray-700 border-b">
-                                        <button
-                                            onClick={(e) => handleStatusChange(building.userId, building.status, e)}
-                                            className={`px-4 py-2 rounded-3xl font-semibold text-white ${building.status
-                                                ? 'bg-green-500 hover:bg-green-400'
-                                                : 'bg-red-500 hover:bg-red-400'
-                                                }`}
-                                        >
-                                            {building.status ? 'Active' : 'Inactive'}
-                                        </button>
-                                    </td>
-                                    <td className="py-2 px-4 border-b text-blue-600 text-center underline underline-offset-2">
-                                        <div className="flex justify-around">
-                                            <button
-                                                onClick={(e) => openAcceptModal(building, e)}
-                                                className="mr-4 hover:text-red-500 underline"
-                                            >
-                                                Xác Nhận
-                                            </button>
-                                            <button
-                                                onClick={(e) => openRejectModal(building, e)}
-                                                className='hover:text-red-500 underline'
-                                            >
-                                                Từ Chối
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))
+                            buildings.map((building, index) => {
+                                const isActive = isActiveStatus(building.status);
+                                return (
+                                    <tr
+                                        key={building.buildingId}
+                                        className="border-t border-gray-200 hover:bg-gray-100 cursor-pointer"
+                                        onClick={() => handleRowClick(building.buildingId)}
+                                    >
+                                        <td className="px-2 py-2 text-center text-sm text-gray-700">{index + 1}</td>
+                                        <td className="px-2 py-2 text-sm text-gray-700 break-words">{building.buildingName}</td>
+                                        <td className="px-2 py-2 text-sm text-gray-700 break-words">{building.location}</td>
+                                        <td className="px-2 py-2 text-sm text-center">
+                                            <span className={`inline-block px-3 py-1 rounded-full text-white text-sm font-medium ${building.status === 1 ? 'bg-green-500' : 'bg-red-500'}`}>
+                                                {building.status === 1 ? 'Hoạt động' : 'Đã khóa'}
+                                            </span>
+                                        </td>
+                                        <td className="px-2 py-2 text-center">
+                                            <div className="flex justify-center gap-4 text-sm min-w-[250px]">
+                                                <button
+                                                    onClick={(e) => openAcceptModal(building, e)}
+                                                    className="text-blue-600 hover:underline w-[70px] text-center"
+                                                >
+                                                    Xác nhận
+                                                </button>
+                                                <button
+                                                    onClick={(e) => openRejectModal(building, e)}
+                                                    className="text-blue-600 hover:underline w-[60px] text-center"
+                                                >
+                                                    Từ chối
+                                                </button>
+                                                <button
+                                                    onClick={(e) => handleStatusChange(building.buildingId, building.status, e)}
+                                                    className={`hover:underline text-center font-semibold w-[70px] ${isActive ? 'text-red-600' : 'text-green-600'}`}
+                                                >
+                                                    {isActive ? 'Khóa' : 'Mở Khóa'}
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })
                         )}
                     </tbody>
                 </table>
             </div>
+
             {/* Modal Xác Nhận */}
             <Modal
                 isOpen={showAcceptModal}
                 onRequestClose={closeAcceptModal}
                 contentLabel="Xác Nhận Tòa Nhà"
-                className="w-1/3 h-40 bg-white mx-auto my-5 p-5 border border-gray-400 rounded-lg"
+                className="w-11/12 sm:w-1/3 mx-auto my-6 p-6 bg-white rounded-lg shadow-lg outline-none"
+                overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
             >
-                <h1 className='font-bold text-xl text-blue-500'>Xác Nhận Tòa Nhà</h1>
-                <p>Bạn có chắc chắn muốn Xác nhận Tòa nhà <strong>{selectedBuilding?.buildingName}</strong> không?</p>
-                <div className="flex justify-end mt-5">
-                    <button onClick={handleAcceptConfirm} className="mr-4 bg-blue-500 text-white px-4 py-2 rounded">
+                <h1 className="text-xl font-bold text-blue-600 mb-4">Xác Nhận Tòa Nhà</h1>
+                <p className="text-gray-700 mb-6">
+                    Bạn có chắc chắn muốn xác nhận tòa nhà <strong>{selectedBuilding?.buildingName}</strong> không?
+                </p>
+                <div className="flex justify-end">
+                    <button
+                        onClick={handleAcceptConfirm}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition mr-3"
+                    >
                         Đồng ý
                     </button>
-                    <button onClick={closeAcceptModal} className="bg-gray-300 px-4 py-2 rounded">
+                    <button
+                        onClick={closeAcceptModal}
+                        className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition"
+                    >
                         Hủy
                     </button>
                 </div>
@@ -197,22 +244,31 @@ const BuildingList = () => {
                 isOpen={showRejectModal}
                 onRequestClose={closeRejectModal}
                 contentLabel="Từ Chối Tòa Nhà"
-                className="w-1/3 h-52 bg-white mx-auto my-5 p-5 border border-gray-400 rounded-lg"
+                className="w-11/12 sm:w-1/3 mx-auto my-6 p-6 bg-white rounded-lg shadow-lg outline-none"
+                overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
             >
-                <h1 className='font-bold text-xl text-red-500'>Từ Chối Tòa Nhà</h1>
-                <p>Vui lòng nhập lý do từ chối cho tòa nhà <strong>{selectedBuilding?.buildingName}</strong>:</p>
+                <h1 className="text-xl font-bold text-red-600 mb-4">Từ Chối Tòa Nhà</h1>
+                <p className="text-gray-700 mb-4">
+                    Vui lòng nhập lý do từ chối cho tòa nhà <strong>{selectedBuilding?.buildingName}</strong>:
+                </p>
                 <input
                     type="text"
                     value={rejectReason}
                     onChange={(e) => setRejectReason(e.target.value)}
-                    className="border p-2 w-full my-4"
                     placeholder="Lý do từ chối..."
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-300"
                 />
-                <div>
-                    <button onClick={handleRejectConfirm} className="mr-4 bg-blue-500 text-white px-4 py-2 rounded">
+                <div className="flex justify-end">
+                    <button
+                        onClick={handleRejectConfirm}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition mr-3"
+                    >
                         Xác nhận
                     </button>
-                    <button onClick={closeRejectModal} className="bg-gray-300 px-4 py-2 rounded">
+                    <button
+                        onClick={closeRejectModal}
+                        className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition"
+                    >
                         Hủy
                     </button>
                 </div>
