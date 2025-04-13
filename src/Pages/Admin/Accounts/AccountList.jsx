@@ -170,7 +170,7 @@ const AccountList = () => {
                     <input
                         className="border w-full p-2 h-11 border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
                         type="text"
-                        placeholder="Search..."
+                        placeholder="Tìm kiếm..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />

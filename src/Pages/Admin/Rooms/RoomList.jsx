@@ -212,7 +212,7 @@ const RoomList = () => {
                     <input
                         className="border border-gray-300 w-full h-10 rounded-lg px-3 focus:outline-none focus:ring focus:ring-blue-200"
                         type="text"
-                        placeholder="Search..."
+                        placeholder="Tìm kiếm theo tiêu đề hoặc địa chỉ..."
                         value={searchTerm}
                         onChange={(e) => {
                             setSearchTerm(e.target.value);

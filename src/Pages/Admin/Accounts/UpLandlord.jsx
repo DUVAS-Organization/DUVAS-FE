@@ -185,17 +185,17 @@ const UpLandlord = () => {
             </div>
 
             <div className="overflow-x-auto">
-                <table className="min-w-full bg-white border-collapse border border-gray-300 rounded-lg shadow-md">
+                <table className="min-w-full table-auto bg-white border-collapse border border-gray-300 rounded-lg shadow-md">
                     <thead>
                         <tr className="bg-gray-100">
                             <th className="py-2 px-4 text-center font-semibold text-black w-12">#</th>
-                            <th className="py-2 px-4 text-left font-semibold text-black min-w-[150px]">Tên</th>
-                            <th className="py-2 px-4 text-left font-semibold text-black w-32">CCCD</th>
+                            <th className="py-2 px-4 text-left font-semibold text-black min-w-[200px]">Tên</th>
+                            <th className="py-2 px-4 text-left font-semibold text-black w-32">Số CCCD</th>
                             <th className="py-2 px-4 text-left font-semibold text-black w-24">Giới tính</th>
                             <th className="py-2 px-4 text-left font-semibold text-black min-w-[200px]">Địa chỉ</th>
                             <th className="py-2 px-4 text-left font-semibold text-black w-32">Giấy tờ</th>
                             <th className="py-2 px-4 text-left font-semibold text-black w-32">Trạng thái</th>
-                            <th className="py-2 px-4 text-center font-semibold text-black w-40">Hành động</th>
+                            <th className="py-2 px-4 text-center font-semibold text-black w-44">Hành động</th>
                         </tr>
                     </thead>
                     <tbody>

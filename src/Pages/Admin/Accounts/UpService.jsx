@@ -163,26 +163,30 @@ const UpService = () => {
             </div>
 
             <div className="overflow-x-auto">
-                <table className="min-w-full bg-white border-collapse border border-gray-300 rounded-lg shadow-md">
+                <table className="min-w-full table-auto bg-white border-collapse border border-gray-300 rounded-lg shadow-md">
                     <thead>
                         <tr className="bg-gray-100">
                             <th className="py-2 px-4 text-left font-semibold text-black w-12">#</th>
-                            <th className="py-2 px-4 text-left font-semibold text-black min-w-[150px]">
+                            <th className="py-2 px-4 text-left font-semibold text-black min-w-[200px]">
                                 Tên
                             </th>
                             <th className="py-2 px-4 text-left font-semibold text-black w-32">
                                 Số CCCD
                             </th>
-                            <th className="py-2 px-4 text-left font-semibold text-black w-32">
-                                Giấy tờ
-                            </th>
                             <th className="py-2 px-4 text-left font-semibold text-black w-24">
                                 Giới tính
+                            </th>
+
+                            <th className="py-2 px-4 text-left font-semibold text-black min-w-[150px]">
+                                Địa chỉ
+                            </th>
+                            <th className="py-2 px-4 text-left font-semibold text-black w-32">
+                                Giấy tờ
                             </th>
                             <th className="py-2 px-4 text-left font-semibold text-black w-32">
                                 Trạng thái
                             </th>
-                            <th className="py-2 px-4 text-center font-semibold text-black w-40">
+                            <th className="py-2 px-4 text-center font-semibold text-black w-44">
                                 Hành động
                             </th>
                         </tr>
@@ -207,6 +211,13 @@ const UpService = () => {
                                     <td className="py-2 px-4 text-gray-700 border-b">
                                         {license.cccd || 'Không có'}
                                     </td>
+
+                                    <td className="py-2 px-4 text-gray-700 border-b">
+                                        {license.sex || 'Không có'}
+                                    </td>
+                                    <td className="py-2 px-4 text-gray-700 border-b break-words">
+                                        {license.address || 'Không có'}
+                                    </td>
                                     <td className="py-2 px-4 text-gray-700 border-b">
                                         <NavLink
                                             to={`/Admin/Service/Giayto/${license.serviceLicenseId}`}
@@ -214,9 +225,6 @@ const UpService = () => {
                                         >
                                             Xem giấy tờ
                                         </NavLink>
-                                    </td>
-                                    <td className="py-2 px-4 text-gray-700 border-b">
-                                        {license.sex || 'Không có'}
                                     </td>
                                     <td className="py-2 px-4 border-b">
                                         <span
