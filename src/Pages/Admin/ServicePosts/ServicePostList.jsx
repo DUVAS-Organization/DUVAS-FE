@@ -97,7 +97,7 @@ const ServicePostList = () => {
                     <input
                         className="border w-full h-11 border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
                         type="text"
-                        placeholder="  Search..."
+                        placeholder="  Tìm kiếm theo tiêu đề hoặc địa chỉ..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
