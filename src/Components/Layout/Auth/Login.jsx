@@ -30,23 +30,31 @@ const LoginPage = () => {
 
             if (token) {
                 localStorage.setItem("authToken", token);
-                // Giải mã token để kiểm tra role
                 const decodedToken = jwtDecode(token);
                 const userRole = decodedToken["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"];
 
-                // Điều hướng dựa trên role của user
                 if (userRole === 'Admin') {
-                    window.location.href = "/Admin/Accounts"; // Điều hướng đến trang Admin
+                    window.location.href = "/Admin/Accounts";
                 } else {
-                    window.location.href = "/"; // Điều hướng đến trang dành cho User
+                    window.location.href = "/";
                 }
             }
         } catch (error) {
-            setErrorMessage("Sai Tên đăng nhập hoặc Mật khẩu."); // Hiển thị thông báo lỗi
+            if (error?.response?.data?.message) {
+                const backendMessage = error.response.data.message;
+                if (backendMessage === "Tài khoản không có quyền đăng nhập.") {
+                    setErrorMessage("Tài khoản của bạn đã bị khóa.");
+                } else {
+                    setErrorMessage("Sai Tên đăng nhập hoặc Mật khẩu.");
+                }
+            } else {
+                setErrorMessage("Đã xảy ra lỗi. Vui lòng thử lại sau.");
+            }
         } finally {
             setLoading(false);
         }
     };
+
 
     // Đăng nhập với Google
     const handleGoogleLogin = () => {
@@ -70,14 +78,23 @@ const LoginPage = () => {
         }
     };
 
-    // Hook để kiểm tra URL sau khi Google callback
     useEffect(() => {
         const query = new URLSearchParams(window.location.search);
-        const code = query.get("token"); // Lấy mã token từ URL
-        if (code) {
-            handleGoogleCallback(code); // Thực hiện đổi token
+        const token = query.get("token");
+        const error = query.get("error");
+
+        if (token) {
+            handleGoogleCallback(token);
+        } else if (error) {
+            const decodedError = decodeURIComponent(error);
+            if (decodedError.includes("Tài khoản đã bị khóa")) {
+                setErrorMessage("Tài khoản của bạn đã bị khóa.");
+            } else {
+                setErrorMessage(decodedError);
+            }
         }
     }, []);
+
 
     return (
         <div className="flex items-center justify-center my-5 bg-gray-100">
