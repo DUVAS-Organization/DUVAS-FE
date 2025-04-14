@@ -20,6 +20,8 @@ import RoomDropdown from './RoomDropdown';
 import ServiceDropdown from './ServiceDropdown';
 import { MdBedroomParent, MdCleaningServices } from 'react-icons/md';
 import { getUserProfile } from '../../Services/User/UserProfileService';
+import Loading from '../Loading';
+import ThemeToggleButton from './UIContext/ThemeToggleButton';
 
 const navLinks = [
     { name: "Trang Chủ", path: "/" },
@@ -75,7 +77,7 @@ const Navbar = () => {
     }, [user]);
 
     if (loading) {
-        return <div>Loading...</div>;
+        return <div><Loading /></div>;
     }
     if (user?.role === 'Admin') {
         return <Sidebar />;
@@ -86,17 +88,22 @@ const Navbar = () => {
     const renderDropdownItems = () => {
         if (!user) return null;
         return (
-            <div className="px-4 py-2 text-gray-800 text-base">
+
+            <div className="px-4 py-2 text-gray-800 dark:bg-gray-800 text-base ">
+                <div className="flex items-center gap-2 ml-4 dark:text-white">
+                    <p className="font-medium">Giao diện: </p>
+                    <ThemeToggleButton />
+                </div>
                 <NavLink
                     to="/Overview"
-                    className="flex items-center space-x-2 px-4 py-2 rounded hover:bg-red-500 hover:text-white text-gray-800 whitespace-nowrap"
+                    className="dark:text-white flex items-center space-x-2 px-4 py-2 rounded hover:bg-red-500 hover:text-white text-gray-800 whitespace-nowrap"
                 >
                     <FaGlobe />
                     <span>Tổng quan</span>
                 </NavLink>
                 <NavLink
                     to="/Message"
-                    className="flex items-center space-x-2 px-4 py-2 rounded hover:bg-red-500 hover:text-white text-gray-800 whitespace-nowrap"
+                    className="dark:text-white flex items-center space-x-2 px-4 py-2 rounded hover:bg-red-500 hover:text-white text-gray-800 whitespace-nowrap"
                 >
                     <FaFacebookMessenger />
                     <span>Tin nhắn</span>
@@ -104,7 +111,7 @@ const Navbar = () => {
                 {user.role === "Landlord" && (
                     <NavLink
                         to="/Room"
-                        className="flex items-center space-x-2 px-4 py-2 rounded hover:bg-red-500 hover:text-white text-gray-800 whitespace-nowrap"
+                        className="dark:text-white flex items-center space-x-2 px-4 py-2 rounded hover:bg-red-500 hover:text-white text-gray-800 whitespace-nowrap"
                     >
                         <MdBedroomParent />
                         <span>Quản lý Phòng</span>
@@ -113,7 +120,7 @@ const Navbar = () => {
                 {user.role === "Service" && (
                     <NavLink
                         to="/ManageServices"
-                        className="flex items-center space-x-2 px-4 py-2 rounded hover:bg-red-500 hover:text-white text-gray-800 whitespace-nowrap"
+                        className="dark:text-white flex items-center space-x-2 px-4 py-2 rounded hover:bg-red-500 hover:text-white text-gray-800 whitespace-nowrap"
                     >
                         <MdCleaningServices />
                         <span>Quản lý Dịch vụ</span>
@@ -121,35 +128,35 @@ const Navbar = () => {
                 )}
                 <NavLink
                     to="/RentalList"
-                    className="flex items-center space-x-2 px-4 py-2 rounded hover:bg-red-500 hover:text-white text-gray-800 whitespace-nowrap"
+                    className="dark:text-white flex items-center space-x-2 px-4 py-2 rounded hover:bg-red-500 hover:text-white text-gray-800 whitespace-nowrap"
                 >
                     <FaDoorClosed />
                     <span>Phòng đã thuê</span>
                 </NavLink>
                 <NavLink
                     to="/Profile?tab=edit"
-                    className="flex items-center space-x-2 px-4 py-2 rounded hover:bg-red-500 hover:text-white text-gray-800 whitespace-nowrap"
+                    className="dark:text-white flex items-center space-x-2 px-4 py-2 rounded hover:bg-red-500 hover:text-white text-gray-800 whitespace-nowrap"
                 >
                     <FaUserTie />
                     <span>Chỉnh Sửa thông tin</span>
                 </NavLink>
                 <NavLink
                     to="/Profile?tab=settings"
-                    className="flex items-center space-x-2 px-4 py-2 rounded hover:bg-red-500 hover:text-white text-gray-800 whitespace-nowrap"
+                    className="dark:text-white flex items-center space-x-2 px-4 py-2 rounded hover:bg-red-500 hover:text-white text-gray-800 whitespace-nowrap"
                 >
                     <FaLock />
                     <span>Thay đổi mật khẩu</span>
                 </NavLink>
                 <NavLink
                     to="/Moneys"
-                    className="flex items-center space-x-2 px-4 py-2 rounded hover:bg-red-500 hover:text-white text-gray-800 whitespace-nowrap"
+                    className="dark:text-white flex items-center space-x-2 px-4 py-2 rounded hover:bg-red-500 hover:text-white text-gray-800 whitespace-nowrap"
                 >
                     <FaHandHoldingDollar />
                     <span>Nạp tiền</span>
                 </NavLink>
                 <button
                     onClick={logout}
-                    className="flex items-center space-x-2 w-full px-4 py-2 rounded hover:bg-red-500 hover:text-white text-left text-gray-800 whitespace-nowrap"
+                    className="dark:text-white flex items-center space-x-2 w-full px-4 py-2 rounded hover:bg-red-500 hover:text-white text-left text-gray-800 whitespace-nowrap"
                 >
                     <FaSignOutAlt className="transform scale-y-[-1]" />
                     <span>Đăng Xuất</span>
@@ -161,14 +168,14 @@ const Navbar = () => {
     // Hàm xử lý khi nhấn nút "Đăng tin"
     const handlePostClick = () => {
         if (user?.role === "Landlord") {
-            navigate("/Room/Create"); // Chuyển hướng nếu là Landlord
+            navigate("/Room/Create");
         } else {
-            setShowRolePopup(true); // Hiển thị popup nếu không phải Landlord
+            setShowRolePopup(true);
         }
     };
 
     return (
-        <nav className="bg-white shadow-md font-sans sticky top-0 z-50 transition duration-500">
+        <nav className="bg-white shadow-md font-sans sticky top-0 z-50 transition duration-500 dark:bg-gray-800 ">
             <div className="max-w-full mx-auto px-2 sm:px-4 lg:px-8">
                 <div className="relative flex items-center h-16">
                     {/* Logo */}
@@ -182,7 +189,7 @@ const Navbar = () => {
                         <NavLink
                             to="/"
                             className={({ isActive }) =>
-                                `relative px-3 py-1 text-base font-medium text-gray-800 transition-all
+                                `dark:text-white relative px-3 py-1 text-base font-medium text-gray-800 transition-all
                                 before:content-[''] before:absolute before:bottom-0 before:left-3 before:w-0 before:h-[2px]
                                 before:bg-red-500 before:transition-all before:duration-500 before:ease-in-out
                                 hover:before:w-[calc(100%-1.5rem)] ${isActive ? 'before:w-[calc(100%-1.5rem)] text-red-500 font-semibold' : ''}`
@@ -197,7 +204,7 @@ const Navbar = () => {
                                 key={name}
                                 to={path}
                                 className={({ isActive }) =>
-                                    `relative px-3 py-1 text-base font-medium text-gray-800 transition-all
+                                    ` dark:text-white relative px-3 py-1 text-base font-medium text-gray-800 transition-all
                                     before:content-[''] before:absolute before:bottom-0 before:left-3 before:w-0 before:h-[2px]
                                     before:bg-red-500 before:transition-all before:duration-500 before:ease-in-out
                                     hover:before:w-[calc(100%-1.5rem)] ${isActive ? 'before:w-[calc(100%-1.5rem)] text-red-500 font-semibold' : ''}`
@@ -209,10 +216,11 @@ const Navbar = () => {
                     </div>
                     {/* Right side: user actions */}
                     <div className="hidden ml-auto space-x-4 sm:flex">
+                        {/* <ThemeToggleButton /> */}
                         {user ? (
                             <>
                                 <UIProvider>
-                                    <div className="flex gap-3 items-center">
+                                    <div className="flex gap-3 items-center ">
                                         <SavePosts />
                                         <BellNotifications />
                                     </div>
@@ -227,14 +235,14 @@ const Navbar = () => {
                                         />
                                     ) : (
                                         <div className="w-8 h-8 rounded-full border border-gray-300 bg-gray-200 flex items-center justify-center">
-                                            <span className="text-gray-800 font-bold">
+                                            <span className="text-gray-800 font-bold ">
                                                 {getInitial(userProfile?.userName || user.username)}
                                             </span>
                                         </div>
                                     )}
                                     <button
                                         onClick={() => setDropdownOpen(!dropdownOpen)}
-                                        className="text-gray-800 px-3 py-2 rounded-md text-base font-medium flex items-center"
+                                        className="text-gray-800 px-3 py-2 rounded-md text-base font-medium flex items-center  dark:text-white"
                                     >
                                         {userProfile?.name || userProfile?.userName || user.username}
                                     </button>
@@ -247,7 +255,7 @@ const Navbar = () => {
                                 {/* Nút Đăng tin */}
                                 <button
                                     onClick={handlePostClick}
-                                    className="text-red-500 px-3 py-2 rounded-md text-base font-medium border border-red-400 hover:bg-red-500 hover:text-white transition-colors duration-150"
+                                    className="dark:text-white dark:bg-red-500 text-red-500 px-3 py-2 rounded-md text-base font-medium border border-red-400 hover:bg-red-500 hover:text-white transition-colors duration-150"
                                 >
                                     Đăng Tin
                                 </button>
@@ -275,7 +283,7 @@ const Navbar = () => {
                     <div className="sm:hidden ml-auto">
                         <button
                             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                            className="text-gray-800 px-3 py-2 rounded-md text-base font-medium"
+                            className="text-gray-800 px-3 py-2 rounded-md text-base font-medium dark:text-white"
                         >
                             {mobileMenuOpen ? 'Đóng' : 'Menu'}
                         </button>
@@ -285,20 +293,21 @@ const Navbar = () => {
 
             {/* Mobile Menu */}
             {mobileMenuOpen && (
-                <div className="sm:hidden bg-white shadow-md p-4">
+                <div className="sm:hidden bg-white shadow-md p-4 dark:bg-gray-800 dark:text-white">
                     <UIProvider>
                         <div className="flex gap-3 items-center">
+                            {/* <ThemeToggleButton /> */}
                             <SavePosts />
                             <BellNotifications />
                         </div>
                     </UIProvider>
-                    <NavLink to="/" className="block px-3 py-2 text-gray-800">
+                    <NavLink to="/" className="block px-3 py-2 text-gray-800 dark:text-white">
                         Trang Chủ
                     </NavLink>
                     <RoomDropdown />
                     <ServiceDropdown />
                     {navLinks.slice(1).map(({ name, path }) => (
-                        <NavLink key={name} to={path} className="block px-3 py-2 text-gray-800">
+                        <NavLink key={name} to={path} className="block px-3 py-2 text-gray-800 dark:text-white">
                             {name}
                         </NavLink>
                     ))}
@@ -307,17 +316,17 @@ const Navbar = () => {
                             {renderDropdownItems()}
                             <button
                                 onClick={handlePostClick}
-                                className="block px-3 py-2 text-red-500 border border-red-400 rounded-md hover:bg-red-500 hover:text-white transition-colors duration-150"
+                                className="dark:text-white dark:bg-red-500 block px-3 py-2 text-red-500 border border-red-400 rounded-md hover:bg-red-500 hover:text-white transition-colors duration-150"
                             >
                                 Đăng Tin
                             </button>
                         </div>
                     ) : (
                         <div className="mt-4">
-                            <NavLink to="/Logins" className="block px-3 py-2 text-gray-800">
+                            <NavLink to="/Logins" className="block px-3 py-2 text-gray-800 dark:text-white">
                                 Đăng Nhập
                             </NavLink>
-                            <NavLink to="/Registers" className="block px-3 py-2 text-gray-800">
+                            <NavLink to="/Registers" className="block px-3 py-2 text-gray-800 dark:text-white">
                                 Đăng Ký
                             </NavLink>
                             <button
@@ -334,16 +343,16 @@ const Navbar = () => {
             {/* Popup thông báo vai trò */}
             {showRolePopup && (
                 <div className="fixed inset-0 top-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-                        <h3 className="text-lg font-bold mb-4 text-red-600">Thông báo: Bạn chưa đủ vai trò</h3>
+                    <div className="bg-white p-6 rounded-lg shadow-lg w-96 dark:bg-gray-800">
+                        <h3 className="text-lg font-bold mb-4 text-red-600 dark:text-white">Thông báo: Bạn chưa đủ vai trò</h3>
 
-                        <p className="mb-4 text-gray-700">
+                        <p className="mb-4 text-gray-700 dark:text-white">
                             Vui lòng đăng ký để thực hiện chức năng này.
                         </p>
                         <div className="flex justify-between">
                             <button
                                 onClick={() => setShowRolePopup(false)}
-                                className="bg-gray-300 text-black px-6 py-2 rounded-lg hover:bg-gray-400 transition"
+                                className="bg-gray-300 text-black px-6 py-2 rounded-lg hover:bg-gray-400 transition dark:text-white"
                             >
                                 Đóng
                             </button>
@@ -352,7 +361,7 @@ const Navbar = () => {
                                     setShowRolePopup(false);
                                     navigate("/Profile?tab=registerLandlord");
                                 }}
-                                className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition"
+                                className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition dark:text-white"
                             >
                                 Đăng Ký
                             </button>

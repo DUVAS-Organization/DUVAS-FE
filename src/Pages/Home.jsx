@@ -51,7 +51,7 @@ const Home = () => {
     const nextSlide = () => setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
 
     return (
-        <div className="bg-white">
+        <div className="bg-white dark:bg-gray-800 dark:text-white">
             {/* Carousel */}
             <div className="relative w-full overflow-hidden">
                 <img
@@ -93,7 +93,7 @@ const Home = () => {
             </div>
 
             {/* Searchbar */}
-            <div className="bg-white w-full mx-auto py-2 px-4">
+            <div className="bg-white w-full mx-auto py-2 px-4 dark:bg-gray-800">
                 <Searchbar />
             </div>
 
@@ -101,7 +101,7 @@ const Home = () => {
             <div className="max-w-6xl mx-auto mt-4 md:mt-8 px-4">
                 {/* Service posts */}
                 <div className="flex flex-col md:flex-row justify-between p-4">
-                    <h2 className="text-lg md:text-xl text-gray-800 font-bold">Tin dịch vụ</h2>
+                    <h2 className="text-lg md:text-xl text-gray-800 font-bold dark:text-white">Tin dịch vụ</h2>
                     <Link
                         to="/ServicePosts?tab=Dịch%20vụ%20sửa%20chữa"
                         className="text-red-600 font-semibold flex items-center hover:scale-105 transition duration-100 mt-2 md:mt-0"

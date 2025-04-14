@@ -122,26 +122,26 @@ const Searchbar = () => {
     };
 
     return (
-        <div className="bg-red-500 p-2 md:p-4">
-            <div className="mx-auto max-w-6xl">
+        <div className="bg-red-500 p-2 md:p-4 dark:bg-gray-700 dark:text-white dark:rounded-xl">
+            <div className="mx-auto max-w-6xl ">
                 <div className="flex flex-col md:flex-row gap-0.5">
                     <div
-                        className={`rounded-t-lg px-4 py-2 cursor-pointer ${activeTab === "rooms" ? "bg-red-800 text-white" : "bg-gray-100 text-black"}`}
+                        className={`rounded-t-lg px-4 py-2 cursor-pointer ${activeTab === "rooms" ? "bg-red-800 text-white dark:bg-gray-800 dark:text-white" : "bg-gray-100 text-black"}`}
                         onClick={() => setActiveTab("rooms")}
                     >
                         Phòng trọ - Căn hộ
                     </div>
                     <div
-                        className={`rounded-t-lg px-4 py-2 cursor-pointer ${activeTab === "services" ? "bg-red-800 text-white" : "bg-gray-100 text-black"}`}
+                        className={`rounded-t-lg px-4 py-2 cursor-pointer ${activeTab === "services" ? "bg-red-800 text-white dark:bg-gray-800 dark:text-white" : "bg-gray-100 text-black"}`}
                         onClick={() => setActiveTab("services")}
                     >
                         Dịch vụ
                     </div>
                 </div>
 
-                <div className="shadow-lg rounded-b-lg p-4">
+                <div className="shadow-lg rounded-b-lg p-4 dark:bg-gray-800 dark:text-white">
                     <div className="bg-white flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-2 rounded-lg">
-                        <div className="flex items-center bg-gray-100 px-4 py-2 flex-shrink-0 w-full md:w-auto">
+                        <div className="flex items-center bg-gray-100 px-4 py-2 flex-shrink-0 w-full md:w-auto  dark:text-black">
                             <FaMapMarkerAlt className="text-gray-500" />
                             <span className="mx-2">Đà Nẵng</span>
                         </div>
@@ -164,9 +164,9 @@ const Searchbar = () => {
                     </div>
 
                     <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2 mt-2">
-                        <div className="w-full md:w-1/3 relative">
+                        <div className="w-full md:w-1/3 relative ">
                             <select
-                                className="w-full bg-red-800 text-white text-left rounded-lg px-4 py-2 appearance-none cursor-pointer focus:outline-none"
+                                className="dark:bg-gray-700 dark:text-white w-full bg-red-800 text-white text-left rounded-lg px-4 py-2 appearance-none cursor-pointer focus:outline-none"
                                 value={selectedCategoryId}
                                 onChange={handleCategoryChange}
                             >
@@ -175,7 +175,7 @@ const Searchbar = () => {
                                     <option
                                         key={cat.categoryRoomId || cat.categoryServiceId}
                                         value={cat.categoryRoomId || cat.categoryServiceId}
-                                        className="bg-white text-black"
+                                        className="bg-white text-black dark:bg-gray-700 dark:text-white"
                                     >
                                         {cat.categoryName || cat.categoryServiceName}
                                     </option>
@@ -184,10 +184,10 @@ const Searchbar = () => {
                             <FaChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white pointer-events-none" />
                         </div>
 
-                        <div className="w-full md:w-1/3 relative">
+                        <div className="w-full md:w-1/3 relative ">
                             <button
                                 onClick={() => { setPriceDropdownOpen(prev => !prev); setAreaDropdownOpen(false); }}
-                                className="w-full bg-red-800 text-white text-left rounded-lg px-4 py-2 select-none flex justify-between items-center"
+                                className="dark:bg-gray-700 dark:text-white w-full bg-red-800 text-white text-left rounded-lg px-4 py-2 select-none flex justify-between items-center"
                             >
                                 <span>{priceLabel}</span>
                                 {priceDropdownOpen ? <FaChevronUp /> : <FaChevronDown />}
@@ -211,21 +211,21 @@ const Searchbar = () => {
                                         onChange={(minVal, maxVal) => { setMinPrice(minVal); setMaxPrice(maxVal); }}
                                     />
                                 </div>
-                                <div className="mb-4 h-40 overflow-y-scroll">
+                                <div className="mb-4 h-40 overflow-y-scroll ">
                                     {priceOptions.map((item) => (
                                         <label
                                             key={item.value}
-                                            className="flex items-center mb-2 cursor-pointer"
+                                            className="flex items-center mb-2 cursor-pointer "
                                             onClick={() => { setSelectedPrice(item.value); setMinPrice(item.min); setMaxPrice(item.max); }}
                                         >
                                             <input
                                                 type="radio"
                                                 name="price"
-                                                className="form-radio text-red-500"
+                                                className="form-radio text-red-500 "
                                                 checked={selectedPrice === item.value}
                                                 onChange={() => { }}
                                             />
-                                            <span className="ml-2 text-gray-700">{item.label}</span>
+                                            <span className="ml-2 text-gray-700 dark:text-white">{item.label}</span>
                                         </label>
                                     ))}
                                 </div>
@@ -247,7 +247,7 @@ const Searchbar = () => {
                             <div className="w-full md:w-1/3 relative">
                                 <button
                                     onClick={() => { setAreaDropdownOpen(prev => !prev); setPriceDropdownOpen(false); }}
-                                    className="w-full bg-red-800 text-white text-left rounded-lg px-4 py-2 select-none flex justify-between items-center"
+                                    className="dark:bg-gray-700 dark:text-white w-full bg-red-800 text-white text-left rounded-lg px-4 py-2 select-none flex justify-between items-center"
                                 >
                                     <span>{areaLabel}</span>
                                     {areaDropdownOpen ? <FaChevronUp /> : <FaChevronDown />}
@@ -275,7 +275,7 @@ const Searchbar = () => {
                                         {areaOptions.map((item) => (
                                             <label
                                                 key={item.value}
-                                                className="flex items-center mb-2 cursor-pointer"
+                                                className="flex items-center mb-2 cursor-pointer dark:text-white"
                                                 onClick={() => { setSelectedArea(item.value); setMinArea(item.min); setMaxArea(item.max); }}
                                             >
                                                 <input
@@ -285,7 +285,7 @@ const Searchbar = () => {
                                                     checked={selectedArea === item.value}
                                                     onChange={() => { }}
                                                 />
-                                                <span className="ml-2 text-gray-700">{item.label}</span>
+                                                <span className="ml-2 text-gray-700 dark:text-white">{item.label}</span>
                                             </label>
                                         ))}
                                     </div>

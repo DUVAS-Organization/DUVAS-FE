@@ -131,11 +131,11 @@ const ServicePostsHome = () => {
         const isSaved = savedPosts.has(post.servicePostId);
 
         return (
-            <Link to={`/ServicePosts/Details/${post.servicePostId}`} className="block">
+            <Link to={`/ServicePosts/Details/${post.servicePostId}`} className="block ">
                 <Item className={`mb-4 ${isDoubleHeight ? 'h-[417px]' : 'h-48'}`} $vertical={isDoubleHeight}>
                     {isDoubleHeight ? (
                         <>
-                            <div className="relative w-full h-1/2">
+                            <div className="relative w-full h-1/2 dark:bg-gray-800">
                                 <img
                                     src={firstImage}
                                     alt={post.title}
@@ -147,28 +147,28 @@ const ServicePostsHome = () => {
                                     </span>
                                 )}
                             </div>
-                            <div className="p-4 flex-1 flex flex-col">
+                            <div className="p-4 flex-1 flex flex-col dark:bg-gray-800">
                                 <h3 className="text-lg font-semibold mb-1 truncate">{post.title}</h3>
-                                <p className="text-gray-600 mb-1 flex items-center">
+                                <p className="text-gray-600 mb-1 flex items-center dark:text-white">
                                     <FaMapMarkerAlt className="mr-1" />
                                     {post.location}
                                 </p>
                                 <p className="text-red-500 font-semibold mb-1">
                                     {post.price.toLocaleString('vi-VN')} đ
                                 </p>
-                                <p className="text-gray-600 mb-2 line-clamp-2">{post.description}</p>
+                                <p className="text-gray-600 mb-2 line-clamp-2 dark:text-white">{post.description}</p>
                                 <div className="mt-auto flex justify-between items-center">
                                     <button
                                         onClick={(e) => toggleSavePost(post.servicePostId, e)}
                                         className="text-xl"
                                     >
                                         {isSaved ? (
-                                            <FaHeart className="text-red-500" />
+                                            <FaHeart className="text-red-500 dark:text-white" />
                                         ) : (
-                                            <FaRegHeart className="text-gray-600" />
+                                            <FaRegHeart className="text-gray-600 dark:text-white" />
                                         )}
                                     </button>
-                                    <span className="text-gray-600 flex items-center">
+                                    <span className="text-gray-600 flex items-center dark:text-white">
                                         <FaCamera className="mr-1" /> {imageCount}
                                     </span>
                                 </div>
@@ -176,7 +176,7 @@ const ServicePostsHome = () => {
                         </>
                     ) : (
                         <>
-                            <div className="relative w-48 h-full flex-shrink-0">
+                            <div className="relative w-48 h-full flex-shrink-0 dark:bg-gray-800 dark:text-white">
                                 <img
                                     src={firstImage}
                                     alt={post.title}
@@ -189,7 +189,7 @@ const ServicePostsHome = () => {
                                 )}
                             </div>
                             <div className="p-4 flex-1 flex flex-col">
-                                <h3 className="text-lg font-semibold mb-1 truncate">{post.title}</h3>
+                                <h3 className="text-lg font-semibold mb-1 truncate ">{post.title}</h3>
                                 <p className="text-gray-600 mb-1 flex items-center">
                                     <FaMapMarkerAlt className="mr-1" />
                                     {post.location}
@@ -231,7 +231,7 @@ const ServicePostsHome = () => {
                     <Link
                         key={post.servicePostId}
                         to={`/ServicePosts/Details/${post.servicePostId}`}
-                        className="block text-xl font-semibold px-2 py-1 text-gray-600 hover:text-white hover:bg-red-500 rounded truncate"
+                        className="block text-xl font-semibold px-2 py-1 text-gray-600 dark:text-white hover:text-white hover:bg-red-500 rounded truncate"
                         onMouseEnter={() => setHoveredPostId(post.servicePostId)}
                         onMouseLeave={() => setHoveredPostId(null)}
                     >
@@ -256,7 +256,7 @@ const ServicePostsHome = () => {
 
     return (
         <div className="">
-            <div className="container mx-auto">
+            <div className="container mx-auto dark:text-white">
                 <div className="p-4">
                     {filteredServicePosts.length === 0 ? (
                         <p className="text-black font-semibold">Không tìm thấy bài đăng dịch vụ nào.</p>

@@ -39,7 +39,7 @@ const RangeSlider = ({ min, max, minValue, maxValue, onChange }) => {
 
     return (
         <div
-            className="relative w-full mt-4"
+            className="relative w-full mt-4 "
             ref={sliderRef}
             style={{ height: "5px" }}
         >

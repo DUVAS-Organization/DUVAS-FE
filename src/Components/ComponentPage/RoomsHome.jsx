@@ -133,13 +133,13 @@ const RoomsHome = () => {
     }
 
     return (
-        <div className="bg-white mt-2">
+        <div className="bg-white mt-2 dark:bg-gray-800 dark:text-white">
             <div className="container mx-auto px-4">
                 {Object.entries(groupedRooms).map(([category, roomsInCategory]) => {
                     const visibleCount = visibleRoomsByCategory[category] || defaultVisible;
                     return (
                         <div key={category} className="mb-8">
-                            <h1 className="text-xl font-bold mb-4 text-gray-800">{category}</h1>
+                            <h1 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">{category}</h1>
                             <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
                                 {roomsInCategory.slice(0, visibleCount).map((room) => {
                                     let images;
@@ -167,13 +167,13 @@ const RoomsHome = () => {
                                                         </span>
                                                     </div>
                                                 )}
-                                                <div className="p-4 flex-1 flex flex-col">
+                                                <div className="p-4 flex-1 flex flex-col dark:bg-gray-800 dark:text-white">
                                                     <h3 className="text-lg font-semibold mb-2 line-clamp-2">{room.title}</h3>
                                                     <p className="text-red-500 font-semibold mb-2">
                                                         {room.price.toLocaleString('vi-VN')} đ • {room.acreage} m²
                                                     </p>
-                                                    <p className="text-gray-600 mb-2 flex items-center truncate max-w-[240px]">
-                                                        <FaMapMarkerAlt className="mr-1 absolute" />
+                                                    <p className="text-gray-600 mb-2 flex items-center truncate max-w-[240px] dark:text-white">
+                                                        <FaMapMarkerAlt className="mr-1 absolute " />
                                                         <p className="ml-5">{room.locationDetail}</p>
                                                     </p>
                                                     <div className="mt-auto flex justify-between items-center border-t pt-2">
@@ -182,12 +182,12 @@ const RoomsHome = () => {
                                                             className="text-2xl"
                                                         >
                                                             {isSaved ? (
-                                                                <FaHeart className="text-red-500" />
+                                                                <FaHeart className="text-red-500 dark:text-white" />
                                                             ) : (
-                                                                <FaRegHeart className="text-gray-600" />
+                                                                <FaRegHeart className="text-gray-600 dark:text-white" />
                                                             )}
                                                         </button>
-                                                        <span className="text-gray-600 flex items-center">
+                                                        <span className="text-gray-600 flex items-center dark:text-white">
                                                             <FaCamera className="mr-1" /> {imageCount}
                                                         </span>
                                                     </div>
