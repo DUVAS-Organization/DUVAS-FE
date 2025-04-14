@@ -11,6 +11,7 @@ import {
     FaSignOutAlt,
     FaFacebookMessenger,
     FaDoorClosed,
+    FaWallet,
 } from 'react-icons/fa';
 import { FaHandHoldingDollar, FaHouse } from "react-icons/fa6";
 import BellNotifications from './UIContext/BellNotifications';
@@ -61,6 +62,7 @@ const Navbar = () => {
                         userName: profileData.userName || user.username,
                         name: profileData.name || '',
                         profilePicture: profileData.profilePicture || "https://www.gravatar.com/avatar/?d=mp",
+                        money: profileData.money || 0,
                     });
                 } catch (error) {
                     console.error("Error fetching user profile:", error);
@@ -68,6 +70,7 @@ const Navbar = () => {
                         userName: user.username || '',
                         name: '',
                         profilePicture: "https://www.gravatar.com/avatar/?d=mp",
+                        money: 0,
                     });
                 }
             }
@@ -90,7 +93,22 @@ const Navbar = () => {
         return (
 
             <div className="px-4 py-2 text-gray-800 dark:bg-gray-800 text-base ">
-                <div className="flex items-center gap-2 ml-4 dark:text-white">
+                <div className="bg-white px-4 py-2 rounded-lg shadow-md my-1 dark:bg-gray-800">
+
+                    <div className="flex justify-between mb-2 ">
+                        <h2 className="text-sm font-semibold dark:text-white ">Số dư tài khoản: </h2>
+                        {/* <span>TK Chính</span> */}
+                        <span className='text-sm font-bold text-red-600 dark:text-red-500'>{userProfile?.money.toLocaleString() || "0"} đ</span>
+                    </div>
+                    {/* <NavLink
+                        to="/Moneys"
+                        className="w-full bg-white text-red-500 py-1 rounded-lg flex items-center justify-center border border-red-400 hover:bg-red-500 hover:text-white"
+                    >
+                        <FaWallet className="mr-2" />
+                        Nạp tiền
+                    </NavLink> */}
+                </div>
+                <div className="flex items-center justify-between w-full gap-2 pl-4 pr-2 dark:text-white">
                     <p className="font-medium">Giao diện: </p>
                     <ThemeToggleButton />
                 </div>
