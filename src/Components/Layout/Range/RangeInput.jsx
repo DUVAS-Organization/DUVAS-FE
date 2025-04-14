@@ -15,15 +15,15 @@ const RangeInput = ({
     maxAllowed  // Giá trị lớn nhất được phép cho ô đến
 }) => {
     return (
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center mb-4 ">
             <div className="flex flex-col items-center">
-                <label className="text-sm font-medium text-black mb-1">
+                <label className="text-sm font-medium text-black mb-1  dark:text-white">
                     {fromLabel} {fromValue} {unit}
                 </label>
                 <input
                     type="number"
                     placeholder={minPlaceholder}
-                    className="border rounded px-2 py-1 text-gray-800 text-center w-20"
+                    className="border rounded px-2 py-1 text-gray-800 text-center w-20 "
                     value={fromValue}
                     onChange={(e) => {
                         let value = Number(e.target.value);
@@ -33,9 +33,9 @@ const RangeInput = ({
                     }}
                 />
             </div>
-            <span className="text-xl text-gray-600">→</span>
+            <span className="text-xl text-gray-600  dark:text-white">→</span>
             <div className="flex flex-col items-center">
-                <label className="text-sm font-medium text-black mb-1">
+                <label className="text-sm font-medium text-black mb-1 dark:text-white">
                     {toLabel} {toValue} {unit}
                 </label>
                 <input

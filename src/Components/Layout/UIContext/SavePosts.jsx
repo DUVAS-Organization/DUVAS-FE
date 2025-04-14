@@ -140,7 +140,7 @@ const SavedPostList = () => {
     return (
         <div className="relative flex flex-col items-center" ref={dropdownRef}>
             <button onClick={handleToggleDropdown} className="relative">
-                <FaRegHeart className="text-2xl text-black" />
+                <FaRegHeart className="text-2xl text-black dark:text-white" />
                 {savedPosts.length > 0 && (
                     <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
                         {savedPosts.length}
@@ -149,12 +149,12 @@ const SavedPostList = () => {
             </button>
 
             {isOpen && (
-                <div className="absolute left-1/2 -translate-x-1/2 mt-10 w-96 h-80 bg-white shadow-lg rounded-md border border-gray-200 flex flex-col">
+                <div className="absolute left-1/2 -translate-x-1/2 mt-10 w-96 h-80 dark:text-black bg-white shadow-lg rounded-md border border-gray-200 flex flex-col">
                     <div className="px-4 py-2 border-b text-lg font-semibold text-center">
                         Tin đăng đã lưu
                     </div>
 
-                    <div className="flex-1 overflow-y-auto">
+                    <div className="flex-1 overflow-y-auto dark:text-white">
                         {savedPosts.length > 0 ? (
                             savedPosts.map((post, index) => {
                                 let title = "";

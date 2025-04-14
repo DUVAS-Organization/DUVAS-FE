@@ -43,7 +43,7 @@ const BellNotifications = () => {
                 onClick={() => toggleDropdown(isOpen ? null : "notifications")}
                 className="relative p-2"
             >
-                <FaRegBell className="text-2xl text-black" />
+                <FaRegBell className="text-2xl text-black dark:text-white" />
                 {notifications.some((n) => n.unread) && (
                     <span className="absolute -top-0 -right-0 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
                         {notifications.filter((n) => n.unread).length}
