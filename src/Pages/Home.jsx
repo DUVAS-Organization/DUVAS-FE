@@ -10,13 +10,29 @@ import carousel2 from '../Assets/Images/carousel4.webp';
 import carousel3 from '../Assets/Images/carousel6.webp';
 
 const images = [
-    { src: carousel1, title: "Phòng trọ sạch đẹp tại Đà Nẵng", btnText: "Xem phòng trọ", link: "/Rooms?tab=Phòng%20trọ" },
-    { src: carousel2, title: "Căn hộ tiện nghi đầy đủ dịch vụ", btnText: "Xem căn hộ", link: "/Rooms?tab=Căn%20hộ" },
-    { src: carousel3, title: "Dịch vụ sinh viên giá rẻ", btnText: "Khám phá ngay", link: "/ServicePosts?tab=Vệ%20sinh" },
+    {
+        src: carousel1,
+        title: "Phòng trọ sạch đẹp tại Đà Nẵng",
+        btnText: "Xem phòng trọ",
+        link: "/Rooms?tab=Phòng%20trọ"
+    },
+    {
+        src: carousel2,
+        title: "Căn hộ tiện nghi đầy đủ dịch vụ",
+        btnText: "Xem căn hộ",
+        link: "/Rooms?tab=Căn%20hộ"
+    },
+    {
+        src: carousel3,
+        title: "Dịch vụ sinh viên giá rẻ",
+        btnText: "Khám phá ngay",
+        link: "/ServicePosts?tab=Vệ%20sinh"
+    },
 ];
 
 const Home = () => {
     const [currentIndex, setCurrentIndex] = useState(0);
+    const [offsetY, setOffsetY] = useState(0);
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -25,17 +41,27 @@ const Home = () => {
         return () => clearInterval(interval);
     }, []);
 
+    useEffect(() => {
+        const handleScroll = () => setOffsetY(window.scrollY);
+        window.addEventListener("scroll", handleScroll);
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, []);
+
     const prevSlide = () => setCurrentIndex((prevIndex) => (prevIndex - 1 + images.length) % images.length);
     const nextSlide = () => setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
 
     return (
         <div className="bg-white">
             {/* Carousel */}
-            <div className="relative w-full">
+            <div className="relative w-full overflow-hidden">
                 <img
                     className="w-full max-h-[200px] md:max-h-[380px] object-cover brightness-90 transition-all duration-700"
                     src={images[currentIndex].src}
                     alt="carousel"
+                    style={{
+                        transform: `translateY(${offsetY * 0.3}px) scale(1.05)`,
+                        transition: "transform 0.2s ease-out",
+                    }}
                 />
 
                 {/* Overlay text */}

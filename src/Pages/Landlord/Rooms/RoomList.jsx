@@ -129,12 +129,9 @@ const RoomList = () => {
             const rentalResponse = await BookingManagementService.getRentalListOfLandlord(user.userId, user.token);
             const roomsData = roomResponse.rooms || [];
             const bookingsData = rentalResponse || [];
-            console.log('Rooms Data:', roomsData); // Log dữ liệu phòng từ API
-            console.log('Bookings Data:', bookingsData); // Log dữ liệu booking
             const newCards = [];
 
             roomsData.forEach((room) => {
-                console.log(`Room ID: ${room.roomId}, isPermission: ${room.isPermission}`); // Log isPermission của từng phòng
                 const roomBookings = bookingsData.filter((bk) => bk.roomId === room.roomId);
                 const validBookings = roomBookings.filter((bk) => bk.rentalStatus === 1);
 
@@ -170,7 +167,6 @@ const RoomList = () => {
                 }
             });
 
-            console.log('New Cards:', newCards); // Log danh sách cards sau khi xử lý
             newCards.sort((a, b) => {
                 const orderA = sortOrder[a.status] || 5;
                 const orderB = sortOrder[b.status] || 5;
@@ -202,11 +198,9 @@ const RoomList = () => {
             const rentalResponse = await BookingManagementService.getRentalListOfLandlord(user.userId, user.token);
             const roomsData = roomResponse.rooms || [];
             const bookingsData = rentalResponse || [];
-            console.log(`Filtered by status ${status} - Rooms Data:`, roomsData); // Log dữ liệu phòng khi lọc theo status
             const filteredCards = [];
 
             roomsData.forEach((room) => {
-                console.log(`Room ID: ${room.roomId}, isPermission: ${room.isPermission}`); // Log isPermission khi lọc
                 const roomBookings = bookingsData.filter((bk) => bk.roomId === room.roomId);
                 const validBookings = roomBookings.filter((bk) => bk.rentalStatus === 1);
 
@@ -245,8 +239,6 @@ const RoomList = () => {
                     });
                 }
             });
-
-            console.log(`Filtered Cards for status ${status}:`, filteredCards); // Log danh sách cards sau khi lọc
             filteredCards.sort((a, b) => {
                 const dateA = new Date(a.createdDate || 0);
                 const dateB = new Date(b.createdDate || 0);
