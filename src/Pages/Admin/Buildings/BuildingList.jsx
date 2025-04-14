@@ -110,8 +110,8 @@ const BuildingList = () => {
     return (
         <div className="container mx-auto px-4 py-6">
             <Counts />
-            <div className="flex flex-col sm:flex-row justify-between items-center mb-6">
-                <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-blue-500 mb-4 sm:mb-0">
+            <div className="flex flex-col sm:flex-row justify-between items-center mb-6 my-8">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-blue-500 mb-4 sm:mb-0">
                     Tòa Nhà
                 </h1>
                 <button
