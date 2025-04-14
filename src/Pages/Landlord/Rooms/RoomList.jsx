@@ -6,7 +6,7 @@ import Grid from '@mui/material/Grid2';
 import SidebarUser from '../../../Components/Layout/SidebarUser';
 import { useNavigate } from 'react-router-dom';
 import Loading from '../../../Components/Loading';
-import { FaMapMarkerAlt, FaCheckCircle, FaHourglassHalf, FaTimesCircle } from 'react-icons/fa';
+import { FaMapMarkerAlt, FaCheckCircle, FaHourglassHalf, FaTimesCircle, FaEdit } from 'react-icons/fa';
 import { FaChartArea } from 'react-icons/fa6';
 import Footer from '../../../Components/Layout/Footer';
 import RoomLandlordService from '../../../Services/Landlord/RoomLandlordService';
@@ -89,8 +89,6 @@ const getStatusName = (status) => {
 };
 
 // Hàm xác định status cho card dựa trên room + booking
-// - booking: { rentalStatus, contractStatus, ... }
-// - room: { status, ... }
 const determineDisplayStatus = (room, booking) => {
     if (!booking) {
         return 1; // Không có booking -> Còn trống
@@ -98,7 +96,6 @@ const determineDisplayStatus = (room, booking) => {
     const { rentalStatus, contractStatus } = booking;
     const roomStatus = room.status;
 
-    // Nếu booking chưa bị hủy (rentalStatus === 1)
     if (rentalStatus === 1 && roomStatus === 1) {
         return 2; // Đang chờ giao dịch
     }
@@ -132,9 +129,12 @@ const RoomList = () => {
             const rentalResponse = await BookingManagementService.getRentalListOfLandlord(user.userId, user.token);
             const roomsData = roomResponse.rooms || [];
             const bookingsData = rentalResponse || [];
+            console.log('Rooms Data:', roomsData); // Log dữ liệu phòng từ API
+            console.log('Bookings Data:', bookingsData); // Log dữ liệu booking
             const newCards = [];
 
             roomsData.forEach((room) => {
+                console.log(`Room ID: ${room.roomId}, isPermission: ${room.isPermission}`); // Log isPermission của từng phòng
                 const roomBookings = bookingsData.filter((bk) => bk.roomId === room.roomId);
                 const validBookings = roomBookings.filter((bk) => bk.rentalStatus === 1);
 
@@ -149,6 +149,7 @@ const RoomList = () => {
                         createdDate: room.createdDate || room.CreatedDate,
                         status: 1,
                         booking: null,
+                        isPermission: room.isPermission !== undefined ? room.isPermission : 1, // Xử lý trường hợp undefined
                     });
                 } else {
                     validBookings.forEach((bk) => {
@@ -163,11 +164,13 @@ const RoomList = () => {
                             createdDate: room.createdDate || room.CreatedDate,
                             status: displayStatus,
                             booking: bk,
+                            isPermission: room.isPermission !== undefined ? room.isPermission : 1, // Xử lý trường hợp undefined
                         });
                     });
                 }
             });
 
+            console.log('New Cards:', newCards); // Log danh sách cards sau khi xử lý
             newCards.sort((a, b) => {
                 const orderA = sortOrder[a.status] || 5;
                 const orderB = sortOrder[b.status] || 5;
@@ -199,9 +202,11 @@ const RoomList = () => {
             const rentalResponse = await BookingManagementService.getRentalListOfLandlord(user.userId, user.token);
             const roomsData = roomResponse.rooms || [];
             const bookingsData = rentalResponse || [];
+            console.log(`Filtered by status ${status} - Rooms Data:`, roomsData); // Log dữ liệu phòng khi lọc theo status
             const filteredCards = [];
 
             roomsData.forEach((room) => {
+                console.log(`Room ID: ${room.roomId}, isPermission: ${room.isPermission}`); // Log isPermission khi lọc
                 const roomBookings = bookingsData.filter((bk) => bk.roomId === room.roomId);
                 const validBookings = roomBookings.filter((bk) => bk.rentalStatus === 1);
 
@@ -217,6 +222,7 @@ const RoomList = () => {
                             createdDate: room.createdDate || room.CreatedDate,
                             status: 1,
                             booking: null,
+                            isPermission: room.isPermission !== undefined ? room.isPermission : 1, // Xử lý trường hợp undefined
                         });
                     }
                 } else {
@@ -233,12 +239,14 @@ const RoomList = () => {
                                 createdDate: room.createdDate || room.CreatedDate,
                                 status: displayStatus,
                                 booking: bk,
+                                isPermission: room.isPermission !== undefined ? room.isPermission : 1, // Xử lý trường hợp undefined
                             });
                         }
                     });
                 }
             });
 
+            console.log(`Filtered Cards for status ${status}:`, filteredCards); // Log danh sách cards sau khi lọc
             filteredCards.sort((a, b) => {
                 const dateA = new Date(a.createdDate || 0);
                 const dateB = new Date(b.createdDate || 0);
@@ -284,7 +292,7 @@ const RoomList = () => {
         <div>
             <SidebarUser />
             <Box className="max-w-7xl mx-auto ml-56" sx={{ flexGrow: 1 }}>
-                <div className="mt-6 mb-4 flex flex-wrap space-x-4">
+                <div className="pt-6 mb-4 flex flex-wrap space-x-4">
                     <button
                         onClick={() => handleFilterByStatus(null)}
                         className={`px-4 py-2 rounded ${activeStatus === null ? 'bg-red-500 text-white' : 'bg-gray-200'}`}
@@ -334,6 +342,7 @@ const RoomList = () => {
                             }
                             if (!Array.isArray(images)) images = [images];
                             const firstImage = images[0] || 'https://via.placeholder.com/250x350';
+                            console.log(`Rendering Room ID: ${card.roomId}, isPermission: ${card.isPermission}`); // Log khi render mỗi card
 
                             return (
                                 <Grid key={`${card.roomId}-${card.booking ? card.booking.rentalId : 'null'}`} item xs={12} sm={6} md={4}>
@@ -341,11 +350,36 @@ const RoomList = () => {
                                         <div className="flex flex-col h-full">
                                             <div className="relative">
                                                 <img
-                                                    className="rounded-t-lg shadow-md overflow-hidden w-full h-48 object-cover"
+                                                    className={`rounded-t-lg shadow-md overflow-hidden w-full h-48 object-cover ${card.isPermission === 0 ? 'opacity-30' : ''}`}
                                                     alt={card.title || 'Image of a room'}
                                                     src={firstImage}
                                                 />
-                                                {getStatusOverlay(card.status)}
+                                                {card.isPermission === 0 ? (
+                                                    <div className="absolute inset-0 flex items-center justify-center">
+                                                        <div className="relative w-full h-full">
+                                                            <div className="absolute top-0 left-0 w-full h-full bg-transparent flex items-center justify-center">
+                                                                <span className="text-red-700 text-2xl font-bold transform -rotate-45">
+                                                                    Đã bị khóa
+                                                                </span>
+                                                            </div>
+                                                            <div className="absolute top-1/2 left-1/2 w-36 h-36 rounded-full border-8 border-red-700 transform -rotate-45 -translate-x-1/2 -translate-y-1/2"></div>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    getStatusOverlay(card.status)
+                                                )}
+                                                {card.status === 1 && (
+                                                    <div
+                                                        className="absolute top-2 right-0 bg-white bg-opacity-70 px-2 py-1 rounded cursor-pointer hover:bg-opacity-100"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            navigate(`/Rooms/Edit/${card.roomId}`);
+                                                        }}
+                                                        title="Chỉnh sửa phòng"
+                                                    >
+                                                        <FaEdit className="text-red-500 text-2xl" />
+                                                    </div>
+                                                )}
                                             </div>
                                             <div className="flex flex-col flex-grow p-2 justify-between max-h-[355px]">
                                                 <p className="text-black text-base font-semibold truncate max-w-[250px]">
@@ -386,7 +420,6 @@ const RoomList = () => {
             <Footer />
         </div>
     );
-
 };
 
 export default RoomList;

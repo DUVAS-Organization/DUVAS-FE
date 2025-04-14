@@ -60,6 +60,7 @@ import ReportList from '../Pages/Admin/Reports/ReportList';
 import LandlordDocuments from '../Pages/Admin/Accounts/LandlordDocuments';
 import ServiceDocuments from '../Pages/Admin/Accounts/ServiceDocuments';
 import TransactionAdmin from '../Pages/Admin/Transactions/TransactionAdmin';
+import RoomEdit from '../Pages/Landlord/Rooms/RoomEdit';
 
 const RoutesConfig = () => {
     const { user } = useAuth();
@@ -278,9 +279,14 @@ const RoutesConfig = () => {
             <Route
                 path="/Room/Create"
                 element={user && user.role === "Landlord" ? <RoomsFormLandlord /> : <Navigate to="/" />}
-            /> <Route
+            />
+            <Route
                 path="/Room"
                 element={user && user.role === "Landlord" ? <RoomListLandlord /> : <Navigate to="/" />}
+            />
+            <Route
+                path="/Rooms/Edit/:roomId"
+                element={user && user.role === "Landlord" ? <RoomEdit /> : <Navigate to="/" />}
             />
             {/* Profile */}
             {/* <Route
