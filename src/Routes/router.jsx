@@ -52,13 +52,14 @@ import Money from '../Pages/User/Transactions/Money';
 import BankAccount from '../Pages/User/Transactions/BankAccount'
 import Transaction from '../Pages/User/Transactions/Transaction'
 import CreateWithdraw from '../Pages/User/Transactions/CreateWithdraw';
-import AdminTransaction from '../Pages/Admin/Transactions/Transaction';
+import AdminTransaction from '../Pages/Admin/Transactions/WithdrawList';
 
 
 import RentalList from '../Pages/User/Profiles/RentalList'
 import ReportList from '../Pages/Admin/Reports/ReportList';
 import LandlordDocuments from '../Pages/Admin/Accounts/LandlordDocuments';
 import ServiceDocuments from '../Pages/Admin/Accounts/ServiceDocuments';
+import TransactionAdmin from '../Pages/Admin/Transactions/TransactionAdmin';
 
 const RoutesConfig = () => {
     const { user } = useAuth();
@@ -266,6 +267,10 @@ const RoutesConfig = () => {
             <Route
                 path="/Admin/Reports"
                 element={user && user.role === "Admin" ? <ReportList /> : <Navigate to="/Logins" />}
+            />
+            <Route
+                path="/Admin/Transactions"
+                element={user && user.role === "Admin" ? <TransactionAdmin /> : <Navigate to="/Logins" />}
             />
 
             {/* Routes dành cho Landlord */}

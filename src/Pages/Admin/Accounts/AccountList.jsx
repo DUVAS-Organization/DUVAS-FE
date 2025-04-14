@@ -141,30 +141,30 @@ const AccountList = () => {
     return (
         <div className="p-6">
             <Counts />
-            <div className="font-bold text-6xl ml-3 my-8 text-blue-500">
+            <div className="font-bold text-4xl ml-3 my-8 text-blue-500">
                 <h1>Tài Khoản</h1>
             </div>
-            <div className="flex items-center mb-6">
+            <div className="flex items-center mb-6 bg-white gap-2">
                 <button
                     onClick={handleSortByName}
-                    className="border-2 border-gray-500 flex items-center p-2 rounded-xl"
+                    className="border-2 border-gray-300 flex items-center p-2 rounded-xl"
                 >
-                    <FiFilter className="mr-2 text-xl" />
-                    <p className="font-bold text-xl">Tên (A-Z)</p>
+                    <FiFilter className="mr-2 text-base" />
+                    <p className="font-medium text-base">Tên (A-Z)</p>
                 </button>
                 <button
-                    className="border-2 border-gray-500 flex items-center p-2 rounded-xl ml-8"
+                    className="border-2 border-gray-300 flex items-center p-2 rounded-xl"
                     onClick={handleGetActiveUsers}
                 >
-                    <FaUnlock className="mr-2 text-xl" />
-                    <p className="font-bold text-xl">Hoạt Động</p>
+                    {/* <FaUnlock className="mr-2 text-base" /> */}
+                    <p className="font-medium text-base">Hoạt Động</p>
                 </button>
                 <button
-                    className="border-2 border-gray-500 flex items-center p-2 rounded-xl ml-8"
+                    className="border-2 border-gray-300 flex items-center p-2 rounded-xl"
                     onClick={handleGetLockedUsers}
                 >
-                    <FaLock className="mr-2 text-xl" />
-                    <p className="font-bold text-xl">Đã bị khóa</p>
+                    {/* <FaLock className="mr-2 text-base" /> */}
+                    <p className="font-medium text-base">Đã bị khóa</p>
                 </button>
                 <div className="relative w-1/3 mx-2 ml-auto">
                     <input
