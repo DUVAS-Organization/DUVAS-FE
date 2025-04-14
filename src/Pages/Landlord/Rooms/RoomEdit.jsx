@@ -225,7 +225,7 @@ const RoomEdit = () => {
         setShowPopup(true);
     };
 
-    const confirmTogglePermission = async (action) => {
+    const confirmTogglePermission = async () => {
         setShowPopup(false);
         setLoading(true);
         try {
@@ -233,7 +233,7 @@ const RoomEdit = () => {
                 await RoomServices.lockRoom(roomId);
                 setRoom(prev => ({ ...prev, isPermission: 0 }));
                 showCustomNotification("success", "Khóa phòng thành công!");
-            } else {
+            } else if (action === 'unlock') {
                 await RoomServices.unlockRoom(roomId);
                 setRoom(prev => ({ ...prev, isPermission: 1 }));
                 showCustomNotification("success", "Mở khóa phòng thành công!");
