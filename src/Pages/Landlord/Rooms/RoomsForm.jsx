@@ -17,7 +17,7 @@ const RoomForm = () => {
     const [buildings, setBuildings] = useState([]);
     const { roomId } = useParams();
     const navigate = useNavigate();
-    const { user } = useAuth(); // Lấy thông tin người dùng từ context
+    const { user } = useAuth();
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState({});
     const [existingImages, setExistingImages] = useState([]);
@@ -25,6 +25,7 @@ const RoomForm = () => {
     const [newPreviews, setNewPreviews] = useState([]);
     const [previewImage, setPreviewImage] = useState(null);
     const [isDropOpen, setIsDropOpen] = useState(false);
+    const [invalidImages, setInvalidImages] = useState([]);
 
     useEffect(() => {
         CategoryRooms.getCategoryRooms()
@@ -62,7 +63,6 @@ const RoomForm = () => {
                         deposit: data.deposit || 0,
                         isPermission: data.isPermission || 1,
                         reputation: data.reputation || 0,
-                        // Thêm các trường chi phí khác
                         dien: data.dien || 0,
                         nuoc: data.nuoc || 0,
                         internet: data.internet || 0,
@@ -70,6 +70,7 @@ const RoomForm = () => {
                         guiXe: data.guiXe || 0,
                         quanLy: data.quanLy || 0,
                         chiPhiKhac: data.chiPhiKhac || 0,
+                        authorization: data.authorization || 0,
                     });
                     setExistingImages(images);
                 })
@@ -96,7 +97,6 @@ const RoomForm = () => {
                 deposit: 0,
                 isPermission: 1,
                 reputation: 0,
-                // Thêm các trường chi phí khác
                 dien: 0,
                 nuoc: 0,
                 internet: 0,
@@ -104,6 +104,7 @@ const RoomForm = () => {
                 guiXe: 0,
                 quanLy: 0,
                 chiPhiKhac: 0,
+                authorization: 0,
             });
         }
     }, [roomId, navigate]);
@@ -120,12 +121,31 @@ const RoomForm = () => {
         }
     }, [categoryRooms, roomId, room.categoryRoomId]);
 
-    const handleFileChange = (e) => {
+    const handleFileChange = async (e) => {
         const selectedFiles = Array.from(e.target.files);
         if (selectedFiles.length > 0) {
-            setNewFiles(prev => [...prev, ...selectedFiles]);
-            const previews = selectedFiles.map(file => URL.createObjectURL(file));
-            setNewPreviews(prev => [...prev, ...previews]);
+            setLoading(true);
+            try {
+                // Generate previews
+                const previews = selectedFiles.map(file => URL.createObjectURL(file));
+
+                // Check images immediately
+                const checks = await Promise.all(selectedFiles.map(file => RoomLandlordService.checkImageAzure(file)));
+                const newInvalidImages = checks.map(result => !result.isSafe);
+
+                // Update state only if all images are valid or to show invalid ones
+                setNewFiles(prev => [...prev, ...selectedFiles]);
+                setNewPreviews(prev => [...prev, ...previews]);
+                setInvalidImages(prev => [...prev, ...newInvalidImages]);
+
+                if (newInvalidImages.some(invalid => invalid)) {
+                    showCustomNotification("error", "Ảnh không phù hợp. Vui lòng kiểm tra và thay thế.");
+                }
+            } catch (error) {
+                showCustomNotification("error", error.message || "Lỗi khi kiểm tra ảnh.");
+            } finally {
+                setLoading(false);
+            }
         }
     };
 
@@ -133,6 +153,7 @@ const RoomForm = () => {
         if (isNew) {
             setNewFiles(prev => prev.filter((_, i) => i !== index));
             setNewPreviews(prev => prev.filter((_, i) => i !== index));
+            setInvalidImages(prev => prev.filter((_, i) => i !== index));
         } else {
             setExistingImages(prev => prev.filter((_, i) => i !== index));
         }
@@ -148,6 +169,15 @@ const RoomForm = () => {
             console.error("Error uploading file:", error);
             throw error;
         }
+    };
+
+    const validateImages = () => {
+        // Since images are validated on upload, check if there are any invalid images
+        if (invalidImages.some(invalid => invalid)) {
+            showCustomNotification("error", "Vui lòng thay thế các ảnh không phù hợp trước khi tiếp tục.");
+            return false;
+        }
+        return true;
     };
 
     const handleSubmit = async (e) => {
@@ -194,7 +224,6 @@ const RoomForm = () => {
                 deposit: Number(room.deposit || 0),
                 isPermission: room.isPermission || 1,
                 reputation: room.reputation || 0,
-                // Thêm các trường chi phí khác
                 dien: Number(room.dien || 0),
                 nuoc: Number(room.nuoc || 0),
                 internet: Number(room.internet || 0),
@@ -202,10 +231,8 @@ const RoomForm = () => {
                 guiXe: Number(room.guiXe || 0),
                 quanLy: Number(room.quanLy || 0),
                 chiPhiKhac: Number(room.chiPhiKhac || 0),
-
+                authorization: Number(room.authorization || 0),
             };
-
-            // console.log("Dữ liệu gửi đi:", roomData);
 
             if (roomId) {
                 await RoomLandlordService.updateRoom(roomId, roomData);
@@ -220,31 +247,26 @@ const RoomForm = () => {
 
             const apiMessage = error?.response?.data?.message || error.message;
 
-            // Check 409 Conflict - mô tả bị trùng với phòng khác
             if (error?.response?.status === 409 && apiMessage.includes("Mô tả phòng đã từng được sử dụng")) {
                 showCustomNotification("error", "Mô tả này đã bị trùng với phòng khác trong hệ thống. Vui lòng chỉnh sửa.");
                 return;
             }
 
-            // Check 409 Conflict - phòng đã tồn tại (trùng title + location)
-            if (error?.response?.status === 409 && apiMessage.includes("tiêu đề và địa chỉ")) {
-                showCustomNotification("error", "Phòng với tiêu đề và địa chỉ này đã được đăng. Hãy kiểm tra lại.");
+            if (error?.response?.status === 409 && apiMessage.includes("tiêu đề")) {
+                showCustomNotification("error", "Phòng với tiêu đề này đã được đăng. Hãy kiểm tra lại.");
                 return;
             }
 
-            // Check 409 Conflict - location trùng toàn hệ thống
-            if (error?.response?.status === 409 && apiMessage.includes("Địa chỉ phòng đã được sử dụng")) {
-                showCustomNotification("error", "Địa chỉ phòng đã được dùng trong hệ thống. Vui lòng nhập địa chỉ khác.");
-                return;
-            }
+            // if (error?.response?.status === 409 && apiMessage.includes("Địa chỉ phòng đã được sử dụng")) {
+            //     showCustomNotification("error", "Địa chỉ phòng đã được dùng trong hệ thống. Vui lòng nhập địa chỉ khác.");
+            //     return;   
+            // }
 
-            // Check 400 BadRequest - mô tả bị AI phát hiện là spam
             if (error?.response?.status === 400 && apiMessage.includes("spam")) {
                 showCustomNotification("error", "Mô tả có thể bị spam hoặc trùng với AI. Hãy chỉnh sửa để khác biệt hơn.");
                 return;
             }
 
-            // Trường hợp lỗi khác
             showCustomNotification("error", apiMessage || "Đã xảy ra lỗi, vui lòng thử lại!");
 
             if (apiMessage.includes("Unauthorized")) {
@@ -258,7 +280,7 @@ const RoomForm = () => {
 
     const combinedPreviews = [
         ...existingImages.map(url => ({ url, isNew: false })),
-        ...newPreviews.map((url, idx) => ({ url, isNew: true, index: idx }))
+        ...newPreviews.map((url, idx) => ({ url, isNew: true, index: idx, isInvalid: invalidImages[idx] }))
     ];
 
     const [step, setStep] = useState(1);
@@ -286,15 +308,14 @@ const RoomForm = () => {
             showCustomNotification("error", "Vui lòng chọn ít nhất 1 ảnh!");
             return false;
         }
-        setErrors({ ...errors, images: '' });
-        return true;
+        return validateImages();
     };
 
     const validateStep3 = () => {
         return true;
     };
 
-    const handleNext = () => {
+    const handleNext = async () => {
         if (step === 1 && validateStep1()) {
             setCompletedSteps([true, false, false]);
             setStep(2);
@@ -324,13 +345,10 @@ const RoomForm = () => {
         }));
     };
 
-    // Hàm xử lý tạo tiêu đề và mô tả với AI
     const handleGenerateWithAI = async () => {
         setLoading(true);
         try {
-            // Chuẩn bị dữ liệu phòng để gửi lên API
             const roomData = {
-                // Các trường bắt buộc trong RoomDTO
                 Title: room.title || '',
                 Description: room.description || '',
                 LocationDetail: room.locationDetail || '',
@@ -341,7 +359,7 @@ const RoomForm = () => {
                 NumberOfBathroom: Number(room.numberOfBathroom) || 0,
                 Price: Number(room.price) || 0,
                 Note: room.note || '',
-                UserId: user?.UserId || 3, // Lấy UserId từ useAuth, mặc định là 3 nếu không có
+                UserId: user?.UserId || 3,
                 BuildingId: room.buildingId || null,
                 CategoryRoomId: room.categoryRoomId || 1,
                 Garret: room.garret || false,
@@ -349,7 +367,6 @@ const RoomForm = () => {
                 Deposit: Number(room.deposit) || 0,
                 status: room.status || 1,
                 reputation: room.reputation || 0,
-                // Thêm các trường chi phí khác
                 Dien: Number(room.dien || 0),
                 Nuoc: Number(room.nuoc || 0),
                 Internet: Number(room.internet || 0),
@@ -357,15 +374,14 @@ const RoomForm = () => {
                 GuiXe: Number(room.guiXe || 0),
                 QuanLy: Number(room.quanLy || 0),
                 ChiPhiKhac: Number(room.chiPhiKhac || 0),
-                // Bổ sung hai trường bắt buộc trong RoomDTO
+                Authorization: Number(room.authorization || 0),
                 User: {
-                    UserId: user?.UserId || 3, // Lấy từ useAuth
-                    UserName: user?.["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"] || "Dang Huu Tu (K16 DN)" // Tên từ token
+                    UserId: user?.UserId || 3,
+                    UserName: user?.["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"] || "Dang Huu Tu (K16 DN)"
                 },
-                RentalLists: [] // Mảng rỗng vì chưa có danh sách thuê
+                RentalLists: []
             };
 
-            // Kiểm tra dữ liệu trước khi gửi
             if (roomData.Acreage <= 0) {
                 throw new Error('Diện tích phải lớn hơn 0.');
             }
@@ -383,10 +399,8 @@ const RoomForm = () => {
                 throw new Error('UserId không được để trống.');
             }
 
-            // Gọi API generateRoomDescription
             const result = await RoomLandlordService.generateRoomDescription(roomData);
 
-            // Cập nhật tiêu đề và mô tả với giá trị từ AI
             setRooms(prev => ({
                 ...prev,
                 title: result.title || prev.title,
@@ -399,31 +413,22 @@ const RoomForm = () => {
 
             const apiMessage = error?.response?.data?.message || error.message;
 
-            // Check 409 Conflict - mô tả bị trùng với phòng khác
             if (error?.response?.status === 409 && apiMessage.includes("Mô tả phòng đã từng được sử dụng")) {
                 showCustomNotification("error", "Mô tả này đã bị trùng với phòng khác trong hệ thống. Vui lòng chỉnh sửa.");
                 return;
             }
 
-            // Check 409 Conflict - phòng đã tồn tại (trùng title + location)
-            if (error?.response?.status === 409 && apiMessage.includes("tiêu đề và địa chỉ")) {
-                showCustomNotification("error", "Phòng với tiêu đề và địa chỉ này đã được đăng. Hãy kiểm tra lại.");
+            if (error?.response?.status === 409 && apiMessage.includes("tiêu đề")) {
+                showCustomNotification("error", "Phòng với tiêu đề này đã được đăng. Hãy kiểm tra lại.");
                 return;
             }
 
-            // Check 409 Conflict - location trùng toàn hệ thống
-            if (error?.response?.status === 409 && apiMessage.includes("Địa chỉ phòng đã được sử dụng")) {
-                showCustomNotification("error", "Địa chỉ phòng đã được dùng trong hệ thống. Vui lòng nhập địa chỉ khác.");
-                return;
-            }
 
-            // Check 400 BadRequest - mô tả bị AI phát hiện là spam
             if (error?.response?.status === 400 && apiMessage.includes("spam")) {
                 showCustomNotification("error", "Mô tả có thể bị spam hoặc trùng với AI. Hãy chỉnh sửa để khác biệt hơn.");
                 return;
             }
 
-            // Trường hợp lỗi khác
             showCustomNotification("error", apiMessage || "Đã xảy ra lỗi, vui lòng thử lại!");
 
             if (apiMessage.includes("Unauthorized")) {
@@ -434,9 +439,11 @@ const RoomForm = () => {
             setLoading(false);
         }
     };
+
     const toggleDropOpen = () => {
         setIsDropOpen(prev => !prev);
     };
+
     return (
         <div className="flex min-h-screen bg-white">
             {loading && <Loading />}
@@ -673,10 +680,8 @@ const RoomForm = () => {
                                     </div>
                                 )}
                             </div>
-                            {/* Tiêu đề & Mô tả Section */}
                             <div className="w-full rounded-lg bg-white shadow-sm">
                                 <h3 className="text-lg font-semibold text-gray-800 mb-2">Tiêu đề & Mô tả</h3>
-                                {/* Tạo nhanh với AI Section */}
                                 <div className="w-full flex justify-between items-center">
                                     <h3 className="text-sm font-medium text-gray-700 mb-2">Tạo nhanh với AI</h3>
                                     <div className="space-y-2">
@@ -699,7 +704,6 @@ const RoomForm = () => {
                                 </div>
                                 <div className="flex space-x-4">
                                     <div className="flex-1 space-y-4">
-                                        {/* Tiêu Đề */}
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700">
                                                 Tiêu Đề <span className="text-red-500">*</span>
@@ -713,7 +717,6 @@ const RoomForm = () => {
                                             />
                                             {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
                                         </div>
-                                        {/* Mô tả */}
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700">
                                                 Mô tả <span className="text-red-500">*</span>
@@ -766,7 +769,7 @@ const RoomForm = () => {
                                     <p className="font-semibold text-gray-700">Ảnh đã chọn:</p>
                                     <div className="grid grid-cols-3 gap-3 mt-2">
                                         {combinedPreviews.map((item, index) => (
-                                            <div key={index} className="relative border p-2 rounded-lg shadow-sm">
+                                            <div key={index} className={`relative border p-2 rounded-lg shadow-sm ${item.isInvalid ? 'border-red-500' : ''}`}>
                                                 <button
                                                     type="button"
                                                     onClick={() => {
@@ -786,6 +789,9 @@ const RoomForm = () => {
                                                     className="w-full h-20 object-cover rounded-md cursor-pointer"
                                                     onClick={() => setPreviewImage(item.url)}
                                                 />
+                                                {item.isInvalid && (
+                                                    <p className="text-red-500 text-xs mt-1">Ảnh không phù hợp</p>
+                                                )}
                                             </div>
                                         ))}
                                     </div>
