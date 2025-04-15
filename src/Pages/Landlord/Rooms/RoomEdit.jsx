@@ -6,7 +6,7 @@ import CategoryRooms from '../../../Services/Admin/CategoryRooms';
 import RoomServices from '../../../Services/Admin/RoomServices';
 import { showCustomNotification } from '../../../Components/Notification';
 import { useAuth } from '../../../Context/AuthProvider';
-import { FaTimes, FaPlus, FaMinus, FaChevronUp, FaChevronDown, FaChevronLeft, FaArrowLeft } from "react-icons/fa";
+import { FaTimes, FaPlus, FaMinus, FaChevronUp, FaChevronDown, FaArrowLeft } from "react-icons/fa";
 import Loading from '../../../Components/Loading';
 import PriceInput from '../../../Components/Layout/Range/PriceInput';
 import SidebarUser from '../../../Components/Layout/SidebarUser';
@@ -38,12 +38,14 @@ const RoomEdit = () => {
         guiXe: 0,
         quanLy: 0,
         chiPhiKhac: 0,
+        authorization: 0,
     });
     const [categoryRooms, setCategoryRooms] = useState([]);
     const [buildings, setBuildings] = useState([]);
     const [existingImages, setExistingImages] = useState([]);
     const [newFiles, setNewFiles] = useState([]);
     const [newPreviews, setNewPreviews] = useState([]);
+    const [invalidImages, setInvalidImages] = useState([]);
     const [previewImage, setPreviewImage] = useState(null);
     const [isDropOpen, setIsDropOpen] = useState(false);
     const [step, setStep] = useState(1);
@@ -60,14 +62,14 @@ const RoomEdit = () => {
         const apiMessage = error?.response?.data?.message || error.message;
         if (error?.response?.status === 409) {
             if (apiMessage.includes("Mô tả phòng đã từng được sử dụng")) {
-                showCustomNotification("error", "Mô tả này đã bị trùng với phòng khác. Vui lòng chỉnh sửa.");
+                showCustomNotification("error", "Mô tả này đã bị trùng với phòng khác trong hệ thống. Vui lòng chỉnh sửa.");
             } else if (apiMessage.includes("tiêu đề và địa chỉ")) {
                 showCustomNotification("error", "Phòng với tiêu đề và địa chỉ này đã được đăng. Hãy kiểm tra lại.");
             } else if (apiMessage.includes("Địa chỉ phòng đã được sử dụng")) {
-                showCustomNotification("error", "Địa chỉ phòng đã được dùng. Vui lòng nhập địa chỉ khác.");
+                showCustomNotification("error", "Địa chỉ phòng đã được dùng trong hệ thống. Vui lòng nhập địa chỉ khác.");
             }
         } else if (error?.response?.status === 400 && apiMessage.includes("spam")) {
-            showCustomNotification("error", "Mô tả có thể bị spam hoặc trùng với AI. Hãy chỉnh sửa.");
+            showCustomNotification("error", "Mô tả có thể bị spam hoặc trùng với AI. Hãy chỉnh sửa để khác biệt hơn.");
         } else {
             showCustomNotification("error", apiMessage || customMessage);
         }
@@ -116,7 +118,7 @@ const RoomEdit = () => {
                     note: roomData.note || '',
                     status: roomData.status || 1,
                     deposit: roomData.deposit || 0,
-                    isPermission: roomData.isPermission ?? 1, // Đảm bảo isPermission không bị undefined
+                    isPermission: roomData.isPermission ?? 1,
                     reputation: roomData.reputation || 0,
                     dien: roomData.dien || 0,
                     nuoc: roomData.nuoc || 0,
@@ -125,6 +127,7 @@ const RoomEdit = () => {
                     guiXe: roomData.guiXe || 0,
                     quanLy: roomData.quanLy || 0,
                     chiPhiKhac: roomData.chiPhiKhac || 0,
+                    authorization: roomData.authorization || 0,
                 });
                 setExistingImages(images);
             })
@@ -136,11 +139,39 @@ const RoomEdit = () => {
     }, [roomId, navigate]);
 
     // Xử lý file ảnh mới
-    const handleFileChange = (e) => {
+    const handleFileChange = async (e) => {
         const selectedFiles = Array.from(e.target.files);
-        if (selectedFiles.length) {
-            setNewFiles(prev => [...prev, ...selectedFiles]);
-            setNewPreviews(prev => [...prev, ...selectedFiles.map(file => URL.createObjectURL(file))]);
+        if (selectedFiles.length > 0) {
+            setLoading(true);
+            try {
+                const previews = selectedFiles.map(file => URL.createObjectURL(file));
+                const checks = await Promise.all(
+                    selectedFiles.map(async (file) => {
+                        const result = await RoomLandlordService.checkImageAzure(file);
+                        console.log(`Kiểm tra ảnh ${file.name}:`, result);
+                        return {
+                            isSafe: result.isSafe !== undefined ? result.isSafe : false,
+                            message: result.message || "Không có thông tin kiểm tra."
+                        };
+                    })
+                );
+                const newInvalidImages = checks.map(result => !result.isSafe);
+
+                setNewFiles(prev => [...prev, ...selectedFiles]);
+                setNewPreviews(prev => [...prev, ...previews]);
+                setInvalidImages(prev => [...prev, ...newInvalidImages]);
+
+                if (newInvalidImages.some(invalid => invalid)) {
+                    showCustomNotification("error", "Ảnh không phù hợp. Vui lòng kiểm tra và thay thế.");
+                } else {
+                    showCustomNotification("success", "Tất cả ảnh đã được kiểm tra và hợp lệ.");
+                }
+            } catch (error) {
+                console.error('Lỗi trong handleFileChange:', error);
+                showCustomNotification("error", error.message || "Lỗi khi kiểm tra ảnh.");
+            } finally {
+                setLoading(false);
+            }
         }
     };
 
@@ -149,6 +180,7 @@ const RoomEdit = () => {
         if (isNew) {
             setNewFiles(prev => prev.filter((_, i) => i !== index));
             setNewPreviews(prev => prev.filter((_, i) => i !== index));
+            setInvalidImages(prev => prev.filter((_, i) => i !== index));
         } else {
             setExistingImages(prev => prev.filter((_, i) => i !== index));
         }
@@ -192,6 +224,7 @@ const RoomEdit = () => {
                 GuiXe: Number(room.guiXe),
                 QuanLy: Number(room.quanLy),
                 ChiPhiKhac: Number(room.chiPhiKhac),
+                authorization: Number(room.authorization || 0),
                 User: {
                     UserId: user?.UserId || 3,
                     UserName: user?.["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"] || "Unknown"
@@ -220,6 +253,8 @@ const RoomEdit = () => {
             setLoading(false);
         }
     };
+
+    // Xử lý khóa/mở khóa phòng
     const handleTogglePermission = (type) => {
         setAction(type);
         setShowPopup(true);
@@ -244,12 +279,17 @@ const RoomEdit = () => {
             setLoading(false);
         }
     };
+
     const closePopup = () => {
         setShowPopup(false);
     };
+
     // Xử lý submit form
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (!validateImages()) {
+            return;
+        }
         if (existingImages.length + newFiles.length === 0) {
             showCustomNotification("error", "Vui lòng chọn ít nhất 1 ảnh!");
             return;
@@ -297,6 +337,7 @@ const RoomEdit = () => {
                 guiXe: Number(room.guiXe),
                 quanLy: Number(room.quanLy),
                 chiPhiKhac: Number(room.chiPhiKhac),
+                authorization: Number(room.authorization || 0),
             };
 
             await RoomLandlordService.updateRoom(roomId, roomData);
@@ -307,6 +348,15 @@ const RoomEdit = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    // Validation ảnh
+    const validateImages = () => {
+        if (invalidImages.some(invalid => invalid)) {
+            showCustomNotification("error", "Vui lòng thay thế các ảnh không phù hợp trước khi tiếp tục.");
+            return false;
+        }
+        return true;
     };
 
     // Validation bước
@@ -331,10 +381,13 @@ const RoomEdit = () => {
                 showCustomNotification("error", "Vui lòng chọn ít nhất 1 ảnh!");
                 return false;
             }
+            if (!validateImages()) {
+                return false;
+            }
             setErrors(prev => ({ ...prev, images: '' }));
             return true;
         }
-        return true; // Bước 3 không cần validation
+        return true;
     };
 
     // Điều hướng bước
@@ -367,7 +420,7 @@ const RoomEdit = () => {
     // Kết hợp ảnh preview
     const combinedPreviews = [
         ...existingImages.map(url => ({ url, isNew: false })),
-        ...newPreviews.map((url, idx) => ({ url, isNew: true, index: idx }))
+        ...newPreviews.map((url, idx) => ({ url, isNew: true, index: idx, isInvalid: invalidImages[idx] }))
     ];
 
     return (
@@ -394,16 +447,13 @@ const RoomEdit = () => {
                             <FaArrowLeft className="text-lg" />
                         </button>
                         <div className="flex justify-between items-center">
-
                             <h2 className="text-xl font-bold mb-2 text-red-600">Chỉnh Sửa Phòng - Bước 1</h2>
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     handleTogglePermission(room.isPermission === 1 ? 'lock' : 'unlock');
                                 }}
-                                className={`py-1 text-lg ${room.isPermission === 1 ? 'text-red-500  w-16 h-12 hover:bg-red-500 hover:text-white  '
-                                    : 'text-green-500 hover:bg-green-500 hover:text-white w-24 h-12 p-2'
-                                    } font-semibold bg-white rounded-full border-2`}
+                                className={`py-1 text-lg ${room.isPermission === 1 ? 'text-red-500 w-16 h-12 hover:bg-red-500 hover:text-white' : 'text-green-500 hover:bg-green-500 hover:text-white w-24 h-12 p-2'} font-semibold bg-white rounded-full border-2`}
                             >
                                 {room.isPermission === 1 ? "Khóa" : "Mở Khóa"}
                             </button>
@@ -671,7 +721,7 @@ const RoomEdit = () => {
                                     type="file"
                                     multiple
                                     onChange={handleFileChange}
-                                    accept=".jpeg, .png, .pdf, .mp4"
+                                    accept=".jpeg, .png"
                                     className="hidden"
                                 />
                             </label>
@@ -683,7 +733,10 @@ const RoomEdit = () => {
                                     <p className="font-semibold text-gray-700">Ảnh đã chọn:</p>
                                     <div className="grid grid-cols-3 gap-3 mt-2">
                                         {combinedPreviews.map((item, index) => (
-                                            <div key={index} className="relative border p-2 rounded-lg shadow-sm">
+                                            <div
+                                                key={index}
+                                                className={`relative border p-2 rounded-lg shadow-sm ${item.isInvalid ? 'border-red-500' : ''}`}
+                                            >
                                                 <button
                                                     type="button"
                                                     onClick={() => handleRemoveFile(item.isNew ? item.index : index, item.isNew)}
@@ -697,6 +750,9 @@ const RoomEdit = () => {
                                                     className="w-full h-20 object-cover rounded-md cursor-pointer"
                                                     onClick={() => setPreviewImage(item.url)}
                                                 />
+                                                {item.isInvalid && (
+                                                    <p className="text-red-500 text-xs mt-1">Ảnh không phù hợp</p>
+                                                )}
                                             </div>
                                         ))}
                                     </div>
@@ -759,7 +815,6 @@ const RoomEdit = () => {
                     </div>
                 )}
             </div>
-
         </div>
     );
 };

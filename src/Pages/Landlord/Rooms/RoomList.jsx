@@ -334,7 +334,7 @@ const RoomList = () => {
                             }
                             if (!Array.isArray(images)) images = [images];
                             const firstImage = images[0] || 'https://via.placeholder.com/250x350';
-                            console.log(`Rendering Room ID: ${card.roomId}, isPermission: ${card.isPermission}`); // Log khi render mỗi card
+                            // console.log(`Rendering Room ID: ${card.roomId}, isPermission: ${card.isPermission}`); // Log khi render mỗi card
 
                             return (
                                 <Grid key={`${card.roomId}-${card.booking ? card.booking.rentalId : 'null'}`} item xs={12} sm={6} md={4}>
