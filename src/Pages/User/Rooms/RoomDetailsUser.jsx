@@ -303,8 +303,16 @@ const RoomDetailsUser = () => {
                 userIdLandlord: room.User.userId,
                 roomId: parseInt(roomId),
                 renterName: renterName,
-                additionalInfo: additionalInfo,
+                roomTitle: room.title,
+                locationDetail: room.locationDetail,
+                price: room.price,
+                deposit: room.deposit,
+                acreage: room.acreage,
+                furniture: room.furniture,
+                numberOfBathroom: room.numberOfBathroom,
+                numberOfBedroom: room.numberOfBedroom,
             };
+
             await RoomService.sendMail(sendMailPayload, token);
 
             showCustomNotification("success", "Yêu cầu thuê phòng và gửi mail thành công!");

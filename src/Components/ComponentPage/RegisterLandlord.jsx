@@ -32,6 +32,7 @@ const RegisterLandlord = ({
     const [name, setName] = useState("");
     const [sex, setSex] = useState("");
     const [address, setAddress] = useState("");
+    const [dateOfBirth, setdateOfBirth] = useState("");
     const [cccdError, setCccdError] = useState("");
     const [previewImage, setPreviewImage] = useState(null);
 
@@ -95,7 +96,7 @@ const RegisterLandlord = ({
             setValidatingFront(true);
 
             const result = await OtherService.AICCCD(image);
-            console.log("AI CCCD Result:", result);
+            // console.log("AI CCCD Result:", result);
 
             // Kiểm tra xem result có tồn tại và có dữ liệu hợp lệ không
             const isValid = result && (result.isValid !== undefined ? result.isValid : !!result.cccd);
@@ -109,6 +110,7 @@ const RegisterLandlord = ({
                 if (result.sex) setSex(result.sex);
                 if (result.address) setAddress(result.address);
                 if (result.cccd) setCccdNumber(result.cccd);
+                if (result.dateOfBirth) setdateOfBirth(result.dateOfBirth);
             }
 
             // Hiển thị thông báo dựa trên kết quả xác thực
@@ -185,6 +187,7 @@ const RegisterLandlord = ({
                 name,
                 sex,
                 address,
+                dateOfBirth,
             };
 
             let response;
@@ -197,12 +200,23 @@ const RegisterLandlord = ({
             setShowConfirm(false);
         } catch (error) {
             console.error("Lỗi trong quá trình đăng ký:", error.response?.data || error.message);
-            showCustomNotification("error", "Có lỗi xảy ra. Vui lòng thử lại.");
+            if (error.response && error.response.status === 409) {
+                showCustomNotification("error", "Giấy phép có số CCCD này đã tồn tại.");
+            } else {
+                showCustomNotification("error", "Có lỗi xảy ra. Vui lòng thử lại.");
+            }
         } finally {
             setIsSubmitting(false);
         }
     };
-
+    const formatDate = (dateStr) => {
+        if (!dateStr) return '';
+        const date = new Date(dateStr);
+        const dd = String(date.getDate()).padStart(2, '0');
+        const mm = String(date.getMonth() + 1).padStart(2, '0');
+        const yyyy = date.getFullYear();
+        return `${dd}/${mm}/${yyyy}`;
+    };
     return (
         <div className='select-none'>
             <h1 className='text-xl font-medium mb-1'>Đăng ký thành chủ</h1>
@@ -296,6 +310,7 @@ const RegisterLandlord = ({
                             <p><strong>Tên:</strong> {frontIdInfo.name}</p>
                             <p><strong>Giới tính:</strong> {frontIdInfo.sex}</p>
                             <p><strong>Địa chỉ:</strong> {frontIdInfo.address}</p>
+                            <p><strong>Ngày sinh:</strong> {formatDate(frontIdInfo.dateOfBirth)}</p>
                         </div>
                     )}
                 </div>

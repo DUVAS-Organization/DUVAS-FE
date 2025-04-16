@@ -9,10 +9,11 @@ const LandlordDocuments = () => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [previewImage, setPreviewImage] = useState(null); // Trạng thái cho ảnh preview
+    const [previewImage, setPreviewImage] = useState(null);
     const { landlordLicenseId } = useParams();
     const navigate = useNavigate();
     const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+    console.log('Token =', token);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -84,14 +85,14 @@ const LandlordDocuments = () => {
                             <span className="font-semibold whitespace-nowrap">Địa chỉ:</span>
                             <span className="break-words">{license?.address || 'Không có'}</span>
                         </div>
-                        {/* <div className='flex gap-2'>
-                        <p className="font-semibold">Ngày sinh:</p>
-                        <p>
-                            {license.dateOfBirth
-                                ? new Date(license.dateOfBirth).toLocaleDateString('vi-VN')
-                                : 'Không có'}
-                        </p>
-                    </div> */}
+                        <div className='flex gap-2'>
+                            <p className="font-semibold">Ngày sinh:</p>
+                            <p>
+                                {license.dateOfBirth
+                                    ? new Date(license.dateOfBirth).toLocaleDateString('vi-VN')
+                                    : 'Không có'}
+                            </p>
+                        </div>
                     </div>
 
                     <div className="mt-6">

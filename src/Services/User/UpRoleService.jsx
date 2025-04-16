@@ -51,9 +51,9 @@ const UpRoleService = {
      * @param {string} token - Token xác thực
      * @returns {Object} Thông tin giấy phép
      */
-    getLandlordLicenseById: async (id, token) => {
+    getLandlordLicenseById: async (landlordLicenseId, token) => {
         try {
-            const response = await axios.get(`${API_BASE_URL}/${id}`, {
+            const response = await axios.get(`${API_BASE_URL}/${landlordLicenseId}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             console.log('📌 Lấy thông tin giấy phép chủ nhà:', response.data);
