@@ -295,6 +295,15 @@ const AuthorizationModal = ({ open, onClose, user, selectedRooms, adminData, onS
                                 required
                             />
                             <TextField
+                                label="Địa chỉ bên A"
+                                fullWidth
+                                margin="dense"
+                                value={contractDetails.partyAAddress}
+                                onChange={(e) => handleContractDetailChange('partyAAddress', e.target.value)}
+                                size="small"
+                                required
+                            />
+                            <TextField
                                 label="Ngày sinh bên A"
                                 fullWidth
                                 margin="dense"
@@ -335,15 +344,7 @@ const AuthorizationModal = ({ open, onClose, user, selectedRooms, adminData, onS
                                 size="small"
                                 required
                             />
-                            <TextField
-                                label="Địa chỉ bên A"
-                                fullWidth
-                                margin="dense"
-                                value={contractDetails.partyAAddress}
-                                onChange={(e) => handleContractDetailChange('partyAAddress', e.target.value)}
-                                size="small"
-                                required
-                            />
+
                         </Grid>
                         <Grid item xs={12} md={4}>
                             <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 'medium' }}>

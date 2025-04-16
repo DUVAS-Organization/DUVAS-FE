@@ -88,12 +88,12 @@ const UpService = () => {
     };
 
     const handleConfirmService = (serviceLicenseId) => {
-        setPendingAction({ serviceLicenseId, action: 'confirm' });
+        setPendingAction({ serviceLicenseId: Number(serviceLicenseId), action: 'confirm' });
         setShowPopup(true);
     };
 
     const handleRejectService = (serviceLicenseId) => {
-        setPendingAction({ serviceLicenseId, action: 'reject' });
+        setPendingAction({ serviceLicenseId: Number(serviceLicenseId), action: 'reject' });
         setShowPopup(true);
     };
 
@@ -101,15 +101,36 @@ const UpService = () => {
         if (!pendingAction) return;
 
         try {
-            const license = licenses.find((l) => l.serviceLicenseId === pendingAction.serviceLicenseId);
-            if (!license) throw new Error('Không tìm thấy giấy phép');
-
-            // Gọi API để cập nhật trạng thái ở backend
-            if (pendingAction.action === 'confirm') {
-                await UserService.acceptUpRoleService(license.userId);
+            const license = licenses.find((s) => s.serviceLicenseId === pendingAction.serviceLicenseId);
+            if (!license) {
+                await fetchData();
+                const updatedLicenses = licenses;
+                const updatedLicense = updatedLicenses.find(
+                    (s) => s.serviceLicenseId === pendingAction.serviceLicenseId
+                );
+                if (!updatedLicense) {
+                    throw new Error('Không tìm thấy giấy phép sau khi làm mới dữ liệu');
+                }
+                // Gọi API với userId
+                if (pendingAction.action === 'confirm') {
+                    await UserService.acceptUpRoleService(updatedLicense.userId);
+                } else {
+                    await UserService.cancelUpRoleService(updatedLicense.userId);
+                }
             } else {
-                await UserService.cancelUpRoleService(license.userId);
+                // Gọi API với userId
+                if (pendingAction.action === 'confirm') {
+                    await UserService.acceptUpRoleService(license.userId);
+                } else {
+                    await UserService.cancelUpRoleService(license.userId);
+                }
             }
+            // Gọi API để cập nhật trạng thái ở backend
+            // if (pendingAction.action === 'confirm') {
+            //     await UserService.acceptUpRoleService(license.userId);
+            // } else {
+            //     await UserService.cancelUpRoleService(license.userId);
+            // }
 
             // Làm mới dữ liệu từ DB để đảm bảo trạng thái chính xác
             await fetchData();
@@ -239,7 +260,7 @@ const UpService = () => {
                                         <div className="flex justify-around">
                                             <button
                                                 onClick={() =>
-                                                    handleConfirmService(license.userId)
+                                                    handleConfirmService(license.serviceLicenseId)
                                                 }
                                                 className={`mr-4 text-blue-600 hover:text-red-500 underline ${license.status !== 0
                                                     ? 'opacity-50 cursor-not-allowed'
@@ -251,7 +272,7 @@ const UpService = () => {
                                             </button>
                                             <button
                                                 onClick={() =>
-                                                    handleRejectService(license.userId)
+                                                    handleRejectService(license.serviceLicenseId)
                                                 }
                                                 className={`text-blue-600 hover:text-red-500 underline ${license.status !== 0
                                                     ? 'opacity-50 cursor-not-allowed'

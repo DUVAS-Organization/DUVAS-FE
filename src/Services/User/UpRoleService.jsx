@@ -51,15 +51,15 @@ const UpRoleService = {
      * @param {string} token - Token xác thực
      * @returns {Object} Thông tin giấy phép
      */
-    getLandlordLicenseById: async (id, token) => {
+    getLandlordLicenseById: async (landlordLicenseId, token) => {
         try {
-            const response = await axios.get(`${API_BASE_URL}/${id}`, {
+            const response = await axios.get(`${API_BASE_URL}/${landlordLicenseId}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            // console.log('📌 Lấy thông tin giấy phép chủ nhà:', response.data);
+            console.log('📌 Lấy thông tin giấy phép chủ nhà:', response.data);
             return response.data;
         } catch (error) {
-            // console.error('❌ Lỗi khi lấy thông tin giấy phép chủ nhà:', error.response?.data || error.message);
+            console.error('❌ Lỗi khi lấy thông tin giấy phép chủ nhà:', error.response?.data || error.message);
             throw error;
         }
     },

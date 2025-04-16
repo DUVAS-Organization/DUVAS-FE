@@ -88,14 +88,14 @@ const ServiceDocuments = () => {
                         </div>
 
                         {/* Nếu muốn thêm ngày sinh */}
-                        {/* <div className="flex gap-2 items-start">
-    <span className="font-semibold whitespace-nowrap">Ngày sinh:</span>
-    <span>
-      {license?.dateOfBirth
-        ? new Date(license.dateOfBirth).toLocaleDateString('vi-VN')
-        : 'Không có'}
-    </span>
-  </div> */}
+                        <div className="flex gap-2 items-start">
+                            <span className="font-semibold whitespace-nowrap">Ngày sinh:</span>
+                            <span>
+                                {license?.dateOfBirth
+                                    ? new Date(license.dateOfBirth).toLocaleDateString('vi-VN')
+                                    : 'Không có'}
+                            </span>
+                        </div>
                     </div>
 
 

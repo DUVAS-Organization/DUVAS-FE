@@ -38,7 +38,10 @@ const WithdrawPage = () => {
                 // showCustomNotification("error", "Có lỗi xảy ra!");
             }
         };
-        fetchData();
+        const intervalId = setInterval(fetchData, 2000); // every 2 seconds
+        return () => {
+            clearInterval(intervalId); // clean up on unmount
+        };
     }, []);
 
     // Handle withdraw submission

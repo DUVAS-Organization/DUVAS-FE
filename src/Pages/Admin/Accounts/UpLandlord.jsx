@@ -106,10 +106,8 @@ const UpLandlord = () => {
         if (!pendingAction) return;
 
         try {
-            // Tìm license để lấy userId
             const license = licenses.find((l) => l.landlordLicenseId === pendingAction.landlordLicenseId);
             if (!license) {
-                // Nếu không tìm thấy, làm mới dữ liệu và thử lại
                 await fetchData();
                 const updatedLicenses = licenses;
                 const updatedLicense = updatedLicenses.find(
