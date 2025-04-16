@@ -56,10 +56,10 @@ const UpRoleService = {
             const response = await axios.get(`${API_BASE_URL}/${id}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            console.log('📌 Lấy thông tin giấy phép chủ nhà:', response.data);
+            // console.log('📌 Lấy thông tin giấy phép chủ nhà:', response.data);
             return response.data;
         } catch (error) {
-            console.error('❌ Lỗi khi lấy thông tin giấy phép chủ nhà:', error.response?.data || error.message);
+            // console.error('❌ Lỗi khi lấy thông tin giấy phép chủ nhà:', error.response?.data || error.message);
             throw error;
         }
     },

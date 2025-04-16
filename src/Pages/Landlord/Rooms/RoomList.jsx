@@ -11,9 +11,12 @@ import { FaChartArea } from 'react-icons/fa6';
 import Footer from '../../../Components/Layout/Footer';
 import RoomLandlordService from '../../../Services/Landlord/RoomLandlordService';
 import BookingManagementService from '../../../Services/Landlord/BookingManagementService';
+import UserService from '../../../Services/User/UserService';
 import { useAuth } from '../../../Context/AuthProvider';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
+import { showCustomNotification } from '../../../Components/Notification';
+import AuthorizationModal from '../../../Components/ComponentPage/AuthorizationModal';
 
 const Item = styled(Paper)(({ theme }) => ({
     backgroundColor: '#fff',
@@ -116,9 +119,31 @@ const RoomList = () => {
     const [cards, setCards] = useState([]);
     const [loading, setLoading] = useState(true);
     const [activeStatus, setActiveStatus] = useState(null);
+    const [selectedRooms, setSelectedRooms] = useState([]);
+    const [isAuthorizing, setIsAuthorizing] = useState(false);
+    const [showModal, setShowModal] = useState(false);
     const { user } = useAuth();
+    const [adminData, setAdminData] = useState(null);
 
-    // Fetch toàn bộ dữ liệu
+    const fetchAdminData = async () => {
+        try {
+            const response = await UserService.getUserById(1);
+            setAdminData({
+                partyBId: response.userId || 1,
+                partyBName: response.name || 'Admin',
+                partyBAddress: response.address || 'Đà Nẵng',
+            });
+        } catch (error) {
+            console.warn('Không lấy được thông tin Admin:', error.message);
+            setAdminData({
+                partyBId: 1,
+                partyBName: 'Admin',
+                partyBAddress: 'Đà Nẵng',
+            });
+        }
+    };
+
+    // Fetch toàn bộ dữ liệu phòng
     const fetchAllCards = async () => {
         setLoading(true);
         try {
@@ -146,7 +171,7 @@ const RoomList = () => {
                         createdDate: room.createdDate || room.CreatedDate,
                         status: 1,
                         booking: null,
-                        isPermission: room.isPermission !== undefined ? room.isPermission : 1, // Xử lý trường hợp undefined
+                        isPermission: room.isPermission !== undefined ? room.isPermission : 1,
                     });
                 } else {
                     validBookings.forEach((bk) => {
@@ -161,7 +186,7 @@ const RoomList = () => {
                             createdDate: room.createdDate || room.CreatedDate,
                             status: displayStatus,
                             booking: bk,
-                            isPermission: room.isPermission !== undefined ? room.isPermission : 1, // Xử lý trường hợp undefined
+                            isPermission: room.isPermission !== undefined ? room.isPermission : 1,
                         });
                     });
                 }
@@ -181,7 +206,7 @@ const RoomList = () => {
 
             setCards(newCards);
         } catch (error) {
-            console.error('Lỗi khi lấy danh sách phòng:', error);
+            console.error('Lỗi khi lấy danh sách phòng:', error.message, error.stack);
             setCards([]);
         } finally {
             setLoading(false);
@@ -216,7 +241,7 @@ const RoomList = () => {
                             createdDate: room.createdDate || room.CreatedDate,
                             status: 1,
                             booking: null,
-                            isPermission: room.isPermission !== undefined ? room.isPermission : 1, // Xử lý trường hợp undefined
+                            isPermission: room.isPermission !== undefined ? room.isPermission : 1,
                         });
                     }
                 } else {
@@ -233,7 +258,7 @@ const RoomList = () => {
                                 createdDate: room.createdDate || room.CreatedDate,
                                 status: displayStatus,
                                 booking: bk,
-                                isPermission: room.isPermission !== undefined ? room.isPermission : 1, // Xử lý trường hợp undefined
+                                isPermission: room.isPermission !== undefined ? room.isPermission : 1,
                             });
                         }
                     });
@@ -244,27 +269,69 @@ const RoomList = () => {
                 const dateB = new Date(b.createdDate || 0);
                 return dateB - dateA;
             });
-
             setCards(filteredCards);
         } catch (error) {
-            console.error('Lỗi khi lấy phòng theo trạng thái:', error);
+            console.error(`Lỗi khi lấy phòng với status ${status}:`, error.message, error.stack);
             setCards([]);
         } finally {
             setLoading(false);
         }
     };
 
+    // Xử lý chọn phòng
+    const handleSelectRoom = (roomId) => {
+        setSelectedRooms((prev) => {
+            const newSelection = prev.includes(roomId) ? prev.filter((id) => id !== roomId) : [...prev, roomId];
+            return newSelection;
+        });
+    };
+
+    // Xử lý chọn tất cả phòng
+    const handleSelectAll = () => {
+        if (selectedRooms.length === cards.length) {
+            setSelectedRooms([]);
+        } else {
+            const allRoomIds = cards.map((card) => card.roomId);
+            setSelectedRooms(allRoomIds);
+        }
+    };
+
+    // Xử lý mở modal để nhập thông tin hợp đồng
+    const handleOpenModal = async () => {
+        if (selectedRooms.length === 0) {
+            showCustomNotification("error", "Vui lòng chọn ít nhất một phòng để ủy quyền.");
+            return;
+        }
+        await fetchAdminData();
+        setShowModal(true);
+    };
+
+    // Xử lý sau khi ủy quyền thành công
+    const handleAuthorizationSuccess = () => {
+        setSelectedRooms([]);
+        setIsAuthorizing(false);
+        setAdminData(null);
+        fetchAllCards();
+    };
+
+    // Xử lý kích hoạt chế độ ủy quyền
+    const toggleAuthorizeMode = () => {
+        setIsAuthorizing(!isAuthorizing);
+        setSelectedRooms([]);
+    };
+
     useEffect(() => {
         if (user?.token && user?.userId) {
             fetchAllCards();
         } else {
-            console.error('Thiếu token hoặc userId từ AuthContext');
             setLoading(false);
         }
     }, [user]);
 
     const handleFilterByStatus = (status) => {
         setActiveStatus(status);
+        setSelectedRooms([]);
+        setIsAuthorizing(false);
         if (status === null) {
             fetchAllCards();
         } else {
@@ -284,7 +351,7 @@ const RoomList = () => {
         <div>
             <SidebarUser />
             <Box className="max-w-7xl mx-auto ml-56" sx={{ flexGrow: 1 }}>
-                <div className="pt-6 mb-4 flex flex-wrap space-x-4">
+                <div className="pt-6 mb-4 flex flex-wrap space-x-4 items-center">
                     <button
                         onClick={() => handleFilterByStatus(null)}
                         className={`px-4 py-2 rounded ${activeStatus === null ? 'bg-red-500 text-white' : 'bg-gray-200'}`}
@@ -315,6 +382,30 @@ const RoomList = () => {
                     >
                         Phòng đang cho thuê
                     </button>
+                    <button
+                        onClick={toggleAuthorizeMode}
+                        className={`p-2 rounded ${isAuthorizing ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-blue-500 text-white hover:bg-blue-600'}`}
+                    >
+                        {isAuthorizing ? 'Hủy ủy quyền' : 'Ủy quyền'}
+                    </button>
+                    {isAuthorizing && (
+                        <>
+                            <button
+                                onClick={handleSelectAll}
+                                className="p-2 rounded bg-green-500 text-white hover:bg-green-600"
+                            >
+                                {selectedRooms.length === cards.length ? 'Bỏ chọn tất cả' : 'Chọn tất cả'}
+                            </button>
+                            {selectedRooms.length > 0 && (
+                                <button
+                                    onClick={handleOpenModal}
+                                    className="p-2 rounded bg-yellow-500 text-white hover:bg-yellow-600"
+                                >
+                                    Ủy quyền {selectedRooms.length} phòng
+                                </button>
+                            )}
+                        </>
+                    )}
                 </div>
                 {cards.length === 0 ? (
                     <p className="text-black font-semibold text-center">
@@ -323,18 +414,17 @@ const RoomList = () => {
                             : `Không có phòng nào đang ${getStatusName(activeStatus)}.`}
                     </p>
                 ) : (
-                    <Grid container spacing={2} className="mt-4">
+                    <Grid container spacing={8} className="mt-4">
                         {cards.map((card) => {
                             let images;
                             try {
                                 images = JSON.parse(card.image || '[]');
                             } catch (error) {
-                                console.error(`Lỗi parse image phòng ${card.roomId}:`, error);
+                                console.error(`Lỗi parse image phòng ${card.roomId}:`, error.message);
                                 images = card.image ? [card.image] : [];
                             }
                             if (!Array.isArray(images)) images = [images];
                             const firstImage = images[0] || 'https://via.placeholder.com/250x350';
-                            // console.log(`Rendering Room ID: ${card.roomId}, isPermission: ${card.isPermission}`); // Log khi render mỗi card
 
                             return (
                                 <Grid key={`${card.roomId}-${card.booking ? card.booking.rentalId : 'null'}`} item xs={12} sm={6} md={4}>
@@ -358,9 +448,27 @@ const RoomList = () => {
                                                         </div>
                                                     </div>
                                                 ) : (
-                                                    getStatusOverlay(card.status)
+                                                    <>
+                                                        {getStatusOverlay(card.status)}
+                                                        {isAuthorizing && (
+                                                            <div
+                                                                className="absolute top-2 right-1"
+                                                                onClick={(e) => e.stopPropagation()}
+                                                            >
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={selectedRooms.includes(card.roomId)}
+                                                                    onChange={(e) => {
+                                                                        e.stopPropagation();
+                                                                        handleSelectRoom(card.roomId);
+                                                                    }}
+                                                                    className="w-7 h-7 cursor-pointer text-lg text-red-500 accent-red-500 hover:scale-125 transition duration-200"
+                                                                />
+                                                            </div>
+                                                        )}
+                                                    </>
                                                 )}
-                                                {card.status === 1 && (
+                                                {!isAuthorizing && card.status === 1 && (
                                                     <div
                                                         className="absolute top-2 right-0 bg-white bg-opacity-70 px-2 py-1 rounded cursor-pointer hover:bg-opacity-100"
                                                         onClick={(e) => {
@@ -409,6 +517,16 @@ const RoomList = () => {
                     </Grid>
                 )}
             </Box>
+
+            <AuthorizationModal
+                open={showModal}
+                onClose={() => setShowModal(false)}
+                user={user}
+                selectedRooms={selectedRooms}
+                adminData={adminData}
+                onSuccess={handleAuthorizationSuccess}
+            />
+
             <Footer />
         </div>
     );
