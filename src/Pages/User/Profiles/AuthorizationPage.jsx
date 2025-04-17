@@ -76,23 +76,23 @@ const AuthorizationPage = () => {
 
         return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
     };
-    const formatDate2 = (dateString) => {
-        const date = new Date(dateString);
-        const pad = (n) => String(n).padStart(2, '0');
+    // const formatDate2 = (dateString) => {
+    //     const date = new Date(dateString);
+    //     const pad = (n) => String(n).padStart(2, '0');
 
-        const day = pad(date.getDate());
-        const month = pad(date.getMonth() + 1);
-        const year = date.getFullYear();
+    //     const day = pad(date.getDate());
+    //     const month = pad(date.getMonth() + 1);
+    //     const year = date.getFullYear();
 
-        return `${day}/${month}/${year} `;
-    };
+    //     return `${day}/${month}/${year} `;
+    // };
 
     const formatStatus = (status) => {
         switch (status) {
             case 0: return 'Bị hủy';
             case 1: return 'Đang hoạt động';
             case 2: return 'Đang chờ duyệt';
-            case 3: return 'Đã duyệt';
+            case 3: return 'Đã được duyệt';
             case 4: return 'Hết hạn';
             default: return 'Không xác định';
         }
@@ -127,7 +127,7 @@ const AuthorizationPage = () => {
     };
 
     return (
-        <div className="flex bg-white min-h-screen">
+        <div className="flex bg-white">
             <SidebarUser />
             <div className="flex-1 p-6 ml-[200px] max-w-8xl mx-auto">
                 <h1 className="text-2xl font-bold mb-6">Danh sách hợp đồng ủy quyền</h1>
@@ -158,7 +158,7 @@ const AuthorizationPage = () => {
                                     <tr>
                                         <th className="px-4 py-2 text-sm font-medium text-center w-20 whitespace-nowrap">#</th>
                                         <th className="px-4 py-2 text-sm font-medium text-left w-40 whitespace-nowrap">Số hợp đồng</th>
-                                        <th className="px-4 py-2 text-sm font-medium text-left w-32 whitespace-nowrap">Ngày lập</th>
+                                        {/* <th className="px-4 py-2 text-sm font-medium text-left w-32 whitespace-nowrap">Ngày lập</th> */}
                                         <th className="px-4 py-2 text-sm font-medium text-left w-48 whitespace-nowrap">Bên A</th>
                                         <th className="px-4 py-2 text-sm font-medium text-left w-48 whitespace-nowrap">Bên B</th>
                                         <th className="px-4 py-2 text-sm font-medium text-left w-48 whitespace-nowrap">Người tạo </th>
@@ -172,7 +172,7 @@ const AuthorizationPage = () => {
                                         <tr key={c.id} className="border-b hover:bg-gray-50">
                                             <td className="px-4 py-2 text-sm text-center whitespace-nowrap">{index + 1}</td>
                                             <td className="px-4 py-2 text-sm whitespace-nowrap">{c.contractNumber}</td>
-                                            <td className="px-4 py-2 text-sm whitespace-nowrap">{formatDate2(c.date)}</td>
+                                            {/* <td className="px-4 py-2 text-sm whitespace-nowrap">{formatDate2(c.date)}</td> */}
                                             <td className="px-4 py-2 text-sm whitespace-nowrap">{names[c.partyAId] || c.partyAId}</td>
                                             <td className="px-4 py-2 text-sm whitespace-nowrap">Nguyễn Đình Mạnh Hùng</td>
                                             <td className="px-4 py-2 text-sm whitespace-nowrap">{names[c.createdById] || c.createdById}</td>

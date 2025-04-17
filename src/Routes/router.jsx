@@ -186,8 +186,8 @@ const RoutesConfig = () => {
             />
             <Route path="/Admin/Landlord/Giayto/:landlordLicenseId" element={<LandlordDocuments />} />
             <Route path="/Admin/Service/Giayto/:serviceLicenseId" element={<ServiceDocuments />} />
-            <Route path="/Giayto/:landlordLicenseId" element={<LandlordDocumentsUser />} />
-            <Route path="/Giayto/:serviceLicenseId" element={<ServiceDocumentsUser />} />
+            <Route path="/Landlord/Giayto/:landlordLicenseId" element={<LandlordDocumentsUser />} />
+            <Route path="/Service/Giayto/:serviceLicenseId" element={<ServiceDocumentsUser />} />
             {/* Service Posts */}
             <Route
                 path="/Admin/ServicePosts"
