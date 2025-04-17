@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import UpRoleService from '../../../Services/User/UpRoleService';
 import UserService from '../../../Services/User/UserService';
 import Loading from '../../../Components/Loading';
+import SidebarUser from '../../../Components/Layout/SidebarUser';
 
 const ServiceDocumentsUser = () => {
     const [license, setLicense] = useState(null);
@@ -58,8 +59,9 @@ const ServiceDocumentsUser = () => {
 
     return (
         <div className="bg-white">
-            <div className="p-6 max-w-6xl mx-auto ">
-                <h1 className="font-bold text-3xl mb-6 text-blue-600">Thông tin giấy tờ Service</h1>
+            <SidebarUser />
+            <div className="p-6 ml-56 max-w-6xl mx-auto">
+                <h1 className="font-bold text-3xl mb-6 text-red-600">Thông tin giấy tờ Service</h1>
                 <div className="bg-white p-6 rounded-lg shadow-md border border-gray-300">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         <div className="flex gap-2 items-start">
@@ -158,8 +160,8 @@ const ServiceDocumentsUser = () => {
                     </div>
 
                     <button
-                        onClick={() => navigate('/Admin/Service')}
-                        className="mt-6 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-500"
+                        onClick={() => navigate('/ViewUpRole')}
+                        className="mt-6 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-500"
                     >
                         Quay lại
                     </button>
@@ -168,13 +170,17 @@ const ServiceDocumentsUser = () => {
                 {previewImage && (
                     <div
                         className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
-                        onClick={closePreview}
+                        onClick={closePreview} // Đóng khi click ngoài
                     >
-                        <div className="relative max-w-4xl max-h-[90vh] p-4 bg-white rounded-lg">
-                            <img src={previewImage} alt="Preview" className="w-full h-auto rounded-lg" />
+                        <div className="relative max-w-4xl max-h-[90vh] p-4 bg-white rounded-lg overflow-auto">
+                            <img
+                                src={previewImage}
+                                alt="Preview"
+                                className="max-w-full max-h-[80vh] w-auto h-auto rounded-lg mx-auto"
+                            />
                             <button
                                 onClick={closePreview}
-                                className="absolute top-0 right-0 font-bold text-black px-2 rounded-full "
+                                className="absolute top-1 right-1 px-2 text-red-500 bg-white font-bold rounded-full"
                             >
                                 ✕
                             </button>

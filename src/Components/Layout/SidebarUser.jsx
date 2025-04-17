@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { FaBook, FaUserTie, FaGlobe, FaDoorClosed, FaIdCard } from 'react-icons/fa';
+import { FaBook, FaUserTie, FaGlobe, FaDoorClosed, FaIdCard, FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import { FaHandHoldingDollar } from "react-icons/fa6";
 import { MdBedroomParent, MdCleaningServices } from 'react-icons/md';
 import { useAuth } from '../../Context/AuthProvider';
@@ -9,11 +9,12 @@ const SidebarUser = () => {
     const location = useLocation();
     const params = new URLSearchParams(location.search);
     const currentTab = params.get("tab");
-    const currentPath = location.pathname; // Lấy đường dẫn hiện tại
-    const isWithdrawActive = location.pathname === "/Withdraw";
-    const isWithdrawCreateActive = location.pathname === "/Withdraw/Create";
-    const { user } = useAuth();
+    const currentPath = location.pathname;
+    const isWithdrawCreateActive = currentPath === "/Withdraw/Create";
+    const isAuthorizationActive = currentPath === "/Landlord/Authorization";
+    const [isFinanceOpen, setIsFinanceOpen] = useState(false);
 
+    const { user } = useAuth();
     if (!user) return null;
 
     let postTitle = "Bài Đăng";
@@ -31,7 +32,7 @@ const SidebarUser = () => {
     }
 
     return (
-        <div className="fixed flex flex-col h-screen pt-5 overflow-y-auto text-black bg-white border-r-2 w-52 select-none">
+        <div className="fixed flex flex-col h-screen pt-2 overflow-y-auto text-black bg-white border-r-2 w-52 select-none">
             <ul className="text-base font-medium text-justify">
                 <li>
                     <NavLink
@@ -85,7 +86,7 @@ const SidebarUser = () => {
                     </ul>
                 </li>
 
-                {/* Bài đăng / Phòng / Dịch vụ - Chỉ hiển thị cho Landlord và Service */}
+                {/* Bài đăng / Phòng / Dịch vụ */}
                 {(user.role === "Landlord" || user.role === "Service") && (
                     <li>
                         <div className="block px-4 py-2 rounded-3xl">
@@ -112,13 +113,13 @@ const SidebarUser = () => {
                                     to={listLink}
                                     className={`block py-2 px-4 hover:bg-red-400 hover:text-white rounded-3xl ${currentPath === listLink ? "bg-red-500 text-white" : ""}`}
                                 >
-                                    {user.role === "Landlord" ? "Quản Lý Phòng" : user.role === "Service" ? "Quản Lý Dịch vụ" : "Quản Lý Tin"}
+                                    {user.role === "Landlord" ? "Quản Lý Phòng" : "Quản Lý Dịch vụ"}
                                 </NavLink>
                             </li>
                             <li>
                                 <NavLink
                                     to="/Landlord/Authorization"
-                                    className={`block py-2 px-4 mb-0.5 hover:bg-red-400 hover:text-white rounded-3xl ${currentPath === createLink ? "bg-red-500 text-white" : ""}`}
+                                    className={`block py-2 px-4 mb-0.5 hover:bg-red-400 hover:text-white rounded-3xl ${isAuthorizationActive ? "bg-red-500 text-white" : ""}`}
                                 >
                                     Đơn ủy quyền
                                 </NavLink>
@@ -139,6 +140,8 @@ const SidebarUser = () => {
                         Phòng đã thuê
                     </NavLink>
                 </li>
+
+                {/* Đơn đăng ký */}
                 <li>
                     <NavLink
                         to="/ViewUpRole"
@@ -150,60 +153,61 @@ const SidebarUser = () => {
                         Đơn đăng ký
                     </NavLink>
                 </li>
+
                 {/* Tài chính */}
                 <li>
-                    <div className="block px-4 py-2 rounded-3xl">
-                        <FaHandHoldingDollar className="inline-block mb-1 mr-2" />
-                        Tài Chính
+                    <div
+                        className="flex items-center justify-between px-4 py-2 rounded-3xl cursor-pointer hover:bg-red-400 hover:text-white"
+                        onClick={() => setIsFinanceOpen(!isFinanceOpen)}
+                    >
+                        <div>
+                            <FaHandHoldingDollar className="inline-block mb-1 mr-2" />
+                            Tài Chính
+                        </div>
+                        {isFinanceOpen ? <FaChevronUp className="inline-block ml-2" /> : <FaChevronDown className="inline-block ml-2" />}
                     </div>
-                    <ul className="pl-4">
-                        <li>
-                            <NavLink
-                                to="/Transaction"
-                                className={({ isActive }) =>
-                                    `block py-2 px-4 mb-0.5 hover:bg-red-400 hover:text-white rounded-3xl ${isActive ? 'bg-red-500 text-white' : ''}`
-                                }
-                            >
-                                Lịch sử giao dịch
-                            </NavLink>
-                        </li>
-                        {/* <li>
-                            <NavLink
-                                to="/Withdraw"
-                                className={`block py-2 px-4 hover:bg-red-400 hover:text-white rounded-3xl ${isWithdrawActive ? 'bg-red-500 text-white' : ''}`}
-                            >
-                                Lịch sử rút tiền
-                            </NavLink>
-                        </li> */}
-                        <li>
-                            <NavLink
-                                to="/Moneys"
-                                className={({ isActive }) =>
-                                    `block py-2 px-4 hover:bg-red-400 hover:text-white rounded-3xl ${isActive ? 'bg-red-500 text-white' : ''}`
-                                }
-                            >
-                                Nạp tiền
-                            </NavLink>
-                        </li>
-                        <li>
-                            <NavLink
-                                to="/Withdraw/Create"
-                                className={`block py-2 px-4 hover:bg-red-500 hover:text-white rounded-3xl ${isWithdrawCreateActive ? 'bg-red-500 text-white' : ''}`}
-                            >
-                                Rút tiền
-                            </NavLink>
-                        </li>
-                        <li>
-                            <NavLink
-                                to="/BankAccounts"
-                                className={({ isActive }) =>
-                                    `block py-2 px-4 hover:bg-red-500 hover:text-white rounded-3xl ${isActive ? 'bg-red-500 text-white' : ''}`
-                                }
-                            >
-                                Tài khoản của bạn
-                            </NavLink>
-                        </li>
-                    </ul>
+                    {isFinanceOpen && (
+                        <ul className="pl-4">
+                            <li>
+                                <NavLink
+                                    to="/Transaction"
+                                    className={({ isActive }) =>
+                                        `block py-2 px-4 mb-0.5 hover:bg-red-400 hover:text-white rounded-3xl ${isActive ? 'bg-red-500 text-white' : ''}`
+                                    }
+                                >
+                                    Lịch sử giao dịch
+                                </NavLink>
+                            </li>
+                            <li>
+                                <NavLink
+                                    to="/Moneys"
+                                    className={({ isActive }) =>
+                                        `block py-2 px-4 hover:bg-red-400 hover:text-white rounded-3xl ${isActive ? 'bg-red-500 text-white' : ''}`
+                                    }
+                                >
+                                    Nạp tiền
+                                </NavLink>
+                            </li>
+                            <li>
+                                <NavLink
+                                    to="/Withdraw/Create"
+                                    className={`block py-2 px-4 hover:bg-red-400 hover:text-white rounded-3xl ${isWithdrawCreateActive ? 'bg-red-500 text-white' : ''}`}
+                                >
+                                    Rút tiền
+                                </NavLink>
+                            </li>
+                            <li>
+                                <NavLink
+                                    to="/BankAccounts"
+                                    className={({ isActive }) =>
+                                        `block py-2 px-4 hover:bg-red-400 hover:text-white rounded-3xl ${isActive ? 'bg-red-500 text-white' : ''}`
+                                    }
+                                >
+                                    Tài khoản của bạn
+                                </NavLink>
+                            </li>
+                        </ul>
+                    )}
                 </li>
             </ul>
         </div>
