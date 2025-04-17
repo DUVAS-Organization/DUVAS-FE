@@ -436,7 +436,7 @@ const RoomList = () => {
                                                     alt={card.title || 'Image of a room'}
                                                     src={firstImage}
                                                 />
-                                                {card.isPermission === 0 ? (
+                                                {card.isPermission === 0 && (
                                                     <div className="absolute inset-0 flex items-center justify-center">
                                                         <div className="relative w-full h-full">
                                                             <div className="absolute top-0 left-0 w-full h-full bg-transparent flex items-center justify-center">
@@ -447,26 +447,23 @@ const RoomList = () => {
                                                             <div className="absolute top-1/2 left-1/2 w-36 h-36 rounded-full border-8 border-red-700 transform -rotate-45 -translate-x-1/2 -translate-y-1/2"></div>
                                                         </div>
                                                     </div>
-                                                ) : (
-                                                    <>
-                                                        {getStatusOverlay(card.status)}
-                                                        {isAuthorizing && (
-                                                            <div
-                                                                className="absolute top-2 right-1"
-                                                                onClick={(e) => e.stopPropagation()}
-                                                            >
-                                                                <input
-                                                                    type="checkbox"
-                                                                    checked={selectedRooms.includes(card.roomId)}
-                                                                    onChange={(e) => {
-                                                                        e.stopPropagation();
-                                                                        handleSelectRoom(card.roomId);
-                                                                    }}
-                                                                    className="w-7 h-7 cursor-pointer text-lg text-red-500 accent-red-500 hover:scale-125 transition duration-200"
-                                                                />
-                                                            </div>
-                                                        )}
-                                                    </>
+                                                )}
+                                                {card.isPermission !== 0 && getStatusOverlay(card.status)}
+                                                {isAuthorizing && (
+                                                    <div
+                                                        className="absolute top-2 right-1 z-10"
+                                                        onClick={(e) => e.stopPropagation()}
+                                                    >
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={selectedRooms.includes(card.roomId)}
+                                                            onChange={(e) => {
+                                                                e.stopPropagation();
+                                                                handleSelectRoom(card.roomId);
+                                                            }}
+                                                            className="w-7 h-7 cursor-pointer text-lg text-red-500 accent-red-500 hover:scale-125 transition duration-200"
+                                                        />
+                                                    </div>
                                                 )}
                                                 {!isAuthorizing && card.status === 1 && (
                                                     <div

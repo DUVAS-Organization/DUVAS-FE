@@ -183,6 +183,16 @@ const Sidebar = () => {
                             </li>
                             <li>
                                 <NavLink
+                                    to="/Admin/Authorization"
+                                    className={({ isActive }) =>
+                                        `block py-2 px-4 hover:bg-blue-400 rounded-3xl ${isActive ? 'bg-blue-500 text-white' : ''}`
+                                    }
+                                >
+                                    Đơn Ủy Quyền
+                                </NavLink>
+                            </li>
+                            <li>
+                                <NavLink
                                     to="/Admin/Withdraws"
                                     className={({ isActive }) =>
                                         `block py-2 px-4 hover:bg-blue-400 rounded-3xl ${isActive ? 'bg-blue-500 text-white' : ''}`

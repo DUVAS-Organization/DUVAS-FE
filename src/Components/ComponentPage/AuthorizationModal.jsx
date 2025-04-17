@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { styled } from '@mui/material/styles';
 import { Modal, Box, Typography, TextField, Button, Grid } from '@mui/material';
 import ContractService from '../../Services/Landlord/ContractService';
-import UpRoleService from '../../Services/User/UpRoleService';
 import Loading from '../Loading';
+import UserService from '../../Services/User/UserService';
 
 // Styled component cho ModalContent
 const ModalContent = styled(Box)(({ theme }) => ({
@@ -91,7 +91,7 @@ const AuthorizationModal = ({ open, onClose, user, selectedRooms, adminData, onS
             try {
                 setIsLoading(true);
                 setWarning(null);
-                const response = await UpRoleService.getLandlordLicenseById(partyAId);
+                const response = await UserService.getOneLicenseByUserId(partyAId, user.token);
 
                 const data = response?.data || response;
 
