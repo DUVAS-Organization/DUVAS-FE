@@ -62,11 +62,30 @@ const AuthorizationPage = () => {
         fetchContracts();
     }, [userId]);
 
-    const formatDate = (dateString) =>
-        new Date(dateString).toLocaleString('vi-VN', {
-            dateStyle: 'short',
-            timeStyle: 'short',
-        });
+    const formatDate = (dateString) => {
+        const date = new Date(dateString);
+        const pad = (n) => String(n).padStart(2, '0');
+
+        const day = pad(date.getDate());
+        const month = pad(date.getMonth() + 1);
+        const year = date.getFullYear();
+
+        const hours = pad(date.getHours());
+        const minutes = pad(date.getMinutes());
+        const seconds = pad(date.getSeconds());
+
+        return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+    };
+    const formatDate2 = (dateString) => {
+        const date = new Date(dateString);
+        const pad = (n) => String(n).padStart(2, '0');
+
+        const day = pad(date.getDate());
+        const month = pad(date.getMonth() + 1);
+        const year = date.getFullYear();
+
+        return `${day}/${month}/${year} `;
+    };
 
     const formatStatus = (status) => {
         switch (status) {
@@ -110,7 +129,7 @@ const AuthorizationPage = () => {
     return (
         <div className="flex bg-white min-h-screen">
             <SidebarUser />
-            <div className="flex-1 p-6 ml-56 max-w-8xl mx-auto">
+            <div className="flex-1 p-6 ml-[200px] max-w-8xl mx-auto">
                 <h1 className="text-2xl font-bold mb-6">Danh sách hợp đồng ủy quyền</h1>
 
                 {loading && (
@@ -137,23 +156,23 @@ const AuthorizationPage = () => {
                             <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow-sm table-fixed">
                                 <thead className="bg-gray-100">
                                     <tr>
-                                        <th className="px-4 py-2 text-sm font-medium text-center w-20 whitespace-nowrap">ID</th>
+                                        <th className="px-4 py-2 text-sm font-medium text-center w-20 whitespace-nowrap">#</th>
                                         <th className="px-4 py-2 text-sm font-medium text-left w-40 whitespace-nowrap">Số hợp đồng</th>
                                         <th className="px-4 py-2 text-sm font-medium text-left w-32 whitespace-nowrap">Ngày lập</th>
-                                        <th className="px-4 py-2 text-sm font-medium text-left w-48 whitespace-nowrap">Bên A (ID)</th>
-                                        <th className="px-4 py-2 text-sm font-medium text-left w-48 whitespace-nowrap">Bên B (ID)</th>
-                                        <th className="px-4 py-2 text-sm font-medium text-left w-48 whitespace-nowrap">Người tạo (ID)</th>
+                                        <th className="px-4 py-2 text-sm font-medium text-left w-48 whitespace-nowrap">Bên A</th>
+                                        <th className="px-4 py-2 text-sm font-medium text-left w-48 whitespace-nowrap">Bên B</th>
+                                        <th className="px-4 py-2 text-sm font-medium text-left w-48 whitespace-nowrap">Người tạo </th>
                                         <th className="px-4 py-2 text-sm font-medium text-center w-40 whitespace-nowrap">Thời gian tạo</th>
                                         <th className="px-4 py-2 text-sm font-medium text-center w-40 whitespace-nowrap">Trạng thái</th>
                                         <th className="px-4 py-2 text-sm font-medium text-center w-40 whitespace-nowrap">PDF</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {contracts.map((c) => (
+                                    {contracts.map((c, index) => (
                                         <tr key={c.id} className="border-b hover:bg-gray-50">
-                                            <td className="px-4 py-2 text-sm text-center whitespace-nowrap">{c.id}</td>
+                                            <td className="px-4 py-2 text-sm text-center whitespace-nowrap">{index + 1}</td>
                                             <td className="px-4 py-2 text-sm whitespace-nowrap">{c.contractNumber}</td>
-                                            <td className="px-4 py-2 text-sm whitespace-nowrap">{c.date}</td>
+                                            <td className="px-4 py-2 text-sm whitespace-nowrap">{formatDate2(c.date)}</td>
                                             <td className="px-4 py-2 text-sm whitespace-nowrap">{names[c.partyAId] || c.partyAId}</td>
                                             <td className="px-4 py-2 text-sm whitespace-nowrap">Nguyễn Đình Mạnh Hùng</td>
                                             <td className="px-4 py-2 text-sm whitespace-nowrap">{names[c.createdById] || c.createdById}</td>

@@ -206,8 +206,8 @@ const AuthorizationModal = ({ open, onClose, user, selectedRooms, adminData, onS
             const fee = 10000 * (Array.isArray(selectedRooms) ? selectedRooms.length : 0) * duration;
 
             const payload = {
-                contractNumber: `CONTRACT-${Date.now()}`,
-                date: new Date().toISOString().split('T')[0],
+                contractNumber: `${Date.now()}`,
+                // date: new Date().toISOString().split('T')[0],
                 partyAId: parseInt(user.userId, 10),
                 partyAName: contractDetails.partyAName,
                 partyABirthDate: new Date(contractDetails.partyABirthDate).toISOString(),
