@@ -62,6 +62,11 @@ import LandlordDocuments from '../Pages/Admin/Accounts/LandlordDocuments';
 import ServiceDocuments from '../Pages/Admin/Accounts/ServiceDocuments';
 import TransactionAdmin from '../Pages/Admin/Transactions/TransactionAdmin';
 import RoomEdit from '../Pages/Landlord/Rooms/RoomEdit';
+import ViewUpRole from '../Pages/User/Profiles/ViewUpRole';
+import LandlordDocumentsUser from '../Pages/User/Profiles/LandlordDocumentsUser'
+import ServiceDocumentsUser from '../Pages/User/Profiles/ServiceDocumentsUser'
+import AuthorizationList from '../Pages/Admin/Accounts/AuthorizationList';
+import AuthorizationPage from '../Pages/User/Profiles/AuthorizationPage';
 
 const RoutesConfig = () => {
     const { user } = useAuth();
@@ -176,8 +181,14 @@ const RoutesConfig = () => {
                 path="/Admin/Service"
                 element={user && user.role === "Admin" ? <UpService /> : <Navigate to="/Logins" />}
             />
+            <Route
+                path="/Admin/Authorization"
+                element={user && user.role === "Admin" ? <AuthorizationList /> : <Navigate to="/Logins" />}
+            />
             <Route path="/Admin/Landlord/Giayto/:landlordLicenseId" element={<LandlordDocuments />} />
             <Route path="/Admin/Service/Giayto/:serviceLicenseId" element={<ServiceDocuments />} />
+            <Route path="/Giayto/:landlordLicenseId" element={<LandlordDocumentsUser />} />
+            <Route path="/Giayto/:serviceLicenseId" element={<ServiceDocumentsUser />} />
             {/* Service Posts */}
             <Route
                 path="/Admin/ServicePosts"
@@ -286,6 +297,10 @@ const RoutesConfig = () => {
                 element={user && user.role === "Landlord" ? <RoomListLandlord /> : <Navigate to="/" />}
             />
             <Route
+                path="/Landlord/Authorization"
+                element={user && user.role === "Landlord" ? <AuthorizationPage /> : <Navigate to="/" />}
+            />
+            <Route
                 path="/Rooms/Edit/:roomId"
                 element={user && user.role === "Landlord" ? <RoomEdit /> : <Navigate to="/" />}
             />
@@ -299,6 +314,10 @@ const RoutesConfig = () => {
                 element={user ? <RoomRentalConfirmation /> : <Navigate to="/" />}
             />
 
+            <Route
+                path="/ViewUpRole"
+                element={user ? <ViewUpRole /> : <Navigate to="/" />}
+            />
         </Routes>
 
 

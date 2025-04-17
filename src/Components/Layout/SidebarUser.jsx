@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { FaBook, FaUserTie, FaGlobe, FaDoorClosed } from 'react-icons/fa';
+import { FaBook, FaUserTie, FaGlobe, FaDoorClosed, FaIdCard } from 'react-icons/fa';
 import { FaHandHoldingDollar } from "react-icons/fa6";
 import { MdBedroomParent, MdCleaningServices } from 'react-icons/md';
 import { useAuth } from '../../Context/AuthProvider';
@@ -115,6 +115,14 @@ const SidebarUser = () => {
                                     {user.role === "Landlord" ? "Quản Lý Phòng" : user.role === "Service" ? "Quản Lý Dịch vụ" : "Quản Lý Tin"}
                                 </NavLink>
                             </li>
+                            <li>
+                                <NavLink
+                                    to="/Landlord/Authorization"
+                                    className={`block py-2 px-4 mb-0.5 hover:bg-red-400 hover:text-white rounded-3xl ${currentPath === createLink ? "bg-red-500 text-white" : ""}`}
+                                >
+                                    Đơn ủy quyền
+                                </NavLink>
+                            </li>
                         </ul>
                     </li>
                 )}
@@ -131,7 +139,17 @@ const SidebarUser = () => {
                         Phòng đã thuê
                     </NavLink>
                 </li>
-
+                <li>
+                    <NavLink
+                        to="/ViewUpRole"
+                        className={({ isActive }) =>
+                            `block py-2 px-4 mb-0.5 hover:bg-red-400 hover:text-white rounded-3xl ${isActive ? 'bg-red-500 text-white' : ''}`
+                        }
+                    >
+                        <FaIdCard className="inline-block mb-1 mr-2" />
+                        Đơn đăng ký
+                    </NavLink>
+                </li>
                 {/* Tài chính */}
                 <li>
                     <div className="block px-4 py-2 rounded-3xl">
