@@ -20,6 +20,7 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
 import 'swiper/css/free-mode';
 import { useAuth } from '../../../Context/AuthProvider';
+import OtherService from '../../../Services/User/OtherService';
 
 const ServicePostDetails = () => {
     const { servicePostId } = useParams();
@@ -99,29 +100,41 @@ const ServicePostDetails = () => {
         return found ? found.categoryServiceName : 'N/A';
     };
 
-    const toggleSavePost = async () => {
+    const toggleSavePost = async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
         if (!user || !servicePostId) {
-            console.error("Lỗi: userId hoặc servicePostId không hợp lệ!", { user, servicePostId });
+            showCustomNotification("error", "Bạn cần đăng nhập để lưu tin!");
             return;
         }
         try {
-            const response = await fetch("https://apiduvas1.runasp.net/api/SavedPosts", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ userId: user.userId, servicePostId: parseInt(servicePostId) }),
-            });
-            if (!response.ok) {
-                throw new Error("Lỗi khi lưu/xóa bài đăng");
-            }
-            setSavedPosts((prev) => {
-                if (prev.includes(parseInt(servicePostId))) {
-                    return prev.filter((id) => id !== parseInt(servicePostId));
-                } else {
-                    return [...prev, parseInt(servicePostId)];
+            const result = await OtherService.toggleSavePostService(user.userId, parseInt(servicePostId));
+            setSavedPosts((prevSaved) => {
+                const newSaved = new Set(prevSaved);
+                let message = "";
+
+                if (result.status === "removed") {
+                    newSaved.delete(parseInt(servicePostId));
+                    message = "Đã xóa tin khỏi danh sách lưu!";
+                } else if (result.status === "saved") {
+                    newSaved.add(parseInt(servicePostId));
+                    message = "Lưu tin thành công!";
                 }
+
+                const updatedSavedPosts = Array.from(newSaved);
+                localStorage.setItem("savedPosts", JSON.stringify(updatedSavedPosts));
+
+                return updatedSavedPosts;
             });
+            if (result.status === "removed") {
+                showCustomNotification("success", "Đã xóa tin khỏi danh sách lưu!");
+            } else if (result.status === "saved") {
+                showCustomNotification("success", "Lưu tin thành công!");
+            }
         } catch (error) {
-            console.error("❌ Lỗi khi lưu / xóa bài:", error);
+            console.error("Lỗi khi lưu / xóa bài:", error);
+            showCustomNotification("error", "Đã xảy ra lỗi, vui lòng thử lại!");
         }
     };
 
@@ -138,15 +151,7 @@ const ServicePostDetails = () => {
                 ServicePostId: parseInt(servicePostId),
                 RequesterId: user.userId,
             };
-            const requestResponse = await fetch("https://apiduvas1.runasp.net/api/ServiceManagement/rent-service", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(requestPayload),
-            });
-            if (!requestResponse.ok) {
-                const requestErrorData = await requestResponse.json();
-                throw new Error(requestErrorData.message || "Lỗi khi yêu cầu dịch vụ");
-            }
+            await OtherService.rentService(requestPayload);
 
             const requesterName = getUserName();
             const sendMailPayload = {
@@ -154,24 +159,13 @@ const ServicePostDetails = () => {
                 servicePostId: parseInt(servicePostId),
                 requesterName: requesterName,
             };
-            const sendMailResponse = await fetch("https://apiduvas1.runasp.net/api/ServiceManagement/send-mail", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`,
-                },
-                body: JSON.stringify(sendMailPayload),
-            });
-            if (!sendMailResponse.ok) {
-                const sendMailErrorData = await sendMailResponse.json();
-                throw new Error(sendMailErrorData.message || "Lỗi khi gửi email cho nhà cung cấp");
-            }
+            await OtherService.sendMail(sendMailPayload, token);
 
             showCustomNotification("success", "Yêu cầu dịch vụ và gửi mail thành công!");
             navigate('/Services/RequestSuccess');
         } catch (error) {
             console.log("Error in handleRequestService catch block:", error);
-            showCustomNotification("error", "Có lỗi xảy ra");
+            showCustomNotification("error", error.response?.data?.message || "Có lỗi xảy ra");
         } finally {
             setIsRequesting(false);
         }
@@ -298,15 +292,10 @@ const ServicePostDetails = () => {
                                 </div>
                             </div>
                             <div className="flex gap-4 text-2xl text-gray-600">
-                                <button>
-                                    <BsExclamationTriangle />
-                                </button>
                                 <button
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        toggleSavePost();
-                                    }}
+                                    onClick={
+                                        toggleSavePost
+                                    }
                                     className="text-2xl"
                                 >
                                     {savedPosts.includes(parseInt(servicePostId)) ? (

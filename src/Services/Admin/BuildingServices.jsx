@@ -19,6 +19,11 @@ const BuildingServices = {
 
     deleteBuilding: (buildingId) =>
         axios.delete(`${API_URL}/${buildingId}`).then((res) => res.data),
+    lockBuilding: (buildingId) =>
+        axios.put(`${API_URL}/lock/${buildingId}`).then((res) => res.data),
+
+    unlockBuilding: (buildingId) =>
+        axios.put(`${API_URL}/unlock/${buildingId}`).then((res) => res.data),
 };
 
 export default BuildingServices;

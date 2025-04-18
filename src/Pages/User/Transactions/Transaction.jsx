@@ -4,7 +4,7 @@ import Layout from "../../../Components/Layout/Layout";
 import Footer from "../../../Components/Layout/Footer";
 import UserService from "../../../Services/User/UserService";
 import { showCustomNotification } from "../../../Components/Notification";
-import { FaChevronLeft, FaChevronRight } from "react-icons/fa6";
+import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
 const Transaction = () => {
     const [transactions, setTransactions] = useState([]);
@@ -62,7 +62,9 @@ const Transaction = () => {
                                                             ? new Date(transaction.createdAt).toLocaleString()
                                                             : "N/A"}
                                                 </td>
-                                                <td className="p-3 border text-center">{transaction.amount}</td>
+                                                <td className="p-3 border text-center">
+                                                    {transaction.amount.toLocaleString("vi-VN", { style: "decimal" })}
+                                                </td>
                                                 <td className="p-3 border">{transaction.bankName}</td>
                                                 <td className="p-3 border">{transaction.description || "N/A"}</td>
                                                 <td className="p-3 border text-center">
@@ -79,7 +81,7 @@ const Transaction = () => {
                                     ) : (
                                         <tr>
                                             <td colSpan="8" className="p-4 text-center text-gray-500">
-                                                No transactions available.
+                                                Không có giao dịch nào.
                                             </td>
                                         </tr>
                                     )}
@@ -93,15 +95,16 @@ const Transaction = () => {
                         <button
                             onClick={() => paginate(currentPage - 1)}
                             disabled={currentPage === 1}
-                            className="px-4 py-2 bg-blue-400 text-gray-500 rounded disabled:bg-gray-300"
+                            className="px-4 py-2 bg-red-500 text-white rounded disabled:bg-gray-300"
                         >
-                            <FaChevronLeft className="text-xl" />
+                            <FaChevronLeft />
+                            {/* Previous */}
                         </button>
                         {Array.from({ length: Math.ceil(transactions.length / itemsPerPage) }, (_, i) => (
                             <button
                                 key={i + 1}
                                 onClick={() => paginate(i + 1)}
-                                className={`px-4 py-2 mx-1 ${currentPage === i + 1 ? "bg-blue-500 text-white" : "bg-blue-400 text-white"} rounded`}
+                                className={`px-4 py-2 mx-1 ${currentPage === i + 1 ? "bg-red-600 text-white" : "bg-red-500 text-white"} rounded`}
                             >
                                 {i + 1}
                             </button>
@@ -109,9 +112,10 @@ const Transaction = () => {
                         <button
                             onClick={() => paginate(currentPage + 1)}
                             disabled={currentPage === Math.ceil(transactions.length / itemsPerPage)}
-                            className="px-4 py-2 bg-blue-400 text-gray-500 rounded disabled:bg-gray-300"
+                            className="px-4 py-2 bg-red-500 text-white rounded disabled:bg-gray-300"
                         >
-                            <FaChevronRight className="text-xl" />
+                            <FaChevronRight />
+                            {/* Next */}
                         </button>
                     </div>
                 </div>

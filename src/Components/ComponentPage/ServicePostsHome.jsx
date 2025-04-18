@@ -5,7 +5,7 @@ import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../Context/AuthProvider';
 import ServicePost from '../../Services/Admin/ServicePost';
 import { showCustomNotification } from '../Notification';
-import Loading from '../Loading';
+import OtherService from '../../Services/User/OtherService';
 
 const Item = styled('div')(({ theme, $vertical }) => ({
     backgroundColor: '#fff',
@@ -14,7 +14,7 @@ const Item = styled('div')(({ theme, $vertical }) => ({
     transition: 'transform 0.2s, box-shadow 0.2s',
     cursor: 'pointer',
     display: 'flex',
-    flexDirection: $vertical ? 'column' : 'row', // nếu $vertical true => layout dọc, ngược lại row
+    flexDirection: $vertical ? 'column' : 'row',
     boxShadow: theme.shadows[3],
     '&:hover': {
         transform: 'scale(1.02)',
@@ -80,9 +80,7 @@ const ServicePostsHome = () => {
 
     const fetchSavedPosts = async () => {
         try {
-            const response = await fetch(`https://apiduvas1.runasp.net/api/SavedPosts/${user.userId}`);
-            if (!response.ok) throw new Error("Lỗi khi lấy danh sách bài đã lưu!");
-            const data = await response.json();
+            const data = await OtherService.getSavedPosts(user.userId);
             const savedServicePostIds = new Set(data.map(item => item.servicePostId));
             setSavedPosts(savedServicePostIds);
         } catch (error) {
@@ -98,15 +96,7 @@ const ServicePostsHome = () => {
             return;
         }
         try {
-            const response = await fetch("https://apiduvas1.runasp.net/api/SavedPosts/", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ userId: user.userId, servicePostId: parseInt(servicePostId) }),
-            });
-            if (!response.ok) {
-                throw new Error("Lỗi khi lưu/xóa bài đăng");
-            }
-            const result = await response.json();
+            const result = await OtherService.toggleSaveServicePost(user.userId, servicePostId);
             setSavedPosts(prevSaved => {
                 const newSaved = new Set(prevSaved);
                 if (result.status === "removed") {
@@ -125,8 +115,6 @@ const ServicePostsHome = () => {
         }
     };
 
-    // Hàm render card
-    // isDoubleHeight = true: card hiển thị theo layout dọc, dành cho cột chính khi có 3 hoặc nhiều bài.
     const renderFullCard = (post, isDoubleHeight = false) => {
         let images;
         try {
@@ -143,12 +131,11 @@ const ServicePostsHome = () => {
         const isSaved = savedPosts.has(post.servicePostId);
 
         return (
-            <Link to={`/ServicePosts/Details/${post.servicePostId}`} className="block">
+            <Link to={`/ServicePosts/Details/${post.servicePostId}`} className="block ">
                 <Item className={`mb-4 ${isDoubleHeight ? 'h-[417px]' : 'h-48'}`} $vertical={isDoubleHeight}>
                     {isDoubleHeight ? (
                         <>
-                            {/* Layout dọc: ảnh ở trên */}
-                            <div className="relative w-full h-1/2">
+                            <div className="relative w-full h-1/2 dark:bg-gray-800">
                                 <img
                                     src={firstImage}
                                     alt={post.title}
@@ -160,29 +147,28 @@ const ServicePostsHome = () => {
                                     </span>
                                 )}
                             </div>
-                            {/* Nội dung bên dưới, xếp theo chiều dọc */}
-                            <div className="p-4 flex-1 flex flex-col">
+                            <div className="p-4 flex-1 flex flex-col dark:bg-gray-800">
                                 <h3 className="text-lg font-semibold mb-1 truncate">{post.title}</h3>
-                                <p className="text-gray-600 mb-1 flex items-center">
+                                <p className="text-gray-600 mb-1 flex items-center dark:text-white">
                                     <FaMapMarkerAlt className="mr-1" />
                                     {post.location}
                                 </p>
                                 <p className="text-red-500 font-semibold mb-1">
                                     {post.price.toLocaleString('vi-VN')} đ
                                 </p>
-                                <p className="text-gray-600 mb-2 line-clamp-2">{post.description}</p>
+                                <p className="text-gray-600 mb-2 line-clamp-2 dark:text-white">{post.description}</p>
                                 <div className="mt-auto flex justify-between items-center">
                                     <button
                                         onClick={(e) => toggleSavePost(post.servicePostId, e)}
                                         className="text-xl"
                                     >
                                         {isSaved ? (
-                                            <FaHeart className="text-red-500" />
+                                            <FaHeart className="text-red-500 dark:text-white" />
                                         ) : (
-                                            <FaRegHeart className="text-gray-600" />
+                                            <FaRegHeart className="text-gray-600 dark:text-white" />
                                         )}
                                     </button>
-                                    <span className="text-gray-600 flex items-center">
+                                    <span className="text-gray-600 flex items-center dark:text-white">
                                         <FaCamera className="mr-1" /> {imageCount}
                                     </span>
                                 </div>
@@ -190,8 +176,7 @@ const ServicePostsHome = () => {
                         </>
                     ) : (
                         <>
-                            {/* Layout ngang: ảnh bên trái, nội dung bên phải */}
-                            <div className="relative w-48 h-full flex-shrink-0">
+                            <div className="relative w-48 h-full flex-shrink-0 dark:bg-gray-800 dark:text-white">
                                 <img
                                     src={firstImage}
                                     alt={post.title}
@@ -204,7 +189,7 @@ const ServicePostsHome = () => {
                                 )}
                             </div>
                             <div className="p-4 flex-1 flex flex-col">
-                                <h3 className="text-lg font-semibold mb-1 truncate">{post.title}</h3>
+                                <h3 className="text-lg font-semibold mb-1 truncate ">{post.title}</h3>
                                 <p className="text-gray-600 mb-1 flex items-center">
                                     <FaMapMarkerAlt className="mr-1" />
                                     {post.location}
@@ -236,8 +221,6 @@ const ServicePostsHome = () => {
         );
     };
 
-    // Khi có 4 bài trở lên: chia lưới theo tỉ lệ 2/3 cho cột trái và 1/3 cho cột phải,
-    // cột trái hiển thị card chính với layout dọc, cột phải hiển thị danh sách link tiêu đề với text size lớn.
     const renderForFourOrMore = () => (
         <div className="grid grid-cols-3 gap-6">
             <div className="col-span-2">
@@ -248,7 +231,7 @@ const ServicePostsHome = () => {
                     <Link
                         key={post.servicePostId}
                         to={`/ServicePosts/Details/${post.servicePostId}`}
-                        className="block text-xl font-semibold px-2 py-1 text-gray-600 hover:text-white hover:bg-red-500 rounded truncate"
+                        className="block text-xl font-semibold px-2 py-1 text-gray-600 dark:text-white hover:text-white hover:bg-red-500 rounded truncate"
                         onMouseEnter={() => setHoveredPostId(post.servicePostId)}
                         onMouseLeave={() => setHoveredPostId(null)}
                     >
@@ -273,7 +256,7 @@ const ServicePostsHome = () => {
 
     return (
         <div className="">
-            <div className="container mx-auto">
+            <div className="container mx-auto dark:text-white">
                 <div className="p-4">
                     {filteredServicePosts.length === 0 ? (
                         <p className="text-black font-semibold">Không tìm thấy bài đăng dịch vụ nào.</p>
@@ -299,7 +282,6 @@ const ServicePostsHome = () => {
                             </div>
                         </div>
                     ) : (
-                        // 4 bài trở lên: chia lưới theo tỉ lệ 2/3 - 1/3, cột trái cũng layout dọc
                         renderForFourOrMore()
                     )}
                 </div>

@@ -12,20 +12,28 @@ const ServicePostList = () => {
     const [categoryServices, setCategoryServices] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
+    const [sortOrder, setSortOrder] = useState('asc');
     const navigate = useNavigate();
 
     useEffect(() => {
         fetchData();
-    }, [searchTerm, selectedCategory]);
+    }, [searchTerm, selectedCategory, sortOrder]);
 
     const fetchData = async () => {
         try {
             const servicePostsData = await ServicePost.getServicePosts(searchTerm);
-            // Lọc theo selectedCategory nếu có
             const filteredServicePosts = selectedCategory
                 ? servicePostsData.filter(servicePost => servicePost.categoryServiceName === selectedCategory)
                 : servicePostsData;
-
+            filteredServicePosts.sort((a, b) => {
+                const titleA = a.title.toLowerCase();
+                const titleB = b.title.toLowerCase();
+                if (sortOrder === 'asc') {
+                    return titleA.localeCompare(titleB);
+                } else {
+                    return titleB.localeCompare(titleA);
+                }
+            });
             setServicePosts(filteredServicePosts);
 
 
@@ -47,7 +55,7 @@ const ServicePostList = () => {
     return (
         <div className="p-6">
             <Counts />
-            <div className='font-bold text-6xl ml-3 my-8 text-blue-500 flex justify-between'>
+            <div className='font-bold text-4xl ml-3 my-8 text-blue-500 flex justify-between'>
                 <h1 >Bài Đăng Dịch Vụ</h1>
                 <button
                     onClick={handleCreate}
@@ -57,12 +65,17 @@ const ServicePostList = () => {
                 </button>
             </div>
             <div className="flex items-center mb-6">
-                <button className="border-2 border-gray-500 flex items-center p-2 rounded-xl">
-                    <FiFilter className="mr-2 text-xl" />
-                    <p className="font-bold text-xl">Tên (A-Z)</p>
+                <button
+                    onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
+                    className="flex items-center  mr-2 border bg-white border-gray-300 rounded-lg px-3 py-2 mb-2 sm:mb-0 hover:bg-gray-100 transition"
+                >
+                    <FiFilter className="text-lg" />
+                    <span className="font-medium text-base">
+                        Tên ({sortOrder === 'asc' ? 'A-Z' : 'Z-A'})
+                    </span>
                 </button>
 
-                <select className="border-2 border-gray-500 flex items-center p-2 rounded-xl ml-8 font-bold text-xl"
+                <select className="border border-gray-300 flex items-center px-3 py-2 rounded-lg shadow-sm font-medium text-base"
                     value={selectedCategory}
                     onChange={handleCategoryChange}
                 >
@@ -75,16 +88,16 @@ const ServicePostList = () => {
                         </option>
                     ))}
                 </select>
-                <button className="border-2 border-gray-500 flex items-center p-2 rounded-xl ml-8"
+                {/* <button className="border-2 border-gray-500 flex items-center p-2 rounded-xl ml-8"
                 >
                     <p className="font-bold text-xl">Giá</p>
                     <FaChevronDown className='ml-2 mt-1' />
-                </button>
+                </button> */}
                 <div className="relative w-1/3 mx-2 ml-auto">
                     <input
                         className="border w-full h-11 border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
                         type="text"
-                        placeholder="  Search..."
+                        placeholder="  Tìm kiếm theo tiêu đề hoặc địa chỉ..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
@@ -96,7 +109,7 @@ const ServicePostList = () => {
                 <table className="min-w-full bg-white border-collapse border border-gray-300 rounded-lg shadow-md">
                     <thead>
                         <tr className="bg-gray-100">
-                            <th className="py-2 px-4 text-left font-semibold text-black">#</th>
+                            <th className="py-2 px-4 text-center font-semibold text-black">#</th>
                             <th className="py-2 px-4 text-left font-semibold text-black">Tên</th>
                             <th className="py-2 px-4 text-left font-semibold text-black">Tiêu Đề</th>
                             <th className="py-2 px-4 text-left font-semibold text-black">Giá</th>
@@ -116,7 +129,7 @@ const ServicePostList = () => {
                                     onClick={() => handleRowClick(servicePost.servicePostId)}
                                     className="hover:bg-gray-200 border-collapse border border-gray-300"
                                 >
-                                    <td className="py-2 px-4 text-gray-700 border-b">{index + 1}</td>
+                                    <td className="py-2 px-4 text-center text-gray-700 border-b">{index + 1}</td>
                                     <td className="py-2 px-4 text-gray-700 border-b">{servicePost.name}</td>
                                     <td className="py-2 px-4 text-gray-700 border-b truncate max-w-[250px]">{servicePost.title}</td>
                                     <td className="py-2 px-4 text-gray-700 border-b">{servicePost.price.toLocaleString('vi-VN')} đ</td>

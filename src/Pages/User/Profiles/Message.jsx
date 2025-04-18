@@ -11,6 +11,7 @@ import { useLocation } from "react-router-dom";
 import UserService from "../../../Services/User/UserService";
 import Loading from "../../../Components/Loading";
 import { useRealtime } from "../../../Context/RealtimeProvider";
+import OtherService from "../../../Services/User/OtherService";
 
 // Hàm hiển thị avatar: nếu có ảnh thì hiển thị, nếu không thì hiển thị chữ cái đầu
 const renderAvatar = (avatar, name, size = 40) => {
@@ -104,12 +105,7 @@ const Message = () => {
     const formData = new FormData();
     formData.append("file", file);
     try {
-      const response = await fetch("https://apiduvas1.runasp.net/api/Upload/upload-image", {
-        method: "POST",
-        body: formData,
-      });
-      if (!response.ok) throw new Error("Upload failed");
-      const data = await response.json();
+      const data = await OtherService.uploadImage(formData);
       return data.imageUrl;
     } catch (error) {
       console.error("Error uploading file:", error);
@@ -142,10 +138,7 @@ const Message = () => {
     if (!currentUserId) return;
     setIsLoading(true);
     try {
-      const response = await fetch(
-        `https://apiduvas1.runasp.net/api/Message/conversations/${currentUserId}`
-      );
-      const data = await response.json();
+      const data = await OtherService.getConversations(currentUserId);
       const newConversations = await Promise.all(
         data.map(async (conv) => {
           try {
@@ -175,10 +168,7 @@ const Message = () => {
     if (!currentUserId) return;
     setIsLoading(true);
     try {
-      const response = await fetch(
-        `https://apiduvas1.runasp.net/api/Message/user/${currentUserId}/${partnerId}`
-      );
-      const data = await response.json();
+      const data = await OtherService.getMessages(currentUserId, partnerId);
       setConversationMessages(data);
     } catch (error) {
       console.error("Error fetching conversation messages:", error);
@@ -322,14 +312,7 @@ const Message = () => {
     setAttachedPreviews([]);
 
     try {
-      const response = await fetch("https://apiduvas1.runasp.net/api/Message", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newMsg),
-      });
-      if (!response.ok) throw new Error("Gửi tin nhắn thất bại");
-      await response.json();
-
+      await OtherService.sendMessage(newMsg);
       // Cập nhật ngay trên client
       setConversationMessages((prev) => [...prev, newMsg]);
     } catch (error) {

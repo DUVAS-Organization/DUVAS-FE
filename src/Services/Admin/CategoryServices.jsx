@@ -18,6 +18,11 @@ const CategoryServices = {
     },
     deleteCategoryService: (categoryServiceId) =>
         axios.delete(`${API_URL}/${categoryServiceId}`).then((res) => res.data),
+    lockCategoryService: (categoryServiceId) =>
+        axios.put(`${API_URL}/lock/${categoryServiceId}`).then((res) => res.data),
+
+    unlockCategoryService: (categoryServiceId) =>
+        axios.put(`${API_URL}/unlock/${categoryServiceId}`).then((res) => res.data),
 };
 
 export default CategoryServices;

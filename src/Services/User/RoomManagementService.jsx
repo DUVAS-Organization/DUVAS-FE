@@ -42,7 +42,7 @@ const handleError = (error) => {
         }
     } else if (error.request) {
         console.error('No response from server:', error.request);
-        throw new Error('Unable to connect to the server.');
+        throw new Error('Không thể kết nối tới máy chủ.');
     } else {
         console.error('Error:', error.message);
         throw error;

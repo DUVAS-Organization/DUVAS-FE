@@ -10,6 +10,7 @@ import { useAuth } from '../../../Context/AuthProvider';
 import FAQList from '../../../Components/FAQ/FAQList';
 import Loading from '../../../Components/Loading';
 import { showCustomNotification } from '../../../Components/Notification';
+import OtherService from '../../../Services/User/OtherService';
 
 const RoomsList = () => {
     const { roomId } = useParams();
@@ -124,12 +125,11 @@ const RoomsList = () => {
 
     const fetchSavedPosts = async () => {
         try {
-            const response = await fetch(`https://apiduvas1.runasp.net/api/SavedPosts/${user.userId}`);
+            const response = await OtherService.getSavedPosts(user.userId);
             if (!response.ok) throw new Error("Lỗi khi lấy danh sách bài đã lưu!");
             const data = await response.json();
-            const savedRoomIds = data.map(item => Number(item.roomId));
+            const savedRoomIds = new Set(data.map(item => item.roomId));
             setSavedPosts(savedRoomIds);
-            localStorage.setItem("savedPosts", JSON.stringify(savedRoomIds));
         } catch (error) {
             console.error("Lỗi khi lấy danh sách bài đã lưu:", error);
         }
@@ -143,29 +143,22 @@ const RoomsList = () => {
             return;
         }
         try {
-            const roomIdNum = Number(roomId);
-            const isSaved = savedPosts.includes(roomIdNum);
-            const response = await fetch("https://apiduvas1.runasp.net/api/SavedPosts", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ userId: user.userId, roomId: roomIdNum }),
+            const result = await OtherService.toggleSavePost(user.userId, roomId);
+            setSavedPosts((prevSaved) => {
+                const newSaved = new Set(prevSaved);
+                if (result.status === "removed") {
+                    newSaved.delete(parseInt(roomId));
+                } else if (result.status === "saved") {
+                    newSaved.add(parseInt(roomId));
+                }
+                return newSaved;
             });
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(errorText || "Lỗi khi lưu/xóa bài đăng");
-            }
-            const text = await response.text();
-            const result = text ? JSON.parse(text) : {};
-            if (result.status === "removed") {
-                setSavedPosts(prev => prev.filter(id => id !== roomIdNum));
-            } else if (result.status === "saved") {
-                setSavedPosts(prev => [...prev, roomIdNum]);
+            if (result.status === "saved") {
                 showCustomNotification("success", "Lưu tin thành công!");
             }
-            localStorage.setItem("savedPosts", JSON.stringify(savedPosts));
         } catch (error) {
             console.error("Lỗi khi lưu / xóa bài:", error);
-            showCustomNotification("error", "Đã xảy ra lỗi, vui lòng thử lại.");
+            showCustomNotification("error", "Đã xảy ra lỗi, vui lòng thử lại!");
         }
     };
 
@@ -205,7 +198,10 @@ const RoomsList = () => {
             filteredRooms = filteredRooms.filter((r) => r.categoryName === "Phòng trọ" || !r.categoryName);
         }
     }
-
+    // Loại bỏ các phòng có status = 2 hoặc 3
+    filteredRooms = filteredRooms.filter((r) => r.status !== 2 && r.status !== 3);
+    // Loại bỏ các phòng có isPermission = 0
+    filteredRooms = filteredRooms.filter((r) => r.isPermission !== 0);
     // Lọc thêm theo giá và diện tích
     filteredRooms = filteredRooms.filter((r) => r.price >= minPrice && r.price <= maxPrice);
     filteredRooms = filteredRooms.filter((r) => r.acreage >= minArea && r.acreage <= maxArea);

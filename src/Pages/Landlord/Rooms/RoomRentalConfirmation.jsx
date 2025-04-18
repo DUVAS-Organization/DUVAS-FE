@@ -5,19 +5,23 @@ import RoomService from "../../../Services/User/RoomService";
 import CategoryRoomService from "../../../Services/User/CategoryRoomService";
 import BuildingServices from "../../../Services/User/BuildingService";
 import BookingManagementService from "../../../Services/Landlord/BookingManagementService";
+import UserRentRoomService from "../../../Services/User/UserRentRoomService";
 import Loading from "../../../Components/Loading";
 import SidebarUser from "../../../Components/Layout/SidebarUser";
 import { FaPlus, FaTimes } from "react-icons/fa";
 import { useAuth } from "../../../Context/AuthProvider";
+import OtherService from "../../../Services/User/OtherService";
 
 const RoomRentalConfirmation = () => {
-    const { roomId } = useParams();
+    const { roomId, rentalId } = useParams();
     const { user } = useAuth();
     const navigate = useNavigate();
+
+    // State declarations
     const [categoryRooms, setCategoryRooms] = useState([]);
     const [buildings, setBuildings] = useState([]);
     const [roomData, setRoomData] = useState(null);
-    const [roomContract, setRoomContract] = useState(null);
+    const [occupantRental, setOccupantRental] = useState(null);
     const [dataLoading, setDataLoading] = useState(true);
     const [today, setToday] = useState("");
     const [minStartDate, setMinStartDate] = useState("");
@@ -31,51 +35,49 @@ const RoomRentalConfirmation = () => {
     });
     const [errors, setErrors] = useState({});
     const [isLoading, setIsLoading] = useState(false);
-    const [occupantRental, setOccupantRental] = useState(null);
-    const [occupantUser, setOccupantUser] = useState(null);
     const [newFiles, setNewFiles] = useState([]);
     const [newPreviews, setNewPreviews] = useState([]);
     const [previewImage, setPreviewImage] = useState(null);
     const [contractStatus, setContractStatus] = useState(null);
+    const [successMessage, setSuccessMessage] = useState("");
 
-    // Thiết lập ngày hiện tại
+    // Set current date
     useEffect(() => {
         const now = new Date();
         const isoDate = now.toISOString().split("T")[0];
         setToday(isoDate);
     }, []);
 
-    // Lấy dữ liệu từ API
+    // Fetch all data from API
     useEffect(() => {
         const fetchAllData = async () => {
             try {
                 setDataLoading(true);
-                const [categories, buildingList, roomDataResponse, roomContractResponse, rentalResponse] = await Promise.all([
+                const [categories, buildingList, roomDataResponse, rentalsResp] = await Promise.all([
                     CategoryRoomService.getCategoryRooms(),
                     BuildingServices.getBuildings(),
                     roomId ? RoomService.getRoomById(roomId) : Promise.resolve(null),
-                    roomId ? RoomService.getRoomContract(roomId) : Promise.resolve(null),
-                    user?.userId && user?.token ? BookingManagementService.getRentalListOfLandlord(user.userId, user.token) : Promise.resolve([]),
+                    user?.userId && user?.token
+                        ? BookingManagementService.getRentalListOfLandlord(user.userId, user.token)
+                        : Promise.resolve([]),
                 ]);
 
                 setCategoryRooms(categories);
                 setBuildings(buildingList);
                 setRoomData(roomDataResponse);
-                setRoomContract(roomContractResponse);
 
-                const rentalForRoom = rentalResponse.find(r => r.roomId === parseInt(roomId));
-                if (rentalForRoom) {
-                    setOccupantRental(rentalForRoom);
-                    setOccupantUser({
-                        name: rentalForRoom.renterName,
-                        gmail: rentalForRoom.renterEmail,
-                        phone: rentalForRoom.renterPhone,
-                    });
-                    console.log(rentalForRoom);
-                    setContractStatus(rentalForRoom?.contractStatus ?? null);
+                const rentalList = rentalsResp.rentalList || rentalsResp || [];
+                const foundBooking = rentalList.find(
+                    (r) => r.roomId === parseInt(roomId) && r.rentalId === parseInt(rentalId)
+                );
 
-                    const rentDateRaw = rentalForRoom.rentDate;
-                    const monthForRent = rentalForRoom.monthForRent;
+                if (foundBooking) {
+                    setOccupantRental(foundBooking);
+                    setContractStatus(foundBooking.contractStatus ?? null);
+
+                    // Process rental dates
+                    const rentDateRaw = foundBooking.rentDate;
+                    const monthForRent = foundBooking.monthForRent;
                     let formattedRentDate;
 
                     if (typeof rentDateRaw === "string") {
@@ -83,22 +85,18 @@ const RoomRentalConfirmation = () => {
                         if (!isNaN(rentDate.getTime())) {
                             rentDate.setDate(rentDate.getDate() + 1);
                             formattedRentDate = rentDate.toISOString().split("T")[0];
-
                             const endDate = new Date(rentDate);
                             endDate.setMonth(endDate.getMonth() + monthForRent);
-                            const formattedEndDate = endDate.toISOString().split("T")[0];
-                            setCalculatedEndDate(formattedEndDate);
+                            setCalculatedEndDate(endDate.toISOString().split("T")[0]);
                         } else {
                             formattedRentDate = rentDateRaw.split(" ")[0];
                             const testDate = new Date(formattedRentDate);
                             if (!isNaN(testDate.getTime())) {
                                 testDate.setDate(testDate.getDate() + 1);
                                 formattedRentDate = testDate.toISOString().split("T")[0];
-
                                 const endDate = new Date(testDate);
                                 endDate.setMonth(endDate.getMonth() + monthForRent);
-                                const formattedEndDate = endDate.toISOString().split("T")[0];
-                                setCalculatedEndDate(formattedEndDate);
+                                setCalculatedEndDate(endDate.toISOString().split("T")[0]);
                             } else {
                                 console.error("Invalid rentDate format:", rentDateRaw);
                                 formattedRentDate = today;
@@ -110,11 +108,9 @@ const RoomRentalConfirmation = () => {
                         if (!isNaN(rentDate.getTime())) {
                             rentDate.setDate(rentDate.getDate() + 1);
                             formattedRentDate = rentDate.toISOString().split("T")[0];
-
                             const endDate = new Date(rentDate);
                             endDate.setMonth(endDate.getMonth() + monthForRent);
-                            const formattedEndDate = endDate.toISOString().split("T")[0];
-                            setCalculatedEndDate(formattedEndDate);
+                            setCalculatedEndDate(endDate.toISOString().split("T")[0]);
                         } else {
                             console.error("Invalid rentDate:", rentDateRaw);
                             formattedRentDate = today;
@@ -132,137 +128,97 @@ const RoomRentalConfirmation = () => {
                     }
                 } else {
                     setOccupantRental(null);
-                    setOccupantUser(null);
+                    setContractStatus(null);
                     setMinStartDate(today);
                     setCalculatedEndDate(today);
                 }
             } catch (error) {
                 console.error("Error fetching data:", error);
-                Swal.fire("Error", "Failed to load data", "error");
+                Swal.fire("Error", "Không thể load dữ liệu", "error");
             } finally {
                 setDataLoading(false);
             }
         };
 
         fetchAllData();
-    }, [roomId, today, user]);
+    }, [roomId, rentalId, today, user]);
 
-    // Cập nhật giá phòng: chỉ set giá mặc định theo giá của phòng (không nhân với số tháng)
+    // Set default room price
     useEffect(() => {
         if (roomData && typeof roomData.price === "number") {
             setFormData((prev) => ({ ...prev, price: roomData.price.toString() }));
         }
     }, [roomData]);
 
-    // Cập nhật ngày kết thúc
+    // Update end date from calculatedEndDate
     useEffect(() => {
         if (calculatedEndDate) {
             setFormData((prev) => ({ ...prev, endDate: calculatedEndDate }));
         }
     }, [calculatedEndDate]);
 
-    // Lấy tên loại phòng
+    // Helper functions
     const getCategoryName = (categoryRoomId) => {
         if (!categoryRoomId) return "Không có";
         const found = categoryRooms.find((c) => c.categoryRoomId === categoryRoomId);
         return found ? found.categoryName : "Không có";
     };
 
-    // CHỈ SỬA 1 CHỖ NÀY: đổi "Đang cho thuê" => "Phòng này đang cho thuê"
     const getRoomStatus = () => {
-        if (!occupantRental || !roomData) return "Không xác định";
+        if (!occupantRental || !roomData) return "Còn trống";
+        const { rentalStatus } = occupantRental;
+        const { status: roomStatus } = roomData;
+        const { contractStatus: cStatus } = occupantRental;
 
-        const rentalStatus = occupantRental.rentalStatus;
-        const roomStatus = roomData.status;
-        const cStatus = occupantRental.contractStatus;
-
-        // Nếu rentalStatus=1, roomStatus=3, cStatus=1 => "Phòng này đang cho thuê"
-        if (rentalStatus === 1 && roomStatus === 3 && cStatus === 1) {
-            return "Phòng này đang cho thuê";
-        }
-        // Nếu rentalStatus=1, roomStatus=1 => có thể chờ giao dịch hoặc đã thuê
+        if (rentalStatus === 1 && roomStatus === 3 && cStatus === 1) return "Phòng này đang cho thuê";
         if (rentalStatus === 1 && roomStatus === 1) {
-            if (cStatus === 3) {
-                return "Phòng này đang cho thuê";
-            }
-            return "Đang chờ giao dịch";
+            return cStatus === 3 ? "Phòng này đang cho thuê" : "Đang chờ giao dịch";
         }
-        // Chờ Người dùng xác nhận: RentalStatus=1, roomStatus=2, cStatus=4
-        else if (rentalStatus === 1 && roomStatus === 2 && cStatus === 4) {
-            return "Chờ Người dùng xác nhận";
-        }
-        // Đã hủy: RentalStatus=1, contractStatus=2
-        else if (rentalStatus === 1 && cStatus === 2) {
-            return "Đã hủy";
-        }
-        // Đã hủy: RentalStatus=2, roomStatus=2, contractStatus=2
-        else if (rentalStatus === 2 && roomStatus === 2 && cStatus === 2) {
-            return "Đã hủy";
-        }
-        // Nếu occupantRental không có => kiểm tra roomData.status
-        if (!occupantRental) {
-            switch (roomStatus) {
-                case 0: return "Đang trống";
-                case 1: return "Đang chờ giao dịch";
-                case 2: return "Đã được đặt";
-                case 3: return "Đang cho thuê";
-                default: return "Không xác định";
-            }
-        }
-        return "Không xác định";
+        if (rentalStatus === 1 && roomStatus === 2 && cStatus === 4) return "Chờ Người thuê xác nhận";
+        if (rentalStatus === 2 && roomStatus === 2 && cStatus === 2) return "Đã hủy";
+        return "Còn trống";
     };
 
-    // Xác thực form
     const validateForm = () => {
         const newErrors = {};
         const price = parseFloat(formData.price);
-        const expectedPrice = roomData?.price && occupantRental?.monthForRent
-            ? roomData.price * occupantRental.monthForRent
-            : 0;
 
-        if (isNaN(price) || price <= 0) {
-            newErrors.price = "Giá phải là số dương";
-        }
-        // else if (price !== expectedPrice && roomData) {
-        //     newErrors.price = `Giá phải bằng ${roomData.price.toLocaleString("vi-VN")}`;
-        // }
-
+        if (isNaN(price) || price <= 0) newErrors.price = "Giá phải là số dương";
         if (!formData.deposit || parseFloat(formData.deposit) < 0)
             newErrors.deposit = "Số tiền gửi phải lớn hơn 0";
-        if (!formData.startDate)
-            newErrors.startDate = "Vui lòng chọn ngày bắt đầu";
-        if (!formData.endDate)
-            newErrors.endDate = "Vui lòng chọn ngày kết thúc";
-        if (formData.startDate && formData.endDate && new Date(formData.startDate) >= new Date(formData.endDate)) {
+        if (!formData.startDate) newErrors.startDate = "Vui lòng chọn ngày bắt đầu";
+        if (!formData.endDate) newErrors.endDate = "Vui lòng chọn ngày kết thúc";
+        if (
+            formData.startDate &&
+            formData.endDate &&
+            new Date(formData.startDate) >= new Date(formData.endDate)
+        ) {
             newErrors.endDate = "Ngày kết thúc phải sau ngày bắt đầu";
         }
-        if (newFiles.length === 0)
-            newErrors.contractFile = "Vui lòng chọn ít nhất một ảnh hợp đồng";
-        if (formData.startDate && minStartDate && new Date(formData.startDate) < new Date(minStartDate)) {
+        if (newFiles.length === 0) newErrors.contractFile = "Vui lòng chọn ít nhất một ảnh hợp đồng";
+        if (
+            formData.startDate &&
+            minStartDate &&
+            new Date(formData.startDate) < new Date(minStartDate)
+        ) {
             newErrors.startDate = "Ngày bắt đầu phải từ ngày sau ngày thuê trở đi";
         }
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
 
-    // Xử lý thay đổi input
+    // Event handlers
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         if (name === "price" || name === "deposit") {
             const rawValue = value.replace(/[^0-9]/g, "");
-            setFormData((prev) => ({
-                ...prev,
-                [name]: rawValue,
-            }));
+            setFormData((prev) => ({ ...prev, [name]: rawValue }));
         } else {
-            setFormData((prev) => ({
-                ...prev,
-                [name]: value,
-            }));
+            setFormData((prev) => ({ ...prev, [name]: value }));
         }
     };
 
-    // Xử lý thêm file
     const handleFileChange = (e) => {
         const selectedFiles = Array.from(e.target.files);
         if (selectedFiles.length > 0) {
@@ -276,27 +232,22 @@ const RoomRentalConfirmation = () => {
         }
     };
 
-    // Xóa file
     const handleRemoveFile = (index) => {
         setNewFiles((prev) => prev.filter((_, i) => i !== index));
         setNewPreviews((prev) => prev.filter((_, i) => i !== index));
         setFormData((prev) => ({
             ...prev,
-            contractFile: Array.isArray(prev.contractFile) ? prev.contractFile.filter((_, i) => i !== index) : [],
+            contractFile: Array.isArray(prev.contractFile)
+                ? prev.contractFile.filter((_, i) => i !== index)
+                : [],
         }));
     };
 
-    // Upload file lên server
     const uploadFile = async (file) => {
-        const formData = new FormData();
-        formData.append("file", file);
+        const formDataFile = new FormData();
+        formDataFile.append("file", file);
         try {
-            const response = await fetch("https://apiduvas1.runasp.net/api/Upload/upload-image", {
-                method: "POST",
-                body: formData,
-            });
-            if (!response.ok) throw new Error("Upload failed");
-            const data = await response.json();
+            const data = await OtherService.uploadImage(formDataFile);
             return data.imageUrl;
         } catch (error) {
             console.error("Error uploading file:", error);
@@ -304,23 +255,17 @@ const RoomRentalConfirmation = () => {
         }
     };
 
-    // Xử lý xác nhận
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!validateForm()) return;
         setIsLoading(true);
+
         try {
             const token = user?.token;
-            if (!token) {
-                throw new Error("Bạn chưa đăng nhập. Vui lòng đăng nhập lại.");
-            }
-
-            if (user.role !== "Landlord") {
-                throw new Error("Bạn không có quyền xác nhận yêu cầu này. Chỉ Landlord mới có thể thực hiện.");
-            }
+            if (!token) throw new Error("Bạn chưa đăng nhập. Vui lòng đăng nhập lại.");
+            if (user.role !== "Landlord") throw new Error("Chỉ Landlord mới có thể xác nhận yêu cầu này.");
 
             const uploadedImageUrls = await Promise.all(newFiles.map((file) => uploadFile(file)));
-
             const dataToSend = {
                 roomId: roomId,
                 rentalDateTimeStart: formData.startDate,
@@ -331,21 +276,14 @@ const RoomRentalConfirmation = () => {
             };
 
             console.log("Data gửi đi:", dataToSend);
-
-            const response = await BookingManagementService.confirmReservation(
-                roomId,
-                dataToSend,
-                token
-            );
+            const response = await BookingManagementService.confirmReservation(roomId, dataToSend, token);
 
             Swal.fire({
                 title: "Thành công!",
-                text: response || "Yêu cầu thuê phòng đã được xác nhận",
+                text: response || "Booking đã được xác nhận",
                 icon: "success",
                 confirmButtonText: "Đồng ý",
-            }).then(() => {
-                navigate("/Room");
-            });
+            }).then(() => navigate("/Room"));
         } catch (error) {
             console.error("Lỗi xác nhận yêu cầu:", error.message);
             Swal.fire({
@@ -359,7 +297,71 @@ const RoomRentalConfirmation = () => {
         }
     };
 
-    // Hủy yêu cầu
+    const handleConfirmRental = async () => {
+        try {
+            const rentalIdLocal = occupantRental?.rentalId;
+            const roomPrice = roomData?.price || 0;
+            const landlordId = roomData?.landlordId;
+            console.log("➡️ [FE] Xác nhận thuê phòng với rentalId:", rentalIdLocal);
+
+            const checkBalanceData = { UserId: user.userId, Amount: roomPrice };
+            const balanceResponse = await BookingManagementService.checkBalance(checkBalanceData, user.token);
+            console.log("🔍 [FE] Kiểm tra số dư:", balanceResponse);
+
+            if (balanceResponse !== "Bạn đủ tiền.") {
+                Swal.fire("Thông báo", "Bạn không đủ tiền. Vui lòng nạp thêm tiền để tiếp tục.", "warning");
+                return;
+            }
+
+            const updateBalanceData = { UserId: user.userId, Amount: -roomPrice };
+            await BookingManagementService.updateBalance(updateBalanceData, user.token);
+            console.log("💸 [FE] Đã trừ tiền user:", roomPrice);
+
+            const insiderTradingData = {
+                Remitter: user.userId,
+                Receiver: landlordId,
+                Money: roomPrice,
+            };
+            const insiderTradingResponse = await BookingManagementService.firstMonthInsiderTrading(
+                insiderTradingData,
+                user.token
+            );
+            console.log("📝 [FE] Tạo giao dịch nội bộ tháng đầu:", insiderTradingResponse);
+
+            const actionDate = new Date().toISOString();
+            const insiderTradingId = insiderTradingResponse.InsiderTradingId || 0;
+            console.log("[FE] Dữ liệu lên lịch:", { actionDate, landlordId, money: roomPrice, insiderTradingId });
+            await BookingManagementService.scheduleAction(
+                actionDate,
+                landlordId,
+                roomPrice,
+                insiderTradingId,
+                user.token
+            );
+            console.log("⏰ [FE] Đã lên lịch giữ tiền 3 ngày.");
+
+            await UserRentRoomService.confirmRental(rentalIdLocal, {}, user.token);
+            console.log("✅ [FE] Đã xác nhận thuê phòng.");
+
+            setSuccessMessage("Xác nhận thuê phòng thành công!");
+            Swal.fire({
+                title: "Thành công!",
+                text: "Xác nhận thuê phòng thành công!",
+                icon: "success",
+                confirmButtonText: "Đồng ý",
+            }).then(() => navigate("/Room"));
+        } catch (error) {
+            console.error("❌ [FE] Error confirming rental:", error);
+            Swal.fire({
+                title: "Lỗi",
+                text: "Có lỗi xảy ra khi xác nhận thuê phòng: " + error.message,
+                icon: "error",
+                confirmButtonText: "Đồng ý",
+            });
+        }
+    };
+
+
     const handleCancelRequest = async () => {
         const result = await Swal.fire({
             title: "Hủy Yêu cầu thuê phòng?",
@@ -406,16 +408,7 @@ const RoomRentalConfirmation = () => {
         }
     };
 
-    // Kiểm tra điều kiện để hiển thị thông báo chờ xác nhận
-    const isWaitingUserConfirmation = () => {
-        return (
-            occupantRental?.rentalStatus === 1 &&
-            roomData?.status === 2 &&
-            contractStatus === 4
-        );
-    };
-
-    if (dataLoading || !roomData) {
+    if (dataLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <Loading />
@@ -431,46 +424,70 @@ const RoomRentalConfirmation = () => {
                     <div className="bg-white shadow-xl rounded-lg overflow-hidden">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 p-4">
                             <div className="flex flex-col space-y-4">
-                                <h2 className="text-xl font-bold">Thông tin người thuê phòng</h2>
-                                {occupantUser ? (
+                                <h2 className="text-xl font-bold">Thông tin người thuê</h2>
+                                {occupantRental ? (
                                     <>
-                                        <p><strong>Tên:</strong> {occupantUser.name || "Không có"}</p>
-                                        <p><strong>Email:</strong> {occupantUser.gmail || "Không có"}</p>
-                                        <p><strong>Số điện thoại:</strong> {occupantUser.phone || "Không có"}</p>
+                                        <p>
+                                            <strong>Tên:</strong> {occupantRental.renterName || "Không có"}
+                                        </p>
+                                        <p>
+                                            <strong>Email:</strong> {occupantRental.renterEmail || "Không có"}
+                                        </p>
+                                        <p>
+                                            <strong>Số điện thoại:</strong> {occupantRental.renterPhone || "Không có"}
+                                        </p>
                                     </>
                                 ) : (
-                                    <p>Phòng này chưa có người thuê.</p>
+                                    <p>Phòng này chưa có người thuê nào.</p>
                                 )}
                             </div>
                             <div className="flex flex-col space-y-1 mr-5">
                                 <h2 className="text-xl font-bold">Thông tin phòng</h2>
                                 <h1 className="text-xl font-medium">{roomData.title || "Không có tiêu đề"}</h1>
                                 <p className="font-medium">
-                                    Mức giá: <span className="text-red-500 font-medium">{roomData.price ? Number(roomData.price).toLocaleString("vi-VN") + " đ/tháng" : "Không có"}</span>
+                                    Mức giá:{" "}
+                                    <span className="text-red-500 font-medium">
+                                        {roomData.price
+                                            ? Number(roomData.price).toLocaleString("vi-VN") + " đ/tháng"
+                                            : "Không có"}
+                                    </span>
                                 </p>
                                 <div className="gap-x-3">
-                                    <div><strong>Diện tích:</strong> {roomData.acreage ? roomData.acreage + " m²" : "Không có"}</div>
-                                    <div><strong>Loại Phòng:</strong> {getCategoryName(roomData.categoryRoomId)}</div>
-                                    <div><strong>Trạng thái:</strong> {getRoomStatus()}</div>
+                                    <div>
+                                        <strong>Diện tích:</strong> {roomData.acreage ? roomData.acreage + " m²" : "Không có"}
+                                    </div>
+                                    <div>
+                                        <strong>Loại Phòng:</strong> {getCategoryName(roomData.categoryRoomId)}
+                                    </div>
+                                    <div>
+                                        <strong>Trạng thái:</strong> {getRoomStatus()}
+                                    </div>
                                 </div>
                             </div>
                             <div className="flex flex-col space-y-4">
-                                <h2 className="text-xl font-bold">Thông tin Rental List</h2>
+                                <h2 className="text-xl font-bold">Thông tin Thuê</h2>
                                 {occupantRental ? (
                                     <div className="rounded-md shadow-sm">
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <div className="font-semibold">Mã Rental:</div>
-                                            <div>{occupantRental.rentalId}</div>
-                                            <div className="font-semibold">Tháng thuê:</div>
-                                            <div>{occupantRental.monthForRent}</div>
-                                            <div className="font-semibold">Ngày thuê:</div>
-                                            <div>{new Date(occupantRental.rentDate).toLocaleDateString()}</div>
-                                            <div className="font-semibold">Ngày kết thúc:</div>
-                                            <div>{calculatedEndDate ? new Date(calculatedEndDate).toLocaleDateString() : "Không có"}</div>
-                                            <div className="font-semibold">Trạng thái:</div>
-                                            <div>{getRoomStatus()}</div>
+                                        <div className="space-y-1">
+                                            <div className="flex">
+                                                <div className="font-semibold min-w-[100px]">Mã Rental:</div>
+                                                <div>{occupantRental.rentalId}</div>
+                                            </div>
+                                            <div className="flex">
+                                                <div className="font-semibold min-w-[100px]">Tháng thuê:</div>
+                                                <div>{occupantRental.monthForRent}</div>
+                                            </div>
+                                            <div className="flex">
+                                                <div className="font-semibold min-w-[100px]">Ngày thuê:</div>
+                                                <div>{new Date(occupantRental.rentDate).toLocaleDateString()}</div>
+                                            </div>
+                                            <div className="flex">
+                                                <div className="font-semibold min-w-[100px]">Trạng thái:</div>
+                                                <div>{getRoomStatus()}</div>
+                                            </div>
                                         </div>
                                     </div>
+
                                 ) : (
                                     <p>Phòng này chưa có yêu cầu thuê nào.</p>
                                 )}
@@ -478,22 +495,18 @@ const RoomRentalConfirmation = () => {
                         </div>
                     </div>
 
-                    {occupantRental ? (
-                        isWaitingUserConfirmation() ? (
+                    {occupantRental && getRoomStatus() === "Phòng này đang cho thuê" ? (
+                        <div className="bg-white shadow-xl rounded-lg overflow-hidden p-6">
+                            <p className="text-lg text-gray-700 font-semibold">Phòng này đang cho thuê</p>
+                        </div>
+                    ) :
+                        getRoomStatus() === "Chờ Người thuê xác nhận" ? (
                             <div className="bg-white shadow-xl rounded-lg overflow-hidden p-6">
-                                <p className="text-lg text-gray-700 font-semibold">
-                                    Phòng này hiện đang chờ Người dùng xác nhận đơn. Vui lòng chờ...
-                                </p>
-                            </div>
-                        ) : getRoomStatus() === "Phòng này đang cho thuê" ? (
-                            <div className="bg-white shadow-xl rounded-lg overflow-hidden p-6">
-                                <p className="text-lg text-gray-700">
-                                    Phòng này đang cho thuê
-                                </p>
+                                <p className="text-lg text-gray-700 font-semibold">Phòng này đang chờ người thuê xác nhận</p>
                             </div>
                         ) : (
-                            <div className="bg-white shadow-xl rounded-lg overflow-hidden">
-                                <div className="p-6">
+                            occupantRental && (
+                                <div className="bg-white shadow-xl rounded-lg overflow-hidden p-6">
                                     <h2 className="text-xl font-bold mb-4">Xác nhận đơn Thuê</h2>
                                     <form onSubmit={handleSubmit} className="space-y-6">
                                         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
@@ -504,7 +517,8 @@ const RoomRentalConfirmation = () => {
                                                     name="price"
                                                     value={formData.price ? Number(formData.price).toLocaleString("vi-VN") : ""}
                                                     onChange={handleInputChange}
-                                                    className={`mt-1 block w-full rounded-md border ${errors.price ? "border-red-500" : "border-gray-300"} px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-red-500`}
+                                                    className={`mt-1 block w-full rounded-md border ${errors.price ? "border-red-500" : "border-gray-300"
+                                                        } px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-red-500`}
                                                     placeholder="Nhập giá phòng"
                                                 />
                                                 {errors.price && <p className="mt-1 text-sm text-red-500">{errors.price}</p>}
@@ -516,7 +530,8 @@ const RoomRentalConfirmation = () => {
                                                     name="deposit"
                                                     value={formData.deposit ? Number(formData.deposit).toLocaleString("vi-VN") : ""}
                                                     onChange={handleInputChange}
-                                                    className={`mt-1 block w-full rounded-md border ${errors.deposit ? "border-red-500" : "border-gray-300"} px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-red-500`}
+                                                    className={`mt-1 block w-full rounded-md border ${errors.deposit ? "border-red-500" : "border-gray-300"
+                                                        } px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-red-500`}
                                                     placeholder="Nhập số tiền gửi"
                                                 />
                                                 {errors.deposit && <p className="mt-1 text-sm text-red-500">{errors.deposit}</p>}
@@ -529,7 +544,8 @@ const RoomRentalConfirmation = () => {
                                                     value={formData.startDate}
                                                     onChange={handleInputChange}
                                                     min={minStartDate}
-                                                    className={`mt-1 block w-full rounded-md border ${errors.startDate ? "border-red-500" : "border-gray-300"} px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-red-500`}
+                                                    className={`mt-1 block w-full rounded-md border ${errors.startDate ? "border-red-500" : "border-gray-300"
+                                                        } px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-red-500`}
                                                 />
                                                 {errors.startDate && <p className="mt-1 text-sm text-red-500">{errors.startDate}</p>}
                                             </div>
@@ -541,7 +557,8 @@ const RoomRentalConfirmation = () => {
                                                     value={formData.endDate}
                                                     onChange={handleInputChange}
                                                     min={formData.startDate || minStartDate}
-                                                    className={`mt-1 block w-full rounded-md border ${errors.endDate ? "border-red-500" : "border-gray-300"} px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-red-500`}
+                                                    className={`mt-1 block w-full rounded-md border ${errors.endDate ? "border-red-500" : "border-gray-300"
+                                                        } px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-red-500`}
                                                 />
                                                 {errors.endDate && <p className="mt-1 text-sm text-red-500">{errors.endDate}</p>}
                                             </div>
@@ -570,7 +587,10 @@ const RoomRentalConfirmation = () => {
                                                         <p className="font-semibold text-gray-700">Ảnh đã chọn:</p>
                                                         <div className="grid grid-cols-3 gap-3 mt-2">
                                                             {newPreviews.map((url, index) => (
-                                                                <div key={index} className="relative border p-2 rounded-lg shadow-sm">
+                                                                <div
+                                                                    key={index}
+                                                                    className="relative border p-2 rounded-lg shadow-sm"
+                                                                >
                                                                     <button
                                                                         type="button"
                                                                         onClick={() => handleRemoveFile(index)}
@@ -590,7 +610,9 @@ const RoomRentalConfirmation = () => {
                                                     </div>
                                                 )}
                                             </div>
-                                            {errors.contractFile && <p className="mt-1 text-sm text-red-500">{errors.contractFile}</p>}
+                                            {errors.contractFile && (
+                                                <p className="mt-1 text-sm text-red-500">{errors.contractFile}</p>
+                                            )}
                                         </div>
                                         <div className="flex justify-end space-x-4">
                                             <button
@@ -611,29 +633,22 @@ const RoomRentalConfirmation = () => {
                                         </div>
                                     </form>
                                 </div>
-                            </div>
-                        )
-                    ) : (
-                        <div className="bg-white shadow-xl rounded-lg overflow-hidden p-6">
-                            <p className="text-lg text-gray-700">
-                                Phòng này hiện chưa có yêu cầu thuê nào để xác nhận.
-                            </p>
-                        </div>
-                    )}
+                            )
+                        )}
                 </div>
-                {previewImage && (
-                    <div
-                        className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
-                        onClick={() => setPreviewImage(null)}
-                    >
-                        <img
-                            src={previewImage}
-                            alt="Enlarged Preview"
-                            className="max-w-[75%] max-h-[85%] object-cover rounded-lg"
-                        />
-                    </div>
-                )}
             </div>
+            {previewImage && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
+                    onClick={() => setPreviewImage(null)}
+                >
+                    <img
+                        src={previewImage}
+                        alt="Enlarged Preview"
+                        className="max-w-[75%] max-h-[85%] object-cover rounded-lg"
+                    />
+                </div>
+            )}
         </div>
     );
 };

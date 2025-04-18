@@ -37,6 +37,9 @@ import 'swiper/css';
 import 'swiper/css/free-mode';
 import { useAuth } from '../../../Context/AuthProvider';
 import UserRentRoomService from '../../../Services/User/UserRentRoomService';
+import OtherService from '../../../Services/User/OtherService';
+import RoomService from '../../../Services/User/RoomManagementService';
+import FeedbackList from '../../../Components/ComponentPage/FeedbackList'
 
 const RoomDetailsUser = () => {
     const { roomId } = useParams();
@@ -175,32 +178,62 @@ const RoomDetailsUser = () => {
         const found = categoryRooms.find((c) => c.categoryRoomId === categoryRoomId);
         return found ? found.categoryName : 'N/A';
     };
-
-    const toggleSavePost = async () => {
-        if (!user || !roomId) {
-            console.error("Lỗi: userId hoặc roomId không hợp lệ!", { user, roomId });
-            return;
+    useEffect(() => {
+        if (user && user.userId) {
+            fetchSavedPosts();
         }
+    }, [user]);
+    const fetchSavedPosts = async () => {
         try {
-            const response = await fetch("https://apiduvas1.runasp.net/api/SavedPosts", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ userId: user.userId, roomId: parseInt(roomId) }),
-            });
-            if (!response.ok) {
-                throw new Error("Lỗi khi lưu/xóa bài đăng");
-            }
-            setSavedPosts((prev) => {
-                if (prev.includes(parseInt(roomId))) {
-                    return prev.filter((id) => id !== parseInt(roomId));
-                } else {
-                    return [...prev, parseInt(roomId)];
-                }
-            });
+            const data = await OtherService.getSavedPosts(user.userId);
+            const savedRoomIds = data.filter(item => item.roomId).map(item => item.roomId);
+            setSavedPosts(savedRoomIds);
+            localStorage.setItem("savedPosts", JSON.stringify(savedRoomIds));
         } catch (error) {
-            console.error("❌ Lỗi khi lưu / xóa bài:", error);
+            console.error("Lỗi khi lấy danh sách bài đã lưu:", error);
         }
     };
+    const toggleSavePost = async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (!user || !roomId) {
+            showCustomNotification("error", "Bạn cần đăng nhập để lưu tin!");
+            return;
+        }
+
+        try {
+            const result = await OtherService.toggleSavePost(user.userId, parseInt(roomId));
+
+            setSavedPosts((prevSaved) => {
+                const newSaved = new Set(prevSaved);
+                let message = "";
+
+                if (result.status === "removed") {
+                    newSaved.delete(parseInt(roomId));
+                    message = "Đã xóa tin khỏi danh sách lưu!";
+                } else if (result.status === "saved") {
+                    newSaved.add(parseInt(roomId));
+                    message = "Lưu tin thành công!";
+                }
+
+                const updatedSavedPosts = Array.from(newSaved);
+                localStorage.setItem("savedPosts", JSON.stringify(updatedSavedPosts));
+
+                return updatedSavedPosts;
+            });
+
+            if (result.status === "removed") {
+                showCustomNotification("success", "Đã xóa tin khỏi danh sách lưu!");
+            } else if (result.status === "saved") {
+                showCustomNotification("success", "Lưu tin thành công!");
+            }
+        } catch (error) {
+            console.error("Lỗi khi lưu / xóa bài:", error);
+            showCustomNotification("error", "Không thể lưu tin này!");
+        }
+    };
+
 
     const handleSubmitRentForm = async (e) => {
         e.preventDefault();
@@ -240,7 +273,6 @@ const RoomDetailsUser = () => {
 
     const handleRentRoom = async (details) => {
         if (!room || !user) {
-            console.log("room hoặc user không hợp lệ:", room, user);
             showCustomNotification("error", "Vui lòng đăng nhập để tiếp tục!");
             return;
         }
@@ -248,68 +280,45 @@ const RoomDetailsUser = () => {
         try {
             const token = user.token || localStorage.getItem("token");
 
-            const trackRoomResponse = await fetch(`https://apiduvas1.runasp.net/api/RoomManagement/track-room/${roomId}`, {
-                method: "GET",
-                headers: { "Authorization": `Bearer ${token}` },
-            });
-            if (trackRoomResponse.ok) {
-                const roomStatusObj = await trackRoomResponse.json();
-                console.log("Room status:", roomStatusObj);
-                if (roomStatusObj.status === 2) {
-                    showCustomNotification("error", "Phòng này đã được thuê!");
-                    return;
-                }
-            } else {
-                console.log("Không thể lấy thông tin room status, trạng thái:", trackRoomResponse.status);
+            // Kiểm tra trạng thái phòng
+            const roomStatus = await RoomService.trackRoomStatus(roomId, token);
+            if (roomStatus.status === 2) {
+                showCustomNotification("error", "Phòng này đã được thuê!");
+                return;
             }
 
+            // Gửi yêu cầu thuê phòng
             const rentPayload = {
                 RoomId: parseInt(roomId),
                 RenterID: user.userId,
                 RentDate: details.moveInDate ? new Date(details.moveInDate).toISOString() : new Date().toISOString(),
                 MonthForRent: details.duration ? parseInt(details.duration) : 1,
             };
-            console.log("Đang gửi payload thuê phòng:", rentPayload);
-            const rentResponse = await fetch("https://apiduvas1.runasp.net/api/RoomManagement/rent-room", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json; charset=UTF-8",
-                },
-                body: JSON.stringify(rentPayload),
-            });
-            console.log("rentResponse status:", rentResponse.status);
-            if (!rentResponse.ok) {
-                const rentErrorData = await rentResponse.json();
-                throw new Error(rentErrorData.message || "Lỗi khi thực hiện thuê phòng");
-            }
+            await RoomService.rentRoom(rentPayload);
 
+            // Gửi email thông báo
             const renterName = details.fullName || getUserName();
             const additionalInfo = `Tên người thuê: ${renterName}, Số điện thoại: ${details.phone}, Ngày dọn vào: ${details.moveInDate || 'Không có thông tin'}, Thời gian thuê: ${details.duration ? details.duration + ' tháng' : 'Không có thông tin'}, Ngày kết thúc: ${details.expirationDate || 'Không có thông tin'}`;
             const sendMailPayload = {
                 userIdLandlord: room.User.userId,
                 roomId: parseInt(roomId),
                 renterName: renterName,
-                additionalInfo: additionalInfo,
+                roomTitle: room.title,
+                locationDetail: room.locationDetail,
+                price: room.price,
+                deposit: room.deposit,
+                acreage: room.acreage,
+                furniture: room.furniture,
+                numberOfBathroom: room.numberOfBathroom,
+                numberOfBedroom: room.numberOfBedroom,
             };
-            console.log("Đang gửi payload send-mail:", sendMailPayload);
-            const sendMailResponse = await fetch("https://apiduvas1.runasp.net/api/RoomManagement/send-mail", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json; charset=UTF-8",
-                    "Authorization": `Bearer ${token}`,
-                },
-                body: JSON.stringify(sendMailPayload),
-            });
-            console.log("sendMailResponse status:", sendMailResponse.status);
-            if (!sendMailResponse.ok) {
-                const sendMailErrorData = await sendMailResponse.json();
-                throw new Error(sendMailErrorData.message || "Lỗi khi gửi email cho chủ phòng");
-            }
+
+            await RoomService.sendMail(sendMailPayload, token);
 
             showCustomNotification("success", "Yêu cầu thuê phòng và gửi mail thành công!");
             navigate('/Rooms/BookingSuccess');
         } catch (error) {
-            console.log("Error in handleRentRoom catch block:", error);
+            console.error("Error in handleRentRoom:", error);
             showCustomNotification("error", error.message || "Có lỗi xảy ra");
         } finally {
             setIsRenting(false);
@@ -576,15 +585,13 @@ const RoomDetailsUser = () => {
                                 </div>
                             </div>
                             <div className="flex gap-4 text-2xl text-gray-600">
-                                <button>
+                                {/* <button>
                                     <BsExclamationTriangle />
-                                </button>
+                                </button> */}
                                 <button
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        toggleSavePost();
-                                    }}
+                                    onClick={
+                                        toggleSavePost
+                                    }
                                     className="text-2xl"
                                 >
                                     {savedPosts.includes(parseInt(roomId)) ? (
@@ -801,6 +808,9 @@ const RoomDetailsUser = () => {
                         </div>
                     )}
                 </div>
+            </div>
+            <div className="flex flex-col md:flex-row gap-4 mt-2">
+                <FeedbackList roomId={roomId} />
             </div>
             {showRentModal && <RentModal />}
             {previewImage && (

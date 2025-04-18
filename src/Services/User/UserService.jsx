@@ -144,6 +144,172 @@ const UserService = {
             },
         });
     },
+    addReport: (report) => {
+        const token = localStorage.getItem("authToken");
+        const url = `https://apiduvas1.runasp.net/api/Report`;
+        return axios.post(url, report, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+            },
+        });
+    },
+    getLockedUsers: () => {
+        const token = localStorage.getItem('authToken');
+        return axios.get(`${API_URL}/locked-users`, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+        }).then((res) => res.data);
+    },
+
+    // New: Get list of active users
+    getActiveUsers: () => {
+        const token = localStorage.getItem('authToken');
+        return axios.get(`${API_URL}/active-users`, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+        }).then((res) => res.data);
+    },
+
+    // New: Lock a user by ID
+    lockUser: (userId) => {
+        const token = localStorage.getItem('authToken');
+        return axios.put(`${API_URL}/lock/${userId}`, {}, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+        }).then((res) => res.data);
+    },
+
+    // New: Unlock a user by ID
+    unlockUser: (userId) => {
+        const token = localStorage.getItem('authToken');
+        return axios.put(`${API_URL}/unlock/${userId}`, {}, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+        }).then((res) => res.data);
+    },
+
+    // New: Accept upgrade to Landlord role
+    acceptUpRoleLandlord: (userId) => {
+        const token = localStorage.getItem('authToken');
+        return axios.put(`${API_URL}/acceptUpRoleLandLord/${userId}`, {}, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+        }).then((res) => res.data);
+    },
+
+    // New: Get list of users requesting Service role upgrade
+    getUpRoleService: () => {
+        const token = localStorage.getItem('authToken');
+        return axios.get(`${API_URL}/upRole-Service`, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+        }).then((res) => res.data);
+    },
+
+    // New: Accept upgrade to Service role
+    acceptUpRoleService: (userId) => {
+        const token = localStorage.getItem('authToken');
+        return axios.put(`${API_URL}/acceptUpRoleService/${userId}`, {}, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+        }).then((res) => res.data);
+    },
+
+    // New: Get list of users requesting Landlord role upgrade
+    getUpRoleLandlord: () => {
+        const token = localStorage.getItem('authToken');
+        return axios.get(`${API_URL}/upRole-LandLord`, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+        }).then((res) => res.data);
+    },
+
+    // New: Cancel upgrade to Landlord role
+    cancelUpRoleLandlord: (userId) => {
+        const token = localStorage.getItem('authToken');
+        return axios.put(`${API_URL}/cancelUpRoleLandLord/${userId}`, {}, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+        }).then((res) => res.data);
+    },
+
+    // New: Cancel upgrade to Service role
+    cancelUpRoleService: (userId) => {
+        const token = localStorage.getItem('authToken');
+        return axios.put(`${API_URL}/cancelUpRoleService/${userId}`, {}, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+        }).then((res) => res.data);
+    },
+    getServiceLicenseByUserId: async (userId, token) => {
+        try {
+            const response = await axios.get(`${API_URL}/service-license/${userId}`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            console.log('📌 Lấy thông tin giấy phép dịch vụ:', response.data);
+            return response.data;
+        } catch (error) {
+            console.error('❌ Lỗi khi lấy thông tin giấy phép dịch vụ:', error.response?.data || error.message);
+            throw error;
+        }
+    },
+    getServiceLicenseByUserId: async (userId, token) => {
+        try {
+            const response = await axios.get(`${API_URL}/service-license/${userId}`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            console.log('📌 Lấy thông tin giấy phép dịch vụ:', response.data);
+            return response.data;
+        } catch (error) {
+            console.error('❌ Lỗi khi lấy thông tin giấy phép dịch vụ:', error.response?.data || error.message);
+            throw error;
+        }
+    },
+    getLandlordLicenseByUserId: async (userId, token) => {
+        try {
+            const response = await axios.get(`${API_URL}/landlord-license/${userId}`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            console.log('📌 Lấy thông tin giấy phép dịch vụ:', response.data);
+            return response.data;
+        } catch (error) {
+            console.error('❌ Lỗi khi lấy thông tin giấy phép dịch vụ:', error.response?.data || error.message);
+            throw error;
+        }
+    },
+    getOneLicenseByUserId: async (userId, token) => {
+        try {
+            const response = await axios.get(`${API_URL}/one-landlord-license/${userId}`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            console.log('📌 Lấy thông tin giấy phép dịch vụ:', response.data);
+            return response.data;
+        } catch (error) {
+            console.error('❌ Lỗi khi lấy thông tin giấy phép dịch vụ:', error.response?.data || error.message);
+            throw error;
+        }
+    },
 };
 
 export default UserService;

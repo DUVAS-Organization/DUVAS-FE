@@ -18,6 +18,11 @@ const CategoryRooms = {
     },
     deleteCategoryRoom: (categoryRoomId) =>
         axios.delete(`${API_URL}/${categoryRoomId}`).then((res) => res.data),
+    lockCategoryRoom: (categoryRoomId) =>
+        axios.put(`${API_URL}/lock/${categoryRoomId}`).then((res) => res.data),
+
+    unlockCategoryRoom: (categoryRoomId) =>
+        axios.put(`${API_URL}/unlock/${categoryRoomId}`).then((res) => res.data),
 };
 
 export default CategoryRooms;

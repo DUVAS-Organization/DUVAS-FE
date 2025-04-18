@@ -24,7 +24,7 @@ const RoomDropdown = () => {
         <div className="relative" ref={roomDropdownRef}>
             <div
                 onClick={() => setRoomDropdownOpen(!roomDropdownOpen)}
-                className={`relative px-3 py-1 text-base font-medium text-gray-800 transition-all
+                className={`dark:text-white relative px-3 py-1 text-base font-medium text-gray-800 transition-all
           before:content-[''] before:absolute before:bottom-0 before:left-3 before:w-0 before:h-[2px]
           before:bg-red-500 before:transition-all before:duration-500 before:ease-in-out
           hover:before:w-[calc(100%-1.5rem)] cursor-pointer 

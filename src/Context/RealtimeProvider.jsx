@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import { HubConnectionBuilder } from "@microsoft/signalr";
+import OtherService from "../Services/User/OtherService";
 
 const RealtimeContext = createContext();
 
@@ -29,7 +30,7 @@ export const RealtimeProvider = ({ children }) => {
         }
 
         if (hubType === "savedPost" && !savedPostConnectionRef.current) {
-            const hubUrl = `https://apiduvas1.runasp.net/savedPostHub?access_token=${token}`;
+            const hubUrl = `${OtherService.savedPostHub}?access_token=${token}`;
             savedPostConnectionRef.current = new HubConnectionBuilder()
                 .withUrl(hubUrl, { withCredentials: true })
                 .withAutomaticReconnect()
@@ -58,7 +59,7 @@ export const RealtimeProvider = ({ children }) => {
         }
 
         if (hubType === "chat" && !chatConnectionRef.current) {
-            const hubUrl = `https://apiduvas1.runasp.net/chathub?access_token=${token}`;
+            const hubUrl = `${OtherService.chatHub}?access_token=${token}`;
             chatConnectionRef.current = new HubConnectionBuilder()
                 .withUrl(hubUrl, { withCredentials: true })
                 .withAutomaticReconnect()

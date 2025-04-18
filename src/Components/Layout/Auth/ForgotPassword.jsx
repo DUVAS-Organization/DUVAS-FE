@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { useNavigate } from "react-router-dom";
 import logo from '../../../Assets/Images/logo1.png'
 import image2 from '../../../Assets/Images/image2.png'
+import OtherService from "../../../Services/User/OtherService";
 
 const ForgotPasswords = () => {
     const navigate = useNavigate();
@@ -41,26 +42,15 @@ const ForgotPasswords = () => {
         setSuccessMessage("");
 
         // Tạo liên kết gửi OTP với email đã nhập
-        const forgotPasswordUrl = `https://apiduvas1.runasp.net/api/Auth/forgot-password?emailOrPhone=${email}`;
+        // const forgotPasswordUrl = `https://apiduvas1.runasp.net/api/Auth/forgot-password?emailOrPhone=${email}`;
 
         try {
-            const response = await fetch(forgotPasswordUrl, {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            });
-            if (!response.ok) {
-                const errorData = await response.json();
-                setErrorMessage(errorData.message || "Gửi OTP thất bại.");
-                return;
-            }
-
+            await OtherService.sendOtp(email);
             setSentOtp(true);
             setSuccessMessage("OTP đã được gửi!");
         } catch (error) {
-            setErrorMessage("Lỗi kết nối: " + error.message);
-            console.error("Connection error:", error);
+            setErrorMessage(error.response?.data?.message || "Gửi OTP thất bại.");
+            console.error("Error sending OTP:", error);
         } finally {
             setLoading(false);
         }
@@ -90,7 +80,7 @@ const ForgotPasswords = () => {
             return;
         }
 
-        const resetpasswordApiUrl = "https://apiduvas1.runasp.net/api/Auth/reset-password";
+        // const resetpasswordApiUrl = "https://apiduvas1.runasp.net/api/Auth/reset-password";
 
         const payload = {
             otp,
@@ -100,25 +90,13 @@ const ForgotPasswords = () => {
         };
 
         try {
-            const response = await fetch(resetpasswordApiUrl, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(payload),
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                setErrorMessage(errorData.message || "Gửi OTP thất bại.");
-                return;
-            }
+            await OtherService.resetPassword(otp, password, rePassword, email);
             setSentOtp(true);
-            const data = await response.json();
             setSuccessMessage("OTP đã được gửi!");
             window.location.href = "/Logins";
         } catch (error) {
-            setErrorMessage(error.message);
+            setErrorMessage(error.response?.data?.message || "Đặt lại mật khẩu thất bại.");
+            console.error("Error resetting password:", error);
         } finally {
             setLoading(false);
         }

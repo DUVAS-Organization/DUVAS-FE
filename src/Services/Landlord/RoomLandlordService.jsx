@@ -42,6 +42,8 @@ const handleError = (error) => {
                 throw new Error('Bị cấm: Bạn không có quyền truy cập.');
             case 404:
                 throw new Error(errorMessage || 'Không tìm thấy tài nguyên.');
+            case 409:
+                throw new Error(errorMessage || 'Không tìm thấy tài nguyên.');
             case 500:
                 throw new Error('Lỗi máy chủ. Vui lòng thử lại sau.');
             default:
@@ -136,6 +138,36 @@ const RoomLandlordService = {
             handleError(error);
         }
     },
+    checkImageAzure: async (file) => {
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const response = await axios.post(
+                'https://apiduvas1.runasp.net/api/CheckImageAzure/check-image',
+                formData,
+                {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                        Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+                    },
+                }
+            );
+
+            const result = response.data;
+            // console.log(`Kiểm tra ảnh ${file.name}:`, result);
+            const isSafe = result === "Ảnh an toàn.";
+            return {
+                isSafe: isSafe,
+                message: isSafe ? "Ảnh an toàn." : result || "Ảnh không hợp lệ."
+            };
+        } catch (error) {
+            console.error(`Lỗi kiểm tra ảnh ${file.name}:`, error);
+            handleError(error);
+            return { isSafe: false, message: "Lỗi khi kiểm tra ảnh." };
+        }
+    },
+
 };
 
 export default RoomLandlordService;

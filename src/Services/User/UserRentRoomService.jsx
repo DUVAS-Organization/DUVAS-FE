@@ -108,6 +108,29 @@ const UserRentRoomService = {
             throw error;
         }
     },
+    sendFeedback: async (data) => {
+        try {
+            const response = await axios.post(`${API_BASE_URL}/send-review`, data, {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+                    "Content-Type": "application/json",
+                }
+            });
+            console.log("📌 API Response:", response.data);
+            return response.data;
+        } catch (error) {
+            console.error("❌ Error sending feedback:", error.response?.data || error.message);
+            throw error;
+        }
+    },
+    getUserFeedbackByRoomId: async (roomId) => {
+        try {
+            const response = await axios.get(`${API_BASE_URL}/get-feedbacks/${roomId}`);
+            return response.data;
+        } catch (error) {
+            console.error(error.message);
+        }
+    }
 };
 
 export default UserRentRoomService;

@@ -8,6 +8,7 @@ import { useAuth } from '../../../Context/AuthProvider';
 import { FaArrowLeft, FaTimes, FaPlus } from "react-icons/fa";
 import Loading from '../../../Components/Loading';
 import PriceInput from '../../../Components/Layout/Range/PriceInput';
+import OtherService from '../../../Services/User/OtherService';
 
 const RoomForm = () => {
     const [room, setRooms] = useState({});
@@ -126,14 +127,7 @@ const RoomForm = () => {
         const formData = new FormData();
         formData.append('file', file);
         try {
-            const response = await fetch('https://apiduvas1.runasp.net/api/Upload/upload-image', {
-                method: 'POST',
-                body: formData,
-            });
-            if (!response.ok) {
-                throw new Error('Upload failed');
-            }
-            const data = await response.json();
+            const data = await OtherService.uploadImage(formData);
             return data.imageUrl;
         } catch (error) {
             console.error("Error uploading file:", error);

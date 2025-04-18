@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../Context/AuthProvider';
 import logoAdmin from '../../Assets/Images/logoAdmin.png';
-import { FaUserCircle, FaFileAlt, FaHome, FaBuilding, FaSignOutAlt, FaClone, FaUserEdit, FaChevronDown, FaChevronUp } from 'react-icons/fa';
+import { FaUserCircle, FaFileAlt, FaHome, FaBuilding, FaSignOutAlt, FaClone, FaUserEdit, FaChevronDown, FaChevronUp, FaFacebookMessenger } from 'react-icons/fa';
 import { MdOutlineCategory } from "react-icons/md";
+import { FaMoneyBillTransfer } from 'react-icons/fa6';
 
 const Sidebar = () => {
     const { user, logout } = useAuth();
@@ -62,7 +63,7 @@ const Sidebar = () => {
                             `block py-2 px-4 hover:bg-blue-400 rounded-3xl ${isActive ? 'bg-blue-500 text-white' : ''}`
                         }
                     >
-                        <FaUserCircle className="inline-block mr-2" />
+                        <FaFacebookMessenger className="inline-block mr-2" />
                         Tin Nhắn
                     </NavLink>
                 </li>
@@ -97,6 +98,17 @@ const Sidebar = () => {
                     >
                         <FaBuilding className="inline-block mr-2" />
                         Tòa Nhà
+                    </NavLink>
+                </li>
+                <li>
+                    <NavLink
+                        to="/Admin/Transactions"
+                        className={({ isActive }) =>
+                            `block py-2 px-4 hover:bg-blue-400 rounded-3xl ${isActive ? 'bg-blue-500 text-white' : ''}`
+                        }
+                    >
+                        <FaMoneyBillTransfer className="inline-block mr-2" />
+                        Giao dịch
                     </NavLink>
                 </li>
                 <li>
@@ -167,6 +179,16 @@ const Sidebar = () => {
                                     }
                                 >
                                     Đơn Tố Cáo
+                                </NavLink>
+                            </li>
+                            <li>
+                                <NavLink
+                                    to="/Admin/Authorization"
+                                    className={({ isActive }) =>
+                                        `block py-2 px-4 hover:bg-blue-400 rounded-3xl ${isActive ? 'bg-blue-500 text-white' : ''}`
+                                    }
+                                >
+                                    Đơn Ủy Quyền
                                 </NavLink>
                             </li>
                             <li>

@@ -6,6 +6,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../../Context/AuthProvider";
 import { useUI } from "./UIContext";
 import { useRealtime } from "../../../Context/RealtimeProvider";
+import OtherService from "../../../Services/User/OtherService";
 
 const SavedPostList = () => {
     const { openDropdown, toggleDropdown } = useUI();
@@ -83,9 +84,7 @@ const SavedPostList = () => {
 
     const fetchSavedPosts = async () => {
         try {
-            const response = await fetch(`https://apiduvas1.runasp.net/api/SavedPosts/${user.userId}`);
-            if (!response.ok) throw new Error("Lỗi khi lấy danh sách bài đã lưu");
-            const data = await response.json();
+            const data = await OtherService.getSavedPosts(user.userId);
             setSavedPosts(data);
         } catch (error) {
             console.error("❌ Lỗi khi lấy danh sách bài đã lưu:", error);
@@ -95,27 +94,17 @@ const SavedPostList = () => {
     const removeSavedPost = async (post, e) => {
         e.stopPropagation();
         try {
-            const payload = { userId: user.userId };
-            if (post.room) {
-                payload.roomId = post.roomId;
-            } else if (post.servicePost) {
-                payload.servicePostId = post.servicePostId;
-            }
-
-            const response = await fetch("https://apiduvas1.runasp.net/api/SavedPosts", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
-            });
-            const data = await response.json();
+            const roomId = post.room ? post.roomId : null;
+            const servicePostId = post.servicePost ? post.servicePostId : null;
+            const data = await OtherService.toggleSavePostRemove(user.userId, roomId, servicePostId);
 
             if (data.status === "removed") {
                 setSavedPosts((prev) =>
                     prev.filter(
                         (p) =>
                             !(
-                                (p.room && payload.roomId && p.roomId === payload.roomId) ||
-                                (p.servicePost && payload.servicePostId && p.servicePostId === payload.servicePostId)
+                                (p.room && roomId && p.roomId === roomId) ||
+                                (p.servicePost && servicePostId && p.servicePostId === servicePostId)
                             )
                     )
                 );
@@ -151,7 +140,7 @@ const SavedPostList = () => {
     return (
         <div className="relative flex flex-col items-center" ref={dropdownRef}>
             <button onClick={handleToggleDropdown} className="relative">
-                <FaRegHeart className="text-2xl text-black" />
+                <FaRegHeart className="text-2xl text-black dark:text-white" />
                 {savedPosts.length > 0 && (
                     <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
                         {savedPosts.length}
@@ -160,12 +149,12 @@ const SavedPostList = () => {
             </button>
 
             {isOpen && (
-                <div className="absolute left-1/2 -translate-x-1/2 mt-10 w-96 h-80 bg-white shadow-lg rounded-md border border-gray-200 flex flex-col">
+                <div className="absolute left-1/2 -translate-x-1/2 mt-10 w-96 h-80 dark:text-black bg-white shadow-lg rounded-md border border-gray-200 flex flex-col">
                     <div className="px-4 py-2 border-b text-lg font-semibold text-center">
                         Tin đăng đã lưu
                     </div>
 
-                    <div className="flex-1 overflow-y-auto">
+                    <div className="flex-1 overflow-y-auto dark:text-white">
                         {savedPosts.length > 0 ? (
                             savedPosts.map((post, index) => {
                                 let title = "";
