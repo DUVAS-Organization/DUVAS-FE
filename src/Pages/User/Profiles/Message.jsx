@@ -136,7 +136,7 @@ const Message = () => {
   // Lấy danh sách hội thoại
   const fetchConversations = async () => {
     if (!currentUserId) return;
-    setIsLoading(true);
+    //setIsLoading(true);
     try {
       const data = await OtherService.getConversations(currentUserId);
       const newConversations = await Promise.all(
@@ -166,7 +166,7 @@ const Message = () => {
   // Lấy danh sách tin nhắn của 1 cuộc trò chuyện cụ thể
   const fetchConversationMessages = async (partnerId) => {
     if (!currentUserId) return;
-    setIsLoading(true);
+    //setIsLoading(true);
     try {
       const data = await OtherService.getMessages(currentUserId, partnerId);
       setConversationMessages(data);
@@ -359,7 +359,7 @@ const Message = () => {
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-2">
-          {isLoading && <Loading />}
+            {/* {isLoading && <Loading />} */}
           {filteredConversations.length > 0 ? (
             filteredConversations.map((conv, index) => (
               <div
