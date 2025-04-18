@@ -272,7 +272,11 @@ const Message = () => {
   // Khi nhận được tin nhắn mới từ phía BE, load lại danh sách hội thoại để cập nhật tin nhắn mới nhất cho sidebar
   useEffect(() => {
     if (currentUserId) {
-      fetchConversations();
+      const timer = setTimeout(() => {
+        fetchConversations();
+      }, 1000);
+
+      return () => clearTimeout(timer);
     }
   }, [conversationMessages, currentUserId]);
 
