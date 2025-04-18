@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API_URL = 'https://apiduvas1.runasp.net/api';
-const HUB_BASE_URL = 'https://localhost:8000';
+const HUB_BASE_URL = 'https://apiduvas1.runasp.net';
 
 const OtherService = {
     //JWT
