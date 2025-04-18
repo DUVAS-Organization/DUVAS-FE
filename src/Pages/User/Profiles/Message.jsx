@@ -272,13 +272,13 @@ const Message = () => {
   // Khi nhận được tin nhắn mới từ phía BE, load lại danh sách hội thoại để cập nhật tin nhắn mới nhất cho sidebar
   useEffect(() => {
     if (currentUserId) {
-      const timer = setTimeout(() => {
+      const interval = setInterval(() => {
         fetchConversations();
-      }, 1000);
+      }, 1000); // Gọi API mỗi 1 giây
 
-      return () => clearTimeout(timer);
+      return () => clearInterval(interval); // Dọn dẹp interval khi component unmount
     }
-  }, [conversationMessages, currentUserId]);
+  }, [currentUserId]);
 
   // Auto scroll xuống cuối danh sách tin nhắn khi có tin nhắn mới
   useEffect(() => {
