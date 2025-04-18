@@ -8,8 +8,8 @@ import { showCustomNotification } from "../../../Components/Notification";
 const Money = () => {
     const location = useLocation();
     const navigate = useNavigate();
-    const [amount, setAmount] = useState(10000); // Giá trị thực tế (số)
-    const [displayAmount, setDisplayAmount] = useState("10,000"); // Giá trị hiển thị (định dạng VND)
+    const [amount, setAmount] = useState(10000);
+    const [displayAmount, setDisplayAmount] = useState("10.000");
     const [qrCode, setQrCode] = useState(null);
 
     // Hàm định dạng số thành tiền Việt Nam

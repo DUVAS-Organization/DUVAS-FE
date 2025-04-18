@@ -200,7 +200,7 @@ const ViewUpRole = () => {
         <div className="bg-white">
             <SidebarUser />
             <div className="select-none p-6 ml-56 max-w-6xl mx-auto">
-                <h1 className="text-2xl font-semibold mb-4">Danh sách đơn đăng ký</h1>
+                <h1 className="text-2xl font-bold mb-4">Danh sách đơn đăng ký</h1>
                 {loading ? (
                     <div className="flex justify-center items-center h-64">
                         <Loading />

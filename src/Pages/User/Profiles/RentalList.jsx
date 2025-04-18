@@ -354,7 +354,7 @@ export default function RentalList() {
             <div className="mx-auto ml-56 max-w-6xl px-4 sm:px-6 lg:px-0">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div className="col-span-1 bg-white p-4 rounded-xl shadow-lg">
-                        <h2 className="text-xl font-bold text-red-600 mb-4">Danh sách phòng</h2>
+                        <h2 className="text-2xl font-bold text-black mb-4">Danh sách phòng</h2>
 
                         <h3 className="text-lg font-bold text-yellow-600 mb-2">Đang chờ giao dịch</h3>
                         {pendingRentals.length > 0 ? pendingRentals.map(room => (
