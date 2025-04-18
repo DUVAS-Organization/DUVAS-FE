@@ -500,7 +500,7 @@ const RoomList = () => {
                                                         <div>
                                                             <p className="font-semibold">Người đặt: {card.booking.renterName || 'N/A'}</p>
                                                             <p>
-                                                                Ngày đặt: {format(new Date(card.booking.createdDate), 'dd-MM-yyyy HH:mm', { locale: vi })}
+                                                                Ngày đặt: {format(new Date(card.booking.createdDate), 'dd-MM-yyyy HH:mm:ss', { locale: vi })}
                                                             </p>
                                                         </div>
                                                     )}
