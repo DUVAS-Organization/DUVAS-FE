@@ -9,13 +9,13 @@ import Counts from "../../../Components/Counts";
 import TransactionService from "../../../Services/Admin/TransactionService";
 
 const statusStyles = {
-    Success: "text-green-600 bg-green-100",
+    Paid: "text-green-600 bg-green-100",
     Pending: "text-yellow-600 bg-yellow-100",
     Canceled: "text-red-600 bg-red-100",
 };
 
 const statusLabels = {
-    Success: "Thành công",
+    Paid: "Thành công",
     Pending: "Đang xử lý",
     Canceled: "Thất bại",
 };
