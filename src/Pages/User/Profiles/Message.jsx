@@ -266,9 +266,9 @@ const Message = () => {
   }, [currentUserId, selectedConversation]);
 
   // Auto scroll xuống cuối danh sách tin nhắn
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [displayedMessages]);
+  // useEffect(() => {
+  //   messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  // }, [displayedMessages]);
 
   const handleSendMessage = async () => {
     if (isSending) return;
