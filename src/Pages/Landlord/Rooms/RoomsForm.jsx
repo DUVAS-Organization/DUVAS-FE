@@ -445,19 +445,19 @@ const RoomForm = () => {
     };
 
     return (
-        <div className="flex min-h-screen bg-white">
+        <div className="flex min-h-screen bg-white dark:bg-gray-800 dark:text-white">
             {loading && <Loading />}
             <SidebarUser />
-            <div className="w-64 bg-white px-2 py-8 max-w-6xl mx-auto ml-56 h-full border-r border-gray-200">
+            <div className="w-64 bg-white dark:bg-gray-800  px-2 py-8 max-w-6xl mx-auto ml-56 h-full border-r border-gray-200">
                 <h1 className="text-2xl font-bold text-red-600 mb-4">{roomId ? 'Chỉnh Sửa Phòng' : 'Tạo Phòng'}</h1>
                 <ul className="space-y-2">
-                    <li className={`text-lg ${step === 1 ? 'text-red-600 font-bold' : 'text-gray-600'}`}>
+                    <li className={`text-lg ${step === 1 ? 'text-red-600 font-bold ' : 'text-gray-600 dark:text-white'}`}>
                         Bước 1: Thông tin Phòng
                     </li>
-                    <li className={`text-lg ${step === 2 ? 'text-red-600 font-bold' : 'text-gray-600'}`}>
+                    <li className={`text-lg ${step === 2 ? 'text-red-600 font-bold' : 'text-gray-600 dark:text-white'}`}>
                         Bước 2: Hình ảnh
                     </li>
-                    <li className={`text-lg ${step === 3 ? 'text-red-600 font-bold' : 'text-gray-600'}`}>
+                    <li className={`text-lg ${step === 3 ? 'text-red-600 font-bold' : 'text-gray-600 dark:text-white'}`}>
                         Bước 3: Xác nhận
                     </li>
                 </ul>
@@ -469,12 +469,12 @@ const RoomForm = () => {
                         <div className="border-b-2 border-red-500 w-32 mb-4"></div>
                         <div className="space-y-4">
                             <div className="w-full">
-                                <h3 className="text-lg font-semibold text-gray-800 mb-2">Thông tin Phòng</h3>
-                                <label className="block text-sm font-medium text-gray-700">Tòa Nhà</label>
+                                <h3 className="text-lg font-semibold text-gray-800 mb-2 dark:text-white">Thông tin Phòng</h3>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-white">Tòa Nhà</label>
                                 <select
                                     value={room.buildingId || ''}
                                     onChange={(e) => setRooms({ ...room, buildingId: parseInt(e.target.value) || null })}
-                                    className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
+                                    className="block dark:bg-gray-800 dark:text-white w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
                                 >
                                     <option value="">Không có</option>
                                     {buildings.map((building) => (
@@ -486,7 +486,7 @@ const RoomForm = () => {
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="w-full">
-                                    <label className="block text-sm font-medium text-gray-700">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-white">
                                         Giá (đ/tháng) <span className="text-red-500">*</span>
                                     </label>
                                     <PriceInput
@@ -496,14 +496,14 @@ const RoomForm = () => {
                                     {errors.price && <p className="text-red-500 text-sm mt-1">{errors.price}</p>}
                                 </div>
                                 <div className="w-full">
-                                    <label className="block text-sm font-medium text-gray-700">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-white">
                                         Loại Phòng <span className="text-red-500">*</span>
                                     </label>
                                     <select
                                         value={room.categoryRoomId || ''}
                                         onChange={(e) => setRooms({ ...room, categoryRoomId: parseInt(e.target.value) })}
                                         required
-                                        className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
+                                        className="block w-full p-2 dark:bg-gray-800 dark:text-white border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
                                     >
                                         <option value="" disabled>Chọn loại phòng...</option>
                                         {categoryRooms.map((categoryRoom) => (
@@ -517,7 +517,7 @@ const RoomForm = () => {
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="w-full">
-                                    <label className="block text-sm font-medium text-gray-700">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-white">
                                         Địa chỉ <span className="text-red-500">*</span>
                                     </label>
                                     <input
@@ -525,13 +525,13 @@ const RoomForm = () => {
                                         value={room.locationDetail}
                                         onChange={(e) => setRooms({ ...room, locationDetail: e.target.value })}
                                         required
-                                        className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
+                                        className="block w-full p-2 dark:bg-gray-800 dark:text-white border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
                                         placeholder="Nhập Địa chỉ"
                                     />
                                     {errors.locationDetail && <p className="text-red-500 text-sm mt-1">{errors.locationDetail}</p>}
                                 </div>
                                 <div className="w-full">
-                                    <label className="block text-sm font-medium text-gray-700">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-white">
                                         Diện Tích (m²) <span className="text-red-500">*</span>
                                     </label>
                                     <input
@@ -545,7 +545,7 @@ const RoomForm = () => {
                                         }}
                                         min="0"
                                         required
-                                        className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
+                                        className="block w-full p-2 dark:bg-gray-800 dark:text-white border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
                                         placeholder="0"
                                     />
                                     {errors.acreage && <p className="text-red-500 text-sm mt-1">{errors.acreage}</p>}
@@ -553,13 +553,13 @@ const RoomForm = () => {
                             </div>
                             <div className="grid grid-cols-3 gap-4">
                                 <div className="w-full">
-                                    <label className="block text-sm font-medium text-gray-700">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-white">
                                         Nội Thất
                                     </label>
                                     <select
                                         value={room.furniture}
                                         onChange={(e) => setRooms({ ...room, furniture: e.target.value })}
-                                        className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
+                                        className="block w-full p-2 dark:bg-gray-800 dark:text-white border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
                                     >
                                         <option value="">Chọn nội thất...</option>
                                         <option value="Đầy đủ">Đầy đủ</option>
@@ -568,14 +568,14 @@ const RoomForm = () => {
                                     </select>
                                 </div>
                                 <div className="w-full flex items-center">
-                                    <label className="block text-sm font-medium text-gray-700 w-1/3">
+                                    <label className="block text-sm font-medium text-gray-700 w-1/3 dark:text-white">
                                         Phòng tắm <span className="text-red-500">*</span>
                                     </label>
                                     <div className="flex-1 flex items-center space-x-2">
                                         <button
                                             type="button"
                                             onClick={() => handleDecrement('numberOfBathroom')}
-                                            className="p-2 bg-gray-200 rounded hover:bg-gray-300"
+                                            className="p-2 bg-gray-200 rounded hover:bg-gray-300 dark:bg-gray-800 dark:text-white"
                                         >
                                             <FaMinus />
                                         </button>
@@ -583,7 +583,7 @@ const RoomForm = () => {
                                         <button
                                             type="button"
                                             onClick={() => handleIncrement('numberOfBathroom')}
-                                            className="p-2 bg-gray-200 rounded hover:bg-gray-300"
+                                            className="p-2 bg-gray-200 rounded hover:bg-gray-300 dark:bg-gray-800 dark:text-white"
                                         >
                                             <FaPlus />
                                         </button>
@@ -591,14 +591,14 @@ const RoomForm = () => {
                                     {errors.numberOfBathroom && <p className="text-red-500 text-sm mt-1">{errors.numberOfBathroom}</p>}
                                 </div>
                                 <div className="w-full flex items-center">
-                                    <label className="block text-sm font-medium text-gray-700">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-white">
                                         Giường ngủ <span className="text-red-500">*</span>
                                     </label>
                                     <div className="flex-1 flex items-center space-x-2">
                                         <button
                                             type="button"
                                             onClick={() => handleDecrement('numberOfBedroom')}
-                                            className="p-2 bg-gray-200 rounded hover:bg-gray-300"
+                                            className="p-2 bg-gray-200 rounded hover:bg-gray-300 dark:bg-gray-800 dark:text-white"
                                         >
                                             <FaMinus />
                                         </button>
@@ -606,7 +606,7 @@ const RoomForm = () => {
                                         <button
                                             type="button"
                                             onClick={() => handleIncrement('numberOfBedroom')}
-                                            className="p-2 bg-gray-200 rounded hover:bg-gray-300"
+                                            className="p-2 bg-gray-200 rounded hover:bg-gray-300 dark:bg-gray-800 dark:text-white"
                                         >
                                             <FaPlus />
                                         </button>
@@ -619,59 +619,59 @@ const RoomForm = () => {
                                     className="flex items-center justify-between cursor-pointer select-none"
                                     onClick={toggleDropOpen}
                                 >
-                                    <h3 className="text-lg font-semibold text-gray-800 mb-2">Chi phí khác</h3>
+                                    <h3 className="text-lg font-semibold text-gray-800 mb-2 dark:text-white">Chi phí khác</h3>
                                     {isDropOpen ? (
-                                        <FaChevronUp className="text-gray-600" />
+                                        <FaChevronUp className="text-gray-600 dark:text-white" />
                                     ) : (
-                                        <FaChevronDown className="text-gray-600" />
+                                        <FaChevronDown className="text-gray-600 dark:text-white" />
                                     )}
                                 </div>
                                 {isDropOpen && (
                                     <div className="grid grid-cols-4 gap-4">
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700">Điện (đ/kWh)</label>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-white">Điện (đ/kWh)</label>
                                             <PriceInput
                                                 value={room.dien || 0}
                                                 onChange={(val) => setRooms({ ...room, dien: Number(val) || 0 })}
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700">Nước (đ/m³)</label>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-white">Nước (đ/m³)</label>
                                             <PriceInput
                                                 value={room.nuoc || 0}
                                                 onChange={(val) => setRooms({ ...room, nuoc: Number(val) || 0 })}
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700">Internet (đ/tháng)</label>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-white">Internet (đ/tháng)</label>
                                             <PriceInput
                                                 value={room.internet || 0}
                                                 onChange={(val) => setRooms({ ...room, internet: Number(val) || 0 })}
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700">Rác (đ/tháng)</label>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-white">Rác (đ/tháng)</label>
                                             <PriceInput
                                                 value={room.rac || 0}
                                                 onChange={(val) => setRooms({ ...room, rac: Number(val) || 0 })}
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700">Gửi xe (đ/tháng)</label>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-white">Gửi xe (đ/tháng)</label>
                                             <PriceInput
                                                 value={room.guiXe || 0}
                                                 onChange={(val) => setRooms({ ...room, guiXe: Number(val) || 0 })}
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700">Quản lý (đ/tháng)</label>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-white">Quản lý (đ/tháng)</label>
                                             <PriceInput
                                                 value={room.quanLy || 0}
                                                 onChange={(val) => setRooms({ ...room, quanLy: Number(val) || 0 })}
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700">Chi phí khác (đ/tháng)</label>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-white">Chi phí khác (đ/tháng)</label>
                                             <PriceInput
                                                 value={room.chiPhiKhac || 0}
                                                 onChange={(val) => setRooms({ ...room, chiPhiKhac: Number(val) || 0 })}
@@ -680,15 +680,15 @@ const RoomForm = () => {
                                     </div>
                                 )}
                             </div>
-                            <div className="w-full rounded-lg bg-white shadow-sm">
-                                <h3 className="text-lg font-semibold text-gray-800 mb-2">Tiêu đề & Mô tả</h3>
+                            <div className="w-full rounded-lg bg-white shadow-sm dark:bg-gray-800 dark:text-white">
+                                <h3 className="text-lg font-semibold text-gray-800 mb-2 dark:text-white">Tiêu đề & Mô tả</h3>
                                 <div className="w-full flex justify-between items-center">
-                                    <h3 className="text-sm font-medium text-gray-700 mb-2">Tạo nhanh với AI</h3>
+                                    <h3 className="text-sm font-medium text-gray-700 mb-2 dark:text-white">Tạo nhanh với AI</h3>
                                     <div className="space-y-2">
                                         <button
                                             type="button"
                                             onClick={handleGenerateWithAI}
-                                            className="flex items-center space-x-1 px-3 py-2 border border-gray-400 rounded-full shadow-sm text-gray-800 hover:bg-gray-300 w-full font-medium"
+                                            className="flex items-center space-x-1 px-3 py-2 dark:text-white border border-gray-400 rounded-full shadow-sm text-gray-800 hover:bg-gray-300 w-full font-medium"
                                         >
                                             <svg
                                                 className="w-4 h-4 text-green-500"
@@ -705,33 +705,33 @@ const RoomForm = () => {
                                 <div className="flex space-x-4">
                                     <div className="flex-1 space-y-4">
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700">
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-white" >
                                                 Tiêu Đề <span className="text-red-500">*</span>
                                             </label>
                                             <input
                                                 type="text"
                                                 value={room.title}
                                                 onChange={(e) => setRooms({ ...room, title: e.target.value })}
-                                                className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
+                                                className="block w-full p-2 dark:bg-gray-800 dark:text-white border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
                                                 placeholder="Mô tả ngắn gọn về loại hình phòng, diện tích, địa chỉ (VD: cho thuê phòng trọ 20m2 tại Hải Châu, Đà Nẵng)"
                                             />
                                             {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700">
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-white">
                                                 Mô tả <span className="text-red-500">*</span>
                                             </label>
                                             <textarea
                                                 value={room.description}
                                                 onChange={(e) => setRooms({ ...room, description: e.target.value })}
-                                                className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
+                                                className="block w-full p-2 dark:bg-gray-800 dark:text-white border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
                                                 placeholder="Mô tả chi tiết về:
-• Loại hình cho thuê
-• Vị trí
-• Diện tích
-• Tình trạng nội thất
-...
-(VD: Phòng trọ có vị trí thuận lợi, gần công viên, trường học...)"
+                                                            • Loại hình cho thuê
+                                                            • Vị trí
+                                                            • Diện tích
+                                                            • Tình trạng nội thất
+                                                            ...
+                                                            (VD: Phòng trọ có vị trí thuận lợi, gần công viên, trường học...)"
                                                 rows="5"
                                             />
                                             {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description}</p>}
@@ -747,11 +747,11 @@ const RoomForm = () => {
                     <div className="mt-8">
                         <h2 className="text-xl font-bold mb-2 text-red-600">{roomId ? 'Chỉnh Sửa Phòng - Bước 2' : 'Tạo Phòng - Bước 2'}</h2>
                         <div className="border-b-2 border-red-500 w-32 mb-4"></div>
-                        <div className="border border-gray-300 rounded-lg p-6 bg-white shadow-sm w-full text-center">
+                        <div className="border border-gray-300 rounded-lg p-6 bg-white shadow-sm w-full text-center dark:bg-gray-800 dark:text-white">
                             <div className="flex items-center justify-center">
-                                <label className="cursor-pointer bg-gray-200 p-3 rounded-lg flex items-center gap-2">
+                                <label className="cursor-pointer bg-gray-200 p-3 rounded-lg flex items-center gap-2 dark:bg-gray-800 dark:text-white">
                                     <FaPlus className="text-blue-600" />
-                                    <span className="text-gray-700 font-semibold">Thêm ảnh</span>
+                                    <span className="text-gray-700 font-semibold bỏ dark:text-white ">Thêm ảnh</span>
                                     <input
                                         type="file"
                                         multiple
@@ -761,12 +761,12 @@ const RoomForm = () => {
                                     />
                                 </label>
                             </div>
-                            <p className="text-gray-500 text-sm mb-3 font-medium text-center mt-2">
+                            <p className="text-gray-500 text-sm mb-3 font-medium text-center mt-2 dark:text-gray-200">
                                 Định dạng: JPEG, PNG - Tối đa 5MB
                             </p>
                             {combinedPreviews.length > 0 && (
                                 <div className="mt-3">
-                                    <p className="font-semibold text-gray-700">Ảnh đã chọn:</p>
+                                    <p className="font-semibold text-gray-700 dark:text-white">Ảnh đã chọn:</p>
                                     <div className="grid grid-cols-3 gap-3 mt-2">
                                         {combinedPreviews.map((item, index) => (
                                             <div key={index} className={`relative border p-2 rounded-lg shadow-sm ${item.isInvalid ? 'border-red-500' : ''}`}>
@@ -810,7 +810,7 @@ const RoomForm = () => {
                             <div className="flex justify-between items-center mt-6">
                                 <button
                                     onClick={handleBack}
-                                    className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                                    className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 dark:bg-gray-800 dark:text-white border dark:border-white"
                                 >
                                     Quay lại
                                 </button>
@@ -830,7 +830,7 @@ const RoomForm = () => {
                         {step > 1 && (
                             <button
                                 onClick={handleBack}
-                                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 dark:bg-gray-800 border dark:border-white"
                             >
                                 Quay lại
                             </button>

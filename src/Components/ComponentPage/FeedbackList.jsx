@@ -50,7 +50,7 @@ const FeedbackList = ({ roomId }) => {
     if (error) return <p className="text-red-500">{error}</p>;
 
     return (
-        <div className="bg-white p-6 rounded-lg shadow-xl w-full">
+        <div className="bg-white p-6 rounded-lg shadow-xl w-full dark:bg-gray-800 dark:text-white">
             <h3 className="text-xl font-bold mb-4">Đánh Giá Phòng</h3>
             {loading ? (
                 <p>Đang tải đánh giá...</p>
@@ -107,7 +107,7 @@ const FeedbackList = ({ roomId }) => {
                                     </div>
 
                                     {/* Comment */}
-                                    <p className="text-gray-700">{feedback.comment}</p>
+                                    <p className="text-gray-700 dark:text-white">{feedback.comment}</p>
 
                                     {/* Image(s) */}
                                     {images.length > 0 && (
@@ -131,7 +131,7 @@ const FeedbackList = ({ roomId }) => {
             {/* Modal for viewing image */}
             {modalImage && (
                 <div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 dark:bg-gray-800 dark:text-white"
                     onClick={closeModal}
                 >
                     <img

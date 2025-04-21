@@ -310,10 +310,10 @@ const Profile = () => {
 
     return (
         <Layout showNavbar={false} showSidebar={true}>
-            <div className="relative">
+            <div className="relative dark:bg-gray-800 dark:text-white">
                 {isUploading && <Loading />}
-                <div className="max-w-6xl mx-auto p-4">
-                    <div className="bg-white p-6 rounded-lg shadow-md">
+                <div className="max-w-6xl mx-auto p-4 ">
+                    <div className="bg-white p-6 rounded-lg shadow-md dark:bg-gray-800 dark:text-white">
                         <h1 className="text-2xl font-bold mb-5 border-b-2 pb-2 border-gray-700">
                             Quản lý tài khoản
                         </h1>
@@ -321,19 +321,19 @@ const Profile = () => {
                         <div className="border-b border-gray-200 mb-4">
                             <ul className="flex space-x-4">
                                 <li
-                                    className={`pb-2 cursor-pointer ${activeTab === "edit" ? "border-b-2 border-red-500 text-red-500" : "text-black"}`}
+                                    className={`pb-2 cursor-pointer ${activeTab === "edit" ? "border-b-2 border-red-500 text-red-500" : "text-black dark:text-white"}`}
                                     onClick={() => handleTabClick("edit")}
                                 >
                                     Chỉnh sửa thông tin
                                 </li>
                                 <li
-                                    className={`pb-2 cursor-pointer ${activeTab === "settings" ? "border-b-2 border-red-500 text-red-500" : "text-black"}`}
+                                    className={`pb-2 cursor-pointer ${activeTab === "settings" ? "border-b-2 border-red-500 text-red-500" : "text-black dark:text-white"}`}
                                     onClick={() => handleTabClick("settings")}
                                 >
                                     Cài đặt tài khoản
                                 </li>
                                 <li
-                                    className={`pb-2 cursor-pointer ${activeTab === "registerLandlord" ? "border-b-2 border-red-500 text-red-500" : "text-black"}`}
+                                    className={`pb-2 cursor-pointer ${activeTab === "registerLandlord" ? "border-b-2 border-red-500 text-red-500" : "text-black dark:text-white"}`}
                                     onClick={() => handleTabClick("registerLandlord")}
                                 >
                                     Đăng ký thành chủ

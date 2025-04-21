@@ -34,13 +34,13 @@ const Transaction = () => {
 
     return (
         <Layout showNavbar={false} showSidebar={true}>
-            <div className="max-w-6xl mx-auto p-4">
-                <div className="bg-white p-6 rounded-lg shadow-md">
+            <div className="max-w-6xl mx-auto p-4 dark:bg-gray-800 dark:text-white">
+                <div className="bg-white p-6 rounded-lg shadow-md dark:bg-gray-800 dark:text-white">
                     <h1 className="text-2xl font-bold mb-5 border-b-2 pb-2 border-gray-700">Lịch sử giao dịch</h1>
                     <div className="flex justify-center">
                         <div className="overflow-x-auto min-w-[80%]">
-                            <table className="min-w-full bg-white border border-gray-300 shadow-md rounded-lg">
-                                <thead className="bg-gray-200">
+                            <table className="min-w-full bg-white border border-gray-300 shadow-md rounded-lg dark:bg-gray-800 dark:text-white">
+                                <thead className="bg-gray-200 dark:bg-gray-800 dark:text-white">
                                     <tr>
                                         <th className="p-3 border">STT</th>
                                         <th className="p-3 border">Ngày Tạo</th>
@@ -53,7 +53,7 @@ const Transaction = () => {
                                 <tbody>
                                     {currentItems.length > 0 ? (
                                         currentItems.map((transaction, index) => (
-                                            <tr key={transaction.id} className="hover:bg-gray-100">
+                                            <tr key={transaction.id} className="hover:bg-gray-100 dark:hover:text-black">
                                                 <td className="p-3 border text-center">{indexOfFirstItem + index + 1}</td> {/* Hiển thị STT */}
                                                 <td className="p-3 border">
                                                     {transaction.when

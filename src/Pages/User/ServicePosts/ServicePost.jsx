@@ -155,7 +155,7 @@ const ServicePostList = () => {
     }
 
     return (
-        <div className="bg-white min-h-screen p-4">
+        <div className="bg-white min-h-screen p-4 dark:bg-gray-800 ">
             <div className="container mx-auto">
                 <div className="flex items-center justify-between mb-4">
                     <div className="w-full">
@@ -163,7 +163,7 @@ const ServicePostList = () => {
                     </div>
                 </div>
                 <div className="flex max-w-6xl mx-auto">
-                    <div className="w-3/4 bg-white p-4 rounded shadow space-y-3">
+                    <div className="w-3/4 bg-white p-4 rounded shadow space-y-3 dark:bg-gray-800 dark:text-white">
                         <h1 className="text-2xl font-semibold">{tab}</h1>
                         <div className="flex justify-between">
                             <p className="mb-2 flex">Hiện có {priceFilteredPosts.length} dịch vụ {tab.toLowerCase()}.</p>
@@ -206,7 +206,7 @@ const ServicePostList = () => {
                                 return (
                                     <div key={post.servicePostId}>
                                         <Link to={`/ServicePosts/Details/${post.servicePostId}`} className="block">
-                                            <div className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col">
+                                            <div className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col dark:bg-gray-800 dark:text-white">
                                                 <div className="relative w-full h-52 overflow-hidden rounded-lg">
                                                     {imageCount < 3 ? (
                                                         <img src={images[0]} alt={post.title} className="w-full h-full object-cover" />
@@ -254,12 +254,12 @@ const ServicePostList = () => {
                                                     )}
                                                 </div>
                                                 <div className="p-4 flex flex-col">
-                                                    <h3 className="text-lg font-semibold mb-2 line-clamp-2">{post.title}</h3>
+                                                    <h3 className="text-lg font-semibold mb-2 line-clamp-2 dark:text-white">{post.title}</h3>
                                                     <p className="text-red-500 font-semibold mb-2">{post.price.toLocaleString('vi-VN')} đ</p>
-                                                    <p className="text-gray-600 mb-2 flex items-center">
+                                                    <p className="text-gray-600 mb-2 flex items-center dark:text-white">
                                                         <FaMapMarkerAlt className="mr-1" /> {post.location}
                                                     </p>
-                                                    <p className="text-gray-600 mb-2">{shortDescription}</p>
+                                                    <p className="text-gray-600 mb-2 dark:text-white">{shortDescription}</p>
                                                     <div className="mt-auto flex justify-between items-center border-t pt-2">
                                                         <div className="flex items-center gap-3">
                                                             {post.User?.profilePicture ? (
@@ -272,10 +272,10 @@ const ServicePostList = () => {
                                                                 </div>
                                                             )}
                                                             <div className="flex flex-col">
-                                                                <span className="text-black font-semibold">
+                                                                <span className="text-black font-semibold dark:text-white">
                                                                     {post.User?.name || 'Chưa xác định'}
                                                                 </span>
-                                                                <span className="text-gray-500">đã đăng lên</span>
+                                                                <span className="text-gray-500 dark:text-white">đã đăng lên</span>
                                                             </div>
                                                         </div>
                                                         <div className="flex justify-end items-center gap-3 text-2xl">
@@ -298,9 +298,9 @@ const ServicePostList = () => {
                                                                 className="text-2xl"
                                                             >
                                                                 {isSaved ? (
-                                                                    <FaHeart className="text-red-500" />
+                                                                    <FaHeart className="text-red-500 dark:text-white" />
                                                                 ) : (
-                                                                    <FaRegHeart className="text-gray-600" />
+                                                                    <FaRegHeart className="text-gray-600 dark:text-white" />
                                                                 )}
                                                             </button>
                                                         </div>
@@ -422,7 +422,7 @@ const ServicePostList = () => {
                     </div>
 
                     <div className="w-1/4 pl-4">
-                        <div className="bg-white p-4 rounded shadow mb-4">
+                        <div className="bg-white p-4 rounded shadow mb-4 dark:bg-gray-800 dark:text-white">
                             <h3 className="font-bold mb-2">Lọc theo khoảng giá</h3>
                             <ul>
                                 {[
@@ -440,7 +440,7 @@ const ServicePostList = () => {
                                 ))}
                             </ul>
                         </div>
-                        <div className="bg-white p-4 rounded shadow">
+                        <div className="bg-white p-4 rounded shadow dark:bg-gray-800 dark:text-white">
                             <h3 className="font-bold mb-2">Lọc theo thời gian</h3>
                             <ul>
                                 {['Mới nhất', 'Cũ nhất', 'Gần đây'].map((item, index) => (

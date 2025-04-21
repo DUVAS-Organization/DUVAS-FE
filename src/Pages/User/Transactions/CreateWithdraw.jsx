@@ -82,10 +82,10 @@ const WithdrawPage = () => {
 
     return (
         <Layout showNavbar={false} showSidebar={true}>
-            <div className="max-w-6xl mx-auto p-4 space-y-6">
+            <div className="max-w-6xl mx-auto p-4 space-y-6 ">
                 {/* CreateWithdraw Section */}
-                <div className="bg-white p-6 rounded-lg shadow-md">
-                    <h1 className="text-2xl font-bold mb-5 border-b-2 pb-2 border-gray-700">Tạo đơn rút tiền</h1>
+                <div className="bg-white p-6 rounded-lg shadow-md dark:bg-gray-800 dark:text-white">
+                    <h1 className="text-2xl font-bold mb-5 border-b-2 pb-2 border-gray-700 dark:text-white">Tạo đơn rút tiền</h1>
 
                     {/* Success & Error Messages */}
                     {message && <p className="text-green-600 bg-green-100 p-3 rounded">{message}</p>}
@@ -94,12 +94,12 @@ const WithdrawPage = () => {
                     <form onSubmit={handleWithdraw} className="space-y-4">
                         {/* Amount Input */}
                         <div>
-                            <label className="block text-gray-700 font-semibold mb-1">Số tiền cần rút:</label>
+                            <label className="block text-gray-700 font-semibold mb-1 dark:text-white">Số tiền cần rút:</label>
                             <input
                                 type="number"
                                 value={amount}
                                 onChange={(e) => setAmount(e.target.value)}
-                                className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-red-500"
+                                className="w-full dark:bg-gray-800 dark:text-white p-2 border rounded focus:outline-none focus:ring-2 focus:ring-red-500"
                                 placeholder="Nhập số tiền"
                                 min="1000"
                                 required
@@ -108,11 +108,11 @@ const WithdrawPage = () => {
 
                         {/* Bank Account Dropdown */}
                         <div>
-                            <label className="block text-gray-700 font-semibold mb-1">Chọn tài khoản ngân hàng:</label>
+                            <label className="block text-gray-700 font-semibold mb-1 dark:text-white">Chọn tài khoản ngân hàng:</label>
                             <select
                                 value={selectedBank}
                                 onChange={(e) => setSelectedBank(e.target.value)}
-                                className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-red-500"
+                                className="w-full p-2 dark:bg-gray-800 dark:text-white border rounded focus:outline-none focus:ring-2 focus:ring-red-500"
                                 required
                             >
                                 <option value="">Chọn tài khoản</option>
@@ -140,12 +140,12 @@ const WithdrawPage = () => {
                 </div>
 
                 {/* WithdrawTransaction Section */}
-                <div className="bg-white p-6 rounded-lg shadow-md">
-                    <h1 className="text-2xl font-bold mb-5 border-b-2 pb-2 border-gray-700">Lịch sử rút tiền</h1>
+                <div className="bg-white p-6 rounded-lg shadow-md dark:bg-gray-800 dark:text-white">
+                    <h1 className="text-2xl font-bold mb-5 border-b-2 pb-2 border-gray-700 dark:text-white">Lịch sử rút tiền</h1>
                     <div className="flex justify-center">
                         <div className="overflow-x-auto">
-                            <table className="min-w-full bg-white border border-gray-300 shadow-md rounded-lg">
-                                <thead className="bg-gray-200">
+                            <table className="min-w-full bg-white border border-gray-300 shadow-md rounded-lg dark:bg-gray-800 dark:text-white">
+                                <thead className="bg-gray-200 dark:bg-gray-800 dark:text-white">
                                     <tr>
                                         <th className="p-3 border">STT</th>
                                         <th className="p-3 border">Ngân hàng</th>
@@ -160,7 +160,7 @@ const WithdrawPage = () => {
                                 <tbody>
                                     {currentItems.length > 0 ? (
                                         currentItems.map((transaction, index) => (
-                                            <tr key={transaction.id} className="hover:bg-gray-100">
+                                            <tr key={transaction.id} className="hover:bg-gray-100 dark:hover:text-black">
                                                 <td className="p-3 border text-center">{indexOfFirstItem + index + 1}</td>
                                                 <td className="p-3 border">{transaction.bankCode}</td>
                                                 <td className="px-4 py-2 border">{transaction.accountNumber}</td>

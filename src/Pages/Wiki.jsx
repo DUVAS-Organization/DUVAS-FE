@@ -2,12 +2,12 @@ import Footer from "../Components/Layout/Footer";
 
 const Wiki = () => {
     return (
-        <div className="bg-white text-gray-800">
+        <div className="bg-white text-gray-800 dark:bg-gray-800 dark:text-white">
             <div className=" max-w-6xl mx-auto px-4 pt-8">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Main Content */}
                     <div className="lg:col-span-2">
-                        <h1 className="text-3xl font-bold text-gray-800 mb-4">
+                        <h1 className="text-3xl font-bold text-gray-800 mb-4 dark:text-white">
                             Hướng Dẫn Thuê Phòng Ở Trang Web Duvas.com.vn
                         </h1>
                         {/* <ul className="list-disc list-inside text-red-600 mb-8">
@@ -17,7 +17,7 @@ const Wiki = () => {
                             <li>Liên hệ và hỗ trợ khách hàng</li>
                             <li>Đánh giá và phản hồi trải nghiệm</li>
                         </ul> */}
-                        <h2 className="text-2xl font-bold text-gray-800 mb-4">
+                        <h2 className="text-2xl font-bold text-gray-800 mb-4 dark:text-white">
                             Bước 1: Xác định ngân sách, địa điểm, nhu cầu
                         </h2>
                         <p className="mb-4">
@@ -33,7 +33,7 @@ const Wiki = () => {
                                 Xem Video Hướng Dẫn
                             </a>
                         </div> */}
-                        <h2 className="text-2xl font-bold text-gray-800 mb-4">
+                        <h2 className="text-2xl font-bold text-gray-800 mb-4 dark:text-white">
                             Bước 2: Tìm kiếm phòng phù hợp với yêu cầu
                         </h2>
                         <p className="mb-4">
@@ -50,7 +50,7 @@ const Wiki = () => {
                                 Xem Hướng Dẫn Tìm Kiếm
                             </a>
                         </div> */}
-                        <h2 className="text-2xl font-bold text-gray-800 mb-4">
+                        <h2 className="text-2xl font-bold text-gray-800 mb-4 dark:text-white">
                             Bước 3: Gửi yêu cầu thuê và chờ chủ nhà chấp nhận
                         </h2>
                         <p className="mb-4">
@@ -63,7 +63,7 @@ const Wiki = () => {
                                 Xem Hướng Dẫn Đăng Ký &amp; Đăng Nhập
                             </a>
                         </div> */}
-                        <h2 className="text-2xl font-bold text-gray-800 mb-4">
+                        <h2 className="text-2xl font-bold text-gray-800 mb-4 dark:text-white">
                             Bước 4: Liên hệ với chủ nhà để ký hợp đồng thông qua tính năng nhắn tin
                         </h2>
                         <p className="mb-4">
@@ -82,7 +82,7 @@ const Wiki = () => {
                                 Xem Hướng Dẫn Liên Hệ
                             </a>
                         </div> */}
-                        <h2 className="text-2xl font-bold text-gray-800 mb-4">
+                        <h2 className="text-2xl font-bold text-gray-800 mb-4 dark:text-white">
                             Bước 5: Đọc kỹ hợp đồng và các điều khoản
                         </h2>
                         <p className="mb-4">
@@ -99,7 +99,7 @@ const Wiki = () => {
                                 Gửi Phản Hồi
                             </a>
                         </div> */}
-                        <h2 className="text-2xl font-bold text-gray-800 mb-4">
+                        <h2 className="text-2xl font-bold text-gray-800 mb-4 dark:text-white">
                             Bước 6: Nạp tiền và nhấn xác nhận thuê phòng để hoàn tất mọi thủ tục
                         </h2>
                         <p className="mb-4">
@@ -115,7 +115,7 @@ const Wiki = () => {
                                 Gửi Phản Hồi
                             </a>
                         </div> */}
-                        <h2 className="text-2xl font-bold text-gray-800 mb-4">
+                        <h2 className="text-2xl font-bold text-gray-800 mb-4 dark:text-white">
                             Bước 7: Báo cáo với chủ nhà hoặc Admin nếu có vấn đề
                         </h2>
                         <p className="mb-4">
@@ -150,14 +150,14 @@ const Wiki = () => {
                     <div className="sticky top-0">
                         <div className="mb-8">
                             <div className="flex space-x-2 mb-4">
-                                <button className="bg-gray-200 text-gray-800 px-4 py-2 rounded-full">
+                                <button className="bg-gray-200 text-gray-800 px-4 py-2 rounded-full dark:bg-gray-800 dark:text-white">
                                     Hướng dẫn sử dụng
                                 </button>
-                                <button className="bg-gray-200 text-gray-800 px-4 py-2 rounded-full">
+                                <button className="bg-gray-200 text-gray-800 px-4 py-2 rounded-full dark:bg-gray-800 dark:text-white">
                                     Tin tức mới
                                 </button>
                             </div>
-                            <div className="bg-white p-4 shadow rounded-lg">
+                            <div className="bg-white p-4 shadow rounded-lg dark:bg-gray-800 dark:text-white">
                                 <h3 className="font-bold mb-4">Bài viết được xem nhiều nhất</h3>
                                 <ul className="list-decimal list-inside">
                                     <li className="mb-2">

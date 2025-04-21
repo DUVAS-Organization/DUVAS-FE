@@ -349,65 +349,65 @@ export default function RentalList() {
     </div>;
 
     return (
-        <div className="bg-white">
+        <div className="bg-white dark:bg-gray-800 dark:text-white">
             <SidebarUser />
             <div className="mx-auto ml-56 max-w-6xl px-4 sm:px-6 lg:px-0">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div className="col-span-1 bg-white p-4 rounded-xl shadow-lg">
-                        <h2 className="text-2xl font-bold text-black mb-4">Danh sách phòng</h2>
+                    <div className="col-span-1 bg-white p-4 rounded-xl shadow-lg dark:bg-gray-800 ">
+                        <h2 className="text-2xl font-bold text-black mb-4 dark:text-white">Danh sách phòng</h2>
 
                         <h3 className="text-lg font-bold text-yellow-600 mb-2">Đang chờ giao dịch</h3>
                         {pendingRentals.length > 0 ? pendingRentals.map(room => (
                             <motion.div key={room.rentalId} whileHover={{ scale: 1.05 }}
-                                className={`p-4 border rounded-xl cursor-pointer mb-3 transition ${selectedRoom?.rentalList?.rentalId === room.rentalId ? 'bg-yellow-300' : 'bg-gray-50 hover:bg-yellow-200'}`}
+                                className={`p-4 dark:bg-gray-800 dark:text-white border rounded-xl cursor-pointer mb-3 transition ${selectedRoom?.rentalList?.rentalId === room.rentalId ? 'bg-yellow-300' : 'bg-gray-50 hover:bg-yellow-200'}`}
                                 onClick={() => handleSelectRental(room.rentalId)}>
                                 <p className="font-semibold text-yellow-700">Phòng #{room.roomId}</p>
                                 <p>Ngày thuê: {new Date(room.rentDate).toLocaleDateString()}</p>
                             </motion.div>
-                        )) : <p className="text-gray-500">Không có phòng nào đang chờ giao dịch.</p>}
+                        )) : <p className="text-gray-500 dark:text-white">Không có phòng nào đang chờ giao dịch.</p>}
 
                         <h3 className="text-lg font-bold text-orange-600 mt-4 mb-2">Chờ Chủ phòng xác nhận</h3>
                         {waitingLandlordRentals.length > 0 ? waitingLandlordRentals.map(room => (
                             <motion.div key={room.rentalId} whileHover={{ scale: 1.05 }}
-                                className={`p-4 border rounded-xl cursor-pointer mb-3 transition ${selectedRoom?.rentalList?.rentalId === room.rentalId ? 'bg-orange-300' : 'bg-gray-50 hover:bg-orange-200'}`}
+                                className={`p-4 border dark:bg-gray-800 dark:text-white rounded-xl cursor-pointer mb-3 transition ${selectedRoom?.rentalList?.rentalId === room.rentalId ? 'bg-orange-300' : 'bg-gray-50 hover:bg-orange-200'}`}
                                 onClick={() => handleSelectRental(room.rentalId)}>
                                 <p className="font-semibold text-orange-700">Phòng #{room.roomId}</p>
                                 <p>Ngày thuê: {new Date(room.rentDate).toLocaleDateString()}</p>
                             </motion.div>
-                        )) : <p className="text-gray-500">Không có phòng nào chờ chủ phòng xác nhận.</p>}
+                        )) : <p className="text-gray-500 dark:text-white">Không có phòng nào chờ chủ phòng xác nhận.</p>}
 
                         <h3 className="text-lg font-bold text-blue-700 mt-4 mb-2">Đang thuê</h3>
                         {rentingRooms.length > 0 ? rentingRooms.map(room => (
                             <motion.div key={room.rentalId} whileHover={{ scale: 1.05 }}
-                                className={`p-4 border rounded-xl cursor-pointer mb-3 transition ${selectedRoom?.rentalList?.rentalId === room.rentalId ? 'bg-blue-300' : 'bg-gray-50 hover:bg-blue-200'}`}
+                                className={`p-4 border dark:bg-gray-800 dark:text-white rounded-xl cursor-pointer mb-3 transition ${selectedRoom?.rentalList?.rentalId === room.rentalId ? 'bg-blue-300' : 'bg-gray-50 hover:bg-blue-200'}`}
                                 onClick={() => handleSelectRental(room.rentalId)}>
                                 <p className="font-semibold text-blue-700">Phòng #{room.roomId}</p>
                                 <p>Ngày thuê: {new Date(room.rentDate).toLocaleDateString()}</p>
                             </motion.div>
-                        )) : <p className="text-gray-500">Không có phòng nào đang thuê.</p>}
+                        )) : <p className="text-gray-500 dark:text-white">Không có phòng nào đang thuê.</p>}
 
                         <h3 className="text-lg font-bold text-green-700 mt-4 mb-2">Đã thuê</h3>
                         {rentedRooms.length > 0 ? rentedRooms.map(room => (
                             <motion.div key={room.rentalId} whileHover={{ scale: 1.05 }}
-                                className={`p-4 border rounded-xl cursor-pointer mb-3 transition ${selectedRoom?.rentalList?.rentalId === room.rentalId ? 'bg-green-300' : 'bg-gray-50 hover:bg-green-200'}`}
+                                className={`p-4 border dark:bg-gray-800 dark:text-white rounded-xl cursor-pointer mb-3 transition ${selectedRoom?.rentalList?.rentalId === room.rentalId ? 'bg-green-300' : 'bg-gray-50 hover:bg-green-200'}`}
                                 onClick={() => handleSelectRental(room.rentalId)}>
                                 <p className="font-semibold text-green-700">Phòng #{room.roomId}</p>
                                 <p>Ngày thuê: {new Date(room.rentDate).toLocaleDateString()}</p>
                             </motion.div>
-                        )) : <p className="text-gray-500">Không có phòng nào đã thuê.</p>}
+                        )) : <p className="text-gray-500 dark:text-white">Không có phòng nào đã thuê.</p>}
 
                         <h3 className="text-lg font-bold text-red-700 mt-4 mb-2">Đã hủy</h3>
                         {cancelledRooms.length > 0 ? cancelledRooms.map(room => (
                             <motion.div key={room.rentalId} whileHover={{ scale: 1.05 }}
-                                className={`p-4 border rounded-xl cursor-pointer mb-3 transition ${selectedRoom?.rentalList?.rentalId === room.rentalId ? 'bg-red-300' : 'bg-gray-50 hover:bg-red-200'}`}
+                                className={`p-4 border dark:bg-gray-800 dark:text-white rounded-xl cursor-pointer mb-3 transition ${selectedRoom?.rentalList?.rentalId === room.rentalId ? 'bg-red-300' : 'bg-gray-50 hover:bg-red-200'}`}
                                 onClick={() => handleSelectRental(room.rentalId)}>
                                 <p className="font-semibold text-red-700">Phòng #{room.roomId}</p>
                                 <p>Ngày thuê: {new Date(room.rentDate).toLocaleDateString()}</p>
                             </motion.div>
-                        )) : <p className="text-gray-500">Không có phòng nào đã bị hủy.</p>}
+                        )) : <p className="text-gray-500 dark:text-white">Không có phòng nào đã bị hủy.</p>}
                     </div>
 
-                    <div className="col-span-1 sm:col-span-2 lg:col-span-2 bg-white p-8 rounded-xl shadow-lg">
+                    <div className="col-span-1 sm:col-span-2 lg:col-span-2 bg-white p-8 rounded-xl shadow-lg dark:bg-gray-800 dark:text-white">
                         {selectedRoom ? (
                             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                                 <img
@@ -416,37 +416,37 @@ export default function RentalList() {
                                     className="w-full h-52 object-cover rounded-xl mb-4"
                                 />
                                 <h2 className="text-2xl font-bold text-red-600 mb-2">{selectedRoom.room?.title || "Không có tiêu đề"}</h2>
-                                <p className="text-lg font-semibold flex items-center">
+                                <p className="text-lg font-semibold flex items-center dark:bg-gray-800 dark:text-white">
                                     <FaMoneyBillWave className="text-green-600 mr-2" />
                                     Giá: {selectedRoom.room?.price ? selectedRoom.room.price.toLocaleString("vi-VN", { style: "currency", currency: "VND" }) : "Chưa cập nhật"}
                                 </p>
-                                <p className="text-gray-700 flex items-center">
+                                <p className="text-gray-700 flex items-center dark:bg-gray-800 dark:text-white">
                                     <FaMapMarkerAlt className="text-green-600 mr-2" />
                                     Địa chỉ: {selectedRoom.room?.locationDetail || "Chưa cập nhật"}
                                 </p>
-                                <p className="text-gray-700 flex items-center">
+                                <p className="text-gray-700 flex items-center dark:bg-gray-800 dark:text-white">
                                     <FaCalendarAlt className="text-gray-500 mr-2" />
                                     Ngày thuê: {selectedRoom.rentalList?.rentDate ? new Date(selectedRoom.rentalList.rentDate).toLocaleDateString() : "Chưa cập nhật"}
                                 </p>
-                                <p className="text-gray-700 flex items-center">
+                                <p className="text-gray-700 flex items-center dark:bg-gray-800 dark:text-white">
                                     <FaCalendarAlt className="text-gray-500 mr-2" />
                                     Ngày hết hạn: {selectedRoom.contract?.rentalDateTimeEnd ? new Date(selectedRoom.contract.rentalDateTimeEnd).toLocaleDateString() : "Chưa cập nhật"}
                                 </p>
-                                <p className="text-gray-700 flex items-center">
+                                <p className="text-gray-700 flex items-center dark:bg-gray-800 dark:text-white">
                                     <FaFileContract className="text-red-600 mr-2" />
                                     Trạng thái hợp đồng: {selectedRoom.contract?.status === 4 ? "Đang chờ giao dịch" :
                                         selectedRoom.contract?.status === 1 ? "Đang thuê" :
                                             selectedRoom.contract?.status === 3 ? "Đã thuê" :
                                                 selectedRoom.contract?.status === 2 ? "Đã hủy" :
                                                     selectedRoom.contract?.status === undefined && selectedRoom.rentalList?.rentalStatus === 1 && selectedRoom.room?.status === 1 ?
-                                                        <span className='text-gray-500 ml-0.5'>Chờ Chủ phòng xác nhận</span> : <span className='text-gray-500 ml-0.5'>Không xác định</span>}
+                                                        <span className='text-gray-500 ml-0.5 dark:text-white'>Chờ Chủ phòng xác nhận</span> : <span className='text-gray-500 ml-0.5'>Không xác định</span>}
                                 </p>
-                                <p className="text-gray-700 flex items-center">
+                                <p className="text-gray-700 flex items-center dark:bg-gray-800 dark:text-white">
                                     <FaFileContract className="text-red-600 mr-2" />
                                     Hợp đồng: {selectedRoom.contract?.contractFile ? (
                                         <a href={selectedRoom.contract.contractFile} className="text-blue-500 underline ml-2" target="_blank" rel="noopener noreferrer">Xem hợp đồng</a>
                                     ) : selectedRoom.contract?.status === undefined && selectedRoom.rentalList?.rentalStatus === 1 && selectedRoom.room?.status === 1 ?
-                                        <span className='text-gray-500 ml-0.5'>Chờ Chủ phòng tạo hợp đồng</span> : <span className='text-gray-500 ml-0.5'>Không có hợp đồng</span>}
+                                        <span className='text-gray-500 ml-0.5 dark:text-white'>Chờ Chủ phòng tạo hợp đồng</span> : <span className='text-gray-500 ml-0.5'>Không có hợp đồng</span>}
                                 </p>
                                 {selectedRoom.contract?.status === 3 && (
                                     <div className="mt-4 flex space-x-4">
@@ -488,7 +488,7 @@ export default function RentalList() {
                                 )}
                             </motion.div>
                         ) : (
-                            <p className="text-center text-gray-500">Chọn một phòng để xem chi tiết</p>
+                            <p className="text-center text-gray-500 dark:bg-gray-800 dark:text-white">Chọn một phòng để xem chi tiết</p>
                         )}
                     </div>
                 </div>

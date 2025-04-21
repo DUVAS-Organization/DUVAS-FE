@@ -7,12 +7,12 @@ const FAQItem = ({ question, answer }) => {
     const [isOpen, setIsOpen] = useState(false);
 
     return (
-        <div className=" px-4 py-2 transition-all duration-300">
+        <div className=" px-4 py-2 transition-all duration-300 ">
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className="flex items-center justify-between w-full text-left focus:outline-none"
             >
-                <span className="text-base font-medium text-gray-800">{question}</span>
+                <span className="text-base font-medium text-gray-800 dark:text-white">{question}</span>
                 <motion.span
                     animate={{ rotate: isOpen ? 180 : 0 }}
                     transition={{ duration: 0.3 }}
@@ -27,7 +27,7 @@ const FAQItem = ({ question, answer }) => {
                 transition={{ duration: 0.3, ease: "easeInOut" }}
                 className="overflow-hidden"
             >
-                <div className="mt-2 text-gray-600">{answer}</div>
+                <div className="mt-2 text-gray-600 dark:text-gray-400">{answer}</div>
             </motion.div>
         </div>
     );
