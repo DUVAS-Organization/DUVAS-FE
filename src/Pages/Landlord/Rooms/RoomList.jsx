@@ -282,6 +282,7 @@ const RoomList = () => {
     const handleSelectRoom = (roomId) => {
         setSelectedRooms((prev) => {
             const newSelection = prev.includes(roomId) ? prev.filter((id) => id !== roomId) : [...prev, roomId];
+            console.log(newSelection);
             return newSelection;
         });
     };
@@ -341,7 +342,7 @@ const RoomList = () => {
 
     if (loading) {
         return (
-            <div className="bg-white p-4">
+            <div className="bg-white p-4 dark:bg-gray-800 dark:text-white">
                 <Loading />
             </div>
         );
@@ -350,35 +351,35 @@ const RoomList = () => {
     return (
         <div>
             <SidebarUser />
-            <Box className="max-w-7xl mx-auto ml-56" sx={{ flexGrow: 1 }}>
+            <Box className="max-w-7xl mx-auto ml-56 dark:bg-gray-800 dark:text-white" sx={{ flexGrow: 1 }}>
                 <div className="pt-6 mb-4 flex flex-wrap space-x-4 items-center">
                     <button
                         onClick={() => handleFilterByStatus(null)}
-                        className={`px-4 py-2 rounded ${activeStatus === null ? 'bg-red-500 text-white' : 'bg-gray-200'}`}
+                        className={`px-4 py-2 rounded ${activeStatus === null ? 'bg-red-500 text-white' : 'bg-gray-200 dark:bg-gray-800 dark:text-white'}`}
                     >
                         Tất cả
                     </button>
                     <button
                         onClick={() => handleFilterByStatus(1)}
-                        className={`px-4 py-2 rounded ${activeStatus === 1 ? 'bg-red-500 text-white' : 'bg-gray-200'}`}
+                        className={`px-4 py-2 rounded ${activeStatus === 1 ? 'bg-red-500 text-white' : 'bg-gray-200 dark:bg-gray-800 dark:text-white'}`}
                     >
                         Phòng đang trống
                     </button>
                     <button
                         onClick={() => handleFilterByStatus(2)}
-                        className={`px-4 py-2 rounded ${activeStatus === 2 ? 'bg-red-500 text-white' : 'bg-gray-200'}`}
+                        className={`px-4 py-2 rounded ${activeStatus === 2 ? 'bg-red-500 text-white' : 'bg-gray-200 dark:bg-gray-800 dark:text-white'}`}
                     >
                         Phòng chờ giao dịch
                     </button>
                     <button
                         onClick={() => handleFilterByStatus(4)}
-                        className={`px-4 py-2 rounded ${activeStatus === 4 ? 'bg-red-500 text-white' : 'bg-gray-200'}`}
+                        className={`px-4 py-2 rounded ${activeStatus === 4 ? 'bg-red-500 text-white' : 'bg-gray-200 dark:bg-gray-800 dark:text-white'}`}
                     >
                         Phòng chờ xác nhận
                     </button>
                     <button
                         onClick={() => handleFilterByStatus(3)}
-                        className={`px-4 py-2 rounded ${activeStatus === 3 ? 'bg-red-500 text-white' : 'bg-gray-200'}`}
+                        className={`px-4 py-2 rounded ${activeStatus === 3 ? 'bg-red-500 text-white' : 'bg-gray-200 dark:bg-gray-800 dark:text-white'}`}
                     >
                         Phòng đang cho thuê
                     </button>
@@ -408,7 +409,7 @@ const RoomList = () => {
                     )}
                 </div>
                 {cards.length === 0 ? (
-                    <p className="text-black font-semibold text-center">
+                    <p className="text-black font-semibold text-center dark:text-white">
                         {activeStatus === null
                             ? "Bạn hiện không có phòng nào trong hệ thống."
                             : `Không có phòng nào đang ${getStatusName(activeStatus)}.`}
@@ -429,7 +430,7 @@ const RoomList = () => {
                             return (
                                 <Grid key={`${card.roomId}-${card.booking ? card.booking.rentalId : 'null'}`} item xs={12} sm={6} md={4}>
                                     <Item onClick={() => navigate(`/Rooms/Contract/${card.roomId}/${card.booking ? card.booking.rentalId : 'null'}`)}>
-                                        <div className="flex flex-col h-full">
+                                        <div className="flex flex-col h-full dark:bg-gray-800 dark:text-white">
                                             <div className="relative">
                                                 <img
                                                     className={`rounded-t-lg shadow-md overflow-hidden w-full h-48 object-cover ${card.isPermission === 0 ? 'opacity-30' : ''}`}
@@ -478,19 +479,19 @@ const RoomList = () => {
                                                     </div>
                                                 )}
                                             </div>
-                                            <div className="flex flex-col flex-grow p-2 justify-between max-h-[355px]">
-                                                <p className="text-black text-base font-semibold truncate max-w-[250px]">
+                                            <div className="flex flex-col flex-grow p-2 justify-between max-h-[355px] ">
+                                                <p className="text-black text-base font-semibold truncate max-w-[250px] dark:text-white">
                                                     {card.title}
                                                 </p>
-                                                <p className="text-gray-600 flex items-center mt-1 text-sm truncate max-w-[250px]">
+                                                <p className="text-gray-600 flex items-center mt-1 text-sm truncate max-w-[250px] dark:text-white">
                                                     <FaMapMarkerAlt className="absolute" />
                                                     <span className="ml-5">
                                                         {card.locationDetail || 'Vị trí không xác định'}
                                                     </span>
                                                 </p>
-                                                <p className="text-gray-600 text-sm mt-1 flex items-center">
+                                                <p className="text-gray-600 text-sm mt-1 flex items-center dark:text-white">
                                                     <FaChartArea className="mr-1" />
-                                                    Diện tích: <span className="text-gray-800">{card.acreage || 'N/A'}</span> m²
+                                                    Diện tích: <span className="text-gray-800 dark:text-white">{card.acreage || 'N/A'}</span> m²
                                                 </p>
                                                 <p className="text-red-500 font-medium text-base mt-1">
                                                     {card.price ? `${card.price.toLocaleString('vi-VN')} đ/tháng` : 'Thỏa thuận'}

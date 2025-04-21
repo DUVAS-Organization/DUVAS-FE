@@ -113,28 +113,36 @@ const RoomDetails = () => {
             {/* Bố cục 2 cột: hiển thị các trường thông tin */}
             <div className="grid grid-cols bg-white shadow-xl rounded-lg py-5 px-10 ">
                 <div className="text-left space-y-4">
-                    <div className="grid grid-cols-3 gap-6">
-                        <p className="text-lg font-medium">
-                            <strong>Tiêu Đề: </strong> {room.title}
+                    <div className="grid grid-cols-1 gap-6">
+                        <p className="text-base font-medium text-justify">
+                            <strong className='text-lg'>Tiêu Đề: </strong> {room.title}
                         </p>
+                    </div>
+                    <div className="grid grid-cols-1 gap-6">
+                        <p className="text-lg font-medium">
+                            <strong>Địa chỉ:</strong> {room.locationDetail}
+                        </p>
+                    </div>
+                    <div className="grid grid-cols-3 gap-6">
                         <p className="text-lg font-medium">
                             <strong>Tòa Nhà:</strong> {getBuildingName(room.buildingId)}
                         </p>
                         <p className="text-lg font-medium">
                             <strong>Giá (đ/tháng):</strong> {room.price.toLocaleString('vi-VN')} đ
                         </p>
-
-                    </div>
-                    <div className="grid grid-cols-3 gap-6">
-                        <p className="text-lg font-medium">
-                            <strong>Địa chỉ:</strong> {room.locationDetail}
-                        </p>
                         <p className="text-lg font-medium">
                             <strong>Diện tích (m²):</strong> {room.acreage}
                         </p>
-
+                    </div>
+                    <div className="grid grid-cols-3 gap-6">
                         <p className="text-lg font-medium">
                             <strong>Loại Phòng:</strong> {getCategoryName(room.categoryRoomId)}
+                        </p>
+                        <p className="text-lg font-medium">
+                            <strong>Gác Xếp:</strong> {room.garret ? 'Có' : 'Không'}
+                        </p>
+                        <p className="text-lg font-medium">
+                            <strong>Nội thất:</strong> {room.furniture}
                         </p>
                     </div>
                     <div className="grid grid-cols-3 gap-6">
@@ -144,17 +152,13 @@ const RoomDetails = () => {
                         <p className="text-lg font-medium">
                             <strong>Giường ngủ:</strong> {room.numberOfBedroom}
                         </p>
-                        <p className="text-lg font-medium">
-                            <strong>Gác Xếp:</strong> {room.garret ? 'Có' : 'Không'}
-                        </p>
+
                     </div>
-                    <div className="grid grid-cols-3 gap-6">
-                        <p className="text-lg font-medium">
-                            <strong>Mô tả:</strong> {room.description}
+                    <div className="grid grid-cols-1 gap-6">
+                        <p className="text-base font-medium text-justify">
+                            <strong className='text-lg'>Mô tả:</strong> {room.description}
                         </p>
-                        <p className="text-lg font-medium">
-                            <strong>Nội thất:</strong> {room.furniture}
-                        </p>
+
                         {/* <p className="text-lg font-medium">
                             <strong>Note:</strong> {room.note}
                         </p> */}

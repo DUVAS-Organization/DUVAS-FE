@@ -269,12 +269,16 @@ const Message = () => {
     }
   }, [currentUserId, selectedConversation]);
 
-  // Khi nhận được tin nhắn mới từ phía BE, load lại danh sách hội thoại để cập nhật tin nhắn mới nhất cho sidebar
+  // Gọi fetchConversations mỗi 1 giây
   useEffect(() => {
     if (currentUserId) {
-      fetchConversations();
+      const interval = setInterval(() => {
+        fetchConversations();
+      }, 1000); // Gọi API mỗi 1 giây
+
+      return () => clearInterval(interval); // Dọn dẹp interval khi component unmount
     }
-  }, [conversationMessages, currentUserId]);
+  }, [currentUserId]);
 
   // Auto scroll xuống cuối danh sách tin nhắn khi có tin nhắn mới
   useEffect(() => {
@@ -341,7 +345,7 @@ const Message = () => {
   });
 
   return (
-    <div className="flex h-[90vh] bg-white text-black">
+    <div className="flex h-[90vh] bg-white text-black dark:bg-gray-800 dark:text-white">
       {/* SIDEBAR bên trái: Danh sách hội thoại */}
       <div className="w-1/4 border-r border-gray-300 flex flex-col">
         <div className="p-4 border-b">
@@ -359,12 +363,12 @@ const Message = () => {
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-2">
-          {isLoading && <Loading />}
+          {/* {isLoading && <Loading />} */}
           {filteredConversations.length > 0 ? (
             filteredConversations.map((conv, index) => (
               <div
                 key={index}
-                className="flex items-center space-x-3 hover:bg-gray-100 p-2 rounded cursor-pointer"
+                className="flex items-center space-x-3 hover:bg-gray-100 dark:hover:bg-gray-500 dark:hover:text-black p-2 rounded cursor-pointer"
                 onClick={() =>
                   handleSelectConversation(
                     conv.userGetID,
@@ -379,7 +383,7 @@ const Message = () => {
                   <div className="font-bold">
                     {conv.partnerName || `User ${conv.userGetID}`}
                   </div>
-                  <div className="text-sm text-gray-500 truncate max-w-[300px]">
+                  <div className="text-sm text-gray-500 dark:text-white truncate max-w-[300px]">
                     {conv.latestMessageContent || ""}
                   </div>
                 </div>
@@ -400,7 +404,7 @@ const Message = () => {
               <div className="font-bold">
                 {selectedPartnerName || "Chọn cuộc trò chuyện"}
               </div>
-              <div className="text-sm text-gray-500">
+              <div className="text-sm text-gray-500 dark:text-white">
                 {selectedPartnerIsActive ? "Đang hoạt động" : "Không hoạt động"}
               </div>
             </div>
@@ -417,7 +421,7 @@ const Message = () => {
                     className={`flex ${isMine ? "justify-end" : "justify-start"} mb-2`}
                   >
                     <div
-                      className={`max-w-[400px] p-3 rounded-lg break-words whitespace-pre-wrap ${isMine ? "bg-blue-200" : "bg-gray-200"
+                      className={`max-w-[400px] p-3 rounded-lg break-words whitespace-pre-wrap ${isMine ? "bg-blue-200 dark:bg-gray-500 dark:text-white" : "bg-gray-200 "
                         }`}
                     >
                       <div className="text-xs text-gray-400 mb-1">
@@ -458,7 +462,7 @@ const Message = () => {
           )}
           {isLoading && (
             <div className="flex justify-center items-center py-4">
-              <Loading />
+              {/* <Loading /> */}
             </div>
           )}
           <div ref={messagesEndRef} />
@@ -529,14 +533,14 @@ const Message = () => {
             <div className="font-bold text-base">
               {selectedPartnerName || "Người lạ"}
             </div>
-            <div className="text-sm text-gray-500">
+            <div className="text-sm text-gray-500 dark:text-white">
               {selectedPartnerIsActive ? "Đang hoạt động" : "Không hoạt động"}
             </div>
           </div>
         </div>
 
         <div className="flex flex-col space-y-3 mb-4">
-          <button
+          {/* <button
             className="flex items-center px-3 py-2 w-full rounded-full border text-gray-600 hover:bg-gray-100 transition"
             onClick={handleToggleMute}
           >
@@ -544,9 +548,9 @@ const Message = () => {
             <span className="text-base">
               {isMuted ? "Bật thông báo" : "Tắt thông báo"}
             </span>
-          </button>
+          </button> */}
           <button
-            className="flex items-center px-3 py-2 w-full rounded-full border text-gray-600 hover:bg-gray-100 transition"
+            className="flex items-center dark:bg-gray-800 dark:text-white px-3 py-2 w-full rounded-full border text-gray-600 hover:bg-gray-100 transition"
             onClick={handleToggleSearch}
           >
             <FaSearch className="mr-2" />
@@ -555,7 +559,7 @@ const Message = () => {
           {showSearchBox && (
             <div className="flex flex-col px-3">
               <input
-                className="mt-2 p-2 border rounded-md"
+                className="mt-2 p-2 dark:bg-gray-800 dark:text-white border rounded-md"
                 placeholder="Nhập từ khóa..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -564,14 +568,14 @@ const Message = () => {
           )}
         </div>
         <hr className="mb-4" />
-        <div className="flex flex-col space-y-2 text-sm text-gray-700">
-          <button className="text-left py-2 px-2 hover:bg-gray-100 rounded">
+        <div className="flex flex-col space-y-2 text-sm text-gray-700 dark:text-white">
+          <button className="text-left py-2 px-2 hover:bg-gray-100 rounded dark:hover:text-black">
             Xem tin nhắn đã ghim
           </button>
-          <button className="text-left py-2 px-2 hover:bg-gray-100 rounded">
+          <button className="text-left py-2 px-2 hover:bg-gray-100 rounded dark:hover:text-black">
             Đổi chủ đề
           </button>
-          <button className="text-left py-2 px-2 hover:bg-gray-100 rounded">
+          <button className="text-left py-2 px-2 hover:bg-gray-100 rounded dark:hover:text-black">
             File phương tiện & file
           </button>
         </div>

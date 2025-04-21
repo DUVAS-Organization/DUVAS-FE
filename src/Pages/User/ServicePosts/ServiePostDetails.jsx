@@ -224,9 +224,9 @@ const ServicePostDetails = () => {
             : 'N/A';
 
     return (
-        <div className="max-w-6xl mx-auto p-4 bg-white">
+        <div className="max-w-6xl mx-auto p-4 bg-white dark:bg-gray-800 dark:text-white">
             <div className="flex flex-col md:flex-row gap-4">
-                <div className="w-full md:w-3/4 bg-white p-4 rounded-lg shadow space-y-4">
+                <div className="w-full md:w-3/4 bg-white dark:bg-gray-800 dark:text-white p-4 rounded-lg shadow space-y-4">
                     {imagesArray.length > 0 && (
                         <div className="relative w-full h-96 overflow-hidden rounded-lg">
                             <img
@@ -274,10 +274,10 @@ const ServicePostDetails = () => {
                             </Swiper>
                         </div>
                     )}
-                    <h2 className="text-2xl font-bold text-gray-800">
+                    <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
                         {servicePost.title || 'Tiêu đề dịch vụ'}
                     </h2>
-                    <div className="text-gray-600 flex items-center mb-2">
+                    <div className="text-gray-600 flex items-center mb-2 dark:text-white">
                         <FaMapMarkerAlt className="mr-1" />
                         {servicePost.location}
                     </div>
@@ -285,7 +285,7 @@ const ServicePostDetails = () => {
                         <div className="flex items-center justify-between">
                             <div className="flex space-x-5">
                                 <div className="flex flex-col text-black text-lg">
-                                    <span className="font-semibold">Mức giá</span>
+                                    <span className="font-semibold dark:text-white">Mức giá</span>
                                     <span className="text-red-500 font-medium">
                                         {servicePost.price.toLocaleString('vi-VN')} đ
                                     </span>
@@ -299,9 +299,9 @@ const ServicePostDetails = () => {
                                     className="text-2xl"
                                 >
                                     {savedPosts.includes(parseInt(servicePostId)) ? (
-                                        <FaHeart className="text-red-500" />
+                                        <FaHeart className="text-red-500 dark:text-white" />
                                     ) : (
-                                        <FaRegHeart className="text-gray-600" />
+                                        <FaRegHeart className="text-gray-600 dark:text-white" />
                                     )}
                                 </button>
                             </div>
@@ -309,7 +309,7 @@ const ServicePostDetails = () => {
                     </div>
                     <div>
                         <h3 className="text-xl font-semibold mb-1">Mô tả</h3>
-                        <p className="text-gray-700">{servicePost.description}</p>
+                        <p className="text-gray-700 dark:text-white">{servicePost.description}</p>
                     </div>
                     <div className="flex items-center gap-x-2">
                         <p className="text-xl font-semibold">Liên hệ:</p>
@@ -319,7 +319,7 @@ const ServicePostDetails = () => {
                                 e.stopPropagation();
                                 setShowFullPhone(true);
                             }}
-                            className="text-base bg-white text-gray-800 px-2 mt-1 flex items-center gap-1"
+                            className="text-base bg-white text-gray-800 dark:bg-gray-800 dark:text-white px-2 mt-1 flex items-center gap-1"
                         >
                             {showFullPhone ? (
                                 userPhone
@@ -369,7 +369,7 @@ const ServicePostDetails = () => {
                     </div>
                 </div>
                 {/* Sidebar được khôi phục từ code cũ */}
-                <div className="w-full md:w-1/4 bg-white p-4 rounded-lg shadow space-y-4 sticky top-0">
+                <div className="w-full md:w-1/4 bg-white dark:bg-gray-800 dark:text-white p-4 rounded-lg shadow space-y-4 sticky top-0">
                     <div className="flex items-center gap-3">
                         {servicePost.User && servicePost.User.profilePicture ? (
                             <img
@@ -394,7 +394,7 @@ const ServicePostDetails = () => {
                                     e.stopPropagation();
                                     setShowFullPhone(true);
                                 }}
-                                className="text-sm text-black pr-2 py-1 rounded-lg flex gap-2"
+                                className="text-sm text-black pr-2 py-1 rounded-lg flex gap-2 dark:text-white"
                             >
                                 {showFullPhone ? (userPhone || 'N/A') : maskedPhone}
                             </button>
@@ -408,7 +408,7 @@ const ServicePostDetails = () => {
                             Yêu cầu dịch vụ
                         </button>
                     </div> */}
-                    <div className="bg-gray-100 py-3 rounded-md text-sm text-gray-600 leading-6">
+                    <div className="bg-gray-100 py-3 rounded-md text-sm text-gray-600 leading-6 dark:bg-gray-800 dark:text-white">
                         Hãy cho nhà cung cấp biết bạn thấy dịch vụ này trên <strong>DUVAS </strong>
                         bằng cách
                         <button

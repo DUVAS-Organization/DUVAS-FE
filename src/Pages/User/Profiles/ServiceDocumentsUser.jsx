@@ -58,11 +58,11 @@ const ServiceDocumentsUser = () => {
     }
 
     return (
-        <div className="bg-white">
+        <div className="bg-white dark:bg-gray-800 dark:text-white">
             <SidebarUser />
             <div className="p-6 ml-56 max-w-6xl mx-auto">
                 <h1 className="font-bold text-3xl mb-6 text-red-600">Thông tin giấy tờ Service</h1>
-                <div className="bg-white p-6 rounded-lg shadow-md border border-gray-300">
+                <div className="bg-white p-6 rounded-lg shadow-md border border-gray-300 dark:bg-gray-800 dark:text-white">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         <div className="flex gap-2 items-start">
                             <span className="font-semibold whitespace-nowrap">ID giấy phép:</span>

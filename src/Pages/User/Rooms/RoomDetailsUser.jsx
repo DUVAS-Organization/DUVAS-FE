@@ -326,9 +326,9 @@ const RoomDetailsUser = () => {
     };
     const PhoneAlertPopup = () => {
         return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-                <div className="bg-white p-6 rounded-lg max-w-sm w-full text-center">
-                    <p className="text-gray-800 mb-4">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 dark:bg-gray-800 dark:text-white">
+                <div className="bg-white p-6 rounded-lg max-w-sm w-full text-center dark:bg-gray-800 dark:text-white">
+                    <p className="text-gray-800 mb-4 dark:text-white">
                         Bạn chưa cập nhật số điện thoại hợp lệ. Vui lòng cập nhật số điện thoại trước khi đặt phòng.
                     </p>
                     <button
@@ -348,20 +348,21 @@ const RoomDetailsUser = () => {
         const today = new Date().toISOString().split('T')[0];
 
         return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-                <div className="bg-white p-6 rounded-lg w-full max-w-md">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50
+             dark:bg-gray-800 dark:text-white border dark:border-white dark:bg-opacity-50">
+                <div className="bg-white p-6 rounded-lg w-full max-w-md dark:bg-gray-800 dark:text-white">
                     <div className="flex justify-between items-center mb-4">
                         <h3 className="text-xl font-semibold">Thông tin thuê phòng</h3>
                         <button
                             onClick={() => setShowRentModal(false)}
-                            className="text-gray-600 hover:text-gray-800"
+                            className="text-gray-600 hover:text-gray-800 dark:text-white"
                         >
                             <FaTimes size={20} />
                         </button>
                     </div>
                     <form onSubmit={handleSubmitRentForm}>
                         <div className="mb-4">
-                            <label className="block text-gray-700 mb-2 font-semibold" style={{ fontFamily: 'Arial, sans-serif' }}>
+                            <label className="block text-gray-700 dark:text-white mb-2 font-semibold" style={{ fontFamily: 'Arial, sans-serif' }}>
                                 Họ và tên
                             </label>
                             <input
@@ -369,13 +370,13 @@ const RoomDetailsUser = () => {
                                 name="fullName"
                                 required
                                 readOnly
-                                className="w-full p-2 border rounded-md bg-gray-100"
+                                className="w-full dark:bg-gray-800 dark:text-white p-2 border rounded-md bg-gray-100"
                                 defaultValue={getUserName()}
                                 style={{ fontFamily: 'Arial, sans-serif' }}
                             />
                         </div>
                         <div className="mb-4">
-                            <label className="block text-gray-700 mb-2 font-semibold" style={{ fontFamily: 'Arial, sans-serif' }}>
+                            <label className="block text-gray-700 dark:text-white mb-2 font-semibold" style={{ fontFamily: 'Arial, sans-serif' }}>
                                 Số điện thoại
                             </label>
                             <input
@@ -383,13 +384,13 @@ const RoomDetailsUser = () => {
                                 name="phone"
                                 required
                                 readOnly
-                                className="w-full p-2 border rounded-md bg-gray-100"
+                                className="w-full dark:bg-gray-800 dark:text-white p-2 border rounded-md bg-gray-100"
                                 defaultValue={getUserPhone()}
                                 style={{ fontFamily: 'Arial, sans-serif' }}
                             />
                         </div>
                         <div className="mb-4">
-                            <label className="block text-gray-700 mb-2 font-semibold" style={{ fontFamily: 'Arial, sans-serif' }}>
+                            <label className="block text-gray-700 dark:text-white mb-2 font-semibold" style={{ fontFamily: 'Arial, sans-serif' }}>
                                 Ngày dọn vào
                             </label>
                             <input
@@ -397,14 +398,14 @@ const RoomDetailsUser = () => {
                                 name="moveInDate"
                                 required
                                 min={today}
-                                className="w-full p-2 border rounded-md"
+                                className="w-full dark:bg-gray-800 dark:text-white p-2 border rounded-md"
                                 value={moveInDate}
                                 onChange={(e) => setMoveInDate(e.target.value)}
                                 style={{ fontFamily: 'Arial, sans-serif' }}
                             />
                         </div>
                         <div className="mb-4">
-                            <label className="block text-gray-700 mb-2 font-semibold" style={{ fontFamily: 'Arial, sans-serif' }}>
+                            <label className="block text-gray-700 dark:text-white mb-2 font-semibold" style={{ fontFamily: 'Arial, sans-serif' }}>
                                 Thời gian thuê (tháng)
                             </label>
                             <input
@@ -412,7 +413,7 @@ const RoomDetailsUser = () => {
                                 name="duration"
                                 min="1"
                                 required
-                                className="w-full p-2 border rounded-md"
+                                className="w-full dark:bg-gray-800 dark:text-white p-2 border rounded-md"
                                 placeholder="Số tháng muốn thuê"
                                 value={duration}
                                 onChange={(e) => setDuration(e.target.value)}
@@ -420,14 +421,14 @@ const RoomDetailsUser = () => {
                             />
                         </div>
                         <div className="mb-4">
-                            <label className="block text-gray-700 mb-2 font-semibold" style={{ fontFamily: 'Arial, sans-serif' }}>
+                            <label className="block text-gray-700 dark:text-white mb-2 font-semibold" style={{ fontFamily: 'Arial, sans-serif' }}>
                                 Ngày kết thúc
                             </label>
                             <input
                                 type="text"
                                 value={expirationDate}
                                 readOnly
-                                className="w-full p-2 border rounded-md bg-gray-100"
+                                className="w-full dark:bg-gray-800 dark:text-white p-2 border rounded-md bg-gray-100"
                                 style={{ fontFamily: 'Arial, sans-serif' }}
                             />
                         </div>
@@ -435,7 +436,7 @@ const RoomDetailsUser = () => {
                             <button
                                 type="button"
                                 onClick={() => setShowRentModal(false)}
-                                className="px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400"
+                                className="px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400 dark:bg-gray-800 dark:text-white border dark:border-white"
                             >
                                 Hủy
                             </button>
@@ -511,9 +512,9 @@ const RoomDetailsUser = () => {
     console.log("Is landlord:", isLandlord);
 
     return (
-        <div className="max-w-6xl mx-auto p-4 bg-white">
+        <div className="max-w-6xl mx-auto p-4 bg-white dark:bg-gray-800 dark:text-white">
             <div className="flex flex-col md:flex-row gap-4">
-                <div className="w-full md:w-3/4 bg-white p-4 rounded-lg shadow space-y-4">
+                <div className="w-full md:w-3/4 bg-white p-4 rounded-lg shadow space-y-4 dark:bg-gray-800 dark:text-white">
                     {imagesArray.length > 0 && (
                         <div className="relative w-full h-96 overflow-hidden rounded-lg">
                             <img
@@ -561,23 +562,23 @@ const RoomDetailsUser = () => {
                             </Swiper>
                         </div>
                     )}
-                    <h2 className="text-2xl font-bold text-gray-800">
+                    <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
                         {room.title || 'Tiêu đề phòng'}
                     </h2>
-                    <div className="text-gray-600 flex items-center mb-2">
+                    <div className="text-gray-600 flex items-center mb-2 dark:text-white">
                         <FaMapMarkerAlt className="mr-1" />
                         {room.locationDetail}
                     </div>
                     <div className="mb-4">
                         <div className="flex items-center justify-between">
                             <div className="flex space-x-5">
-                                <div className="flex flex-col text-black text-lg">
-                                    <span className='font-semibold'>Mức giá</span>
+                                <div className="flex flex-col text-black text-lg dark:text-white">
+                                    <span className='font-semibold '>Mức giá</span>
                                     <span className="text-red-500 font-medium">
                                         {room.price.toLocaleString('vi-VN')} đ/tháng
                                     </span>
                                 </div>
-                                <div className="flex flex-col text-black text-lg">
+                                <div className="flex flex-col text-black text-lg dark:text-white">
                                     <span className='font-semibold'>Diện tích</span>
                                     <span className="text-red-500 font-medium">
                                         {room.acreage} m²
@@ -595,9 +596,9 @@ const RoomDetailsUser = () => {
                                     className="text-2xl"
                                 >
                                     {savedPosts.includes(parseInt(roomId)) ? (
-                                        <FaHeart className="text-red-500" />
+                                        <FaHeart className="text-red-500 dark:text-white" />
                                     ) : (
-                                        <FaRegHeart className="text-gray-600" />
+                                        <FaRegHeart className="text-gray-600 dark:text-white" />
                                     )}
                                 </button>
                             </div>
@@ -605,7 +606,7 @@ const RoomDetailsUser = () => {
                     </div>
                     <div>
                         <h3 className="text-xl font-semibold mb-1">Mô tả</h3>
-                        <p className="text-gray-700">{room.description}</p>
+                        <p className="text-gray-700 dark:text-white">{room.description}</p>
                     </div>
                     <div className="flex items-center gap-x-2">
                         <p className='text-xl font-semibold '>Liên hệ:</p>
@@ -615,7 +616,7 @@ const RoomDetailsUser = () => {
                                 e.stopPropagation();
                                 setShowFullPhone(true);
                             }}
-                            className="text-base bg-white text-gray-800 px-2 mt-1 flex items-center gap-1"
+                            className="text-base bg-white text-gray-800 px-2 mt-1 flex items-center gap-1 dark:bg-gray-800 dark:text-white"
                         >
                             {showFullPhone ? (
                                 userPhone || 'N/A'
@@ -730,7 +731,7 @@ const RoomDetailsUser = () => {
                         </div>
                     </div>
                 </div>
-                <div className="w-full md:w-1/4 bg-white p-4 rounded-lg shadow space-y-4 sticky top-0">
+                <div className="w-full md:w-1/4 bg-white p-4 rounded-lg shadow space-y-4 sticky top-0 dark:bg-gray-800 dark:text-white">
                     <div className="flex items-center gap-3">
                         {room.User && room.User.profilePicture ? (
                             <img
@@ -764,7 +765,7 @@ const RoomDetailsUser = () => {
                     {/* Ẩn nút Đặt phòng nếu người dùng là chủ phòng */}
                     {!isLandlord && (
                         <div>
-                            <div className='flex justify-center'>
+                            <div className='flex justify-center '>
                                 <button
                                     onClick={(e) => {
                                         e.preventDefault();
@@ -775,7 +776,7 @@ const RoomDetailsUser = () => {
                                     Đặt Phòng
                                 </button>
                             </div>
-                            <div className="bg-gray-100 py-3 rounded-md text-sm text-justify text-gray-600 leading-6">
+                            <div className="bg-gray-100 py-3 rounded-md text-sm mt-4 text-justify text-gray-600 leading-6 dark:bg-gray-800 dark:text-white">
                                 <span className="inline">
                                     <span className="font-medium">Lưu ý: </span>
                                     Sau khi bạn nhấn vào&nbsp;
@@ -783,7 +784,7 @@ const RoomDetailsUser = () => {
                                     Chủ nhà có thể chấp nhận hoặc từ chối yêu cầu của bạn.
                                 </span>
                             </div>
-                            <div className="bg-gray-100 py-3 rounded-md text-justify text-sm text-gray-600 leading-6">
+                            <div className="bg-gray-100 py-3 rounded-md text-justify text-sm text-gray-600 leading-6 dark:bg-gray-800 dark:text-white">
                                 Hãy cho chủ nhà biết bạn thấy phòng này hoặc đã đặt phòng trên <strong>DUVAS </strong>
                                 bằng cách
                                 <button

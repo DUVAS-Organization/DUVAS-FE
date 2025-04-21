@@ -54,10 +54,10 @@ const FAQList = () => {
     const [isExpanded, setIsExpanded] = useState(false);
 
     return (
-        <div className="max-w-6xl mx-auto my-6">
+        <div className="max-w-6xl mx-auto my-6 ">
             <h2 className="text-xl font-bold mb-4">Các câu hỏi thường gặp ?</h2>
 
-            <div className="border border-gray-300 rounded-md overflow-hidden relative">
+            <div className="border border-gray-300 rounded-md overflow-hidden relative dark:text-white">
                 {isExpanded ? (
                     // Khi mở rộng, sử dụng AnimatePresence để hiệu ứng entry cho toàn bộ FAQ
                     <AnimatePresence>
@@ -81,7 +81,7 @@ const FAQList = () => {
                 )}
 
                 {/* Nút Xem thêm / Ẩn bớt */}
-                <div className="text-center mt-1">
+                <div className="text-center mt-1 ">
                     {isExpanded ? (
                         <button
                             onClick={() => setIsExpanded(false)}

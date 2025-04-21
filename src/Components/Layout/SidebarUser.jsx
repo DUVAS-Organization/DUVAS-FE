@@ -32,7 +32,7 @@ const SidebarUser = () => {
     }
 
     return (
-        <div className="fixed flex flex-col h-screen pt-2 overflow-y-auto text-black bg-white border-r-2 w-52 select-none">
+        <div className="fixed flex flex-col h-screen pt-2 overflow-y-auto text-black bg-white border-r-2 w-52 select-none dark:bg-gray-800 dark:text-white">
             <ul className="text-base font-medium text-justify">
                 <li>
                     <NavLink
@@ -52,12 +52,12 @@ const SidebarUser = () => {
                         <FaUserTie className="inline-block mb-2 mr-2" />
                         Tài Khoản
                     </div>
-                    <ul className="ml-4">
+                    <ul className="ml-4 ">
                         <li>
                             <NavLink
                                 to="/Profile?tab=edit"
                                 className={() =>
-                                    `block py-2 px-4 mb-0.5 hover:bg-red-400 hover:text-white rounded-3xl ${currentTab === "edit" ? "bg-red-500 text-white" : "text-black"}`
+                                    `block py-2 px-4 mb-0.5 hover:bg-red-400 hover:text-white rounded-3xl ${currentTab === "edit" ? "bg-red-500 text-white" : "text-black dark:text-white"}`
                                 }
                             >
                                 Chỉnh sửa thông tin
@@ -67,7 +67,7 @@ const SidebarUser = () => {
                             <NavLink
                                 to="/Profile?tab=settings"
                                 className={() =>
-                                    `block py-2 px-4 mb-0.5 hover:bg-red-400 hover:text-white rounded-3xl ${currentTab === "settings" ? "bg-red-500 text-white" : "text-black"}`
+                                    `block py-2 px-4 mb-0.5 hover:bg-red-400 hover:text-white rounded-3xl ${currentTab === "settings" ? "bg-red-500 text-white" : "text-black dark:text-white"}`
                                 }
                             >
                                 Cài đặt tài khoản
@@ -77,7 +77,7 @@ const SidebarUser = () => {
                             <NavLink
                                 to="/Profile?tab=registerLandlord"
                                 className={() =>
-                                    `block py-2 px-4 hover:bg-red-400 hover:text-white rounded-3xl ${currentTab === "registerLandlord" ? "bg-red-500 text-white" : "text-black"}`
+                                    `block py-2 px-4 hover:bg-red-400 hover:text-white rounded-3xl ${currentTab === "registerLandlord" ? "bg-red-500 text-white" : "text-black dark:text-white"}`
                                 }
                             >
                                 Đăng ký thành chủ

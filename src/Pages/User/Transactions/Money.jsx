@@ -45,16 +45,17 @@ const Money = () => {
         }
         // Thanh toán thành công
         showCustomNotification("success", "Thanh toán thành công!");
+        setQrCode(null);
     };
 
     return (
         <Layout showNavbar={false} showSidebar={true}>
-            <div className="max-w-6xl mx-auto p-4">
-                <div className="bg-white p-6 rounded-lg shadow-md">
+            <div className="max-w-6xl mx-auto p-4 ">
+                <div className="bg-white p-6 rounded-lg shadow-md dark:bg-gray-800 dark:text-white">
                     <h1 className="text-2xl font-bold mb-5 border-b-2 pb-2 border-gray-700">Nạp tiền</h1>
                     <div className="flex">
-                        <form className="w-1/3 bg-white p-6 rounded-lg shadow-md" onSubmit={handleDeposit}>
-                            <label htmlFor="amount" className="block text-sm font-medium text-gray-700">
+                        <form className="w-1/3 bg-white dark:bg-gray-800 dark:text-white p-6 rounded-lg shadow-md" onSubmit={handleDeposit}>
+                            <label htmlFor="amount" className="block text-sm font-medium text-gray-700 dark:text-white">
                                 Số tiền nạp
                             </label>
                             <input
@@ -66,7 +67,7 @@ const Money = () => {
                                 required
                                 value={displayAmount} // Sử dụng giá trị hiển thị
                                 onChange={handleAmountChange} // Xử lý thay đổi
-                                className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                className="mt-1 p-2 dark:bg-gray-800 dark:text-white w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
                                 placeholder="Nhập số tiền (VND)"
                             />
 
@@ -78,7 +79,7 @@ const Money = () => {
                             </button>
                         </form>
 
-                        <div className="w-2/3 flex items-center justify-center">
+                        <div className="w-2/3 flex items-center justify-center" style={{ height: "777px" }}>
                             {qrCode ? (
                                 <img src={qrCode} alt="QR Code" />
                             ) : (

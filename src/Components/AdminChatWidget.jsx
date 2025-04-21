@@ -227,7 +227,7 @@ const AdminChatWidget = () => {
     return (
         <div>
             {isOpen ? (
-                <div className="fixed bottom-5 right-5 w-80 h-[450px] bg-white border border-gray-300 shadow-lg rounded-lg z-50 flex flex-col">
+                <div className="fixed bottom-5 right-5 w-80 h-[450px] dark:bg-gray-800 dark:text-white bg-white border border-gray-300 shadow-lg rounded-lg z-50 flex flex-col">
                     <div className="flex items-center justify-between bg-red-600 text-white p-3 rounded-t-lg">
                         <span className="font-semibold">
                             Chat với {adminUser.name}
@@ -239,7 +239,7 @@ const AdminChatWidget = () => {
                             <FaTimes />
                         </button>
                     </div>
-                    <div className="flex-1 p-3 overflow-y-auto bg-gray-50">
+                    <div className="flex-1 p-3 overflow-y-auto bg-gray-50 dark:bg-gray-800 dark:text-white">
                         {messages.length === 0 ? (
                             <div className="text-center text-gray-500">
                                 Chưa có tin nhắn nào.
@@ -248,7 +248,7 @@ const AdminChatWidget = () => {
                             messages.map((msg, idx) => (
                                 <div
                                     key={idx}
-                                    className={`mb-3 flex ${msg.sender === "user"
+                                    className={`mb-3 flex dark:bg-gray-800 dark:text-white ${msg.sender === "user"
                                         ? "justify-end"
                                         : "justify-start"
                                         } items-start`}
@@ -271,7 +271,7 @@ const AdminChatWidget = () => {
                                         <div
                                             className={`inline-block p-2 rounded-lg max-w-[250px] min-w-fit break-words whitespace-pre-wrap ${msg.sender === "user"
                                                 ? "bg-red-600 text-white"
-                                                : "bg-gray-200 text-gray-800"
+                                                : "bg-gray-200 text-gray-800 dark:bg-gray-500 dark:text-white"
                                                 }`}
                                         >
                                             {msg.content}
@@ -299,7 +299,7 @@ const AdminChatWidget = () => {
                             onKeyDown={(e) =>
                                 e.key === "Enter" && handleSendMessage()
                             }
-                            className="flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
+                            className="flex-1 p-2 dark:bg-gray-800 dark:text-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
                         />
                         <button
                             onClick={handleSendMessage}

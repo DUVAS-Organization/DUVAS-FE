@@ -127,7 +127,7 @@ const AuthorizationPage = () => {
     };
 
     return (
-        <div className="flex bg-white">
+        <div className="flex bg-white dark:bg-gray-800 dark:text-white">
             <SidebarUser />
             <div className="flex-1 p-6 ml-[200px] max-w-8xl mx-auto">
                 <h1 className="text-2xl font-bold mb-6">Danh sách hợp đồng ủy quyền</h1>
@@ -153,8 +153,8 @@ const AuthorizationPage = () => {
                 {!loading && !error && contracts.length > 0 && (
                     <div className="overflow-x-auto">
                         <div className="overflow-x-auto">
-                            <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow-sm table-fixed">
-                                <thead className="bg-gray-100">
+                            <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow-sm table-fixed dark:bg-gray-800 dark:text-white">
+                                <thead className="bg-gray-100 dark:bg-gray-800 dark:text-white">
                                     <tr>
                                         <th className="px-4 py-2 text-sm font-medium text-center w-20 whitespace-nowrap">#</th>
                                         <th className="px-4 py-2 text-sm font-medium text-left w-40 whitespace-nowrap">Số hợp đồng</th>
@@ -169,7 +169,7 @@ const AuthorizationPage = () => {
                                 </thead>
                                 <tbody>
                                     {contracts.map((c, index) => (
-                                        <tr key={c.id} className="border-b hover:bg-gray-50">
+                                        <tr key={c.id} className="border-b hover:bg-gray-50 dark:hover:text-black">
                                             <td className="px-4 py-2 text-sm text-center whitespace-nowrap">{index + 1}</td>
                                             <td className="px-4 py-2 text-sm whitespace-nowrap">{c.contractNumber}</td>
                                             {/* <td className="px-4 py-2 text-sm whitespace-nowrap">{formatDate2(c.date)}</td> */}

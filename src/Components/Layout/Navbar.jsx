@@ -280,10 +280,10 @@ const Navbar = () => {
                             </>
                         ) : (
                             <>
-                                <NavLink to="/Logins" className="text-gray-800 px-3 py-2 rounded-md text-base font-medium">
+                                <NavLink to="/Logins" className="text-gray-800 px-3 py-2 rounded-md text-base font-medium dark:text-white">
                                     Đăng Nhập
                                 </NavLink>
-                                <NavLink to="/Registers" className="text-gray-800 px-3 py-2 rounded-md text-base font-medium">
+                                <NavLink to="/Registers" className="text-gray-800 px-3 py-2 rounded-md text-base font-medium dark:text-white">
                                     Đăng Ký
                                 </NavLink>
                                 {/* Nút Đăng tin cho người chưa đăng nhập */}
