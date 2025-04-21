@@ -27,8 +27,11 @@ import {
     FaCar,
     FaUserTie,
     FaMoneyBill,
+    FaPaperPlane,
+    FaRocketchat,
+    FaFacebookMessenger,
 } from 'react-icons/fa';
-import { FaPhoneVolume } from 'react-icons/fa6';
+import { FaPhoneVolume, FaSignalMessenger } from 'react-icons/fa6';
 import { BsExclamationTriangle } from 'react-icons/bs';
 import Footer from '../../../Components/Layout/Footer';
 import Loading from '../../../Components/Loading';
@@ -178,11 +181,13 @@ const RoomDetailsUser = () => {
         const found = categoryRooms.find((c) => c.categoryRoomId === categoryRoomId);
         return found ? found.categoryName : 'N/A';
     };
+
     useEffect(() => {
         if (user && user.userId) {
             fetchSavedPosts();
         }
     }, [user]);
+
     const fetchSavedPosts = async () => {
         try {
             const data = await OtherService.getSavedPosts(user.userId);
@@ -193,6 +198,7 @@ const RoomDetailsUser = () => {
             console.error("Lỗi khi lấy danh sách bài đã lưu:", error);
         }
     };
+
     const toggleSavePost = async (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -234,7 +240,6 @@ const RoomDetailsUser = () => {
         }
     };
 
-
     const handleSubmitRentForm = async (e) => {
         e.preventDefault();
 
@@ -268,8 +273,6 @@ const RoomDetailsUser = () => {
         setShowRentModal(false);
         await handleRentRoom(rentDetails);
     };
-
-
 
     const handleRentRoom = async (details) => {
         if (!room || !user) {
@@ -324,6 +327,7 @@ const RoomDetailsUser = () => {
             setIsRenting(false);
         }
     };
+
     const PhoneAlertPopup = () => {
         return (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 dark:bg-gray-800 dark:text-white">
@@ -344,6 +348,7 @@ const RoomDetailsUser = () => {
             </div>
         );
     };
+
     const RentModal = () => {
         const today = new Date().toISOString().split('T')[0];
 
@@ -491,10 +496,12 @@ const RoomDetailsUser = () => {
         e.stopPropagation();
         setCurrentIndex((prev) => (prev - 1 + imagesArray.length) % imagesArray.length);
     };
+
     const handleNext = (e) => {
         e.stopPropagation();
         setCurrentIndex((prev) => (prev + 1) % imagesArray.length);
     };
+
     const openPreview = () => {
         setPreviewImage(imagesArray[currentIndex]);
     };
@@ -512,7 +519,7 @@ const RoomDetailsUser = () => {
     console.log("Is landlord:", isLandlord);
 
     return (
-        <div className="max-w-6xl mx-auto p-4 bg-white dark:bg-gray-800 dark:text-white">
+        <div className="max-w-7xl mx-auto p-4 bg-white dark:bg-gray-800 dark:text-white">
             <div className="flex flex-col md:flex-row gap-4">
                 <div className="w-full md:w-3/4 bg-white p-4 rounded-lg shadow space-y-4 dark:bg-gray-800 dark:text-white">
                     {imagesArray.length > 0 && (
@@ -573,7 +580,7 @@ const RoomDetailsUser = () => {
                         <div className="flex items-center justify-between">
                             <div className="flex space-x-5">
                                 <div className="flex flex-col text-black text-lg dark:text-white">
-                                    <span className='font-semibold '>Mức giá</span>
+                                    <span className='font-semibold'>Mức giá</span>
                                     <span className="text-red-500 font-medium">
                                         {room.price.toLocaleString('vi-VN')} đ/tháng
                                     </span>
@@ -586,13 +593,8 @@ const RoomDetailsUser = () => {
                                 </div>
                             </div>
                             <div className="flex gap-4 text-2xl text-gray-600">
-                                {/* <button>
-                                    <BsExclamationTriangle />
-                                </button> */}
                                 <button
-                                    onClick={
-                                        toggleSavePost
-                                    }
+                                    onClick={toggleSavePost}
                                     className="text-2xl"
                                 >
                                     {savedPosts.includes(parseInt(roomId)) ? (
@@ -609,7 +611,7 @@ const RoomDetailsUser = () => {
                         <p className="text-gray-700 dark:text-white">{room.description}</p>
                     </div>
                     <div className="flex items-center gap-x-2">
-                        <p className='text-xl font-semibold '>Liên hệ:</p>
+                        <p className='text-xl font-semibold'>Liên hệ:</p>
                         <button
                             onClick={(e) => {
                                 e.preventDefault();
@@ -684,8 +686,6 @@ const RoomDetailsUser = () => {
                                 <FaRegListAlt className="text-lg text-gray-500" />
                                 <strong>Loại Phòng:</strong> {getCategoryName(room.categoryRoomId)}
                             </div>
-
-                            {/* Thêm các trường chi phí khác, chỉ hiển thị nếu giá trị > 0 */}
                             {room.dien > 0 && (
                                 <div className="flex gap-x-1 items-center">
                                     <FaBolt className="text-lg text-gray-600" />
@@ -732,22 +732,22 @@ const RoomDetailsUser = () => {
                     </div>
                 </div>
                 <div className="w-full md:w-1/4 bg-white p-4 rounded-lg shadow space-y-4 sticky top-0 dark:bg-gray-800 dark:text-white">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-between gap-2">
                         {room.User && room.User.profilePicture ? (
                             <img
                                 src={room.User.profilePicture}
                                 alt={room.User.name}
-                                className="w-14 h-14 object-cover rounded-full"
+                                className="w-10 h-10 object-cover rounded-full flex-shrink-0"
                             />
                         ) : (
-                            <div className="w-14 h-14 rounded-full bg-gray-300 flex items-center justify-center">
-                                <span className="text-xl font-semibold text-gray-800">
+                            <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center flex-shrink-0">
+                                <span className="text-lg font-semibold text-gray-800">
                                     {room.User && room.User.name ? room.User.name.charAt(0).toUpperCase() : "U"}
                                 </span>
                             </div>
                         )}
-                        <div>
-                            <p className="font-semibold">
+                        <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-sm truncate">
                                 {room.User && room.User.name ? room.User.name : "Chưa xác định"}
                             </p>
                             <button
@@ -756,35 +756,54 @@ const RoomDetailsUser = () => {
                                     e.stopPropagation();
                                     setShowFullPhone(true);
                                 }}
-                                className='text-sm text-black pr-2 py-1 rounded-lg flex gap-2'
+                                className="text-xs text-black py-1 rounded-lg flex gap-1 items-center dark:text-white"
                             >
-                                {showFullPhone ? (userPhone || 'N/A') : maskedPhone}
+                                {showFullPhone ? userPhone || "N/A" : maskedPhone}
                             </button>
                         </div>
+                        {!isLandlord && (
+                            <button
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    navigate("/Message", {
+                                        state: {
+                                            partnerId: room.User.userId,
+                                            partnerName: room.User.name,
+                                            partnerAvatar: room.User.profilePicture,
+                                            partnerIsActive: room.User.isActive || false,
+                                        },
+                                    });
+                                }}
+                                className="bg-red-500 p-1 border border-red-500 text-white rounded-full flex items-center gap-1 hover:bg-red-600 transition-colors flex-shrink-0"
+                            >
+                                <FaFacebookMessenger className="text-2xl" />
+                            </button>
+                        )}
                     </div>
                     {/* Ẩn nút Đặt phòng nếu người dùng là chủ phòng */}
                     {!isLandlord && (
                         <div>
-                            <div className='flex justify-center '>
+                            <div className="flex justify-center">
                                 <button
                                     onClick={(e) => {
                                         e.preventDefault();
                                         setShowRentModal(true);
                                     }}
-                                    className='w-52 bg-red-500 text-white font-medium px-5 py-1 rounded-xl hover:bg-red-400'
+                                    className="w-48 bg-red-500 text-white font-medium px-4 py-1 rounded-xl hover:bg-red-400 text-sm"
                                 >
                                     Đặt Phòng
                                 </button>
                             </div>
-                            <div className="bg-gray-100 py-3 rounded-md text-sm mt-4 text-justify text-gray-600 leading-6 dark:bg-gray-800 dark:text-white">
+                            <div className="bg-gray-100 py-2 rounded-md text-sm mt-3 text-justify text-gray-600 leading-5 dark:bg-gray-800 dark:text-white">
                                 <span className="inline">
                                     <span className="font-medium">Lưu ý: </span>
-                                    Sau khi bạn nhấn vào&nbsp;
-                                    <span className="font-medium text-red-500">Đặt phòng</span>, thông tin của bạn sẽ được gửi đến chủ nhà để xem xét.
+                                    Sau khi bạn nhấn vào
+                                    <span className="font-medium text-red-500">&nbsp;Đặt phòng</span>, thông tin của bạn sẽ được gửi đến chủ nhà để xem xét.
                                     Chủ nhà có thể chấp nhận hoặc từ chối yêu cầu của bạn.
                                 </span>
                             </div>
-                            <div className="bg-gray-100 py-3 rounded-md text-justify text-sm text-gray-600 leading-6 dark:bg-gray-800 dark:text-white">
+                            <div className="bg-gray-100 py-2 rounded-md text-justify text-sm text-gray-600 leading-5 dark:bg-gray-800 dark:text-white">
                                 Hãy cho chủ nhà biết bạn thấy phòng này hoặc đã đặt phòng trên <strong>DUVAS </strong>
                                 bằng cách
                                 <button
@@ -804,7 +823,6 @@ const RoomDetailsUser = () => {
                                 >
                                     Nhắn Tin
                                 </button> để nhận ưu đãi tốt nhất.
-                                <br />
                             </div>
                         </div>
                     )}
