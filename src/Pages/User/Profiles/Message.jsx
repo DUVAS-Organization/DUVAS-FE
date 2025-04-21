@@ -9,7 +9,6 @@ import {
 import { useAuth } from "../../../Context/AuthProvider";
 import { useLocation } from "react-router-dom";
 import UserService from "../../../Services/User/UserService";
-import Loading from "../../../Components/Loading";
 import { useRealtime } from "../../../Context/RealtimeProvider";
 import OtherService from "../../../Services/User/OtherService";
 
@@ -38,17 +37,16 @@ const renderAvatar = (avatar, name, size = 40) => {
   }
 };
 
-// Hàm format thời gian: dưới 1 phút -> "vừa gửi", trên 1 phút -> "x phút"
+// Hàm format thời gian: định dạng dd-mm-yyyy HH:mm:ss
 const formatTime = (dateString) => {
-  const messageTime = new Date(dateString);
-  const now = new Date();
-  const diffInSeconds = Math.floor((now - messageTime) / 1000);
-  if (diffInSeconds < 60) {
-    return "vừa gửi";
-  } else {
-    const minutes = Math.floor(diffInSeconds / 60);
-    return `${minutes} phút`;
-  }
+  const date = new Date(dateString);
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  const seconds = String(date.getSeconds()).padStart(2, "0");
+  return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
 };
 
 const Message = () => {
@@ -77,7 +75,6 @@ const Message = () => {
     )
     : conversationMessages;
 
-  const [isLoading, setIsLoading] = useState(false);
   const [isSending, setIsSending] = useState(false);
 
   const messagesContainerRef = useRef(null);
@@ -108,7 +105,7 @@ const Message = () => {
       const data = await OtherService.uploadImage(formData);
       return data.imageUrl;
     } catch (error) {
-      console.error("Error uploading file:", error);
+      console.error("Lỗi khi tải lên tệp:", error);
       throw error;
     }
   };
@@ -133,22 +130,23 @@ const Message = () => {
     }
   };
 
-  // Lấy danh sách hội thoại
-  const fetchConversations = async () => {
+  // Hàm fetch cả hội thoại và tin nhắn
+  const fetchAllData = async () => {
     if (!currentUserId) return;
-    setIsLoading(true);
+
     try {
-      const data = await OtherService.getConversations(currentUserId);
+      // Fetch danh sách hội thoại
+      const convData = await OtherService.getConversations(currentUserId);
       const newConversations = await Promise.all(
-        data.map(async (conv) => {
+        convData.map(async (conv) => {
           try {
             const userInfo = await UserService.getUserById(conv.userGetID);
             conv.partnerName = userInfo.name;
             conv.partnerPicture = userInfo.profilePicture;
             conv.partnerIsActive = userInfo.isActive || false;
           } catch (error) {
-            console.error("Error fetching user info for", conv.userGetID, error);
-            conv.partnerName = `User ${conv.userGetID}`;
+            console.error("Lỗi khi lấy thông tin người dùng:", conv.userGetID, error);
+            conv.partnerName = `Người dùng ${conv.userGetID}`;
             conv.partnerPicture = "";
             conv.partnerIsActive = false;
           }
@@ -156,24 +154,14 @@ const Message = () => {
         })
       );
       setConversations(newConversations);
-    } catch (error) {
-      console.error("Error fetching conversations:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
-  // Lấy danh sách tin nhắn của 1 cuộc trò chuyện cụ thể
-  const fetchConversationMessages = async (partnerId) => {
-    if (!currentUserId) return;
-    setIsLoading(true);
-    try {
-      const data = await OtherService.getMessages(currentUserId, partnerId);
-      setConversationMessages(data);
+      // Fetch tin nhắn nếu có hội thoại được chọn
+      if (selectedConversation) {
+        const msgData = await OtherService.getMessages(currentUserId, selectedConversation);
+        setConversationMessages(msgData);
+      }
     } catch (error) {
-      console.error("Error fetching conversation messages:", error);
-    } finally {
-      setIsLoading(false);
+      console.error("Lỗi khi lấy dữ liệu:", error);
     }
   };
 
@@ -190,10 +178,10 @@ const Message = () => {
     setSelectedPartnerIsActive(partnerIsActive);
     setAttachedFiles([]);
     setAttachedPreviews([]);
-    fetchConversationMessages(pid);
+    fetchAllData(); // Gọi ngay để lấy tin nhắn
   };
 
-  // --- PHẦN NHẬN THÔNG TIN NGƯỜI NHẮN --- 
+  // Nhận thông tin người nhắn từ location state
   useEffect(() => {
     if (locationState.state?.partnerId) {
       handleSelectConversation(
@@ -204,19 +192,15 @@ const Message = () => {
       );
     }
   }, [locationState.state]);
-  // -------------------------------------
 
   // Xử lý sự kiện tin nhắn realtime từ ChatHub
   useEffect(() => {
     if (currentUserId) {
-      // Kết nối tới ChatHub
       connectSocket(currentUserId, "chat");
 
-      // Đăng ký các sự kiện realtime
       const handleReceiveMessage = (msg) => {
         const sendId = Number(msg.userSendID);
         const getId = Number(msg.userGetID);
-        // Nếu tin nhắn thuộc cuộc trò chuyện đang mở thì hiển thị ngay
         if (
           (sendId === selectedConversation && getId === Number(currentUserId)) ||
           (sendId === Number(currentUserId) && getId === selectedConversation)
@@ -269,18 +253,19 @@ const Message = () => {
     }
   }, [currentUserId, selectedConversation]);
 
-  // Gọi fetchConversations mỗi 1 giây
+  // Gọi fetchAllData mỗi 1 giây
   useEffect(() => {
     if (currentUserId) {
+      fetchAllData(); // Gọi ngay lần đầu
       const interval = setInterval(() => {
-        fetchConversations();
-      }, 1000); // Gọi API mỗi 1 giây
+        fetchAllData();
+      }, 1000); // Gọi mỗi 1 giây
 
-      return () => clearInterval(interval); // Dọn dẹp interval khi component unmount
+      return () => clearInterval(interval);
     }
-  }, [currentUserId]);
+  }, [currentUserId, selectedConversation]);
 
-  // Auto scroll xuống cuối danh sách tin nhắn khi có tin nhắn mới
+  // Auto scroll xuống cuối danh sách tin nhắn
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [displayedMessages]);
@@ -298,7 +283,7 @@ const Message = () => {
           attachedFiles.map((file) => uploadFile(file))
         );
       } catch (error) {
-        console.error("Error uploading files:", error);
+        console.error("Lỗi khi tải lên tệp:", error);
       }
     }
 
@@ -317,10 +302,9 @@ const Message = () => {
 
     try {
       await OtherService.sendMessage(newMsg);
-      // Cập nhật ngay trên client
       setConversationMessages((prev) => [...prev, newMsg]);
     } catch (error) {
-      console.error("Error sending message:", error);
+      console.error("Lỗi khi gửi tin nhắn:", error);
     } finally {
       setIsSending(false);
     }
@@ -338,9 +322,9 @@ const Message = () => {
     return renderAvatar(avatar, name, size);
   };
 
-  // Lọc danh sách hội thoại cho sidebar
+  // Lọc danh sách hội thoại
   const filteredConversations = conversations.filter((conv) => {
-    const name = conv.partnerName || `User ${conv.userGetID}`;
+    const name = conv.partnerName || `Người dùng ${conv.userGetID}`;
     return name.toLowerCase().includes(conversationSearchTerm.toLowerCase());
   });
 
@@ -363,7 +347,6 @@ const Message = () => {
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-2">
-          {/* {isLoading && <Loading />} */}
           {filteredConversations.length > 0 ? (
             filteredConversations.map((conv, index) => (
               <div
@@ -372,7 +355,7 @@ const Message = () => {
                 onClick={() =>
                   handleSelectConversation(
                     conv.userGetID,
-                    conv.partnerName || `User ${conv.userGetID}`,
+                    conv.partnerName || `Người dùng ${conv.userGetID}`,
                     conv.partnerPicture || "",
                     conv.partnerIsActive || false
                   )
@@ -381,7 +364,7 @@ const Message = () => {
                 {renderAvatarDisplay(conv.partnerPicture, conv.partnerName, 40)}
                 <div>
                   <div className="font-bold">
-                    {conv.partnerName || `User ${conv.userGetID}`}
+                    {conv.partnerName || `Người dùng ${conv.userGetID}`}
                   </div>
                   <div className="text-sm text-gray-500 dark:text-white truncate max-w-[300px]">
                     {conv.latestMessageContent || ""}
@@ -395,7 +378,7 @@ const Message = () => {
         </div>
       </div>
 
-      {/* PHẦN GIỮA: Danh sách tin nhắn của cuộc trò chuyện được chọn */}
+      {/* PHẦN GIỮA: Danh sách tin nhắn */}
       <div className="flex-1 flex flex-col">
         <div className="flex items-center justify-between p-4 border-b">
           <div className="flex items-center space-x-3">
@@ -421,7 +404,7 @@ const Message = () => {
                     className={`flex ${isMine ? "justify-end" : "justify-start"} mb-2`}
                   >
                     <div
-                      className={`max-w-[400px] p-3 rounded-lg break-words whitespace-pre-wrap ${isMine ? "bg-blue-200 dark:bg-gray-500 dark:text-white" : "bg-gray-200 "
+                      className={`max-w-[400px] p-3 rounded-lg break-words whitespace-pre-wrap ${isMine ? "bg-blue-200 dark:bg-gray-500 dark:text-white" : "bg-gray-200"
                         }`}
                     >
                       <div className="text-xs text-gray-400 mb-1">
@@ -442,7 +425,7 @@ const Message = () => {
                                 <img
                                   key={idx}
                                   src={imgUrl}
-                                  alt="Attached"
+                                  alt="Tệp đính kèm"
                                   className="w-full h-32 object-cover rounded-md cursor-pointer"
                                   onClick={() => setPreviewImage(imgUrl)}
                                 />
@@ -458,19 +441,14 @@ const Message = () => {
               <div className="text-gray-500">Chưa có tin nhắn.</div>
             )
           ) : (
-            <div className="text-gray-500">Chọn một cuộc trò chuyện để xem tin nhắn</div>
-          )}
-          {isLoading && (
-            <div className="flex justify-center items-center py-4">
-              {/* <Loading /> */}
-            </div>
+            <div className="text-gray-500">Chọn một cuộc trò chuyện để xem tin nhắn.</div>
           )}
           <div ref={messagesEndRef} />
         </div>
         <div className="border-t p-4 flex flex-col">
           <div className="flex items-center space-x-3">
             <button
-              onClick={() => fileInputRef.current && fileInputRef.current.click()}
+              onClick={handleUploadClick}
               className="bg-red-600 p-2 rounded-full text-white hover:bg-red-700 transition-colors"
             >
               <FaUpload />
@@ -485,7 +463,7 @@ const Message = () => {
             />
             <input
               className="w-full p-2 bg-gray-200 rounded-full text-black"
-              placeholder="Aa"
+              placeholder="Nhập tin nhắn..."
               type="text"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
@@ -505,15 +483,12 @@ const Message = () => {
                 <div key={index} className="relative">
                   <img
                     src={preview}
-                    alt={`Preview ${index}`}
+                    alt={`Xem trước ${index}`}
                     className="w-24 h-24 object-cover rounded-md cursor-pointer"
                     onClick={() => setPreviewImage(preview)}
                   />
                   <button
-                    onClick={() => {
-                      setAttachedFiles((prev) => prev.filter((_, i) => i !== index));
-                      setAttachedPreviews((prev) => prev.filter((_, i) => i !== index));
-                    }}
+                    onClick={() => handleRemoveFile(index)}
                     className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
                   >
                     <FaTimes size={12} />
@@ -540,7 +515,7 @@ const Message = () => {
         </div>
 
         <div className="flex flex-col space-y-3 mb-4">
-          {/* <button
+          <button
             className="flex items-center px-3 py-2 w-full rounded-full border text-gray-600 hover:bg-gray-100 transition"
             onClick={handleToggleMute}
           >
@@ -548,7 +523,7 @@ const Message = () => {
             <span className="text-base">
               {isMuted ? "Bật thông báo" : "Tắt thông báo"}
             </span>
-          </button> */}
+          </button>
           <button
             className="flex items-center dark:bg-gray-800 dark:text-white px-3 py-2 w-full rounded-full border text-gray-600 hover:bg-gray-100 transition"
             onClick={handleToggleSearch}
@@ -576,7 +551,7 @@ const Message = () => {
             Đổi chủ đề
           </button>
           <button className="text-left py-2 px-2 hover:bg-gray-100 rounded dark:hover:text-black">
-            File phương tiện & file
+            File phương tiện & tệp
           </button>
         </div>
       </div>
@@ -588,7 +563,7 @@ const Message = () => {
         >
           <img
             src={previewImage}
-            alt="Enlarged Preview"
+            alt="Ảnh phóng to"
             className="max-w-[90%] max-h-[90%] object-contain rounded-lg"
           />
         </div>
