@@ -8,7 +8,7 @@ import UserRentRoomService from "../../../Services/User/UserRentRoomService";
 import { useNavigate } from "react-router-dom";
 import Loading from "../../../Components/Loading";
 import OtherService from "../../../Services/User/OtherService";
-import UserService from '../../../Services/User/UserService'
+import UserService from '../../../Services/User/UserService';
 import { showCustomNotification } from "../../../Components/Notification";
 
 export default function RentalList() {
@@ -44,34 +44,52 @@ export default function RentalList() {
     });
 
     useEffect(() => {
-        if (!user?.userId || !user?.token) return;
-
         const fetchRentals = async () => {
+            setLoading(true);
             try {
-                setLoading(true);
-                const rentalList = await BookingManagementService.getRentalListOfUser(user.userId, user.token);
+                const list = await BookingManagementService.getRentalListOfUser(user.userId, user.token);
 
-                const waitingLandlordFiltered = rentalList.filter(rental =>
-                    rental.rentalStatus === 1 && rental.roomStatus === 1 && (!rental.contractStatus || rental.contractStatus !== 3)
-                );
-                const pendingFiltered = rentalList.filter(rental =>
-                    rental.rentalStatus === 1 && rental.roomStatus === 2 && rental.contractStatus === 4
-                );
-                const rentingFiltered = rentalList.filter(rental =>
-                    rental.rentalStatus === 1 && rental.roomStatus === 3 && rental.contractStatus === 1
-                );
-                const rentedFiltered = rentalList.filter(rental =>
-                    rental.rentalStatus === 1 && rental.roomStatus === 1 && rental.contractStatus === 3
-                );
-                const cancelledFiltered = rentalList.filter(rental =>
-                    rental.rentalStatus === 2 && rental.contractStatus === 2
-                );
+                const waitingLandlord = [];
+                const pendingTrans = [];
+                const rentingRoomsArr = [];
+                const rentedRoomsArr = [];
+                const cancelledRoomsArr = [];
 
-                setWaitingLandlordRentals(waitingLandlordFiltered);
-                setPendingRentals(pendingFiltered);
-                setRentingRooms(rentingFiltered);
-                setRentedRooms(rentedFiltered);
-                setCancelledRooms(cancelledFiltered);
+                list.forEach(r => {
+                    // 1) Chờ chủ phòng xác nhận (ưu tiên kiểm tra trước)
+                    if (r.rentalStatus === 1 && !r.contractId && r.roomStatus === 1) {
+                        waitingLandlord.push(r);
+                        return;
+                    }
+                    // 2) Đang chờ giao dịch
+                    if (r.contractId && r.contractStatus === 4) {
+                        pendingTrans.push(r);
+                        return;
+                    }
+                    // 3) Đang thuê
+                    if (r.contractId && r.contractStatus === 1 && r.roomStatus === 3 && r.rentalStatus === 1) {
+                        rentingRoomsArr.push(r);
+                        return;
+                    }
+                    // 4) Đã thuê
+                    if (r.contractId && r.contractStatus === 3 && r.roomStatus === 1 && r.rentalStatus === 1) {
+                        rentedRoomsArr.push(r);
+                        return;
+                    }
+                    // 5) Đã hủy
+                    if (r.rentalStatus === 2 || r.contractStatus === 2) {
+                        cancelledRoomsArr.push(r);
+                        return;
+                    }
+                    cancelledRoomsArr.push(r);
+                });
+
+                setWaitingLandlordRentals(waitingLandlord);
+                setPendingRentals(pendingTrans);
+                setRentingRooms(rentingRoomsArr);
+                setRentedRooms(rentedRoomsArr);
+                setCancelledRooms(cancelledRoomsArr);
+
             } catch (error) {
                 console.error("❌ [FE] Error fetching rental list:", error);
             } finally {
@@ -107,10 +125,12 @@ export default function RentalList() {
             setLoading(false);
         }
     };
+
     const handleImageChange = (event) => {
         const files = Array.from(event.target.files);
         setImages(files);
     };
+
     const handleSubmit = () => {
         addReport({ reportContent, images });
         setShowReportPopup(false);
@@ -130,7 +150,7 @@ export default function RentalList() {
                     createdDate: rental.createdDate,
                     monthForRent: rental.monthForRent,
                     rentDate: rental.rentDate,
-                    scheduledActionDate: rental.scheduledActionDate // Lưu nếu có
+                    scheduledActionDate: rental.scheduledActionDate
                 },
                 room: rental.roomDetails,
                 contract: rental.contractDetails
@@ -261,14 +281,9 @@ export default function RentalList() {
         if (rentalStatus === 2 && cStatus === 2) return "Đã hủy";
         return "Không xác định";
     };
+
     const handleImageSelection = (event) => {
         const files = Array.from(event.target.files);
-
-        // if (files.length + selectedImages.length > 3) {
-        //     alert("You can only upload up to 3 images.");
-        //     return;
-        // }
-
         const newPreviews = files.map(file => URL.createObjectURL(file));
         setPreviewImages(prev => [...prev, ...newPreviews]);
         setSelectedImages(prev => [...prev, ...files]);
@@ -282,7 +297,6 @@ export default function RentalList() {
     const uploadFile = async (file) => {
         const formData = new FormData();
         formData.append('file', file);
-
         try {
             const data = await OtherService.uploadImage(formData);
             return data.imageUrl;
@@ -298,7 +312,6 @@ export default function RentalList() {
         return await Promise.all(uploadPromises);
     };
 
-
     const submitReview = async () => {
         if (rating === 0) {
             showCustomNotification("warning", "Vui lòng chọn số sao để đánh giá!");
@@ -307,9 +320,7 @@ export default function RentalList() {
         setLoading(true);
         try {
             const uploadedUrls = await uploadImages();
-
-            const finalImage = JSON.stringify([...existingImages, ...uploadedUrls]); // Merge and stringify
-
+            const finalImage = JSON.stringify([...existingImages, ...uploadedUrls]);
             const feedbackBody = {
                 comment,
                 star: rating,
@@ -317,7 +328,6 @@ export default function RentalList() {
                 roomId: selectedRoom.room.roomId,
                 contractId: selectedRoom.contract.contractId
             };
-
             await UserRentRoomService.sendFeedback(feedbackBody);
             showCustomNotification("success", "Đánh giá của bạn đã được gửi");
             setReviewedRooms(prev => {
@@ -335,15 +345,13 @@ export default function RentalList() {
     };
 
     const openReviewModal = () => {
-        // Reset all states
         setComment("");
         setRating(0);
         setPreviewImages([]);
         setSelectedImages([]);
-
-        // Show modal
         setShowReviewModal(true);
     };
+
     if (loading) return <div className="flex justify-center items-center h-screen">
         <Loading />
     </div>;
@@ -430,7 +438,11 @@ export default function RentalList() {
                                 </p>
                                 <p className="text-gray-700 flex items-center dark:bg-gray-800 dark:text-white">
                                     <FaCalendarAlt className="text-gray-500 mr-2" />
-                                    Ngày hết hạn: {selectedRoom.contract?.rentalDateTimeEnd ? new Date(selectedRoom.contract.rentalDateTimeEnd).toLocaleDateString() : "Chưa cập nhật"}
+                                    Ngày hết hạn: {selectedRoom.rentalList?.rentDate && selectedRoom.rentalList?.monthForRent ? (() => {
+                                        const startDate = new Date(selectedRoom.rentalList.rentDate);
+                                        const endDate = new Date(startDate.setMonth(startDate.getMonth() + selectedRoom.rentalList.monthForRent));
+                                        return endDate.toLocaleDateString();
+                                    })() : "Chưa cập nhật"}
                                 </p>
                                 <p className="text-gray-700 flex items-center dark:bg-gray-800 dark:text-white">
                                     <FaFileContract className="text-red-600 mr-2" />
@@ -533,7 +545,6 @@ export default function RentalList() {
                         <div className="flex justify-center">
                             <button
                                 onClick={() => {
-
                                     setShowSuccessPopup(false);
                                     if (successMessage.includes("không đủ tiền")) navigate("/Moneys");
                                 }}
@@ -545,6 +556,7 @@ export default function RentalList() {
                     </div>
                 </div>
             )}
+
             {showReviewModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white p-6 rounded-lg shadow-xl max-w-[500px] max-h-[800px] overflow-y-auto relative">
@@ -564,8 +576,7 @@ export default function RentalList() {
                                 return (
                                     <FaStar
                                         key={index}
-                                        className={`cursor-pointer text-2xl ${starValue <= (hover || rating) ? "text-yellow-500" : "text-gray-300"
-                                            }`}
+                                        className={`cursor-pointer text-2xl ${starValue <= (hover || rating) ? "text-yellow-500" : "text-gray-300"}`}
                                         onMouseEnter={() => setHover(starValue)}
                                         onMouseLeave={() => setHover(0)}
                                         onClick={() => setRating(starValue)}
@@ -595,8 +606,7 @@ export default function RentalList() {
                                 onChange={handleImageSelection}
                             />
                             <p className="text-gray-500">
-                                Kéo và thả ảnh vào đây hoặc{" "}
-                                <span className="text-green-500 font-semibold">chọn ảnh</span>
+                                Kéo và thả ảnh vào đây hoặc <span className="text-green-500 font-semibold">chọn ảnh</span>
                             </p>
                             <p className="text-sm text-gray-400 mt-1">.jpg, .png, .gif</p>
                         </div>
@@ -614,7 +624,6 @@ export default function RentalList() {
                                         <button
                                             onClick={() => removeImage(index)}
                                             className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
-
                                         >
                                             ✕
                                         </button>
@@ -633,10 +642,7 @@ export default function RentalList() {
                             </button>
                             <button
                                 onClick={submitReview}
-                                className={`px-6 py-2 rounded-lg text-white transition ${rating === 0
-                                    ? "bg-gray-400 cursor-not-allowed"
-                                    : "bg-green-600 hover:bg-green-700"
-                                    }`}
+                                className={`px-6 py-2 rounded-lg text-white transition ${rating === 0 ? "bg-gray-400 cursor-not-allowed" : "bg-green-600 hover:bg-green-700"}`}
                                 disabled={rating === 0}
                             >
                                 Xác nhận
@@ -645,6 +651,7 @@ export default function RentalList() {
                     </div>
                 </div>
             )}
+
             {showReportPopup && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white p-6 rounded-lg shadow-lg min-w-[600px] max-w-[800px] max-h-[80vh] overflow-y-auto relative">
@@ -666,7 +673,6 @@ export default function RentalList() {
                             placeholder="Nhập nội dung báo cáo..."
                             value={reportContent}
                             onChange={(e) => setReportContent(e.target.value)}
-
                         ></textarea>
 
                         {/* Upload ảnh */}
@@ -678,7 +684,6 @@ export default function RentalList() {
                                 accept="image/*"
                                 onChange={handleImageChange}
                                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-
                             />
                             <p className="text-gray-500">
                                 Kéo và thả ảnh vào đây hoặc <span className="text-blue-500 font-semibold">chọn ảnh</span>
@@ -713,16 +718,12 @@ export default function RentalList() {
                             <button
                                 onClick={() => setShowReportPopup(false)}
                                 className="bg-gray-300 text-black px-6 py-2 rounded-lg hover:bg-gray-400 transition disabled:opacity-50 disabled:cursor-not-allowed"
-
                             >
                                 Hủy
                             </button>
                             <button
                                 onClick={addReport}
-                                className={`px-6 py-2 rounded-lg text-white transition flex items-center justify-center ${!reportContent.trim() || loading
-                                    ? "bg-gray-400 cursor-not-allowed"
-                                    : "bg-red-600 hover:bg-red-700"
-                                    }`}
+                                className={`px-6 py-2 rounded-lg text-white transition flex items-center justify-center ${!reportContent.trim() || loading ? "bg-gray-400 cursor-not-allowed" : "bg-red-600 hover:bg-red-700"}`}
                                 disabled={!reportContent.trim()}
                             >
                                 Báo cáo
@@ -733,5 +734,4 @@ export default function RentalList() {
             )}
         </div>
     );
-
 }
