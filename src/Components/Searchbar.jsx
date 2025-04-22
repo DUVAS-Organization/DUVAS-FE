@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaMapMarkerAlt, FaSearch, FaChevronUp, FaChevronDown } from "react-icons/fa";
+import { FaMapMarkerAlt, FaSearch, FaChevronUp, FaChevronDown, FaMicrophone, FaUpload } from "react-icons/fa";
 import { useNavigate } from 'react-router-dom';
 import RangeSlider from "../Components/Layout/Range/RangeSlider";
 import DropdownFilter from "../Components/Layout/DropdownFilter";
@@ -8,23 +8,22 @@ import CategoryRoomService from '../Services/User/CategoryRoomService';
 import CategoryServiceService from '../Services/User/CategoryServices';
 
 const Searchbar = (props) => {
+    const [searchKeyword, setSearchKeyword] = useState("");
+    const [searchResults, setSearchResults] = useState([]);
     const [priceDropdownOpen, setPriceDropdownOpen] = useState(false);
     const [minPrice, setMinPrice] = useState(0);
     const [maxPrice, setMaxPrice] = useState(100);
     const [selectedPrice, setSelectedPrice] = useState("all");
     const [priceLabel, setPriceLabel] = useState("Mức giá");
-
     const [areaDropdownOpen, setAreaDropdownOpen] = useState(false);
     const [minArea, setMinArea] = useState(0);
     const [maxArea, setMaxArea] = useState(1000);
     const [selectedArea, setSelectedArea] = useState("all");
     const [areaLabel, setAreaLabel] = useState("Diện tích");
-
     const [categoriesRoom, setCategoriesRoom] = useState([]);
     const [categoriesService, setCategoriesService] = useState([]);
     const [selectedCategoryId, setSelectedCategoryId] = useState("");
     const [categoryLabel, setCategoryLabel] = useState("-- Chọn loại --");
-
     const [activeTab, setActiveTab] = useState("rooms");
     const navigate = useNavigate();
     const { isManagementRoom } = props;
@@ -98,30 +97,106 @@ const Searchbar = (props) => {
         );
     };
 
-    const handleSearch = () => {
-        // Tạo queryParams cho URL điều hướng
-        const queryParams = {};
+    const handleSearch = async () => {
+        const queryParams = new URLSearchParams();
 
         if (activeTab === "rooms") {
             const selectedCategory = categoriesRoom.find(c => c.categoryRoomId.toString() === selectedCategoryId);
-            queryParams.tab = selectedCategory ? selectedCategory.categoryName : "Phòng trọ";
-            if (selectedCategoryId) queryParams.categoryRoomId = selectedCategoryId;
-            if (minPrice !== 0) queryParams.minPrice = minPrice;
-            if (maxPrice !== 100) queryParams.maxPrice = maxPrice;
-            if (minArea !== 0) queryParams.minArea = minArea;
-            if (maxArea !== 1000) queryParams.maxArea = maxArea;
-            const queryString = new URLSearchParams(queryParams).toString();
-            // console.log("Navigating to Rooms:", `/Rooms?${queryString}`);
-            navigate(`/Rooms?${queryString}`);
+            queryParams.set("tab", selectedCategory ? selectedCategory.categoryName : "Phòng trọ");
+            if (selectedCategoryId) queryParams.set("categoryRoomId", selectedCategoryId);
+            if (minPrice !== 0) queryParams.set("minPrice", minPrice);
+            if (maxPrice !== 100) queryParams.set("maxPrice", maxPrice);
+            if (minArea !== 0) queryParams.set("minArea", minArea);
+            if (maxArea !== 1000) queryParams.set("maxArea", maxArea);
+            if (searchKeyword) queryParams.set("searchTerm", searchKeyword);
+
+            try {
+                const response = await fetch(`http://localhost:3000/api/search-rooms?${queryParams.toString()}`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    setSearchResults(data.rooms || []);
+                    navigate(`/Rooms`, { state: { searchResults: data.rooms || [] } });
+                } else {
+                    console.error(data.message);
+                    setSearchResults([]);
+                    navigate(`/Rooms`, { state: { searchResults: [] } });
+                }
+            } catch (error) {
+                console.error("Error searching rooms:", error);
+                setSearchResults([]);
+                navigate(`/Rooms`, { state: { searchResults: [] } });
+            }
         } else if (activeTab === "services") {
             const selectedCategory = categoriesService.find(c => c.categoryServiceId.toString() === selectedCategoryId);
-            queryParams.tab = selectedCategory ? selectedCategory.categoryServiceName : "Dịch vụ vệ sinh";
-            if (selectedCategoryId) queryParams.categoryServiceId = selectedCategoryId;
-            if (minPrice !== 0) queryParams.minPrice = minPrice;
-            if (maxPrice !== 100) queryParams.maxPrice = maxPrice;
-            const queryString = new URLSearchParams(queryParams).toString();
-            // console.log("Navigating to ServicePosts:", `/ServicePosts?${queryString}`);
-            navigate(`/ServicePosts?${queryString}`);
+            queryParams.set("tab", selectedCategory ? selectedCategory.categoryServiceName : "Dịch vụ vệ sinh");
+            if (selectedCategoryId) queryParams.set("categoryServiceId", selectedCategoryId);
+            if (minPrice !== 0) queryParams.set("minPrice", minPrice);
+            if (maxPrice !== 100) queryParams.set("maxPrice", maxPrice);
+            if (searchKeyword) queryParams.set("searchTerm", searchKeyword);
+
+            try {
+                const response = await fetch(`http://localhost:3000/api/search-services?${queryParams.toString()}`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    setSearchResults(data.services || []);
+                    navigate(`/ServicePosts`, { state: { searchResults: data.services || [] } });
+                } else {
+                    console.error(data.message);
+                    setSearchResults([]);
+                    navigate(`/ServicePosts`, { state: { searchResults: [] } });
+                }
+            } catch (error) {
+                console.error("Error searching services:", error);
+                setSearchResults([]);
+                navigate(`/ServicePosts`, { state: { searchResults: [] } });
+            }
+        }
+    };
+
+    const handleRecord = () => {
+        console.log("Bắt đầu ghi âm...");
+    };
+
+    const handleUpload = () => {
+        console.log("Tải tệp âm thanh...");
+        document.getElementById("audio-upload").click();
+    };
+
+    const handleFileChange = async (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const formData = new FormData();
+            formData.append("audioFile", file);
+
+            try {
+                const response = await fetch(`http://localhost:3000/api/search-rooms`, {
+                    method: "POST",
+                    body: formData,
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    setSearchResults(data.rooms || []);
+                    navigate(`/Rooms`, { state: { searchResults: data.rooms || [] } });
+                } else {
+                    console.error(data.message);
+                    setSearchResults([]);
+                    navigate(`/Rooms`, { state: { searchResults: [] } });
+                }
+            } catch (error) {
+                console.error("Error uploading audio file:", error);
+                setSearchResults([]);
+                navigate(`/Rooms`, { state: { searchResults: [] } });
+            }
         }
     };
 
@@ -150,13 +225,28 @@ const Searchbar = (props) => {
                             <span className="mx-2">Đà Nẵng</span>
                         </div>
                         <h1 className="font-medium text-gray-500 flex-shrink-0">|</h1>
-                        <div className="relative flex-1">
+                        <div className="relative flex-1 flex items-center">
+                            <button onClick={handleRecord} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                                <FaMicrophone />
+                            </button>
+                            <button onClick={handleUpload} className="absolute left-9 top-1/2 transform -translate-y-1/2 text-gray-500">
+                                <FaUpload />
+                            </button>
                             <input
-                                className="w-full bg-gray-100 rounded-lg pl-10 pr-28 py-2"
+                                id="audio-upload"
+                                type="file"
+                                accept="audio/*"
+                                className="hidden"
+                                onChange={handleFileChange}
+                            />
+                            <input
+                                className="w-full bg-gray-100 rounded-lg pl-16 pr-28 py-2"
                                 placeholder="Nhập tối đa 3 địa điểm."
                                 type="text"
+                                value={searchKeyword}
+                                onChange={(e) => setSearchKeyword(e.target.value)}
                             />
-                            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+                            <FaSearch className="absolute left-14 top-1/2 transform -translate-y-1/2 text-gray-500" />
                             <button
                                 type="button"
                                 onClick={handleSearch}
@@ -310,19 +400,32 @@ const Searchbar = (props) => {
                     </div>
                 </div>
             </div>
-
         </div> :
             <div className="bg-red-500 p-4">
                 <div className="mx-auto max-w-6xl">
                     <div className="shadow-lg rounded-b-lg p-4">
                         <div className="bg-white flex items-center space-x-2 rounded-lg">
-                            <div className="relative flex-1">
+                            <div className="relative flex-1 flex items-center">
+                                <button onClick={handleRecord} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                                    <FaMicrophone />
+                                </button>
+                                <button onClick={handleUpload} className="absolute left-9 top-1/2 transform -translate-y-1/2 text-gray-500">
+                                    <FaUpload />
+                                </button>
                                 <input
-                                    className="w-full bg-gray-100 rounded-lg pl-10 pr-28 py-2"
-                                    
-                                    type="text"
+                                    id="audio-upload"
+                                    type="file"
+                                    accept="audio/*"
+                                    className="hidden"
+                                    onChange={handleFileChange}
                                 />
-                                <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+                                <input
+                                    className="w-full bg-gray-100 rounded-lg pl-16 pr-28 py-2"
+                                    type="text"
+                                    value={searchKeyword}
+                                    onChange={(e) => setSearchKeyword(e.target.value)}
+                                />
+                                <FaSearch className="absolute left-14 top-1/2 transform -translate-y-1/2 text-gray-500" />
                                 <button
                                     onClick={handleSearch}
                                     className="absolute right-0 top-1/2 transform -translate-y-1/2 h-8 bg-red-600 text-white rounded-lg px-4 mx-2"
@@ -334,25 +437,20 @@ const Searchbar = (props) => {
                     </div>
 
                     <div className="w-1/3 relative">
-  <select
-    className="w-full bg-red-800 text-white text-left rounded-lg px-4 py-2 appearance-none cursor-pointer focus:outline-none"
-    value={selectedCategoryId}
-    onChange={handleCategoryChange}
-  >
-    <option value="">-- Danh sách Phòng --</option>
-    {/* Các tùy chọn phòng */}
-    <option value="available">Phòng Đang trống</option>
-    <option value="pending">Phòng đang chờ giao dịch</option>
-    <option value="rented">Phòng Đang cho thuê</option>
-  </select>
-  <FaChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white pointer-events-none" />
-</div>
-
+                        <select
+                            className="w-full bg-red-800 text-white text-left rounded-lg px-4 py-2 appearance-none cursor-pointer focus:outline-none"
+                            value={selectedCategoryId}
+                            onChange={handleCategoryChange}
+                        >
+                            <option value="">-- Danh sách Phòng --</option>
+                            <option value="available">Phòng Đang trống</option>
+                            <option value="pending">Phòng đang chờ giao dịch</option>
+                            <option value="rented">Phòng Đang cho thuê</option>
+                        </select>
+                        <FaChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white pointer-events-none" />
+                    </div>
                 </div>
-                
             </div>)
-            
-
     );
 };
 
