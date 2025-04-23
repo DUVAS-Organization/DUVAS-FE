@@ -5,7 +5,6 @@ import { BiBookHeart } from "react-icons/bi";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../../Context/AuthProvider";
 import { useUI } from "./UIContext";
-import { useRealtime } from "../../../Context/RealtimeProvider";
 import OtherService from "../../../Services/User/OtherService";
 
 const SavedPostList = () => {
@@ -15,54 +14,70 @@ const SavedPostList = () => {
     const navigate = useNavigate();
     const [savedPosts, setSavedPosts] = useState([]);
     const dropdownRef = useRef(null);
-    const { connectSocket, onEvent, offEvent, isConnected } = useRealtime();
+    const wsRef = useRef(null); // Ref cho WebSocket
 
-    // Kết nối SignalR và lắng nghe sự kiện
+    // Kết nối WebSocket và lắng nghe sự kiện
     useEffect(() => {
-        if (user) {
-            connectSocket(user.userId);
+        if (!user) return;
 
-            const handleSavedPostAdded = (message) => {
-                const { data } = message;
-                if (String(data.userId) === String(user.userId)) { // Chuyển cả hai thành chuỗi
-                    setSavedPosts((prev) => {
-                        const exists = prev.some(
-                            (p) =>
-                                (p.roomId && p.roomId === data.roomId) ||
-                                (p.servicePostId && p.servicePostId === data.servicePostId)
-                        );
-                        if (!exists) {
-                            return [...prev, data];
-                        }
-                        return prev;
-                    });
-                }
-            };
+        const userId = user.userId;
 
-            const handleSavedPostRemoved = (message) => {
-                const { data } = message;
-                if (String(data.userId) === String(user.userId)) { // Chuyển cả hai thành chuỗi
-                    setSavedPosts((prev) =>
-                        prev.filter(
-                            (p) =>
-                                !(
+        // Kết nối WebSocket
+        wsRef.current = OtherService.connectWebSocket(userId, {
+            onOpen: () => {
+                console.log("WebSocket connected for SavedPostList");
+            },
+            onMessage: (event) => {
+                try {
+                    const message = JSON.parse(event.data);
+                    const { event: eventType, data } = message;
+
+                    if (String(data.userId) !== String(userId)) return; // Kiểm tra userId
+
+                    if (eventType === "savedPostAdded") {
+                        setSavedPosts((prev) => {
+                            const exists = prev.some(
+                                (p) =>
                                     (p.roomId && p.roomId === data.roomId) ||
                                     (p.servicePostId && p.servicePostId === data.servicePostId)
-                                )
-                        )
-                    );
+                            );
+                            if (!exists) {
+                                return [...prev, data];
+                            }
+                            return prev;
+                        });
+                    } else if (eventType === "savedPostRemoved") {
+                        setSavedPosts((prev) =>
+                            prev.filter(
+                                (p) =>
+                                    !(
+                                        (p.roomId && p.roomId === data.roomId) ||
+                                        (p.servicePostId && p.servicePostId === data.servicePostId)
+                                    )
+                            )
+                        );
+                    }
+                } catch (err) {
+                    console.error("Error processing WebSocket message for SavedPostList:", err);
                 }
-            };
+            },
+            onClose: () => {
+                console.log("WebSocket disconnected for SavedPostList");
+            },
+            onError: (error) => {
+                console.error("WebSocket error for SavedPostList:", error);
+                // Fallback sang polling nếu WebSocket thất bại
+                const pollingInterval = setInterval(() => {
+                    fetchSavedPosts();
+                }, 10000); // Gọi mỗi 10 giây
+                return () => clearInterval(pollingInterval);
+            },
+        });
 
-            onEvent("savedPostAdded", handleSavedPostAdded);
-            onEvent("savedPostRemoved", handleSavedPostRemoved);
-
-            return () => {
-                onEvent("savedPostAdded", handleSavedPostAdded);
-                onEvent("savedPostRemoved", handleSavedPostRemoved);
-            };
-        }
-    }, [user, connectSocket, onEvent, offEvent]);
+        return () => {
+            wsRef.current?.close();
+        };
+    }, [user]);
 
     // Đóng dropdown khi click bên ngoài
     useEffect(() => {

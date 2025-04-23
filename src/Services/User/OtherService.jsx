@@ -2,6 +2,7 @@ import axios from 'axios';
 
 const API_URL = 'https://apiduvas1.runasp.net/api';
 const HUB_BASE_URL = 'https://apiduvas1.runasp.net';
+const WS_URL = "wss://apiduvas1.runasp.net/ws/savedPosts";
 
 const OtherService = {
     //JWT
@@ -163,6 +164,32 @@ const OtherService = {
             console.error('Error fetching reports:', error);
             throw error; // Throw lỗi để xử lý ở component gọi hàm này
         }
+    },
+    // Kết nối WebSocket
+    connectWebSocket(userId, { onMessage, onOpen, onClose, onError }) {
+        const ws = new WebSocket(`${WS_URL}?userId=${userId}`);
+
+        ws.onopen = () => {
+            console.log("WebSocket connected for SavedPostList");
+            if (onOpen) onOpen();
+        };
+
+        ws.onmessage = (event) => {
+            console.log("WebSocket message received for SavedPostList:", event.data);
+            if (onMessage) onMessage(event);
+        };
+
+        ws.onclose = () => {
+            console.log("WebSocket disconnected for SavedPostList");
+            if (onClose) onClose();
+        };
+
+        ws.onerror = (error) => {
+            console.error("WebSocket error for SavedPostList:", error);
+            if (onError) onError(error);
+        };
+
+        return ws; // Trả về đối tượng WebSocket để đóng kết nối khi cần
     },
     savedPostHub: `${HUB_BASE_URL}/savedPostHub`,
     chatHub: `${HUB_BASE_URL}/chathub`,
