@@ -33,7 +33,7 @@ const ContractService = {
                 throw new Error('No authentication token found.');
             }
 
-            const response = await axios.get(`${API_URL}/all-authorization-contract`, {
+            const response = await axios.get(`${API_URL}/authorization`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     'Content-Type': 'application/json',
