@@ -12,7 +12,7 @@ const SidebarUser = () => {
     const currentPath = location.pathname;
     const isWithdrawCreateActive = currentPath === "/Withdraw/Create";
     const isAuthorizationActive = currentPath === "/Landlord/Authorization";
-    const [isFinanceOpen, setIsFinanceOpen] = useState(false);
+    const [isFinanceOpen, setIsFinanceOpen] = useState(true);
 
     const { user } = useAuth();
     if (!user) return null;
