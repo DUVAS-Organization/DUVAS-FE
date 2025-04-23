@@ -56,27 +56,22 @@ export default function RentalList() {
                 const cancelledRoomsArr = [];
 
                 list.forEach(r => {
-                    // 1) Chờ chủ phòng xác nhận (ưu tiên kiểm tra trước)
                     if (r.rentalStatus === 1 && !r.contractId && r.roomStatus === 1) {
                         waitingLandlord.push(r);
                         return;
                     }
-                    // 2) Đang chờ giao dịch
                     if (r.contractId && r.contractStatus === 4) {
                         pendingTrans.push(r);
                         return;
                     }
-                    // 3) Đang thuê
                     if (r.contractId && r.contractStatus === 1 && r.roomStatus === 3 && r.rentalStatus === 1) {
                         rentingRoomsArr.push(r);
                         return;
                     }
-                    // 4) Đã thuê
                     if (r.contractId && r.contractStatus === 3 && r.roomStatus === 1 && r.rentalStatus === 1) {
                         rentedRoomsArr.push(r);
                         return;
                     }
-                    // 5) Đã hủy
                     if (r.rentalStatus === 2 || r.contractStatus === 2) {
                         cancelledRoomsArr.push(r);
                         return;
@@ -131,11 +126,6 @@ export default function RentalList() {
         setImages(files);
     };
 
-    const handleSubmit = () => {
-        addReport({ reportContent, images });
-        setShowReportPopup(false);
-    };
-
     const handleSelectRental = (rentalId) => {
         const rental = [...pendingRentals, ...waitingLandlordRentals, ...rentingRooms, ...rentedRooms, ...cancelledRooms]
             .find(r => r.rentalId === rentalId);
@@ -181,8 +171,8 @@ export default function RentalList() {
             await BookingManagementService.updateBalance(updateBalanceData, user.token);
 
             const insiderTradingData = {
-                Remitter: user.userId, // User thuê phòng
-                Receiver: landlordId,  // Landlord
+                Remitter: user.userId,
+                Receiver: landlordId,
                 Money: roomPrice
             };
             const insiderTradingResponse = await BookingManagementService.firstMonthInsiderTrading(insiderTradingData, user.token);
@@ -328,14 +318,22 @@ export default function RentalList() {
                 roomId: selectedRoom.room.roomId,
                 contractId: selectedRoom.contract.contractId
             };
-            await UserRentRoomService.sendFeedback(feedbackBody);
-            showCustomNotification("success", "Đánh giá của bạn đã được gửi");
-            setReviewedRooms(prev => {
-                const updatedReviews = [...prev, selectedRoom.room.roomId];
-                localStorage.setItem('reviewedRooms', JSON.stringify(updatedReviews));
-                return updatedReviews;
-            });
-            setShowReviewModal(false);
+            const response = await UserRentRoomService.sendFeedback(feedbackBody);
+            if (response.status === 200) {
+                showCustomNotification("success", "Đánh giá của bạn đã được gửi");
+                setReviewedRooms(prev => {
+                    const updatedReviews = [...prev, selectedRoom.room.roomId];
+                    localStorage.setItem('reviewedRooms', JSON.stringify(updatedReviews));
+                    return updatedReviews;
+                });
+                setShowReviewModal(false);
+                setComment("");
+                setRating(0);
+                setPreviewImages([]);
+                setSelectedImages([]);
+            } else {
+                showCustomNotification("error", "Gửi đánh giá thất bại, vui lòng thử lại!");
+            }
         } catch (error) {
             console.error("❌ Lỗi khi gửi đánh giá:", error.response?.data || error.message);
             showCustomNotification("error", "Không thể gửi đánh giá, vui lòng thử lại!");
@@ -473,8 +471,7 @@ export default function RentalList() {
                                             Đánh Giá
                                         </button>
                                         <button
-                                            onClick={() => { console.log('test'); setShowReportPopup(true); setRoomId(selectedRoom.room.roomId) }}
-                                            type="button"
+                                            onClick={() => { setShowReportPopup(true); setRoomId(selectedRoom.room.roomId); }}
                                             className="text-red-500 px-3 py-2 rounded-md text-base font-medium border border-red-400 hover:bg-red-500 hover:text-white transition-colors duration-150"
                                         >
                                             Báo cáo!
@@ -491,8 +488,7 @@ export default function RentalList() {
                                 )}
                                 {selectedRoom.contract?.status === 1 && (
                                     <button
-                                        onClick={() => { console.log('test'); setShowReportPopup(true); setRoomId(selectedRoom.room.roomId) }}
-                                        type="button"
+                                        onClick={() => { setShowReportPopup(true); setRoomId(selectedRoom.room.roomId); }}
                                         className="text-red-500 px-3 py-2 rounded-md text-base font-medium border border-red-400 hover:bg-red-500 hover:text-white transition-colors duration-150"
                                     >
                                         Báo cáo!
@@ -506,7 +502,6 @@ export default function RentalList() {
                 </div>
             </div>
 
-            {/* Popups */}
             {showConfirmPopup && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
                     <div className="bg-white p-6 rounded-lg shadow-lg w-96">
@@ -560,7 +555,6 @@ export default function RentalList() {
             {showReviewModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white p-6 rounded-lg shadow-xl max-w-[500px] max-h-[800px] overflow-y-auto relative">
-                        {/* Hiển thị Loading overlay khi reviewLoading là true */}
                         {loading && (
                             <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
                                 <Loading />
@@ -569,7 +563,6 @@ export default function RentalList() {
 
                         <h3 className="text-xl font-bold mb-4">Đánh Giá Phòng</h3>
 
-                        {/* Star Rating */}
                         <div className="flex mb-4">
                             {[...Array(5)].map((_, index) => {
                                 const starValue = index + 1;
@@ -586,7 +579,6 @@ export default function RentalList() {
                         </div>
                         <p className="text-sm text-gray-500 mb-4">Vui lòng chọn số sao (bắt buộc)</p>
 
-                        {/* Comment Box */}
                         <textarea
                             className="w-full border rounded-lg p-2 mb-4"
                             rows="3"
@@ -595,7 +587,6 @@ export default function RentalList() {
                             onChange={(e) => setComment(e.target.value)}
                         ></textarea>
 
-                        {/* Image Upload */}
                         <label className="block mb-2 font-medium text-gray-700">Hình ảnh (không bắt buộc):</label>
                         <div className="relative border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-green-400 transition">
                             <input
@@ -611,7 +602,6 @@ export default function RentalList() {
                             <p className="text-sm text-gray-400 mt-1">.jpg, .png, .gif</p>
                         </div>
 
-                        {/* Image Previews */}
                         {previewImages.length > 0 && (
                             <div className="mt-4 grid grid-cols-3 gap-3 max-h-64 overflow-y-auto">
                                 {previewImages.map((img, index) => (
@@ -632,7 +622,6 @@ export default function RentalList() {
                             </div>
                         )}
 
-                        {/* Buttons */}
                         <div className="flex justify-between mt-6 sticky bottom-0 bg-white pt-4">
                             <button
                                 onClick={() => setShowReviewModal(false)}
@@ -655,7 +644,6 @@ export default function RentalList() {
             {showReportPopup && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white p-6 rounded-lg shadow-lg min-w-[600px] max-w-[800px] max-h-[80vh] overflow-y-auto relative">
-                        {/* Hiển thị Loading overlay khi loading là true */}
                         {loading && (
                             <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
                                 <Loading />
@@ -665,7 +653,6 @@ export default function RentalList() {
                         <h3 className="text-lg font-bold mb-4">Báo cáo</h3>
                         <p className="mb-4 text-gray-600">Báo cáo về những gì bạn gặp trong quá trình thuê phòng.</p>
 
-                        {/* Nội dung báo cáo */}
                         <label className="block mb-2 font-medium text-gray-700">Nội dung (bắt buộc):</label>
                         <textarea
                             className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-300 transition"
@@ -675,7 +662,6 @@ export default function RentalList() {
                             onChange={(e) => setReportContent(e.target.value)}
                         ></textarea>
 
-                        {/* Upload ảnh */}
                         <label className="block mt-4 mb-2 font-medium text-gray-700">Hình ảnh (không bắt buộc):</label>
                         <div className="relative border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-blue-400 transition">
                             <input
@@ -691,7 +677,6 @@ export default function RentalList() {
                             <p className="text-sm text-gray-400 mt-1">Hỗ trợ nhiều ảnh</p>
                         </div>
 
-                        {/* Danh sách ảnh tải lên */}
                         {images.length > 0 && (
                             <div className="mt-4 grid grid-cols-3 gap-3 max-h-64 overflow-y-auto">
                                 {images.map((img, index) => (
@@ -713,7 +698,6 @@ export default function RentalList() {
                             </div>
                         )}
 
-                        {/* Nút điều khiển */}
                         <div className="flex justify-between mt-6 sticky bottom-0 bg-white pt-4">
                             <button
                                 onClick={() => setShowReportPopup(false)}
