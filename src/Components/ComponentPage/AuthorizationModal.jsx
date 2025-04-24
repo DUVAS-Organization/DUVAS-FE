@@ -207,7 +207,6 @@ const AuthorizationModal = ({ open, onClose, user, selectedRooms, adminData, onS
 
             const payload = {
                 contractNumber: `${Date.now()}`,
-                // date: new Date().toISOString().split('T')[0],
                 partyAId: parseInt(user.userId, 10),
                 partyAName: contractDetails.partyAName,
                 partyABirthDate: new Date(contractDetails.partyABirthDate).toISOString(),
@@ -222,7 +221,6 @@ const AuthorizationModal = ({ open, onClose, user, selectedRooms, adminData, onS
                 partyBIDIssueDate: contractDetails.partyBIDIssueDate,
                 partyBIDIssuePlace: contractDetails.partyBIDIssuePlace,
                 partyBAddress: contractDetails.partyBAddress,
-                // certificationLocation: contractDetails.certificationLocation,
                 scopeOfAuthorization: contractDetails.scopeOfAuthorization,
                 startDate: contractDetails.startDate,
                 duration: duration.toString(),
@@ -231,6 +229,7 @@ const AuthorizationModal = ({ open, onClose, user, selectedRooms, adminData, onS
                 effectiveDate: contractDetails.effectiveDate,
                 partyASignature: '',
                 partyBSignature: '',
+                selectedRoom: selectedRooms // Gửi mảng roomId
             };
 
             setIsLoading(true);
@@ -238,7 +237,6 @@ const AuthorizationModal = ({ open, onClose, user, selectedRooms, adminData, onS
             await ContractService.generateAuthorizationContract(payload);
             alert("Ủy quyền thành công!");
             setContractDetails({
-                // certificationLocation: '',
                 partyAName: '',
                 partyABirthDate: '',
                 partyAIDNumber: '',
@@ -248,6 +246,9 @@ const AuthorizationModal = ({ open, onClose, user, selectedRooms, adminData, onS
                 partyBId: '1',
                 partyBName: 'Nguyễn Đình Mạnh Hùng',
                 partyBAddress: 'Phường Phong An, thị xã Phong Điền, Thừa Thiên Huế',
+                partyBBirthDate: '2003-08-02',
+                partyBIDNumber: '046203004566',
+                partyBIDIssueDate: '2022-08-23',
                 partyBBirthDate: '2003-08-02',
                 partyBIDNumber: '046203004566',
                 partyBIDIssueDate: '2022-08-23',
