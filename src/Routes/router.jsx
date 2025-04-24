@@ -10,8 +10,6 @@ import ForgotPasswords from '../Components/Layout/Auth/ForgotPassword';
 import { useAuth } from '../Context/AuthProvider'; // Import useAuth
 import Profile from '../Pages/User/Profiles/Profile';
 
-import ServicePost from '../Pages/User/ServicePosts/ServicePost';
-
 import AccountList from '../Pages/Admin/Accounts/AccountList'
 import ServicePostList from '../Pages/Admin/ServicePosts/ServicePostList'
 import RoomList from '../Pages/Admin/Rooms/RoomList'
@@ -46,7 +44,6 @@ import ViewProfile from '../Pages/Landlord/ViewProfile'
 import RoomsFormLandlord from '../Pages/Landlord/Rooms/RoomsForm';
 import RoomRentalConfirmation from '../Pages/Landlord/Rooms/RoomRentalConfirmation';
 
-import ServicePostDetailsUser from '../Pages/User/ServicePosts/ServiePostDetails'
 import Wiki from '../Pages/Wiki'
 import Money from '../Pages/User/Transactions/Money';
 import BankAccount from '../Pages/User/Transactions/BankAccount'
@@ -70,6 +67,11 @@ import ContractDetail from '../Pages/Admin/Accounts/Authorization/ContractDetail
 import RoomAdminEdit from '../Pages/Admin/Accounts/Authorization/RoomAdminEdit';
 import AdminRoomRentalConfirmation from '../Pages/Admin/Accounts/Authorization/AdminRoomRentalConfirmation';
 import AdminRoomList from '../Pages/Admin/Accounts/Authorization/AdminRoomList'
+import ServicePostOwner from '../Pages/ServiceOwner/ServicePostList';
+import ServicePostEdit from '../Pages/ServiceOwner/ServicePostEdit';
+import ServicePostCreate from '../Pages/ServiceOwner/ServicePostCreate';
+import ServicePost from '../Pages/User/ServicePosts/ServicePost'
+import ServicePostDetailsUser from '../Pages/User/ServicePosts/ServiePostDetails'
 
 const RoutesConfig = () => {
     const { user } = useAuth();
@@ -86,18 +88,16 @@ const RoutesConfig = () => {
             <Route path="/forgot-password" element={<ForgotPasswords />} />
             <Route path="/Profile" element={<Profile />} />
             <Route path="/Wiki" element={<Wiki />} />
-            <Route
-                path="/Rooms/Details/:roomId"
-                element={<RoomDetailsUser />}
-            />
-            <Route
-                path="/ServicePosts"
-                element={<ServicePost />}
-            />
+            <Route path="/ServicePosts" element={<ServicePost />} />
             <Route
                 path="/ServicePosts/Details/:servicePostId"
                 element={<ServicePostDetailsUser />}
             />
+            <Route
+                path="/Rooms/Details/:roomId"
+                element={<RoomDetailsUser />}
+            />
+
             {/* Routes dành cho User */}
             <Route
                 path="/Moneys"
@@ -336,6 +336,22 @@ const RoutesConfig = () => {
                 path="/ViewUpRole"
                 element={user ? <ViewUpRole /> : <Navigate to="/" />}
             />
+
+            {/* Routes dành cho ServiceOwner */}
+            {/* Service Post */}
+            <Route
+                path="/ServiceOwner/ManageServices"
+                element={user && user.role === "Service" ? <ServicePostOwner /> : <Navigate to="/" />}
+            />
+            <Route
+                path="/ServiceOwner/ServicePosts/Edit/:servicePostId"
+                element={user && user.role === "Service" ? <ServicePostEdit /> : <Navigate to="/" />}
+            />
+            <Route
+                path="/ServiceOwner/ServicePosts/Create"
+                element={user && user.role === "Service" ? <ServicePostCreate /> : <Navigate to="/" />}
+            />
+
         </Routes>
 
 

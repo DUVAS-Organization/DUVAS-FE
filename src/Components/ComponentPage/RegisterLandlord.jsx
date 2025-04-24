@@ -203,7 +203,7 @@ const RegisterLandlord = ({
             if (error.response && error.response.status === 409) {
                 showCustomNotification("error", "Giấy phép có số CCCD này đã tồn tại.");
             } else {
-                showCustomNotification("error", "Có lỗi xảy ra. Vui lòng thử lại.");
+                showCustomNotification("error", error.response?.data?.message || "Có lỗi xảy ra. Vui lòng thử lại.");
             }
         } finally {
             setIsSubmitting(false);

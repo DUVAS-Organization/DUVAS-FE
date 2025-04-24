@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../../Context/AuthProvider';
-import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'; // Thêm useNavigate
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import Image_Logo from '../../Assets/Images/logo2.png';
 import Sidebar from './Sidebar';
 import {
@@ -12,8 +12,10 @@ import {
     FaFacebookMessenger,
     FaDoorClosed,
     FaWallet,
+    FaBed,
+    FaTools,
 } from 'react-icons/fa';
-import { FaHandHoldingDollar, FaHouse } from "react-icons/fa6";
+import { FaHandHoldingDollar, FaHouse } from 'react-icons/fa6';
 import BellNotifications from './UIContext/BellNotifications';
 import SavePosts from './UIContext/SavePosts';
 import { UIProvider } from './UIContext/UIContext';
@@ -21,12 +23,13 @@ import RoomDropdown from './RoomDropdown';
 import ServiceDropdown from './ServiceDropdown';
 import { MdBedroomParent, MdCleaningServices } from 'react-icons/md';
 import { getUserProfile } from '../../Services/User/UserProfileService';
+import UserService from '../../Services/User/UserService';
 import Loading from '../Loading';
 import ThemeToggleButton from './UIContext/ThemeToggleButton';
 
 const navLinks = [
-    { name: "Trang Chủ", path: "/" },
-    { name: "Thông tin", path: "/Wiki" },
+    { name: 'Trang Chủ', path: '/' },
+    { name: 'Thông tin', path: '/Wiki' },
 ];
 
 const Navbar = () => {
@@ -34,12 +37,13 @@ const Navbar = () => {
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [userProfile, setUserProfile] = useState(null);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-    const [showRolePopup, setShowRolePopup] = useState(false); // Trạng thái hiển thị popup
+    const [showRolePopup, setShowRolePopup] = useState(false);
+    const [showPostSelectionModal, setShowPostSelectionModal] = useState(false);
     const dropdownRef = useRef(null);
     const location = useLocation();
-    const navigate = useNavigate(); // Thêm useNavigate để điều hướng
+    const navigate = useNavigate();
     const queryParams = new URLSearchParams(location.search);
-    const tab = queryParams.get("tab") || "";
+    const tab = queryParams.get('tab') || '';
 
     // Đóng dropdown khi click bên ngoài
     useEffect(() => {
@@ -48,8 +52,8 @@ const Navbar = () => {
                 setDropdownOpen(false);
             }
         };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [dropdownRef]);
 
     // Lấy thông tin chi tiết người dùng
@@ -61,15 +65,15 @@ const Navbar = () => {
                     setUserProfile({
                         userName: profileData.userName || user.username,
                         name: profileData.name || '',
-                        profilePicture: profileData.profilePicture || "https://www.gravatar.com/avatar/?d=mp",
+                        profilePicture: profileData.profilePicture || 'https://www.gravatar.com/avatar/?d=mp',
                         money: profileData.money || 0,
                     });
                 } catch (error) {
-                    console.error("Error fetching user profile:", error);
+                    console.error('Error fetching user profile:', error);
                     setUserProfile({
                         userName: user.username || '',
                         name: '',
-                        profilePicture: "https://www.gravatar.com/avatar/?d=mp",
+                        profilePicture: 'https://www.gravatar.com/avatar/?d=mp',
                         money: 0,
                     });
                 }
@@ -86,27 +90,19 @@ const Navbar = () => {
         return <Sidebar />;
     }
 
-    const getInitial = (username) => username ? username.charAt(0).toUpperCase() : '';
+    const getInitial = (username) => (username ? username.charAt(0).toUpperCase() : '');
 
     const renderDropdownItems = () => {
         if (!user) return null;
         return (
-
-            <div className="px-4 py-2 text-gray-800 dark:bg-gray-800 text-base ">
+            <div className="px-4 py-2 text-gray-800 dark:bg-gray-800 text-base">
                 <div className="bg-white px-4 py-2 rounded-lg shadow-md my-1 dark:bg-gray-800">
-
-                    <div className="flex justify-between mb-2 ">
-                        <h2 className="text-sm font-semibold dark:text-white ">Số dư tài khoản: </h2>
-                        {/* <span>TK Chính</span> */}
-                        <span className='text-sm font-bold text-red-600 dark:text-red-500'>{userProfile?.money.toLocaleString() || "0"} đ</span>
+                    <div className="flex justify-between mb-2">
+                        <h2 className="text-sm font-semibold dark:text-white">Số dư tài khoản: </h2>
+                        <span className="text-sm font-bold text-red-600 dark:text-red-500">
+                            {userProfile?.money.toLocaleString() || '0'} đ
+                        </span>
                     </div>
-                    {/* <NavLink
-                        to="/Moneys"
-                        className="w-full bg-white text-red-500 py-1 rounded-lg flex items-center justify-center border border-red-400 hover:bg-red-500 hover:text-white"
-                    >
-                        <FaWallet className="mr-2" />
-                        Nạp tiền
-                    </NavLink> */}
                 </div>
                 <div className="flex items-center justify-between w-full gap-2 pl-4 pr-2 dark:text-white">
                     <p className="font-medium">Giao diện: </p>
@@ -126,7 +122,7 @@ const Navbar = () => {
                     <FaFacebookMessenger />
                     <span>Tin nhắn</span>
                 </NavLink>
-                {user.role === "Landlord" && (
+                {user.role === 'Landlord' && (
                     <NavLink
                         to="/Room"
                         className="dark:text-white flex items-center space-x-2 px-4 py-2 rounded hover:bg-red-500 hover:text-white text-gray-800 whitespace-nowrap"
@@ -135,9 +131,9 @@ const Navbar = () => {
                         <span>Quản lý Phòng</span>
                     </NavLink>
                 )}
-                {user.role === "Service" && (
+                {user.role === 'Service' && (
                     <NavLink
-                        to="/ManageServices"
+                        to="/ServiceOwner/ManageServices"
                         className="dark:text-white flex items-center space-x-2 px-4 py-2 rounded hover:bg-red-500 hover:text-white text-gray-800 whitespace-nowrap"
                     >
                         <MdCleaningServices />
@@ -184,16 +180,48 @@ const Navbar = () => {
     };
 
     // Hàm xử lý khi nhấn nút "Đăng tin"
-    const handlePostClick = () => {
-        if (user?.role === "Landlord") {
-            navigate("/Room/Create");
-        } else {
+    const handlePostClick = async () => {
+        if (!user) {
             setShowRolePopup(true);
+            return;
+        }
+
+        try {
+            // Gọi UserService.getUserById để lấy thông tin người dùng
+            const userData = await UserService.getUserById(user.userId);
+            console.log('User Data:', userData); // Debug
+
+            // Kiểm tra vai trò dựa trên RoleLandlord và RoleService
+            const isLandlord = userData.RoleLandlord === 1;
+            const isService = userData.RoleService === 1;
+
+            if (isLandlord && isService) {
+                setShowPostSelectionModal(true);
+            } else if (user.role === 'Landlord') {
+                navigate('/Room/Create');
+            } else if (user.role === 'Service') {
+                navigate('/ServiceOwner/ServicePosts/Create');
+            } else {
+                setShowRolePopup(true);
+            }
+        } catch (error) {
+            console.error('Error fetching user data:', error);
+            setShowRolePopup(true); // Hiển thị popup nếu lỗi
+        }
+    };
+
+    // Hàm xử lý chọn loại bài đăng trong modal
+    const handlePostSelection = (type) => {
+        setShowPostSelectionModal(false);
+        if (type === 'room') {
+            navigate('/Room/Create');
+        } else if (type === 'service') {
+            navigate('/ServiceOwner/ServicePosts/Create');
         }
     };
 
     return (
-        <nav className="bg-white shadow-md font-sans sticky top-0 z-50 transition duration-500 dark:bg-gray-800 ">
+        <nav className="bg-white shadow-md font-sans sticky top-0 z-50 transition duration-500 dark:bg-gray-800">
             <div className="max-w-full mx-auto px-2 sm:px-4 lg:px-8">
                 <div className="relative flex items-center h-16">
                     {/* Logo */}
@@ -222,7 +250,7 @@ const Navbar = () => {
                                 key={name}
                                 to={path}
                                 className={({ isActive }) =>
-                                    ` dark:text-white relative px-3 py-1 text-base font-medium text-gray-800 transition-all
+                                    `dark:text-white relative px-3 py-1 text-base font-medium text-gray-800 transition-all
                                     before:content-[''] before:absolute before:bottom-0 before:left-3 before:w-0 before:h-[2px]
                                     before:bg-red-500 before:transition-all before:duration-500 before:ease-in-out
                                     hover:before:w-[calc(100%-1.5rem)] ${isActive ? 'before:w-[calc(100%-1.5rem)] text-red-500 font-semibold' : ''}`
@@ -234,11 +262,10 @@ const Navbar = () => {
                     </div>
                     {/* Right side: user actions */}
                     <div className="hidden ml-auto space-x-4 sm:flex">
-                        {/* <ThemeToggleButton /> */}
                         {user ? (
                             <>
                                 <UIProvider>
-                                    <div className="flex gap-3 items-center ">
+                                    <div className="flex gap-3 items-center">
                                         <SavePosts />
                                         <BellNotifications />
                                     </div>
@@ -249,18 +276,20 @@ const Navbar = () => {
                                             src={userProfile.profilePicture}
                                             alt={`${userProfile.userName}'s Profile`}
                                             className="w-8 h-8 rounded-full border border-gray-300 object-cover"
-                                            onError={(e) => { e.target.src = "https://www.gravatar.com/avatar/?d=mp"; }}
+                                            onError={(e) => {
+                                                e.target.src = 'https://www.gravatar.com/avatar/?d=mp';
+                                            }}
                                         />
                                     ) : (
                                         <div className="w-8 h-8 rounded-full border border-gray-300 bg-gray-200 flex items-center justify-center">
-                                            <span className="text-gray-800 font-bold ">
+                                            <span className="text-gray-800 font-bold">
                                                 {getInitial(userProfile?.userName || user.username)}
                                             </span>
                                         </div>
                                     )}
                                     <button
                                         onClick={() => setDropdownOpen(!dropdownOpen)}
-                                        className="text-gray-800 px-3 py-2 rounded-md text-base font-medium flex items-center  dark:text-white"
+                                        className="text-gray-800 px-3 py-2 rounded-md text-base font-medium flex items-center dark:text-white"
                                     >
                                         {userProfile?.name || userProfile?.userName || user.username}
                                     </button>
@@ -280,13 +309,18 @@ const Navbar = () => {
                             </>
                         ) : (
                             <>
-                                <NavLink to="/Logins" className="text-gray-800 px-3 py-2 rounded-md text-base font-medium dark:text-white">
+                                <NavLink
+                                    to="/Logins"
+                                    className="text-gray-800 px-3 py-2 rounded-md text-base font-medium dark:text-white"
+                                >
                                     Đăng Nhập
                                 </NavLink>
-                                <NavLink to="/Registers" className="text-gray-800 px-3 py-2 rounded-md text-base font-medium dark:text-white">
+                                <NavLink
+                                    to="/Registers"
+                                    className="text-gray-800 px-3 py-2 rounded-md text-base font-medium dark:text-white"
+                                >
                                     Đăng Ký
                                 </NavLink>
-                                {/* Nút Đăng tin cho người chưa đăng nhập */}
                                 <button
                                     onClick={handlePostClick}
                                     className="text-red-500 px-3 py-2 rounded-md text-base font-medium border border-red-400 hover:bg-red-500 hover:text-white transition-colors duration-150"
@@ -314,7 +348,6 @@ const Navbar = () => {
                 <div className="sm:hidden bg-white shadow-md p-4 dark:bg-gray-800 dark:text-white">
                     <UIProvider>
                         <div className="flex gap-3 items-center">
-                            {/* <ThemeToggleButton /> */}
                             <SavePosts />
                             <BellNotifications />
                         </div>
@@ -362,10 +395,11 @@ const Navbar = () => {
             {showRolePopup && (
                 <div className="fixed inset-0 top-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white p-6 rounded-lg shadow-lg w-96 dark:bg-gray-800">
-                        <h3 className="text-lg font-bold mb-4 text-red-600 dark:text-white">Thông báo: Bạn chưa đủ vai trò</h3>
-
+                        <h3 className="text-lg font-bold mb-4 text-red-600 dark:text-white">
+                            Thông báo: Bạn chưa đủ vai trò
+                        </h3>
                         <p className="mb-4 text-gray-700 dark:text-white">
-                            Vui lòng đăng ký để thực hiện chức năng này.
+                            Vui lòng đăng ký vai trò Landlord hoặc Service để thực hiện chức năng này.
                         </p>
                         <div className="flex justify-between">
                             <button
@@ -377,11 +411,44 @@ const Navbar = () => {
                             <button
                                 onClick={() => {
                                     setShowRolePopup(false);
-                                    navigate("/Profile?tab=registerLandlord");
+                                    navigate('/Profile?tab=registerLandlord');
                                 }}
                                 className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition dark:text-white"
                             >
                                 Đăng Ký
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal chọn loại bài đăng */}
+            {showPostSelectionModal && (
+                <div className="fixed inset-0 top-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white p-8 rounded-lg shadow-lg w-96 dark:bg-gray-800">
+                        <h3 className="text-lg font-bold mb-4 text-gray-800 dark:text-white">
+                            Chọn loại bài đăng
+                        </h3>
+                        <div className="flex flex-col gap-4">
+                            <button
+                                onClick={() => handlePostSelection('room')}
+                                className="flex items-center justify-center gap-2 bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-600 transition-colors duration-150"
+                            >
+                                <FaBed className="text-xl" />
+                                Đăng Phòng
+                            </button>
+                            <button
+                                onClick={() => handlePostSelection('service')}
+                                className="flex items-center justify-center gap-2 bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-600 transition-colors duration-150"
+                            >
+                                <FaTools className="text-xl" />
+                                Đăng Dịch vụ
+                            </button>
+                            <button
+                                onClick={() => setShowPostSelectionModal(false)}
+                                className="bg-gray-300 text-black px-6 py-2 rounded-lg hover:bg-gray-400 transition dark:text-white mt-2"
+                            >
+                                Đóng
                             </button>
                         </div>
                     </div>
