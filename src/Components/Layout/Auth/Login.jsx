@@ -97,7 +97,7 @@ const LoginPage = () => {
 
 
     return (
-        <div className="flex items-center justify-center my-5 bg-gray-100">
+        <div className="flex items-center justify-center py-5 bg-gray-100 dark:bg-gray-800 ">
             <div className="flex flex-col md:flex-row bg-white rounded-lg shadow-md w-full max-w-4xl">
                 {/* Bên trái: Hình ảnh */}
                 <div className="relative w-full md:w-1/2 flex flex-col items-center justify-center">
@@ -108,10 +108,10 @@ const LoginPage = () => {
                 </div>
 
                 {/* Bên phải: Form đăng nhập */}
-                <div className="p-6 w-full md:w-1/2">
-                    <h3 className="text-base font-semibold text-gray-800">Xin chào bạn</h3>
+                <div className="p-6 w-full md:w-1/2 dark:bg-gray-800 dark:text-white">
+                    <h3 className="text-base font-semibold text-gray-800 dark:text-white">Xin chào bạn</h3>
                     <div className="mb-2">
-                        <h2 className="text-2xl font-semibold text-gray-800">
+                        <h2 className="text-2xl font-semibold text-gray-800 dark:text-white">
                             Đăng nhập để tiếp tục
                         </h2>
                     </div>
@@ -119,11 +119,11 @@ const LoginPage = () => {
                     <form onSubmit={handleSubmit} className="max-w-sm mx-auto">
                         {/* Tên đăng nhập */}
                         <div className="mb-4 relative">
-                            <FaEnvelope className="absolute left-3 top-5 transform -translate-y-1/2 text-gray-500 text-xl" />
+                            <FaEnvelope className="absolute left-3 top-5 transform -translate-y-1/2 text-gray-500 text-xl dark:text-white" />
                             <input
                                 type="text"
                                 id="username"
-                                className={`shadow appearance-none border rounded w-full py-2 px-10 text-gray-700 leading-tight focus:outline-none focus:shadow-outline`}
+                                className={`shadow appearance-none dark:bg-gray-800 dark:text-white border rounded w-full py-2 px-10 text-gray-700 leading-tight focus:outline-none focus:shadow-outline`}
                                 value={username}
                                 placeholder="Nhập tên đăng nhập hoặc email"
                                 onChange={handleUsernameChange}
@@ -133,11 +133,11 @@ const LoginPage = () => {
 
                         {/* Mật khẩu */}
                         <div className="mb-2 relative">
-                            <FaLock className="absolute left-3 top-5 transform -translate-y-1/2 text-gray-500 text-xl" />
+                            <FaLock className="absolute left-3 top-5 transform -translate-y-1/2 text-gray-500 text-xl dark:text-white" />
                             <input
                                 type={showPassword ? "text" : "password"}
                                 id="password"
-                                className="shadow appearance-none border rounded w-full py-2 px-10 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                className="shadow appearance-none dark:bg-gray-800 dark:text-white border rounded w-full py-2 px-10 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                                 value={password}
                                 placeholder="Nhập mật khẩu"
                                 onChange={handlePasswordChange}
@@ -177,7 +177,7 @@ const LoginPage = () => {
 
                     {/* Đăng nhập Google */}
                     <div className="text-center mt-4">
-                        <h3 className="text-gray-600">Hoặc</h3>
+                        <h3 className="text-gray-600 dark:text-white">Hoặc</h3>
                         <button
                             onClick={handleGoogleLogin}
                             className="flex w-full items-center justify-center bg-white border-2 text-black font-medium py-2 px-4 rounded-md mt-2 hover:bg-gray-100"

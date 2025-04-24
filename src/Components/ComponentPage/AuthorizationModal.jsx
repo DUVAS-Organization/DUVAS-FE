@@ -53,7 +53,7 @@ const AuthorizationModal = ({ open, onClose, user, selectedRooms, adminData, onS
         partyAIDIssueDate: '',
         partyAIDIssuePlace: 'CỤC CẢNH SÁT QUẢN LÝ HÀNH CHÍNH VỀ TRẬT TỰ XÃ HỘI',
         partyAAddress: '',
-        partyBId: '3', // Giả sử ID cố định, có thể thay đổi nếu cần
+        partyBId: '1', // Giả sử ID cố định, có thể thay đổi nếu cần
         partyBName: 'Nguyễn Đình Mạnh Hùng',
         partyBAddress: 'Phường Phong An, thị xã Phong Điền, Thừa Thiên Huế',
         partyBBirthDate: '2003-08-02',

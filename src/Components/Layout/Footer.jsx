@@ -22,7 +22,7 @@ const Footer = () => {
                                 <img
                                     src={logo}
                                     alt="Company Logo"
-                                    className="h-48 w-96 border rounded-lg border-gray-200 shadow-lg p-2 dark:bg-white"
+                                    className="h-48 w-96 border rounded-lg border-gray-200 shadow-lg p-2 dark:bg-gray-800"
                                 />
 
                             </div>

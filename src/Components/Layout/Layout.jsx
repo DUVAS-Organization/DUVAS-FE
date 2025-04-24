@@ -24,7 +24,7 @@ const Layout = ({
         : (!renderNavbar && showSidebar && <SidebarUser />);
 
     return (
-        <div className="bg-gray-100 flex flex-col">
+        <div className="bg-gray-100 flex flex-col dark:bg-gray-800 dark:text-white">
             {renderNavbar && <Navbar />}
 
             <div className="flex flex-grow">

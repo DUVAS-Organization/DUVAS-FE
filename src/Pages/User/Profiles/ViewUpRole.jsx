@@ -133,19 +133,19 @@ const ViewUpRole = () => {
         <div className="mb-10 text-center">
             <h2 className="text-lg font-semibold mb-2">{title}</h2>
             {data.length === 0 ? (
-                <p className="text-gray-500 text-center">Không tìm thấy giấy phép nào</p>
+                <p className="text-gray-500 text-center dark:text-white">Không tìm thấy giấy phép nào</p>
             ) : (
                 <div className="overflow-x-auto">
-                    <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow-sm">
-                        <thead className="bg-gray-100">
+                    <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 ">
+                        <thead className="bg-gray-100 dark:bg-gray-800 text-gray-700  dark:text-white">
                             <tr>
-                                <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 border-b">#</th>
-                                <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 border-b">Tên</th>
-                                <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 border-b">Số CCCD</th>
-                                <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 border-b">Giới tính</th>
-                                <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 border-b">Địa chỉ</th>
-                                <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 border-b">Giấy tờ</th>
-                                <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 border-b">Trạng thái</th>
+                                <th className="px-4 py-2 text-left text-sm font-medium border-b">#</th>
+                                <th className="px-4 py-2 text-left text-sm font-medium border-b">Tên</th>
+                                <th className="px-4 py-2 text-left text-sm font-medium  border-b">Số CCCD</th>
+                                <th className="px-4 py-2 text-left text-sm font-medium  border-b">Giới tính</th>
+                                <th className="px-4 py-2 text-left text-sm font-medium  border-b">Địa chỉ</th>
+                                <th className="px-4 py-2 text-left text-sm font-medium border-b">Giấy tờ</th>
+                                <th className="px-4 py-2 text-left text-sm font-medium  border-b">Trạng thái</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -154,14 +154,14 @@ const ViewUpRole = () => {
                                 return (
                                     <tr
                                         key={registration.userId + (registration.landlordLicenseId || registration.serviceLicenseId || index)}
-                                        className="border-b hover:bg-gray-50"
+                                        className="border-b text-gray-700  hover:bg-gray-50 dark:text-white dark:hover:text-black"
                                     >
-                                        <td className="px-4 py-2 text-sm text-gray-700">{index + 1}</td>
-                                        <td className="px-4 py-2 text-sm text-gray-700">{registration.name}</td>
-                                        <td className="px-4 py-2 text-sm text-gray-700">{registration.cccd}</td>
-                                        <td className="px-4 py-2 text-sm text-gray-700">{registration.sex}</td>
-                                        <td className="px-4 py-2 text-sm text-gray-700">{registration.address}</td>
-                                        <td className="py-2 px-4 text-gray-700 border-b">
+                                        <td className="px-4 py-2 text-sm  ">{index + 1}</td>
+                                        <td className="px-4 py-2 text-sm  ">{registration.name}</td>
+                                        <td className="px-4 py-2 text-sm t ">{registration.cccd}</td>
+                                        <td className="px-4 py-2 text-sm  ">{registration.sex}</td>
+                                        <td className="px-4 py-2 text-sm  ">{registration.address}</td>
+                                        <td className="py-2 px-4  border-b">
                                             {registration.role === 'Landlord' && (
                                                 <NavLink
                                                     to={`/Landlord/Giayto/${registration.landlordLicenseId}`}
@@ -197,7 +197,7 @@ const ViewUpRole = () => {
     );
 
     return (
-        <div className="bg-white">
+        <div className="bg-white dark:bg-gray-800 dark:text-white">
             <SidebarUser />
             <div className="select-none p-6 ml-56 max-w-6xl mx-auto">
                 <h1 className="text-2xl font-bold mb-4">Danh sách đơn đăng ký</h1>

@@ -172,7 +172,7 @@ const RoomsList = () => {
 
     if (!rooms.length) {
         return (
-            <div className="bg-white p-4 flex justify-center">
+            <div className="bg-white min-h-screen p-4 flex justify-center">
                 <p className="text-black font-semibold">Không tìm thấy phòng nào.</p>
             </div>
         );
@@ -207,7 +207,7 @@ const RoomsList = () => {
     filteredRooms = filteredRooms.filter((r) => r.acreage >= minArea && r.acreage <= maxArea);
 
     return (
-        <div className="bg-white min-h-screen p-4">
+        <div className="bg-white min-h-screen p-4 dark:bg-gray-800 ">
             <div className="container mx-auto">
                 <div className="flex items-center justify-between mb-4">
                     <div className="w-full">
@@ -215,7 +215,7 @@ const RoomsList = () => {
                     </div>
                 </div>
                 <div className="flex max-w-6xl mx-auto">
-                    <div className="w-3/4 bg-white p-4 rounded shadow space-y-3">
+                    <div className="w-3/4 bg-white p-4 rounded shadow space-y-3 dark:bg-gray-800 dark:text-white">
                         <h1 className="text-2xl font-semibold">{category || tab}</h1>
                         <div className="flex justify-between">
                             <p className="mb-2">Hiện có {filteredRooms.length} {(category || tab).toLowerCase()}.</p>
@@ -259,13 +259,13 @@ const RoomsList = () => {
                                     return (
                                         <div key={room.roomId}>
                                             <Link to={`/Rooms/Details/${room.roomId}`} className="block">
-                                                <div className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col">
-                                                    <div className="relative w-full h-52 overflow-hidden rounded-lg">
+                                                <div className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col dark:bg-gray-800 ">
+                                                    <div className="relative w-full h-52 overflow-hidden rounded-lg dark:text-white">
                                                         {imageCount < 3 ? (
                                                             <img
                                                                 src={images[0]}
                                                                 alt={room.title}
-                                                                className="w-full h-full object-cover"
+                                                                className="w-full h-full object-cover "
                                                             />
                                                         ) : imageCount === 3 ? (
                                                             <div className="flex h-full">
@@ -338,15 +338,15 @@ const RoomsList = () => {
                                                             </span>
                                                         )}
                                                     </div>
-                                                    <div className="p-4 flex flex-col">
-                                                        <h3 className="text-lg font-semibold mb-2 line-clamp-2">{room.title}</h3>
-                                                        <p className="text-red-500 font-semibold mb-2">
+                                                    <div className="p-4 flex flex-col ">
+                                                        <h3 className="text-lg font-semibold mb-2 line-clamp-2 dark:text-white">{room.title}</h3>
+                                                        <p className="text-red-500 font-semibold mb-2 ">
                                                             {room.price.toLocaleString("vi-VN")} đ • {room.acreage} m²
                                                         </p>
-                                                        <p className="text-gray-600 mb-2 flex items-center">
+                                                        <p className="text-gray-600 mb-2 flex items-center dark:text-white">
                                                             <FaMapMarkerAlt className="mr-1" /> {room.locationDetail}
                                                         </p>
-                                                        <p className="text-gray-600 mb-2">{shortDescription}</p>
+                                                        <p className="text-gray-600 mb-2 dark:text-white">{shortDescription}</p>
                                                         <div className="mt-auto flex justify-between items-center border-t pt-2">
                                                             <div className="flex items-center gap-3">
                                                                 {room.User && room.User.profilePicture ? (
@@ -365,10 +365,10 @@ const RoomsList = () => {
                                                                     </div>
                                                                 )}
                                                                 <div className="flex flex-col">
-                                                                    <span className="text-black font-semibold">
+                                                                    <span className="text-black font-semibold dark:text-white">
                                                                         {room.User && room.User.name ? room.User.name : "Chưa xác định"}
                                                                     </span>
-                                                                    <span className="text-gray-500">đã đăng lên</span>
+                                                                    <span className="text-gray-500 dark:text-white">đã đăng lên</span>
                                                                 </div>
                                                             </div>
                                                             <div className="flex justify-end items-center gap-3 text-2xl">
@@ -391,9 +391,9 @@ const RoomsList = () => {
                                                                     className="text-2xl"
                                                                 >
                                                                     {isSaved ? (
-                                                                        <FaHeart className="text-red-500" />
+                                                                        <FaHeart className="text-red-500 dark:text-white" />
                                                                     ) : (
-                                                                        <FaRegHeart className="text-gray-600" />
+                                                                        <FaRegHeart className="text-gray-600 dark:text-white" />
                                                                     )}
                                                                 </button>
                                                             </div>
@@ -406,7 +406,7 @@ const RoomsList = () => {
                                 } else {
                                     return (
                                         <Link key={room.roomId} to={`/Rooms/Details/${room.roomId}`} className="block">
-                                            <div className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col">
+                                            <div className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col dark:bg-gray-800 dark:text-white">
                                                 <div className="flex flex-row">
                                                     <div className="w-2/5 flex h-[200px] gap-0.5">
                                                         <div className="relative w-1/2 h-full overflow-hidden">
@@ -441,14 +441,14 @@ const RoomsList = () => {
                                                         </div>
                                                     </div>
                                                     <div className="w-3/5 p-4 flex flex-col">
-                                                        <h3 className="text-lg font-semibold mb-2 line-clamp-2">{room.title}</h3>
-                                                        <p className="text-red-500 font-semibold mb-2">
+                                                        <h3 className="text-lg font-semibold mb-2 line-clamp-2 dark:text-white">{room.title}</h3>
+                                                        <p className="text-red-500 font-semibold mb-2 dark:text-white">
                                                             {room.price.toLocaleString("vi-VN")} đ • {room.acreage} m²
                                                         </p>
-                                                        <p className="text-gray-600 mb-2 flex items-center">
+                                                        <p className="text-gray-600 mb-2 flex items-center dark:text-white">
                                                             <FaMapMarkerAlt className="mr-1" /> {room.locationDetail}
                                                         </p>
-                                                        <p className="text-gray-600 mb-2">{shortDescription}</p>
+                                                        <p className="text-gray-600 mb-2 dark:text-white">{shortDescription}</p>
                                                     </div>
                                                 </div>
                                                 <div className="mt-auto flex justify-between items-center border-t py-3 px-4">
@@ -469,10 +469,10 @@ const RoomsList = () => {
                                                             </div>
                                                         )}
                                                         <div className="flex flex-col">
-                                                            <span className="text-black font-semibold">
+                                                            <span className="text-black font-semibold dark:text-white">
                                                                 {room.User && room.User.name ? room.User.name : "Chưa xác định"}
                                                             </span>
-                                                            <span className="text-gray-500">đã đăng lên</span>
+                                                            <span className="text-gray-500 dark:text-white">đã đăng lên</span>
                                                         </div>
                                                     </div>
                                                     <div className="flex justify-end items-center gap-3 text-2xl">
@@ -495,9 +495,9 @@ const RoomsList = () => {
                                                             className="text-2xl"
                                                         >
                                                             {isSaved ? (
-                                                                <FaHeart className="text-red-500" />
+                                                                <FaHeart className="text-red-500 dark:text-white" />
                                                             ) : (
-                                                                <FaRegHeart className="text-gray-600" />
+                                                                <FaRegHeart className="text-gray-600 dark:text-white" />
                                                             )}
                                                         </button>
                                                     </div>
@@ -508,7 +508,7 @@ const RoomsList = () => {
                                 }
                             })
                         ) : (
-                            <p className="text-gray-500">Không có phòng nào để hiển thị.</p>
+                            <p className="text-gray-500 dark:bg-gray-800 dark:text-white">Không có phòng nào để hiển thị.</p>
                         )}
 
                         {visibleRooms < filteredRooms.length && (
@@ -534,7 +534,7 @@ const RoomsList = () => {
                     </div>
 
                     <div className="w-1/4 pl-4">
-                        <div className="bg-white p-4 rounded shadow mb-4">
+                        <div className="bg-white p-4 rounded shadow mb-4 dark:bg-gray-800 dark:text-white" >
                             <h3 className="font-bold mb-2">Lọc theo khoảng giá</h3>
                             <ul>
                                 {[
@@ -551,7 +551,7 @@ const RoomsList = () => {
                                 ))}
                             </ul>
                         </div>
-                        <div className="bg-white p-4 rounded shadow">
+                        <div className="bg-white p-4 rounded shadow dark:bg-gray-800 dark:text-white">
                             <h3 className="font-bold mb-2">Lọc theo diện tích</h3>
                             <ul>
                                 {[

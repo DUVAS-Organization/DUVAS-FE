@@ -3,7 +3,7 @@ import logo from '../Assets/Images/logo2.png';
 
 const Loading = () => {
     return (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white bg-opacity-90">
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white bg-opacity-90 dark:bg-gray-800">
             <div className="relative flex items-center justify-center">
                 {/* Spinner SVG */}
                 <svg

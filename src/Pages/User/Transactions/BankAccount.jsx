@@ -111,37 +111,37 @@ const BankAccount = () => {
     return (
         <Layout showNavbar={false} showSidebar={true}>
             <div className="max-w-6xl mx-auto p-4">
-                <div className="bg-white p-6 rounded-lg shadow-md">
+                <div className="bg-white p-6 rounded-lg shadow-md dark:bg-gray-800 dark:text-white">
                     <h1 className="text-2xl font-bold mb-5 border-b-2 pb-2 border-gray-700">
                         Quản lý tài khoản rút tiền của bạn
                     </h1>
 
                     <div className="flex ">
                         {!isEnteringOtp ? (
-                            <div className="w-1/3 bg-white p-6 rounded-lg shadow-md">
+                            <div className="w-1/3 bg-white p-6 rounded-lg shadow-md dark:bg-gray-800 dark:text-white">
                                 <h1 className="font-bold mb-1 text-center">Tạo tài khoản ngân hàng</h1>
                                 <form className="">
-                                    <label className="block text-sm font-medium text-gray-700">Nhập số tài khoản</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-white">Nhập số tài khoản</label>
                                     <input
                                         type="text"
                                         value={accountNumber}
                                         onChange={(e) => setAccountNumber(e.target.value)}
-                                        className="mt-1 p-2 w-full border border-gray-300 rounded-md"
+                                        className="mt-1 dark:bg-gray-800 dark:text-white p-2 w-full border border-gray-300 rounded-md"
                                     />
 
-                                    <label className="block text-sm font-medium text-gray-700">Nhập tên chủ tài khoản</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-white">Nhập tên chủ tài khoản</label>
                                     <input
                                         type="text"
                                         value={accountName}
                                         onChange={(e) => setAccountName(e.target.value)}
-                                        className="mt-1 p-2 w-full border border-gray-300 rounded-md"
+                                        className="mt-1 dark:bg-gray-800 dark:text-white p-2 w-full border border-gray-300 rounded-md"
                                     />
 
-                                    <label className="block text-sm font-medium text-gray-700">Chọn ngân hàng</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-white">Chọn ngân hàng</label>
                                     <select
                                         onChange={(e) => setSelectedBankCode(e.target.value)}
                                         value={selectedBankCode}
-                                        className="mt-1 p-2 w-full border border-gray-300 rounded-md"
+                                        className="mt-1 dark:bg-gray-800 dark:text-white p-2 w-full border border-gray-300 rounded-md"
                                     >
                                         <option disabled value="0">Chọn ngân hàng</option>
                                         {bankCodes.map((bank) => (
@@ -161,13 +161,13 @@ const BankAccount = () => {
                                 </form>
                             </div>
                         ) : (
-                            <div className="w-1/3 bg-white p-6 rounded-lg shadow-md">
-                                <label className="block text-sm font-medium text-gray-700">Nhập mã OTP</label>
+                            <div className="w-1/3 bg-white p-6 rounded-lg shadow-md dark:bg-gray-800 dark:text-white">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-white">Nhập mã OTP</label>
                                 <input
                                     type="text"
                                     value={otp}
                                     onChange={(e) => setOtp(e.target.value)}
-                                    className="mt-1 p-2 w-full border border-gray-300 rounded-md"
+                                    className="mt-1 p-2 dark:bg-gray-800 dark:text-white w-full border border-gray-300 rounded-md"
                                 />
 
                                 <button
@@ -182,8 +182,8 @@ const BankAccount = () => {
 
                         <div className="w-2/3 mb-6">
                             <div className="overflow-x-auto">
-                                <table className="w-full border border-gray-300 shadow-md rounded-lg">
-                                    <thead className="bg-gray-100">
+                                <table className="w-full border border-gray-300 shadow-md rounded-lg dark:bg-gray-800 dark:text-white">
+                                    <thead className="bg-gray-100 dark:bg-gray-800 dark:text-white">
                                         <tr>
                                             <th className="px-4 py-2 border">STT</th> {/* Thêm cột STT */}
                                             <th className="px-4 py-2 border">Số tài khoản</th>
@@ -195,7 +195,7 @@ const BankAccount = () => {
                                     </thead>
                                     <tbody>
                                         {userBankAccounts.map((account, index) => (
-                                            <tr key={account.id} className="text-center hover:bg-gray-50">
+                                            <tr key={account.id} className="text-center hover:bg-gray-50 dark:hover:text-black">
                                                 <td className="px-4 py-2 border text-center">{index + 1}</td> {/* Hiển thị STT */}
                                                 <td className="px-4 py-2 border">{account.accountNumber}</td>
                                                 <td className="px-4 py-2 border">{account.accountName}</td>

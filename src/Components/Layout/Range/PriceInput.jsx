@@ -12,7 +12,7 @@ const PriceInput = ({ value, onChange, ...rest }) => {
         // values.value là giá trị chưa định dạng
         onChange(values.value);
       }}
-      className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+      className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white"
       placeholder="Nhập giá"
       {...rest}
     />

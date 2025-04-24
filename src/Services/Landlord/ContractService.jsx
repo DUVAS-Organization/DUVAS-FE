@@ -39,7 +39,7 @@ const ContractService = {
                     'Content-Type': 'application/json',
                 },
             });
-            console.log('📌 Lấy tất cả hợp đồng ủy quyền:', response.data);
+            // console.log('📌 Lấy tất cả hợp đồng ủy quyền:', response.data);
             return response.data;
         } catch (error) {
             console.error('❌ Lỗi khi lấy tất cả hợp đồng ủy quyền:', error.response?.data || error.message);

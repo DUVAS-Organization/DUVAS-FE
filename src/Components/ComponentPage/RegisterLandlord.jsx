@@ -222,7 +222,7 @@ const RegisterLandlord = ({
             <h1 className='text-xl font-medium mb-1'>Đăng ký thành chủ</h1>
             {/* Role Selection */}
             <div className="mb-6">
-                <label className="block text-base font-medium text-gray-700 mb-2">Bạn là:</label>
+                <label className="block text-base font-medium text-gray-700 mb-2 dark:text-white">Bạn là:</label>
                 <div className="flex space-x-4">
                     <button
                         type="button"
@@ -250,11 +250,11 @@ const RegisterLandlord = ({
             </div>
 
             {/* Identity Verification */}
-            <h2 className="text-lg font-semibold text-gray-800 mb-2">Xác minh danh tính</h2>
+            <h2 className="text-lg font-semibold text-gray-800 mb-2 dark:text-white">Xác minh danh tính</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 {/* Front ID */}
                 <div className="flex flex-col items-center">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2 dark:bg-gray-800 dark:text-white">
                         Ảnh CCCD mặt trước:
                         {validatingFront && (
                             <span className="ml-2 text-yellow-500 inline-flex items-center">
@@ -276,17 +276,17 @@ const RegisterLandlord = ({
                         )}
                     </label>
                     <div
-                        className="w-full h-40 border border-gray-300 rounded-lg flex items-center justify-center bg-gray-50 cursor-pointer"
+                        className="w-full h-40 border dark:bg-gray-800 border-gray-300 rounded-lg flex items-center justify-center bg-gray-50 cursor-pointer"
                         onClick={() => frontImage && setPreviewImage(URL.createObjectURL(frontImage))}
                     >
                         {frontImage ? (
                             <img
                                 src={URL.createObjectURL(frontImage)}
                                 alt="Front CCCD"
-                                className="object-cover h-full w-full rounded-lg"
+                                className="object-cover h-full w-full rounded-lg "
                             />
                         ) : (
-                            <span className="text-gray-500 text-sm">Chưa có ảnh</span>
+                            <span className="text-gray-500 text-sm dark:text-white">Chưa có ảnh</span>
                         )}
                     </div>
                     <button
@@ -306,7 +306,7 @@ const RegisterLandlord = ({
                         disabled={isSubmitting || validatingFront}
                     />
                     {frontIdInfo && (
-                        <div className="mt-2 text-sm text-gray-700 w-full">
+                        <div className="mt-2 text-sm text-gray-700 w-full dark:text-white">
                             <p><strong>Tên:</strong> {frontIdInfo.name}</p>
                             <p><strong>Giới tính:</strong> {frontIdInfo.sex}</p>
                             <p><strong>Địa chỉ:</strong> {frontIdInfo.address}</p>
@@ -317,11 +317,11 @@ const RegisterLandlord = ({
 
                 {/* Back ID - Giữ nguyên giao diện nhưng không xác thực */}
                 <div className="flex flex-col items-center">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-white">
                         Ảnh CCCD mặt sau:
                     </label>
                     <div
-                        className="w-full h-40 border border-gray-300 rounded-lg flex items-center justify-center bg-gray-50 cursor-pointer"
+                        className="w-full h-40 dark:bg-gray-800 border border-gray-300 rounded-lg flex items-center justify-center bg-gray-50 cursor-pointer"
                         onClick={() => backImage && setPreviewImage(URL.createObjectURL(backImage))}
                     >
                         {backImage ? (
@@ -331,7 +331,7 @@ const RegisterLandlord = ({
                                 className="object-cover h-full w-full rounded-lg"
                             />
                         ) : (
-                            <span className="text-gray-500 text-sm">Chưa có ảnh</span>
+                            <span className="text-gray-500 text-sm dark:text-white">Chưa có ảnh</span>
                         )}
                     </div>
                     <button
@@ -351,7 +351,7 @@ const RegisterLandlord = ({
                         disabled={isSubmitting}
                     />
                     {backIdInfo && (
-                        <div className="mt-2 text-sm text-gray-700 w-full">
+                        <div className="mt-2 text-sm text-gray-700 w-full dark:text-white">
                             <p><strong>Ngày cấp:</strong> {backIdInfo.issueDate}</p>
                             <p><strong>Nơi cấp:</strong> {backIdInfo.issuePlace}</p>
                         </div>
@@ -361,13 +361,13 @@ const RegisterLandlord = ({
 
             {/* ID Number */}
             <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Số CCCD:</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-white">Số CCCD:</label>
                 <input
                     type="text"
                     placeholder="Nhập số CCCD"
                     value={cccdNumber || ""}
                     onChange={handleCccdChange}
-                    className={`w-full p-3 border rounded-lg ${cccdError ? 'border-red-500' : 'border-gray-300'
+                    className={`w-full p-3 border rounded-lg ${cccdError ? 'border-red-500 dark:bg-gray-800 dark:text-white' : 'border-gray-300 dark:bg-gray-800 dark:text-white'
                         }`}
                     maxLength={12}
                     disabled={isSubmitting}
@@ -376,13 +376,13 @@ const RegisterLandlord = ({
             </div>
 
             {/* Legal Documents */}
-            <h2 className="text-lg font-semibold text-gray-800 mb-2 ">Giấy tờ pháp lý</h2>
+            <h2 className="text-lg font-semibold text-gray-800 mb-2 dark:text-white">Giấy tờ pháp lý</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 {/* Business License */}
                 <div className="flex flex-col items-center">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Giấy phép kinh doanh:</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-white">Giấy phép kinh doanh:</label>
                     <div
-                        className="w-full h-40 border border-gray-300 rounded-lg flex items-center justify-center bg-gray-50 cursor-pointer"
+                        className="w-full h-40 dark:bg-gray-800 border border-gray-300 rounded-lg flex items-center justify-center bg-gray-50 cursor-pointer"
                         onClick={() => businessLicense && setPreviewImage(URL.createObjectURL(businessLicense))}
                     >
                         {businessLicense ? (
@@ -392,7 +392,7 @@ const RegisterLandlord = ({
                                 className="object-cover h-full w-full rounded-lg"
                             />
                         ) : (
-                            <span className="text-gray-500 text-sm">Chưa có ảnh</span>
+                            <span className="text-gray-500 text-sm dark:text-white">Chưa có ảnh</span>
                         )}
                     </div>
                     <button
@@ -416,9 +416,9 @@ const RegisterLandlord = ({
                 {/* Professional License (Conditional) */}
                 {selectedNeed === 'Chủ dịch vụ' && (
                     <div className="flex flex-col items-center">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Giấy phép chuyên môn:</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-white">Giấy phép chuyên môn:</label>
                         <div
-                            className="w-full h-40 border border-gray-300 rounded-lg flex items-center justify-center bg-gray-50 cursor-pointer"
+                            className="w-full h-40 dark:bg-gray-800 border border-gray-300 rounded-lg flex items-center justify-center bg-gray-50 cursor-pointer"
                             onClick={() => professionalLicense && setPreviewImage(URL.createObjectURL(professionalLicense))}
                         >
                             {professionalLicense ? (
@@ -428,7 +428,7 @@ const RegisterLandlord = ({
                                     className="object-cover h-full w-full rounded-lg"
                                 />
                             ) : (
-                                <span className="text-gray-500 text-sm">Chưa có ảnh</span>
+                                <span className="text-gray-500 text-sm dark:text-white">Chưa có ảnh</span>
                             )}
                         </div>
                         <button
@@ -502,14 +502,14 @@ const RegisterLandlord = ({
 
             {showConfirm && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                    <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
-                        <h2 className="text-lg font-semibold text-gray-800 mb-2 text-center">Xác nhận đăng ký</h2>
-                        <p className="text-gray-600 mb-4 text-center">Vui lòng kiểm tra kỹ thông tin trước khi xác nhận.</p>
-                        <div className="space-y-2 text-gray-700">
+                    <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md max-h-[90vh] overflow-y-auto dark:bg-gray-800 dark:text-white">
+                        <h2 className="text-lg font-semibold text-gray-800 mb-2 text-center dark:text-white">Xác nhận đăng ký</h2>
+                        <p className="text-gray-600 mb-4 text-center dark:text-white">Vui lòng kiểm tra kỹ thông tin trước khi xác nhận.</p>
+                        <div className="space-y-2 text-gray-700 dark:text-white">
                             <p><strong>Số CCCD:</strong> {cccdNumber}</p>
 
                             {/* Chạy các ảnh ngang hàng */}
-                            <div className="flex space-x-4 mb-4">
+                            <div className="flex space-x-4 mb-4 dark:text-white">
                                 <div className="flex-1">
                                     <p><strong>Ảnh CCCD mặt trước:</strong></p>
                                     {frontImage ? (

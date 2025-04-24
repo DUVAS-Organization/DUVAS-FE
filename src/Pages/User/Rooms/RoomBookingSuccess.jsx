@@ -4,7 +4,7 @@ import { FaCheckCircle } from 'react-icons/fa';
 
 const RoomBookingSuccess = () => {
     return (
-        <div className="min-h-96 flex flex-col items-center justify-center p-4 bg-white">
+        <div className="min-h-96 flex flex-col items-center justify-center p-4 bg-white dark:bg-gray-800 dark:text-white">
             {/* Icon thông báo thành công */}
             <FaCheckCircle className="text-green-500 text-6xl mb-4" />
 
@@ -14,7 +14,7 @@ const RoomBookingSuccess = () => {
             </h1>
 
             {/* Thông báo */}
-            <p className="text-gray-700 mb-6 text-center max-w-md">
+            <p className="text-gray-700 mb-6 text-center max-w-md dark:text-white">
                 Vui lòng chờ chủ phòng xác nhận. <br />
                 Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi.
             </p>
