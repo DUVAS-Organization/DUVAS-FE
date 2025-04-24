@@ -45,7 +45,7 @@ const RegisterForm = () => {
         setSuccessMessage("");
 
         try {
-            await OtherService.sendOtp(email); // Sử dụng OtherService để gửi OTP
+            await OtherService.sendOtpVerify(email);
             setSentOtp(true);
             setSuccessMessage("OTP đã được gửi!");
         } catch (error) {

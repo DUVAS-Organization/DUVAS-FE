@@ -148,7 +148,7 @@ const Searchbar = () => {
                         <h1 className="font-medium text-gray-500 flex-shrink-0 hidden md:block">|</h1>
                         <div className="relative flex-1 w-full">
                             <input
-                                className="w-full bg-gray-100 rounded-lg pl-10 pr-28 py-2"
+                                className="w-full bg-gray-100 rounded-lg pl-10 pr-28 py-2 dark:text-black"
                                 placeholder="Nhập tối đa 3 địa điểm."
                                 type="text"
                             />

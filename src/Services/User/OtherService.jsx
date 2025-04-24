@@ -5,6 +5,33 @@ const HUB_BASE_URL = 'https://localhost:8000';
 const WS_URL = "wss://localhost:8000/ws/savedPosts";
 
 const OtherService = {
+    checkImageAzure: async (file) => {
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const response = await axios.post(
+                `${API_URL}/CheckImageAzure/check-image`,
+                formData,
+                {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                        Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+                    },
+                }
+            );
+
+            const result = response.data;
+            const isSafe = result === "Ảnh an toàn.";
+            return {
+                isSafe: isSafe,
+                message: isSafe ? "Ảnh an toàn." : result || "Ảnh không hợp lệ."
+            };
+        } catch (error) {
+            console.error(`Lỗi kiểm tra ảnh ${file.name}:`, error);
+            return { isSafe: false, message: "Lỗi khi kiểm tra ảnh." };
+        }
+    },
     //JWT
     login: async (username, password) => {
         const payload = {

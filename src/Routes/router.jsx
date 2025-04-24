@@ -64,8 +64,12 @@ import RoomEdit from '../Pages/Landlord/Rooms/RoomEdit';
 import ViewUpRole from '../Pages/User/Profiles/ViewUpRole';
 import LandlordDocumentsUser from '../Pages/User/Profiles/LandlordDocumentsUser'
 import ServiceDocumentsUser from '../Pages/User/Profiles/ServiceDocumentsUser'
-import AuthorizationList from '../Pages/Admin/Accounts/AuthorizationList';
+import AuthorizationList from '../Pages/Admin/Accounts/Authorization/AuthorizationList';
 import AuthorizationPage from '../Pages/User/Profiles/AuthorizationPage';
+import ContractDetail from '../Pages/Admin/Accounts/Authorization/ContractDetail';
+import RoomAdminEdit from '../Pages/Admin/Accounts/Authorization/RoomAdminEdit';
+import AdminRoomRentalConfirmation from '../Pages/Admin/Accounts/Authorization/AdminRoomRentalConfirmation';
+import AdminRoomList from '../Pages/Admin/Accounts/Authorization/AdminRoomList'
 
 const RoutesConfig = () => {
     const { user } = useAuth();
@@ -188,6 +192,22 @@ const RoutesConfig = () => {
             <Route path="/Admin/Service/Giayto/:serviceLicenseId" element={<ServiceDocuments />} />
             <Route path="/Landlord/Giayto/:landlordLicenseId" element={<LandlordDocumentsUser />} />
             <Route path="/Service/Giayto/:serviceLicenseId" element={<ServiceDocumentsUser />} />
+            <Route
+                path="/contract-detail/:contractId"
+                element={user && user.role === "Admin" ? <ContractDetail /> : <Navigate to="/Logins" />}
+            />
+            <Route
+                path="/Admin/edit/:roomId"
+                element={user && user.role === "Admin" ? <RoomAdminEdit /> : <Navigate to="/Logins" />}
+            />
+            <Route
+                path="/Admin/rooms/list"
+                element={user && user.role === "Admin" ? <AdminRoomList /> : <Navigate to="/Logins" />}
+            />
+            <Route
+                path="/Admin/rooms/contract/:roomId/:rentalId"
+                element={user && user.role === "Admin" ? <AdminRoomRentalConfirmation /> : <Navigate to="/Logins" />}
+            />
             {/* Service Posts */}
             <Route
                 path="/Admin/ServicePosts"
@@ -205,7 +225,6 @@ const RoutesConfig = () => {
                 path="/Admin/ServicePost/Edit/:servicePostId"
                 element={user && user.role === "Admin" ? <ServicePostForm /> : <Navigate to="/Logins" />}
             />
-
             {/* Rooms */}
             <Route
                 path="/Admin/Rooms"

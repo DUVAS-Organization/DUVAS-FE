@@ -1,18 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import RoomLandlordService from '../../../Services/Landlord/RoomLandlordService';
-import BuildingServices from '../../../Services/Admin/BuildingServices';
-import CategoryRooms from '../../../Services/Admin/CategoryRooms';
-import RoomServices from '../../../Services/Admin/RoomServices';
-import { showCustomNotification } from '../../../Components/Notification';
-import { useAuth } from '../../../Context/AuthProvider';
-import { FaTimes, FaPlus, FaMinus, FaChevronUp, FaChevronDown, FaArrowLeft } from "react-icons/fa";
-import Loading from '../../../Components/Loading';
-import PriceInput from '../../../Components/Layout/Range/PriceInput';
-import SidebarUser from '../../../Components/Layout/SidebarUser';
-import OtherService from '../../../Services/User/OtherService';
+import AdminManageRoomService from '../../../../Services/Admin/AdminManageRoomService';
+import BuildingServices from '../../../../Services/Admin/BuildingServices';
+import CategoryRooms from '../../../../Services/Admin/CategoryRooms';
+import OtherService from '../../../../Services/User/OtherService';
+import { showCustomNotification } from '../../../../Components/Notification';
+import { useAuth } from '../../../../Context/AuthProvider';
+import { FaTimes, FaPlus, FaMinus, FaChevronUp, FaChevronDown, FaArrowLeft } from 'react-icons/fa';
+import Loading from '../../../../Components/Loading';
+import PriceInput from '../../../../Components/Layout/Range/PriceInput';
+import RoomService from '../../../../Services/User/RoomService';
 
-const RoomEdit = () => {
+const RoomAdminEdit = () => {
     const [room, setRoom] = useState({
         roomId: '',
         buildingId: null,
@@ -58,22 +57,22 @@ const RoomEdit = () => {
     const { user } = useAuth();
 
     // Hàm xử lý lỗi chung
-    const handleApiError = (error, customMessage = "Đã xảy ra lỗi, vui lòng thử lại!") => {
+    const handleApiError = (error, customMessage = 'Đã xảy ra lỗi, vui lòng thử lại!') => {
         const apiMessage = error?.response?.data?.message || error.message;
         if (error?.response?.status === 409) {
-            if (apiMessage.includes("Mô tả phòng đã từng được sử dụng")) {
-                showCustomNotification("error", "Mô tả này đã bị trùng với phòng khác trong hệ thống. Vui lòng chỉnh sửa.");
-            } else if (apiMessage.includes("tiêu đề và địa chỉ")) {
-                showCustomNotification("error", "Phòng với tiêu đề và địa chỉ này đã được đăng. Hãy kiểm tra lại.");
-            } else if (apiMessage.includes("Địa chỉ phòng đã được sử dụng")) {
-                showCustomNotification("error", "Địa chỉ phòng đã được dùng trong hệ thống. Vui lòng nhập địa chỉ khác.");
+            if (apiMessage.includes('Mô tả phòng đã từng được sử dụng')) {
+                showCustomNotification('error', 'Mô tả này đã bị trùng với phòng khác trong hệ thống. Vui lòng chỉnh sửa.');
+            } else if (apiMessage.includes('tiêu đề và địa chỉ')) {
+                showCustomNotification('error', 'Phòng với tiêu đề và địa chỉ này đã được đăng. Hãy kiểm tra lại.');
+            } else if (apiMessage.includes('Địa chỉ phòng đã được sử dụng')) {
+                showCustomNotification('error', 'Địa chỉ phòng đã được dùng trong hệ thống. Vui lòng nhập địa chỉ khác.');
             }
-        } else if (error?.response?.status === 400 && apiMessage.includes("spam")) {
-            showCustomNotification("error", "Mô tả có thể bị spam hoặc trùng với AI. Hãy chỉnh sửa để khác biệt hơn.");
+        } else if (error?.response?.status === 400 && apiMessage.includes('spam')) {
+            showCustomNotification('error', 'Mô tả có thể bị spam hoặc trùng với AI. Hãy chỉnh sửa để khác biệt hơn.');
         } else {
-            showCustomNotification("error", apiMessage || customMessage);
+            showCustomNotification('error', apiMessage || customMessage);
         }
-        if (apiMessage.includes("Unauthorized")) {
+        if (apiMessage.includes('Unauthorized')) {
             localStorage.removeItem('authToken');
             navigate('/login');
         }
@@ -81,9 +80,9 @@ const RoomEdit = () => {
 
     // Fetch dữ liệu ban đầu
     useEffect(() => {
-        if (!roomId) {
-            showCustomNotification("error", "Không tìm thấy ID phòng!");
-            navigate('/Room');
+        if (!roomId || isNaN(roomId)) {
+            showCustomNotification('error', 'ID phòng không hợp lệ!');
+            navigate('/Admin/Authorization');
             return;
         }
 
@@ -91,7 +90,7 @@ const RoomEdit = () => {
         Promise.all([
             CategoryRooms.getCategoryRooms(),
             BuildingServices.getBuildings(),
-            RoomLandlordService.getRoom(roomId)
+            RoomService.getRoomById(roomId),
         ])
             .then(([categories, buildings, roomData]) => {
                 setCategoryRooms(categories);
@@ -132,8 +131,8 @@ const RoomEdit = () => {
                 setExistingImages(images);
             })
             .catch(error => {
-                console.error('Error fetching data:', error);
-                handleApiError(error, "Không thể lấy thông tin phòng!");
+                console.error('Lỗi khi lấy dữ liệu:', error);
+                handleApiError(error, 'Không thể lấy thông tin phòng!');
             })
             .finally(() => setLoading(false));
     }, [roomId, navigate]);
@@ -146,12 +145,12 @@ const RoomEdit = () => {
             try {
                 const previews = selectedFiles.map(file => URL.createObjectURL(file));
                 const checks = await Promise.all(
-                    selectedFiles.map(async (file) => {
+                    selectedFiles.map(async file => {
                         const result = await OtherService.checkImageAzure(file);
                         console.log(`Kiểm tra ảnh ${file.name}:`, result);
                         return {
                             isSafe: result.isSafe !== undefined ? result.isSafe : false,
-                            message: result.message || "Không có thông tin kiểm tra."
+                            message: result.message || 'Không có thông tin kiểm tra.',
                         };
                     })
                 );
@@ -162,13 +161,13 @@ const RoomEdit = () => {
                 setInvalidImages(prev => [...prev, ...newInvalidImages]);
 
                 if (newInvalidImages.some(invalid => invalid)) {
-                    showCustomNotification("error", "Ảnh không phù hợp. Vui lòng kiểm tra và thay thế.");
+                    showCustomNotification('error', 'Ảnh không phù hợp. Vui lòng kiểm tra và thay thế.');
                 } else {
-                    showCustomNotification("success", "Tất cả ảnh đã được kiểm tra và hợp lệ.");
+                    showCustomNotification('success', 'Tất cả ảnh đã được kiểm tra và hợp lệ.');
                 }
             } catch (error) {
                 console.error('Lỗi trong handleFileChange:', error);
-                showCustomNotification("error", error.message || "Lỗi khi kiểm tra ảnh.");
+                showCustomNotification('error', error.message || 'Lỗi khi kiểm tra ảnh.');
             } finally {
                 setLoading(false);
             }
@@ -187,7 +186,7 @@ const RoomEdit = () => {
     };
 
     // Upload file ảnh
-    const uploadFile = async (file) => {
+    const uploadFile = async file => {
         const formData = new FormData();
         formData.append('file', file);
         const data = await OtherService.uploadImage(formData);
@@ -209,7 +208,7 @@ const RoomEdit = () => {
                 NumberOfBathroom: Number(room.numberOfBathroom),
                 Price: Number(room.price),
                 Note: room.note,
-                UserId: user?.UserId || 3,
+                UserId: user?.UserId || 1,
                 BuildingId: room.buildingId,
                 CategoryRoomId: Number(room.categoryRoomId),
                 Garret: room.garret,
@@ -226,10 +225,10 @@ const RoomEdit = () => {
                 ChiPhiKhac: Number(room.chiPhiKhac),
                 authorization: Number(room.authorization || 0),
                 User: {
-                    UserId: user?.UserId || 3,
-                    UserName: user?.["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"] || "Unknown"
+                    UserId: user?.UserId || 1,
+                    UserName: user?.['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'] || 'Admin',
                 },
-                RentalLists: []
+                RentalLists: [],
             };
 
             if (roomData.Acreage <= 0) throw new Error('Diện tích phải lớn hơn 0.');
@@ -240,22 +239,22 @@ const RoomEdit = () => {
             if (!roomData.LocationDetail) throw new Error('Địa chỉ không được để trống.');
             if (!roomData.User.UserId) throw new Error('UserId không được để trống.');
 
-            const result = await RoomLandlordService.generateRoomDescription(roomData);
+            const result = await AdminManageRoomService.generateRoomDescription(roomData);
             setRoom(prev => ({
                 ...prev,
                 title: result.title || prev.title,
                 description: result.description || prev.description,
             }));
-            showCustomNotification("success", "Tạo tiêu đề và mô tả thành công với AI!");
+            showCustomNotification('success', 'Tạo tiêu đề và mô tả thành công với AI!');
         } catch (error) {
-            handleApiError(error, "Lỗi khi tạo với AI!");
+            handleApiError(error, 'Lỗi khi tạo với AI!');
         } finally {
             setLoading(false);
         }
     };
 
     // Xử lý khóa/mở khóa phòng
-    const handleTogglePermission = (type) => {
+    const handleTogglePermission = type => {
         setAction(type);
         setShowPopup(true);
     };
@@ -265,13 +264,13 @@ const RoomEdit = () => {
         setLoading(true);
         try {
             if (action === 'lock') {
-                await RoomServices.lockRoom(roomId);
+                await AdminManageRoomService.lockRoom(roomId);
                 setRoom(prev => ({ ...prev, isPermission: 0 }));
-                showCustomNotification("success", "Khóa phòng thành công!");
+                showCustomNotification('success', 'Khóa phòng thành công!');
             } else if (action === 'unlock') {
-                await RoomServices.unlockRoom(roomId);
+                await AdminManageRoomService.unlockRoom(roomId);
                 setRoom(prev => ({ ...prev, isPermission: 1 }));
-                showCustomNotification("success", "Mở khóa phòng thành công!");
+                showCustomNotification('success', 'Mở khóa phòng thành công!');
             }
         } catch (error) {
             handleApiError(error, `Lỗi khi ${action === 'lock' ? 'khóa' : 'mở khóa'} phòng!`);
@@ -285,25 +284,25 @@ const RoomEdit = () => {
     };
 
     // Xử lý submit form
-    const handleSubmit = async (e) => {
+    const handleSubmit = async e => {
         e.preventDefault();
         if (!validateImages()) {
             return;
         }
         if (existingImages.length + newFiles.length === 0) {
-            showCustomNotification("error", "Vui lòng chọn ít nhất 1 ảnh!");
+            showCustomNotification('error', 'Vui lòng chọn ít nhất 1 ảnh!');
             return;
         }
         if (!room.title || room.title.length < 3) {
-            showCustomNotification("error", "Tiêu đề phải ít nhất 3 ký tự!");
+            showCustomNotification('error', 'Tiêu đề phải ít nhất 3 ký tự!');
             return;
         }
         if (!room.description || room.description.length < 50) {
-            showCustomNotification("error", "Mô tả phải ít nhất 50 ký tự!");
+            showCustomNotification('error', 'Mô tả phải ít nhất 50 ký tự!');
             return;
         }
         if (!room.categoryRoomId || isNaN(room.categoryRoomId)) {
-            showCustomNotification("error", "Vui lòng chọn loại phòng hợp lệ!");
+            showCustomNotification('error', 'Vui lòng chọn loại phòng hợp lệ!');
             return;
         }
 
@@ -340,9 +339,9 @@ const RoomEdit = () => {
                 authorization: Number(room.authorization || 0),
             };
 
-            await RoomLandlordService.updateRoom(roomId, roomData);
-            showCustomNotification("success", "Cập nhật phòng thành công!");
-            navigate('/Room');
+            await AdminManageRoomService.updateRoom(roomId, roomData);
+            showCustomNotification('success', 'Cập nhật phòng thành công!');
+            navigate('/Admin/rooms/list');
         } catch (error) {
             handleApiError(error);
         } finally {
@@ -353,7 +352,7 @@ const RoomEdit = () => {
     // Validation ảnh
     const validateImages = () => {
         if (invalidImages.some(invalid => invalid)) {
-            showCustomNotification("error", "Vui lòng thay thế các ảnh không phù hợp trước khi tiếp tục.");
+            showCustomNotification('error', 'Vui lòng thay thế các ảnh không phù hợp trước khi tiếp tục.');
             return false;
         }
         return true;
@@ -365,12 +364,16 @@ const RoomEdit = () => {
             const newErrors = {};
             if (!room.title) newErrors.title = 'Tiêu đề là bắt buộc';
             else if (room.title.length < 3) newErrors.title = 'Tiêu đề phải ít nhất 3 ký tự';
-            if (!room.price || isNaN(Number(room.price)) || Number(room.price) <= 0) newErrors.price = 'Giá phải là số dương';
+            if (!room.price || isNaN(Number(room.price)) || Number(room.price) <= 0)
+                newErrors.price = 'Giá phải là số dương';
             if (!room.categoryRoomId) newErrors.categoryRoomId = 'Loại phòng là bắt buộc';
             if (!room.locationDetail) newErrors.locationDetail = 'Địa chỉ là bắt buộc';
-            if (!room.acreage || isNaN(Number(room.acreage)) || Number(room.acreage) < 0) newErrors.acreage = 'Diện tích phải là số không âm';
-            if (room.numberOfBathroom < 0 || isNaN(Number(room.numberOfBathroom))) newErrors.numberOfBathroom = 'Số phòng tắm phải là số không âm';
-            if (room.numberOfBedroom < 0 || isNaN(Number(room.numberOfBedroom))) newErrors.numberOfBedroom = 'Số giường ngủ phải là số không âm';
+            if (!room.acreage || isNaN(Number(room.acreage)) || Number(room.acreage) < 0)
+                newErrors.acreage = 'Diện tích phải là số không âm';
+            if (room.numberOfBathroom < 0 || isNaN(Number(room.numberOfBathroom)))
+                newErrors.numberOfBathroom = 'Số phòng tắm phải là số không âm';
+            if (room.numberOfBedroom < 0 || isNaN(Number(room.numberOfBedroom)))
+                newErrors.numberOfBedroom = 'Số giường ngủ phải là số không âm';
             if (!room.description) newErrors.description = 'Mô tả là bắt buộc';
             else if (room.description.length <= 50) newErrors.description = 'Mô tả phải trên 50 ký tự';
             setErrors(newErrors);
@@ -378,7 +381,7 @@ const RoomEdit = () => {
         }
         if (step === 2) {
             if (existingImages.length + newFiles.length === 0) {
-                showCustomNotification("error", "Vui lòng chọn ít nhất 1 ảnh!");
+                showCustomNotification('error', 'Vui lòng chọn ít nhất 1 ảnh!');
                 return false;
             }
             if (!validateImages()) {
@@ -406,11 +409,11 @@ const RoomEdit = () => {
     };
 
     // Tăng/giảm số lượng
-    const handleIncrement = (field) => {
+    const handleIncrement = field => {
         setRoom(prev => ({ ...prev, [field]: (prev[field] || 0) + 1 }));
     };
 
-    const handleDecrement = (field) => {
+    const handleDecrement = field => {
         setRoom(prev => ({ ...prev, [field]: Math.max(0, (prev[field] || 0) - 1) }));
     };
 
@@ -420,18 +423,26 @@ const RoomEdit = () => {
     // Kết hợp ảnh preview
     const combinedPreviews = [
         ...existingImages.map(url => ({ url, isNew: false })),
-        ...newPreviews.map((url, idx) => ({ url, isNew: true, index: idx, isInvalid: invalidImages[idx] }))
+        ...newPreviews.map((url, idx) => ({
+            url,
+            isNew: true,
+            index: idx,
+            isInvalid: invalidImages[idx],
+        })),
     ];
 
     return (
         <div className="flex min-h-screen bg-white">
             {loading && <Loading />}
-            <SidebarUser />
-            <div className="w-64 bg-white px-2 py-8 max-w-6xl mx-auto ml-56 h-full border-r border-gray-200">
-                <h1 className="text-2xl font-bold text-red-600 mb-4">Chỉnh Sửa Phòng</h1>
+            <div className="w-64 bg-white px-2 py-8 max-w-6xl mx-auto h-full border-r border-gray-200">
+                {/* <h1 className="text-2xl font-bold text-blue-600"> (Admin) </h1> */}
+                <h1 className="text-2xl font-bold text-blue-600 mb-4"> Chỉnh Sửa Phòng</h1>
                 <ul className="space-y-2">
                     {['Thông tin Phòng', 'Hình ảnh', 'Xác nhận'].map((label, idx) => (
-                        <li key={idx} className={`text-lg ${step === idx + 1 ? 'text-red-600 font-bold' : 'text-gray-600'}`}>
+                        <li
+                            key={idx}
+                            className={`text-lg ${step === idx + 1 ? 'text-blue-600 font-bold' : 'text-gray-600'}`}
+                        >
                             Bước {idx + 1}: {label}
                         </li>
                     ))}
@@ -442,20 +453,23 @@ const RoomEdit = () => {
                     <div>
                         <button
                             onClick={() => navigate(-1)}
-                            className="flex items-center gap-2 text-gray-700 hover:text-red-600 text-sm font-medium transition-colors"
+                            className="flex items-center gap-2 text-gray-700 hover:text-blue-600 text-sm font-medium transition-colors"
                         >
                             <FaArrowLeft className="text-lg" />
                         </button>
                         <div className="flex justify-between items-center">
-                            <h2 className="text-xl font-bold mb-2 text-red-600">Chỉnh Sửa Phòng - Bước 1</h2>
+                            <h2 className="text-xl font-bold mb-2 text-blue-600">Chỉnh Sửa Phòng - Bước 1</h2>
                             <button
-                                onClick={(e) => {
+                                onClick={e => {
                                     e.stopPropagation();
                                     handleTogglePermission(room.isPermission === 1 ? 'lock' : 'unlock');
                                 }}
-                                className={`py-1 text-lg ${room.isPermission === 1 ? 'text-red-500 w-16 h-12 hover:bg-red-500 hover:text-white' : 'text-green-500 hover:bg-green-500 hover:text-white w-24 h-12 p-2'} font-semibold bg-white rounded-full border-2`}
+                                className={`py-1 text-lg ${room.isPermission === 1
+                                    ? 'text-red-500 w-16 h-12 hover:bg-red-500 hover:text-white'
+                                    : 'text-green-500 hover:bg-green-500 hover:text-white w-24 h-12 p-2'
+                                    } font-semibold bg-white rounded-full border-2`}
                             >
-                                {room.isPermission === 1 ? "Khóa" : "Mở Khóa"}
+                                {room.isPermission === 1 ? 'Khóa' : 'Mở Khóa'}
                             </button>
                         </div>
                         {showPopup && (
@@ -476,7 +490,10 @@ const RoomEdit = () => {
                                         </button>
                                         <button
                                             onClick={confirmTogglePermission}
-                                            className={`px-4 py-2 rounded text-white ${action === 'lock' ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'}`}
+                                            className={`px-4 py-2 rounded text-white ${action === 'lock'
+                                                ? 'bg-red-500 hover:bg-red-600'
+                                                : 'bg-green-500 hover:bg-green-600'
+                                                }`}
                                         >
                                             Xác nhận
                                         </button>
@@ -484,15 +501,17 @@ const RoomEdit = () => {
                                 </div>
                             </div>
                         )}
-                        <div className="border-b-2 border-red-500 w-32 mb-4"></div>
+                        <div className="border-b-2 border-blue-500 w-32 mb-4"></div>
                         <div className="space-y-4">
                             <div>
                                 <h3 className="text-lg font-semibold text-gray-800 mb-2">Thông tin Phòng</h3>
                                 <label className="block text-sm font-medium text-gray-700">Tòa Nhà</label>
                                 <select
                                     value={room.buildingId || ''}
-                                    onChange={(e) => setRoom({ ...room, buildingId: parseInt(e.target.value) || null })}
-                                    className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
+                                    onChange={e =>
+                                        setRoom({ ...room, buildingId: parseInt(e.target.value) || null })
+                                    }
+                                    className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                                 >
                                     <option value="">Không có</option>
                                     {buildings.map(building => (
@@ -509,7 +528,7 @@ const RoomEdit = () => {
                                     </label>
                                     <PriceInput
                                         value={room.price}
-                                        onChange={(val) => setRoom({ ...room, price: val })}
+                                        onChange={val => setRoom({ ...room, price: val })}
                                     />
                                     {errors.price && <p className="text-red-500 text-sm mt-1">{errors.price}</p>}
                                 </div>
@@ -519,17 +538,23 @@ const RoomEdit = () => {
                                     </label>
                                     <select
                                         value={room.categoryRoomId}
-                                        onChange={(e) => setRoom({ ...room, categoryRoomId: parseInt(e.target.value) })}
-                                        className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
+                                        onChange={e =>
+                                            setRoom({ ...room, categoryRoomId: parseInt(e.target.value) })
+                                        }
+                                        className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                                     >
-                                        <option value="" disabled>Chọn loại phòng...</option>
+                                        <option value="" disabled>
+                                            Chọn loại phòng...
+                                        </option>
                                         {categoryRooms.map(category => (
                                             <option key={category.categoryRoomId} value={category.categoryRoomId}>
                                                 {category.categoryName}
                                             </option>
                                         ))}
                                     </select>
-                                    {errors.categoryRoomId && <p className="text-red-500 text-sm mt-1">{errors.categoryRoomId}</p>}
+                                    {errors.categoryRoomId && (
+                                        <p className="text-red-500 text-sm mt-1">{errors.categoryRoomId}</p>
+                                    )}
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
@@ -540,11 +565,13 @@ const RoomEdit = () => {
                                     <input
                                         type="text"
                                         value={room.locationDetail}
-                                        onChange={(e) => setRoom({ ...room, locationDetail: e.target.value })}
-                                        className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
+                                        onChange={e => setRoom({ ...room, locationDetail: e.target.value })}
+                                        className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                                         placeholder="Nhập Địa chỉ"
                                     />
-                                    {errors.locationDetail && <p className="text-red-500 text-sm mt-1">{errors.locationDetail}</p>}
+                                    {errors.locationDetail && (
+                                        <p className="text-red-500 text-sm mt-1">{errors.locationDetail}</p>
+                                    )}
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">
@@ -553,14 +580,14 @@ const RoomEdit = () => {
                                     <input
                                         type="number"
                                         value={room.acreage}
-                                        onChange={(e) => {
+                                        onChange={e => {
                                             const value = e.target.value;
                                             if (value === '' || Number(value) >= 0) {
                                                 setRoom({ ...room, acreage: value });
                                             }
                                         }}
                                         min="0"
-                                        className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
+                                        className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                                         placeholder="0"
                                     />
                                     {errors.acreage && <p className="text-red-500 text-sm mt-1">{errors.acreage}</p>}
@@ -571,12 +598,14 @@ const RoomEdit = () => {
                                     <label className="block text-sm font-medium text-gray-700">Nội Thất</label>
                                     <select
                                         value={room.furniture}
-                                        onChange={(e) => setRoom({ ...room, furniture: e.target.value })}
-                                        className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
+                                        onChange={e => setRoom({ ...room, furniture: e.target.value })}
+                                        className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                                     >
                                         <option value="">Chọn nội thất...</option>
                                         {['Đầy đủ', 'Cơ bản', 'Không nội thất'].map(option => (
-                                            <option key={option} value={option}>{option}</option>
+                                            <option key={option} value={option}>
+                                                {option}
+                                            </option>
                                         ))}
                                     </select>
                                 </div>
@@ -601,7 +630,9 @@ const RoomEdit = () => {
                                             <FaPlus />
                                         </button>
                                     </div>
-                                    {errors.numberOfBathroom && <p className="text-red-500 text-sm mt-1">{errors.numberOfBathroom}</p>}
+                                    {errors.numberOfBathroom && (
+                                        <p className="text-red-500 text-sm mt-1">{errors.numberOfBathroom}</p>
+                                    )}
                                 </div>
                                 <div className="flex items-center">
                                     <label className="block text-sm font-medium text-gray-700 w-1/3">
@@ -624,7 +655,9 @@ const RoomEdit = () => {
                                             <FaPlus />
                                         </button>
                                     </div>
-                                    {errors.numberOfBedroom && <p className="text-red-500 text-sm mt-1">{errors.numberOfBedroom}</p>}
+                                    {errors.numberOfBedroom && (
+                                        <p className="text-red-500 text-sm mt-1">{errors.numberOfBedroom}</p>
+                                    )}
                                 </div>
                             </div>
                             <div>
@@ -633,7 +666,11 @@ const RoomEdit = () => {
                                     onClick={toggleDropOpen}
                                 >
                                     <h3 className="text-lg font-semibold text-gray-800 mb-2">Chi phí khác</h3>
-                                    {isDropOpen ? <FaChevronUp className="text-gray-600" /> : <FaChevronDown className="text-gray-600" />}
+                                    {isDropOpen ? (
+                                        <FaChevronUp className="text-gray-600" />
+                                    ) : (
+                                        <FaChevronDown className="text-gray-600" />
+                                    )}
                                 </div>
                                 {isDropOpen && (
                                     <div className="grid grid-cols-4 gap-4">
@@ -644,13 +681,15 @@ const RoomEdit = () => {
                                             { label: 'Rác (đ/tháng)', key: 'rac' },
                                             { label: 'Gửi xe (đ/tháng)', key: 'guiXe' },
                                             { label: 'Quản lý (đ/tháng)', key: 'quanLy' },
-                                            { label: 'Chi phí khác (đ/tháng)', key: 'chiPhiKhac' }
+                                            { label: 'Chi phí khác (đ/tháng)', key: 'chiPhiKhac' },
                                         ].map(({ label, key }) => (
                                             <div key={key}>
-                                                <label className="block text-sm font-medium text-gray-700">{label}</label>
+                                                <label className="block text-sm font-medium text-gray-700">
+                                                    {label}
+                                                </label>
                                                 <PriceInput
                                                     value={room[key]}
-                                                    onChange={(val) => setRoom({ ...room, [key]: Number(val) || 0 })}
+                                                    onChange={val => setRoom({ ...room, [key]: Number(val) || 0 })}
                                                 />
                                             </div>
                                         ))}
@@ -685,8 +724,8 @@ const RoomEdit = () => {
                                         <input
                                             type="text"
                                             value={room.title}
-                                            onChange={(e) => setRoom({ ...room, title: e.target.value })}
-                                            className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
+                                            onChange={e => setRoom({ ...room, title: e.target.value })}
+                                            className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                                             placeholder="Mô tả ngắn gọn về loại hình phòng, diện tích, địa chỉ"
                                         />
                                         {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
@@ -697,12 +736,14 @@ const RoomEdit = () => {
                                         </label>
                                         <textarea
                                             value={room.description}
-                                            onChange={(e) => setRoom({ ...room, description: e.target.value })}
-                                            className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
+                                            onChange={e => setRoom({ ...room, description: e.target.value })}
+                                            className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                                             placeholder="Mô tả chi tiết về phòng..."
                                             rows="5"
                                         />
-                                        {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description}</p>}
+                                        {errors.description && (
+                                            <p className="text-red-500 text-sm mt-1">{errors.description}</p>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -711,8 +752,8 @@ const RoomEdit = () => {
                 )}
                 {step === 2 && (
                     <div className="mt-8">
-                        <h2 className="text-xl font-bold mb-2 text-red-600">Chỉnh Sửa Phòng - Bước 2</h2>
-                        <div className="border-b-2 border-red-500 w-32 mb-4"></div>
+                        <h2 className="text-xl font-bold mb-2 text-blue-600">Chỉnh Sửa Phòng - Bước 2</h2>
+                        <div className="border-b-2 border-blue-500 w-32 mb-4"></div>
                         <div className="border border-gray-300 rounded-lg p-6 bg-white shadow-sm text-center">
                             <label className="cursor-pointer bg-gray-200 p-3 rounded-lg flex items-center gap-2 justify-center">
                                 <FaPlus className="text-blue-600" />
@@ -735,7 +776,8 @@ const RoomEdit = () => {
                                         {combinedPreviews.map((item, index) => (
                                             <div
                                                 key={index}
-                                                className={`relative border p-2 rounded-lg shadow-sm ${item.isInvalid ? 'border-red-500' : ''}`}
+                                                className={`relative border p-2 rounded-lg shadow-sm ${item.isInvalid ? 'border-red-500' : ''
+                                                    }`}
                                             >
                                                 <button
                                                     type="button"
@@ -763,8 +805,8 @@ const RoomEdit = () => {
                 )}
                 {step === 3 && (
                     <div className="mt-8">
-                        <h2 className="text-xl font-bold mb-2 text-red-600">Chỉnh Sửa Phòng - Bước 3</h2>
-                        <div className="border-b-2 border-red-500 w-32 mb-4"></div>
+                        <h2 className="text-xl font-bold mb-2 text-blue-600">Chỉnh Sửa Phòng - Bước 3</h2>
+                        <div className="border-b-2 border-blue-500 w-32 mb-4"></div>
                         <div className="space-y-6">
                             <p className="text-lg">Vui lòng kiểm tra lại thông tin trước khi cập nhật phòng.</p>
                             <div className="flex justify-between items-center mt-6">
@@ -776,7 +818,7 @@ const RoomEdit = () => {
                                 </button>
                                 <button
                                     onClick={handleNext}
-                                    className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                                 >
                                     Cập Nhật Phòng
                                 </button>
@@ -796,7 +838,7 @@ const RoomEdit = () => {
                         )}
                         <button
                             onClick={handleNext}
-                            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                         >
                             Tiếp tục
                         </button>
@@ -819,4 +861,4 @@ const RoomEdit = () => {
     );
 };
 
-export default RoomEdit;
+export default RoomAdminEdit;
