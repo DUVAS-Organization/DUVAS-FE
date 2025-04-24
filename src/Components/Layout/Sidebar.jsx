@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../../Context/AuthProvider';
 import logoAdmin from '../../Assets/Images/logoAdmin.png';
 import { FaUserCircle, FaFileAlt, FaHome, FaBuilding, FaSignOutAlt, FaClone, FaUserEdit, FaChevronDown, FaChevronUp, FaFacebookMessenger } from 'react-icons/fa';
@@ -8,6 +8,7 @@ import { FaMoneyBillTransfer } from 'react-icons/fa6';
 
 const Sidebar = () => {
     const { user, logout } = useAuth();
+    const location = useLocation(); // Sử dụng useLocation để lấy thông tin route hiện tại
 
     // Tạo trạng thái riêng cho mỗi dropdown
     const [dropdownStates, setDropdownStates] = useState({
@@ -34,6 +35,19 @@ const Sidebar = () => {
         return username ? username.charAt(0).toUpperCase() : '';
     };
 
+    // Kiểm tra xem route hiện tại có phải là route con của một mục dropdown không
+    const isActiveRoute = (path) => {
+        return location.pathname === path || location.pathname.startsWith(`${path}/`);
+    };
+
+    // Kiểm tra xem route hiện tại có thuộc ngữ cảnh "Phòng Ủy Quyền" không
+    const isAuthorizedRoomsContext = () => {
+        return (
+            isActiveRoute('/Admin/rooms/list') || // Route chính của "Phòng Ủy Quyền"
+            location.pathname.match(/^\/Admin\/edit\/\d+$/) // Route chỉnh sửa phòng, ví dụ: /Admin/edit/123
+        );
+    };
+
     return (
         <div className="w-56 text-black h-screen fixed border-r-2 flex flex-col overflow-y-auto">
             <div className="flex-shrink-0">
@@ -43,7 +57,6 @@ const Sidebar = () => {
                     className="w-full h-40 border-b-2"
                 />
             </div>
-            {/* <h3 className='text-gray-500'>Quản Lý Admin</h3> */}
             <ul className="flex-1 text-justify text-base font-medium">
                 <li>
                     <NavLink
@@ -82,7 +95,7 @@ const Sidebar = () => {
                     <NavLink
                         to="/Admin/Rooms"
                         className={({ isActive }) =>
-                            `block py-2 px-4 hover:bg-blue-400 rounded-3xl ${isActive ? 'bg-blue-500 text-white' : ''}`
+                            `block py-2 px-4 hover:bg-blue-400 rounded-3xl ${isActive && !isActiveRoute('/Admin/rooms/list') && !location.pathname.match(/^\/Admin\/edit\/\d+$/) ? 'bg-blue-500 text-white' : ''}`
                         }
                     >
                         <FaHome className="inline-block mr-2" />
@@ -113,12 +126,11 @@ const Sidebar = () => {
                 </li>
                 <li>
                     <div
-                        className="cursor-pointer block py-2 px-4 hover:bg-blue-400 rounded-3xl relative"
+                        className={`cursor-pointer block py-2 px-4 hover:bg-blue-400 rounded-3xl relative `}
                         onClick={() => toggleDropdown('roleUpdate')}
                     >
                         <FaUserEdit className="inline-block mr-2" />
                         Cập Nhật vai trò
-                        {/* Hiển thị mũi tên tương ứng */}
                         <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
                             {dropdownStates.roleUpdate ? (
                                 <FaChevronUp />
@@ -152,15 +164,13 @@ const Sidebar = () => {
                         </ul>
                     )}
                 </li>
-
                 <li>
                     <div
-                        className="cursor-pointer block py-2 px-4 hover:bg-blue-400 rounded-3xl relative"
+                        className={`cursor-pointer block py-2 px-4 hover:bg-blue-400 rounded-3xl relative `}
                         onClick={() => toggleDropdown('orderProcessing')}
                     >
                         <FaClone className="inline-block mr-2" />
                         Xử Lý Đơn
-                        {/* Hiển thị mũi tên tương ứng */}
                         <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
                             {dropdownStates.orderProcessing ? (
                                 <FaChevronUp />
@@ -193,6 +203,16 @@ const Sidebar = () => {
                             </li>
                             <li>
                                 <NavLink
+                                    to="/Admin/rooms/list"
+                                    className={({ isActive }) =>
+                                        `block py-2 px-4 hover:bg-blue-400 rounded-3xl ${isActive || location.pathname.match(/^\/Admin\/edit\/\d+$/) ? 'bg-blue-500 text-white' : ''}`
+                                    }
+                                >
+                                    Phòng Ủy Quyền
+                                </NavLink>
+                            </li>
+                            <li>
+                                <NavLink
                                     to="/Admin/Withdraws"
                                     className={({ isActive }) =>
                                         `block py-2 px-4 hover:bg-blue-400 rounded-3xl ${isActive ? 'bg-blue-500 text-white' : ''}`
@@ -204,15 +224,13 @@ const Sidebar = () => {
                         </ul>
                     )}
                 </li>
-
                 <li>
                     <div
-                        className="cursor-pointer block py-2 px-4 hover:bg-blue-400 rounded-3xl relative"
+                        className={`cursor-pointer block py-2 px-4 hover:bg-blue-400 rounded-3xl relative `}
                         onClick={() => toggleDropdown('category')}
                     >
                         <MdOutlineCategory className="inline-block mr-2" />
                         Loại
-                        {/* Hiển thị mũi tên tương ứng */}
                         <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
                             {dropdownStates.category ? (
                                 <FaChevronUp />
@@ -247,10 +265,8 @@ const Sidebar = () => {
                     )}
                 </li>
             </ul>
-
-            {/* Admin Profile Section ở dưới cùng */}
             <div className="mt-2 px-4 py-2 border-t border-gray-700">
-                <div className="flex items-center cursor-pointer " onClick={toggleAdminMenu}>
+                <div className="flex items-center cursor-pointer" onClick={toggleAdminMenu}>
                     <div className="w-8 h-8 rounded-full border border-gray-300 bg-gray-200 flex items-center justify-center">
                         <span className="text-gray-800 font-bold">
                             {getInitial(user.username)}
