@@ -8,6 +8,7 @@ import NotificationService from "../../../Services/User/NotificationService";
 import UserService from "../../../Services/User/UserService";
 import { useAuth } from "../../../Context/AuthProvider";
 import { parse, format, differenceInSeconds, differenceInMinutes, differenceInHours } from "date-fns";
+import { useNavigate } from "react-router-dom";
 
 const BellNotifications = () => {
     const { openDropdown, toggleDropdown } = useUI();
@@ -15,23 +16,20 @@ const BellNotifications = () => {
     const { user } = useAuth();
     const userId = user?.userId ? parseInt(user.userId) : null;
     const userRole = user?.role || "User";
+    const navigate = useNavigate();
 
     const [notifications, setNotifications] = useState([]);
     const [filterUnread, setFilterUnread] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    const wsRef = useRef(null); // Ref cho WebSocket
-    const userCache = useRef({}); // Cache cho username
+    const wsRef = useRef(null);
+    const userCache = useRef({});
 
     const bellRef = useRef(null);
     const dropdownRef = useOutsideClick(() => {
         if (isOpen) toggleDropdown(null);
     }, bellRef);
 
-    // Log trạng thái ban đầu
-    console.log("BellNotifications rendered", { isOpen, userId, userRole, user });
-
-    // Hàm định dạng thời gian giống Facebook
     const formatRelativeTime = (dateString) => {
         try {
             const parsedDate = parse(dateString, "HH:mm - dd/MM/yyyy", new Date());
@@ -55,7 +53,6 @@ const BellNotifications = () => {
         }
     };
 
-    // Hàm xử lý thông báo mới (từ API hoặc WebSocket)
     const processNotification = async (item) => {
         let message = item.message;
         let redirectUrl = null;
@@ -89,29 +86,29 @@ const BellNotifications = () => {
             type: item.type,
             message,
             unread: !item.isRead,
+            rawCreatedDate: item.createdDate,
             createdDate: formatRelativeTime(item.createdDate),
             redirectUrl,
         };
     };
 
-    // Hàm lấy thông báo từ API
     const fetchNotifications = async () => {
         if (!userId) {
-            console.log("No userId available, skipping API call");
             setError("Vui lòng đăng nhập để xem thông báo");
             return;
         }
 
-        // setLoading(true);
         try {
-            console.log(`Fetching notifications for userId: ${userId}, unread only: ${filterUnread}`);
             const data = filterUnread
                 ? await NotificationService.getNotificationUnreadByUser(userId)
                 : await NotificationService.getNotificationsByUser(userId);
 
-            console.log("API response:", data);
-
             const mappedData = await Promise.all(data.map(processNotification));
+            mappedData.sort((a, b) => {
+                const dateA = parse(a.rawCreatedDate, "HH:mm - dd/MM/yyyy", new Date());
+                const dateB = parse(b.rawCreatedDate, "HH:mm - dd/MM/yyyy", new Date());
+                return dateB - dateA;
+            });
             setNotifications(mappedData);
             setError(null);
         } catch (err) {
@@ -122,35 +119,34 @@ const BellNotifications = () => {
         }
     };
 
-    // Thiết lập WebSocket
     useEffect(() => {
         if (!userId) return;
 
-        // Kết nối WebSocket qua NotificationService
         wsRef.current = NotificationService.connectWebSocket(userId, {
-            onOpen: () => {
-                console.log("WebSocket connected");
-            },
+            onOpen: () => { },
             onMessage: async (event) => {
                 try {
                     const newNotification = JSON.parse(event.data);
-                    console.log("New notification received:", newNotification);
-
                     const processedNotification = await processNotification(newNotification);
-                    setNotifications((prev) => [processedNotification, ...prev]);
+                    setNotifications((prev) => {
+                        const updatedNotifications = [processedNotification, ...prev];
+                        updatedNotifications.sort((a, b) => {
+                            const dateA = parse(a.rawCreatedDate, "HH:mm - dd/MM/yyyy", new Date());
+                            const dateB = parse(b.rawCreatedDate, "HH:mm - dd/MM/yyyy", new Date());
+                            return dateB - dateA;
+                        });
+                        return updatedNotifications;
+                    });
                 } catch (err) {
                     console.error("Error processing WebSocket message:", err);
                 }
             },
-            onClose: () => {
-                console.log("WebSocket disconnected");
-            },
+            onClose: () => { },
             onError: (error) => {
                 console.error("WebSocket error:", error);
-                // Fallback sang polling nếu WebSocket thất bại
                 const pollingInterval = setInterval(() => {
                     fetchNotifications();
-                }, 10000); // Gọi mỗi 10 giây
+                }, 10000);
 
                 return () => clearInterval(pollingInterval);
             },
@@ -161,23 +157,18 @@ const BellNotifications = () => {
         };
     }, [userId]);
 
-    // Gọi API ban đầu khi mở dropdown hoặc thay đổi filterUnread
     useEffect(() => {
-        console.log("useEffect triggered", { isOpen, userId });
         if (isOpen && userId) {
             fetchNotifications();
         }
     }, [isOpen, filterUnread, userId]);
 
-    // Lọc thông báo dựa trên filterUnread
     const filteredNotifications = filterUnread
         ? notifications.filter((n) => n.unread)
         : notifications;
 
-    // Đánh dấu tất cả thông báo là đã đọc
     const markAllAsRead = async () => {
         try {
-            console.log("Marking all notifications as read");
             await Promise.all(
                 notifications
                     .filter((n) => n.unread)
@@ -190,10 +181,8 @@ const BellNotifications = () => {
         }
     };
 
-    // Xóa thông báo
     const removeNotification = async (id) => {
         try {
-            console.log(`Deleting notification with id: ${id}`);
             await NotificationService.deleteNotification(id);
             setNotifications((prev) => prev.filter((n) => n.id !== id));
         } catch (err) {
@@ -202,10 +191,8 @@ const BellNotifications = () => {
         }
     };
 
-    // Xóa tất cả thông báo
     const clearAllNotifications = async () => {
         try {
-            console.log("Clearing all notifications");
             await Promise.all(notifications.map((n) => NotificationService.deleteNotification(n.id)));
             setNotifications([]);
         } catch (err) {
@@ -214,21 +201,33 @@ const BellNotifications = () => {
         }
     };
 
-    // Xử lý nhấp vào thông báo
-    const handleNotificationClick = (notification) => {
+    const handleNotificationClick = async (notification) => {
+        // Đánh dấu thông báo là đã đọc nếu nó chưa đọc
+        if (notification.unread) {
+            try {
+                await NotificationService.markAsRead(notification.id);
+                setNotifications((prev) =>
+                    prev.map((n) =>
+                        n.id === notification.id ? { ...n, unread: false } : n
+                    )
+                );
+            } catch (err) {
+                console.error("Error marking notification as read:", err.response || err);
+                setError(err.message || "Lỗi khi đánh dấu thông báo là đã đọc");
+            }
+        }
+
+        // Chuyển hướng nếu có redirectUrl
         if (notification.redirectUrl) {
-            console.log(`Redirecting to: ${notification.redirectUrl}`);
-            window.location.href = notification.redirectUrl;
+            navigate(notification.redirectUrl);
         }
     };
 
     return (
         <div className="relative">
-            {/* Nút chuông thông báo */}
             <button
                 ref={bellRef}
                 onClick={() => {
-                    console.log("Bell button clicked, toggling dropdown");
                     toggleDropdown(isOpen ? null : "notifications");
                 }}
                 className="relative p-2 focus:outline-none"
@@ -241,7 +240,6 @@ const BellNotifications = () => {
                 )}
             </button>
 
-            {/* Dropdown thông báo */}
             {isOpen && (
                 <div
                     ref={dropdownRef}
@@ -249,7 +247,6 @@ const BellNotifications = () => {
                      bg-white dark:bg-gray-800 shadow-lg rounded-lg border border-gray-200 dark:border-gray-700
                      flex flex-col z-50"
                 >
-                    {/* Header */}
                     <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
                         <h3 className="text-lg font-semibold text-gray-800 dark:text-white">Thông báo</h3>
                         <button
@@ -260,7 +257,6 @@ const BellNotifications = () => {
                         </button>
                     </div>
 
-                    {/* Bộ lọc chưa đọc */}
                     <div className="px-4 py-2 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
                         <span className="text-base font-medium text-gray-800 dark:text-white">Xem tin chưa đọc</span>
                         <label className="relative inline-flex items-center cursor-pointer">
@@ -279,11 +275,9 @@ const BellNotifications = () => {
                         </label>
                     </div>
 
-                    {/* Danh sách thông báo */}
                     <div className="flex-1 overflow-y-auto">
                         {loading ? (
                             <div className="flex justify-center py-4">
-                                {/* <p className="text-gray-500 dark:text-gray-400">Đang tải...</p> */}
                             </div>
                         ) : error ? (
                             <div className="flex justify-center py-4">
@@ -293,12 +287,11 @@ const BellNotifications = () => {
                             filteredNotifications.map((notification) => (
                                 <div
                                     key={notification.id}
-                                    className={`flex items-center gap-3 p-3 ${notification.unread ? "bg-red-50 dark:bg-red-900/50" : "hover:bg-gray-100 dark:hover:bg-gray-700"
-                                        } rounded-md relative group ${notification.redirectUrl ? "cursor-pointer" : ""}`}
+                                    className={`flex items-center gap-3 p-3 ${notification.unread ? "bg-red-50 dark:bg-red-900/50 font-bold" : "hover:bg-gray-100 dark:hover:bg-gray-700"} rounded-md relative group ${notification.redirectUrl ? "cursor-pointer" : ""}`}
                                     onClick={() => handleNotificationClick(notification)}
                                 >
                                     <div className="flex-1">
-                                        <p className="text-sm font-medium text-gray-800 dark:text-white">{notification.message}</p>
+                                        <p className={`text-sm ${notification.unread ? "font-bold" : "font-medium"} text-gray-800 dark:text-white`}>{notification.message}</p>
                                         <p className="text-xs text-gray-400 dark:text-gray-300">{notification.createdDate}</p>
                                     </div>
                                     <button
@@ -320,7 +313,6 @@ const BellNotifications = () => {
                         )}
                     </div>
 
-                    {/* Thanh hành động */}
                     {notifications.length > 0 && (
                         <div className="p-3 border-t border-gray-200 dark:border-gray-700 flex justify-between">
                             <button
