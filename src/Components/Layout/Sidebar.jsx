@@ -47,17 +47,31 @@ const Sidebar = () => {
             location.pathname.match(/^\/Admin\/edit\/\d+$/) // Route chỉnh sửa phòng, ví dụ: /Admin/edit/123
         );
     };
-
+    // const onClickMenu = () => {
+    //     document.getElementById("root").classList.toggle("short");
+    // }
     return (
-        <div className="w-56 text-black h-screen fixed border-r-2 flex flex-col overflow-y-auto">
+        <div className="w-56 text-black h-screen fixed border-r-2 flex flex-col overflow-y-auto ">
             <div className="flex-shrink-0">
                 <img
                     src={logoAdmin}
                     alt="DUVAS"
                     className="w-full h-40 border-b-2"
+                // onClick={onClickMenu}
                 />
             </div>
             <ul className="flex-1 text-justify text-base font-medium">
+                <li>
+                    <NavLink
+                        to="/Admin/Dashboard"
+                        className={({ isActive }) =>
+                            `block py-2 px-4 hover:bg-blue-400 rounded-3xl ${isActive ? 'bg-blue-500 text-white' : ''}`
+                        }
+                    >
+                        <FaHome className="inline-block mr-2" />
+                        Dashboard
+                    </NavLink>
+                </li>
                 <li>
                     <NavLink
                         to="/Admin/Accounts"

@@ -146,7 +146,7 @@ const ServicePostOwner = () => {
                 const errorMessage = error.message || 'Không thể xóa bài đăng.';
                 showCustomNotification('error', errorMessage);
                 if (errorMessage.includes('No authentication token found') || errorMessage.includes('Phiên đăng nhập hết hạn')) {
-                    navigate('/login');
+                    navigate('/Logins');
                 }
             }
         }
@@ -165,7 +165,7 @@ const ServicePostOwner = () => {
         if (!user) {
             showCustomNotification('error', 'Vui lòng đăng nhập để xem danh sách bài đăng.');
             setLoading(false);
-            navigate('/login');
+            navigate('/Logins');
             return;
         }
         fetchAllPosts();

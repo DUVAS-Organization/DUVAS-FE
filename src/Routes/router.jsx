@@ -73,6 +73,7 @@ import ServicePostEdit from '../Pages/ServiceOwner/ServicePostEdit';
 import ServicePostCreate from '../Pages/ServiceOwner/ServicePostCreate';
 import ServicePost from '../Pages/User/ServicePosts/ServicePost'
 import ServicePostDetailsUser from '../Pages/User/ServicePosts/ServiePostDetails'
+import Dashboard from '../Components/Layout/Dashboard';
 
 const RoutesConfig = () => {
     const { user } = useAuth();
@@ -169,6 +170,10 @@ const RoutesConfig = () => {
 
             {/* Routes dành cho Admin */}
             {/* Account */}
+            <Route
+                path="/Admin/Dashboard"
+                element={user && user.role === "Admin" ? <Dashboard /> : <Navigate to="/Logins" />}
+            />
             <Route
                 path="/Admin/Accounts"
                 element={user && user.role === "Admin" ? <AccountList /> : <Navigate to="/Logins" />}
