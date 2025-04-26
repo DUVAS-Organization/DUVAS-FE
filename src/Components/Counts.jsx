@@ -3,6 +3,7 @@ import AccountsService from "../Services/Admin/AccountServices";
 import ServicePost from "../Services/Admin/ServicePost";
 import BuildingServices from "../Services/Admin/BuildingServices";
 import RoomServices from "../Services/Admin/RoomServices";
+import { FaUser, FaFileAlt, FaBuilding, FaDoorOpen } from 'react-icons/fa';
 
 const Counts = () => {
     const [accountCount, setAccountCount] = useState(0);
@@ -12,7 +13,7 @@ const Counts = () => {
 
     useEffect(() => {
         fetchData();
-    }, []); // Chạy fetchData() khi component được mount
+    }, []);
 
     const fetchData = () => {
         AccountsService.getAccounts()
@@ -33,25 +34,30 @@ const Counts = () => {
     };
 
     return (
-        <div className="flex space-x-4 mb-4">
-            <div className="flex-1 text-white font-medium bg-blue-500 p-4 rounded-lg h-28">
-                <p className='font-bold text-3xl'>Tài Khoản</p>
-                <p className='font-bold text-2xl mt-2'>{accountCount}</p>
-            </div>
-            <div className="flex-1 text-white font-medium bg-blue-500 p-4 rounded-lg h-28">
-                <p className='font-bold text-3xl'>Bài Đăng</p>
-                <p className='font-bold text-2xl mt-2'>{postCount}</p>
-            </div>
-            <div className="flex-1 text-white font-medium bg-blue-500 p-4 rounded-lg h-28">
-                <p className='font-bold text-3xl'>Tòa Nhà</p>
-                <p className='font-bold text-2xl mt-2'>{buildingCount}</p>
-            </div>
-            <div className="flex-1 text-white font-medium bg-blue-500 p-4 rounded-lg h-28">
-                <p className='font-bold text-3xl'>Phòng</p>
-                <p className='font-bold text-2xl mt-2'>{roomCount}</p>
-            </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {/* Tài Khoản */}
+            <Card count={accountCount} label="Tài Khoản" color="bg-blue-500" Icon={FaUser} />
+
+            {/* Bài Đăng */}
+            <Card count={postCount} label="Bài Đăng" color="bg-green-500" Icon={FaFileAlt} />
+
+            {/* Tòa Nhà */}
+            <Card count={buildingCount} label="Tòa Nhà" color="bg-purple-600" Icon={FaBuilding} />
+
+            {/* Phòng */}
+            <Card count={roomCount} label="Phòng" color="bg-orange-500" Icon={FaDoorOpen} />
         </div>
     );
 };
+
+const Card = ({ count, label, color, Icon }) => (
+    <div className={`${color} p-6 rounded-lg shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 flex items-center justify-between`}>
+        <div className="text-white">
+            <p className="text-5xl font-bold">{count}</p>
+            <p className="text-xl font-semibold mt-2">{label}</p>
+        </div>
+        <Icon className="text-white text-6xl ml-6" />
+    </div>
+);
 
 export default Counts;
