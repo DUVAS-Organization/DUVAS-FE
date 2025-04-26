@@ -33,17 +33,34 @@ const Sidebar = () => {
         return username ? username.charAt(0).toUpperCase() : '';
     };
 
+    const onClickMenu = () => {
+        document.getElementById("root").classList.toggle("short");
+    }
+
     return (
-        <div className="w-56 text-black h-screen fixed border-r-2 flex flex-col overflow-y-auto">
+        <div className="w-56 text-black h-screen fixed border-r-2 flex flex-col overflow-y-auto sidebar-duvas">
             <div className="flex-shrink-0">
                 <img
                     src={logoAdmin}
                     alt="DUVAS"
                     className="w-full h-40 border-b-2"
+                    onClick={onClickMenu}
                 />
             </div>
             {/* <h3 className='text-gray-500'>Quản Lý Admin</h3> */}
             <ul className="flex-1 text-justify text-base font-medium">
+            <li>
+                    <NavLink
+                        to="/Admin/Dashboard" // Chỉ đường dẫn thôi, không cần thay đổi logic
+                        className={({ isActive }) =>
+                            `block py-2 px-4 hover:bg-blue-400 rounded-3xl ${isActive ? 'bg-blue-500 text-white' : ''}`
+                        }
+                    >
+                        <FaHome className="inline-block mr-2" />
+                        <p className='text-category'>Dashboard</p> {/* Mục Dashboard */}
+                    </NavLink>
+                </li>
+                
                 <li>
                     <NavLink
                         to="/Admin/Accounts"
@@ -52,7 +69,7 @@ const Sidebar = () => {
                         }
                     >
                         <FaUserCircle className="inline-block mr-2" />
-                        Tài Khoản
+                        <p className='text-category'>Tài Khoản</p>
                     </NavLink>
                 </li>
                 <li>
@@ -63,7 +80,7 @@ const Sidebar = () => {
                         }
                     >
                         <FaUserCircle className="inline-block mr-2" />
-                        Tin Nhắn
+                        <p className='text-category'>Tin Nhắn</p>
                     </NavLink>
                 </li>
                 <li>
@@ -74,7 +91,7 @@ const Sidebar = () => {
                         }
                     >
                         <FaFileAlt className="inline-block mr-2" />
-                        Bài Đăng
+                        <p className='text-category'> Bài Đăng</p>
                     </NavLink>
                 </li>
                 <li>
@@ -85,7 +102,7 @@ const Sidebar = () => {
                         }
                     >
                         <FaHome className="inline-block mr-2" />
-                        Phòng
+                        <p className='text-category'>Phòng</p>
                     </NavLink>
                 </li>
                 <li>
@@ -96,7 +113,7 @@ const Sidebar = () => {
                         }
                     >
                         <FaBuilding className="inline-block mr-2" />
-                        Tòa Nhà
+                        <p className='text-category'>Tòa Nhà</p>
                     </NavLink>
                 </li>
                 <li>
@@ -105,7 +122,7 @@ const Sidebar = () => {
                         onClick={() => toggleDropdown('roleUpdate')}
                     >
                         <FaUserEdit className="inline-block mr-2" />
-                        Cập Nhật vai trò
+                        <p className='text-category'> Cập Nhật vai trò</p>
                         {/* Hiển thị mũi tên tương ứng */}
                         <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
                             {dropdownStates.roleUpdate ? (
@@ -147,7 +164,7 @@ const Sidebar = () => {
                         onClick={() => toggleDropdown('orderProcessing')}
                     >
                         <FaClone className="inline-block mr-2" />
-                        Xử Lý Đơn
+                        <p className='text-category'>Xử Lý Đơn</p>
                         {/* Hiển thị mũi tên tương ứng */}
                         <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
                             {dropdownStates.orderProcessing ? (
@@ -189,7 +206,7 @@ const Sidebar = () => {
                         onClick={() => toggleDropdown('category')}
                     >
                         <MdOutlineCategory className="inline-block mr-2" />
-                        Loại
+                        <p className='text-category'>Loại</p>
                         {/* Hiển thị mũi tên tương ứng */}
                         <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
                             {dropdownStates.category ? (

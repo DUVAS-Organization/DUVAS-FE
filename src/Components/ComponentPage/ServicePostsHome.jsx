@@ -130,7 +130,7 @@ const ServicePostsHome = () => {
     const renderFullCard = (post, isDoubleHeight = false) => {
         let images;
         try {
-            images = JSON.parse(post.image || '[]');
+            images = post.image ;
         } catch (error) {
             console.error(`Lỗi parse image bài đăng ${post.servicePostId}:`, error);
             images = post.image ? [post.image] : [];

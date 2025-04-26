@@ -6,9 +6,12 @@ import DropdownFilter from "../Components/Layout/DropdownFilter";
 import RangeInput from '../Components/Layout/Range/RangeInput';
 import CategoryRoomService from '../Services/User/CategoryRoomService';
 import CategoryServiceService from '../Services/User/CategoryServices';
+import { AudioRecorder } from 'react-audio-voice-recorder';
+import { FFmpeg } from '@ffmpeg/ffmpeg'
+import { fetchFile } from '@ffmpeg/util'
 
 const Searchbar = (props) => {
-    const [searchKeyword, setSearchKeyword] = useState("");
+    const [searchKeyword, setSearchKeyword] = useState(props.searchTerm);
     const [searchResults, setSearchResults] = useState([]);
     const [priceDropdownOpen, setPriceDropdownOpen] = useState(false);
     const [minPrice, setMinPrice] = useState(0);
@@ -26,6 +29,7 @@ const Searchbar = (props) => {
     const [categoryLabel, setCategoryLabel] = useState("-- Chọn loại --");
     const [activeTab, setActiveTab] = useState("rooms");
     const navigate = useNavigate();
+    const [blob, setBlob] = useState();
     const { isManagementRoom } = props;
 
     useEffect(() => {
@@ -97,30 +101,71 @@ const Searchbar = (props) => {
         );
     };
 
+    const addAudioElement = async (blob) => {
+        // Create an FFmpeg instance
+        const ffmpeg = new FFmpeg({ log: true });
+
+        // Load the FFmpeg core
+        await ffmpeg.load();
+
+        // Convert the blob to a file
+        const webmFile = new Blob([blob], { type: 'audio/webm' });
+
+        // Write the WebM file to FFmpeg's virtual filesystem
+        const webmFileName = 'audio.webm';
+        ffmpeg.writeFile(webmFileName, await fetchFile(webmFile))
+
+        // Convert WebM to WAV
+        const number = await ffmpeg.exec('-i', webmFileName, 'output.wav');
+
+        // Read the converted WAV file from FFmpeg's virtual filesystem
+        // const list = await ffmpeg.listDir("/output.wav")	
+        const wavData = await ffmpeg.readFile("audio.webm")
+
+        // Create a Blob from the WAV data
+        const wavBlob = new Blob([wavData.buffer], { type: 'audio/wav' });
+
+        // Set the blob in state (or handle it as you need)
+        setBlob(wavBlob);
+        console.log("File successfully converted to WAV format.");
+    };
+
+
+    useEffect(() => {
+        if (blob !== undefined)
+            handleFileChange()
+    }, [blob]);
+
+
+
     const handleSearch = async () => {
         const queryParams = new URLSearchParams();
+        const formData = new FormData();
 
         if (activeTab === "rooms") {
             const selectedCategory = categoriesRoom.find(c => c.categoryRoomId.toString() === selectedCategoryId);
-            queryParams.set("tab", selectedCategory ? selectedCategory.categoryName : "Phòng trọ");
-            if (selectedCategoryId) queryParams.set("categoryRoomId", selectedCategoryId);
-            if (minPrice !== 0) queryParams.set("minPrice", minPrice);
-            if (maxPrice !== 100) queryParams.set("maxPrice", maxPrice);
-            if (minArea !== 0) queryParams.set("minArea", minArea);
-            if (maxArea !== 1000) queryParams.set("maxArea", maxArea);
-            if (searchKeyword) queryParams.set("searchTerm", searchKeyword);
+            formData.append("tab", selectedCategory ? selectedCategory.categoryName : "Phòng trọ");
+            let url = new URL("https://localhost:8000/api/landlord/RoomManagementLandlord/search-rooms");
+
+
+            if (selectedCategoryId) formData.append("categoryRoomId", selectedCategoryId);
+            if (minPrice !== 0) formData.append("minPrice", minPrice);
+            if (maxPrice !== 100) formData.append("maxPrice", maxPrice);
+            if (minArea !== 0) formData.append("minArea", minArea);
+            if (maxArea !== 1000) formData.append("maxArea", maxArea);
+            if (searchKeyword) queryParams.set("searchTerm", searchKeyword)
+            if (blob !== undefined) formData.append("audioFile", blob, "audio-recording.wav")
 
             try {
-                const response = await fetch(`http://localhost:3000/api/search-rooms?${queryParams.toString()}`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
+                const response = await fetch(`${url}?${queryParams.toString()}`, {
+                    method: 'POST',
+                    body: formData
                 });
+
                 const data = await response.json();
                 if (response.ok) {
                     setSearchResults(data.rooms || []);
-                    navigate(`/Rooms`, { state: { searchResults: data.rooms || [] } });
+                    navigate(`/Rooms`, { state: { searchResults: data.rooms, searchTerm: searchKeyword || [] } });
                 } else {
                     console.error(data.message);
                     setSearchResults([]);
@@ -140,7 +185,7 @@ const Searchbar = (props) => {
             if (searchKeyword) queryParams.set("searchTerm", searchKeyword);
 
             try {
-                const response = await fetch(`http://localhost:3000/api/search-services?${queryParams.toString()}`, {
+                const response = await fetch(`http://localhost:8000/api/search-services?${queryParams.toString()}`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -172,32 +217,28 @@ const Searchbar = (props) => {
         document.getElementById("audio-upload").click();
     };
 
-    const handleFileChange = async (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            const formData = new FormData();
-            formData.append("audioFile", file);
+    const handleFileChange = async () => {
+        const formData = new FormData();
+        formData.append("File", blob, "audio-recording.wav")
+        try {
+            const response = await fetch(`https://localhost:8000/api/SpeechToText/convert`, {
+                method: "POST",
+                body: formData,
+            });
+            const data = await response.json();
+            if (response.ok) {
+                setSearchKeyword(data.text);
+            } else {
+                console.error(data.message);
+                setSearchKeyword("");
 
-            try {
-                const response = await fetch(`http://localhost:3000/api/search-rooms`, {
-                    method: "POST",
-                    body: formData,
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    setSearchResults(data.rooms || []);
-                    navigate(`/Rooms`, { state: { searchResults: data.rooms || [] } });
-                } else {
-                    console.error(data.message);
-                    setSearchResults([]);
-                    navigate(`/Rooms`, { state: { searchResults: [] } });
-                }
-            } catch (error) {
-                console.error("Error uploading audio file:", error);
                 setSearchResults([]);
-                navigate(`/Rooms`, { state: { searchResults: [] } });
             }
+        } catch (error) {
+            console.error("Error uploading audio file:", error);
+            setSearchResults([]);
         }
+
     };
 
     return (
@@ -226,18 +267,31 @@ const Searchbar = (props) => {
                         </div>
                         <h1 className="font-medium text-gray-500 flex-shrink-0">|</h1>
                         <div className="relative flex-1 flex items-center">
-                            <button onClick={handleRecord} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                            {/* <button onClick={handleRecord} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
                                 <FaMicrophone />
-                            </button>
+                            </button> */}
                             <button onClick={handleUpload} className="absolute left-9 top-1/2 transform -translate-y-1/2 text-gray-500">
                                 <FaUpload />
                             </button>
-                            <input
-                                id="audio-upload"
-                                type="file"
-                                accept="audio/*"
-                                className="hidden"
-                                onChange={handleFileChange}
+                            <AudioRecorder
+                                onRecordingComplete={addAudioElement}
+                                audioTrackConstraints={{
+                                    noiseSuppression: false,
+                                    echoCancellation: true,
+                                    // autoGainControl,
+                                    // channelCount,
+                                    // deviceId,
+                                    // groupId,
+                                    // sampleRate,
+                                    // sampleSize,
+                                }}
+                                onNotAllowedOrFound={(err) => console.table(err)}
+                                downloadOnSavePress={false}
+                                downloadFileExtension="wav"
+                                mediaRecorderOptions={{
+                                    audioBitsPerSecond: 128000,
+                                }}
+                                showVisualizer={false}
                             />
                             <input
                                 className="w-full bg-gray-100 rounded-lg pl-16 pr-28 py-2"

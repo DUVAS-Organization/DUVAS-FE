@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import RoomService from '../../../Services/User/RoomService';
 import UserService from '../../../Services/User/UserService';
 import { useNavigate, Link, useParams, useLocation } from 'react-router-dom';
@@ -10,7 +10,6 @@ import { useAuth } from '../../../Context/AuthProvider';
 import FAQList from '../../../Components/FAQ/FAQList';
 import Loading from '../../../Components/Loading';
 import { showCustomNotification } from '../../../Components/Notification';
-
 const RoomsList = () => {
     const { roomId } = useParams();
     const [rooms, setRooms] = useState([]);
@@ -32,16 +31,22 @@ const RoomsList = () => {
     const maxPrice = queryParams.get("maxPrice") ? Number(queryParams.get("maxPrice")) * 1000000 : Infinity;
     const minArea = queryParams.get("minArea") ? Number(queryParams.get("minArea")) : 0;
     const maxArea = queryParams.get("maxArea") ? Number(queryParams.get("maxArea")) : Infinity;
+    const { searchResults, searchTerm} = location.state || {}; 
 
+    console.log(JSON.stringify(searchResults))
     useEffect(() => {
-        fetchRooms();
+        if (searchResults == undefined) {
+            fetchRooms();
+        }
     }, []);
 
     useEffect(() => {
         if (user && user.userId) {
             fetchSavedPosts();
         }
-    }, [user]);
+
+        setRooms(searchResults);
+    }, [user, searchResults]);
 
     const fetchRooms = async () => {
         setLoading(true);
@@ -189,33 +194,33 @@ const RoomsList = () => {
     let filteredRooms = rooms;
 
     // Ưu tiên lọc theo category từ Searchbar
-    if (category) {
-        if (category === "Phòng trọ") {
-            filteredRooms = filteredRooms.filter((r) => r.categoryName === "Phòng trọ" || !r.categoryName);
-        } else {
-            filteredRooms = filteredRooms.filter((r) => r.categoryName === category);
-        }
-    } else {
-        // Nếu không có category, lọc theo tab
-        if (tab === "Căn hộ") {
-            filteredRooms = filteredRooms.filter((r) => r.categoryName === "Căn hộ");
-        } else if (tab === "Nhà nguyên căn") {
-            filteredRooms = filteredRooms.filter((r) => r.categoryName === "Nhà nguyên căn");
-        } else if (tab === "Phòng trọ") {
-            filteredRooms = filteredRooms.filter((r) => r.categoryName === "Phòng trọ" || !r.categoryName);
-        }
-    }
+    // if (category) {
+    //     if (category === "Phòng trọ") {
+    //         filteredRooms = filteredRooms.filter((r) => r.categoryName === "Phòng trọ" || !r.categoryName);
+    //     } else {
+    //         filteredRooms = filteredRooms.filter((r) => r.categoryName === category);
+    //     }
+    // } else {
+    //     // Nếu không có category, lọc theo tab
+    //     if (tab === "Căn hộ") {
+    //         filteredRooms = filteredRooms.filter((r) => r.categoryName === "Căn hộ");
+    //     } else if (tab === "Nhà nguyên căn") {
+    //         filteredRooms = filteredRooms.filter((r) => r.categoryName === "Nhà nguyên căn");
+    //     } else if (tab === "Phòng trọ") {
+    //         filteredRooms = filteredRooms.filter((r) => r.categoryName === "Phòng trọ" || !r.categoryName);
+    //     }
+    // }
 
     // Lọc thêm theo giá và diện tích
-    filteredRooms = filteredRooms.filter((r) => r.price >= minPrice && r.price <= maxPrice);
-    filteredRooms = filteredRooms.filter((r) => r.acreage >= minArea && r.acreage <= maxArea);
+    // filteredRooms = filteredRooms.filter((r) => r.price >= minPrice && r.price <= maxPrice);
+    // filteredRooms = filteredRooms.filter((r) => r.acreage >= minArea && r.acreage <= maxArea);
 
     return (
         <div className="bg-white min-h-screen p-4">
             <div className="container mx-auto">
                 <div className="flex items-center justify-between mb-4">
                     <div className="w-full">
-                        <Searchbar />
+                        <Searchbar searchTerm={searchTerm}/>
                     </div>
                 </div>
                 <div className="flex max-w-6xl mx-auto">

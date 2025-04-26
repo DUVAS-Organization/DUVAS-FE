@@ -3,11 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import Icon from '../../../Components/Icon';
 import AccountsService from "../../../Services/Admin/AccountServices";
 import Counts from '../../../Components/Counts';
+import { useAuth } from '../../../Context/AuthProvider';
 
 import { FiFilter } from 'react-icons/fi';
 import { FaLock, FaUnlock } from 'react-icons/fa';
+import { display } from '@mui/system';
 
 const AccountList = () => {
+    const { user, logout } = useAuth(); 
     const [accounts, setAccounts] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const navigate = useNavigate();
@@ -134,7 +137,12 @@ const AccountList = () => {
                                     className="hover:bg-gray-200 border-collapse border border-gray-300"
                                 >
                                     <td className="py-2 px-4 text-gray-700 border-b">{index + 1}</td>
-                                    <td className="py-2 px-4 text-gray-700 border-b">{account.name}</td>
+                                    <td className="py-2 px-4 text-gray-700 border-b" style={{display: 'flex'}}>
+
+                                        <div> {user.userId == account.userId ? (
+                                        <img className="circle-image" src="https://res.cloudinary.com/ddxmnppjz/image/upload/v1742583625/zzqb0ugy1vj90ddhuu3x.jpg" alt="Circle Image" />
+                                    ) : null}{account.name}</div>
+                                    </td>
                                     <td className="py-2 px-4 text-gray-700 border-b">{account.gmail}</td>
                                     <td className="py-2 px-4 text-gray-700 border-b">{getRole(account)}</td>
                                     <td className="py-2 px-4 text-gray-700 border-b">

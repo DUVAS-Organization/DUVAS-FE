@@ -6,6 +6,14 @@
     text-align: center;
 }
 
+/* Khi .recording tồn tại trong .audio-recorder */
+.recording {
+    position: absolute;
+    left: 45%;
+}
+
+
+
 /* Container Notifications: đảm bảo định vị đúng, không dùng padding cố định */
 .custom-notification {
     position: fixed;
@@ -56,6 +64,33 @@
     margin-top: 4px;
     /* Căn giữa theo chiều dọc */
     /* Nếu có thuộc tính top, hãy loại bỏ nó để tránh đẩy icon xuống */
+}
+
+.container .sidebar-duvas {
+    height: 100%;
+    padding: 0 1rem;
+    position: fixed;
+    top: 0;
+    left: 0;
+    transition: width 0.1s ease-out;
+  }
+
+
+  .short .sidebar-duvas {
+    width: 7%;
+    text-align: center;
+  }
+  .short .text-category {
+    display: none;
+  }
+  .short main {
+    margin-left: calc(5% + -7rem);
+  }
+  .circle-image {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    object-fit: cover;
 }
 
 /* Responsive: điều chỉnh container cho màn hình nhỏ */

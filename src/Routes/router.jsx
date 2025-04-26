@@ -39,6 +39,7 @@ import RoomBookingSuccess from '../Pages/User/Rooms/RoomBookingSuccess';
 import Message from '../Pages/User/Profiles/Message';
 import MessageAdmin from '../Pages/Admin/MessageAdmin';
 import SavedPostList from '../Pages/User/Profiles/SavedPostList';
+import Dashboard from '../Components/Layout/Dashboard'; // Thay đường dẫn nếu cần
 
 
 import RoomListLandlord from '../Pages/Landlord/Rooms/RoomList'
@@ -55,6 +56,7 @@ import Transaction from '../Pages/User/Transactions/Transaction'
 import Withdraw from '../Pages/User/Transactions/Withdraw';
 import CreateWithdraw from '../Pages/User/Transactions/CreateWithdraw';
 import AdminTransaction from '../Pages/Admin/Transactions/Transaction';
+
 
 const RoutesConfig = () => {
     const { user } = useAuth();
@@ -157,10 +159,17 @@ const RoutesConfig = () => {
 
             {/* Routes dành cho Admin */}
             {/* Account */}
+            
+            <Route
+                path="/Admin/Dashboard"
+                element={user && user.role === "Admin" ? <Dashboard /> : <Navigate to="/Logins" />}
+            />
             <Route
                 path="/Admin/Accounts"
                 element={user && user.role === "Admin" ? <AccountList /> : <Navigate to="/Logins" />}
             />
+            
+
             <Route
                 path="/Admin/Message"
                 element={user && user.role === "Admin" ? <MessageAdmin /> : <Navigate to="/Logins" />}

@@ -24,10 +24,10 @@ const Layout = ({
         : (!renderNavbar && showSidebar && <SidebarUser />);
 
     return (
-        <div className="bg-gray-100 flex flex-col">
+        <div className="bg-gray-100 flex flex-col" id="root">
             {renderNavbar && <Navbar />}
 
-            <div className="flex flex-grow">
+            <div className="flex flex-grow container">
                 {renderSidebar && renderSidebar}
                 <div className={`flex-1 ${renderSidebar ? 'ml-56' : ''}`}>
                     <main>{children}</main>
