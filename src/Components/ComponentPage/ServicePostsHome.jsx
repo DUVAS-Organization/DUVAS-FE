@@ -52,7 +52,8 @@ const ServicePostsHome = () => {
     useEffect(() => {
         const filtered = servicePosts.filter(post => {
             const priceMatch = post.price >= minPriceQuery && post.price <= maxPriceQuery;
-            return priceMatch;
+            const permissionMatch = post.isPermission === 1; // Only include posts with isPermission = 1
+            return priceMatch && permissionMatch;
         });
         setFilteredServicePosts(filtered);
     }, [servicePosts, minPriceQuery, maxPriceQuery]);
@@ -72,7 +73,9 @@ const ServicePostsHome = () => {
     const fetchServicePosts = async () => {
         try {
             const data = await ServicePost.getServicePosts();
-            setServicePosts(data || []);
+            // Filter posts to only include those with isPermission = 1
+            const permittedPosts = (data || []).filter(post => post.isPermission === 1);
+            setServicePosts(permittedPosts);
         } catch (error) {
             console.error('Lỗi khi lấy danh sách bài đăng dịch vụ:', error);
         }
@@ -131,7 +134,7 @@ const ServicePostsHome = () => {
         const isSaved = savedPosts.has(post.servicePostId);
 
         return (
-            <Link to={`/ServicePosts/Details/${post.servicePostId}`} className="block ">
+            <Link to={`/ServicePosts/Details/${post.servicePostId}`} className="block">
                 <Item className={`mb-4 ${isDoubleHeight ? 'h-[417px]' : 'h-48'}`} $vertical={isDoubleHeight}>
                     {isDoubleHeight ? (
                         <>
@@ -189,7 +192,7 @@ const ServicePostsHome = () => {
                                 )}
                             </div>
                             <div className="p-4 flex-1 flex flex-col">
-                                <h3 className="text-lg font-semibold mb-1 truncate ">{post.title}</h3>
+                                <h3 className="text-lg font-semibold mb-1 truncate">{post.title}</h3>
                                 <p className="text-gray-600 mb-1 flex items-center">
                                     <FaMapMarkerAlt className="mr-1" />
                                     {post.location}

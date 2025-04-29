@@ -5,10 +5,12 @@ import Counts from '../../../Components/Counts';
 
 import { FiFilter } from 'react-icons/fi';
 import { FaLock, FaUnlock } from 'react-icons/fa';
-
+import { display } from '@mui/system';
+import { useAuth } from '../../../Context/AuthProvider';
 
 const ConfirmModal = ({ title, message, actionText, onConfirm, onCancel }) => {
     const titleClass = actionText === 'Khóa' ? 'text-red-500' : 'text-green-500';
+
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50">
             {/* Overlay */}
@@ -37,6 +39,7 @@ const ConfirmModal = ({ title, message, actionText, onConfirm, onCancel }) => {
 
 
 const AccountList = () => {
+    const { user, logout } = useAuth();
     const [accounts, setAccounts] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [isSortedAscending, setIsSortedAscending] = useState(true);

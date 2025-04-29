@@ -10,8 +10,6 @@ import ForgotPasswords from '../Components/Layout/Auth/ForgotPassword';
 import { useAuth } from '../Context/AuthProvider'; // Import useAuth
 import Profile from '../Pages/User/Profiles/Profile';
 
-import ServicePost from '../Pages/User/ServicePosts/ServicePost';
-
 import AccountList from '../Pages/Admin/Accounts/AccountList'
 import ServicePostList from '../Pages/Admin/ServicePosts/ServicePostList'
 import RoomList from '../Pages/Admin/Rooms/RoomList'
@@ -46,7 +44,6 @@ import ViewProfile from '../Pages/Landlord/ViewProfile'
 import RoomsFormLandlord from '../Pages/Landlord/Rooms/RoomsForm';
 import RoomRentalConfirmation from '../Pages/Landlord/Rooms/RoomRentalConfirmation';
 
-import ServicePostDetailsUser from '../Pages/User/ServicePosts/ServiePostDetails'
 import Wiki from '../Pages/Wiki'
 import Money from '../Pages/User/Transactions/Money';
 import BankAccount from '../Pages/User/Transactions/BankAccount'
@@ -71,6 +68,18 @@ import ContractDetail from '../Pages/Admin/Accounts/Authorization/ContractDetail
 import RoomAdminEdit from '../Pages/Admin/Accounts/Authorization/RoomAdminEdit';
 import AdminRoomRentalConfirmation from '../Pages/Admin/Accounts/Authorization/AdminRoomRentalConfirmation';
 import AdminRoomList from '../Pages/Admin/Accounts/Authorization/AdminRoomList'
+import ServicePostOwner from '../Pages/ServiceOwner/ServicePostList';
+import ServicePostEdit from '../Pages/ServiceOwner/ServicePostEdit';
+import ServicePostCreate from '../Pages/ServiceOwner/ServicePostCreate';
+import ServicePost from '../Pages/User/ServicePosts/ServicePost'
+import ServicePostDetailsUser from '../Pages/User/ServicePosts/ServiePostDetails'
+import Dashboard from '../Components/Layout/Dashboard';
+import CPPRoomForm from '../Pages/Admin/PriorityPackage/CPPRoomForm';
+import CPPRoomList from '../Pages/Admin/PriorityPackage/CPPRoomList';
+import CPPServicePostList from '../Pages/Admin/PriorityPackage/CPPServicePostList';
+import CPPServicePostForm from '../Pages/Admin/PriorityPackage/CPPServicePostForm';
+import ServicePackagesList from '../Pages/Admin/PriorityPackage/ServicePackagesList';
+import RoomPackagesList from '../Pages/Admin/PriorityPackage/RoomPackagesList';
 
 const RoutesConfig = () => {
     const { user } = useAuth();
@@ -87,18 +96,16 @@ const RoutesConfig = () => {
             <Route path="/forgot-password" element={<ForgotPasswords />} />
             <Route path="/Profile" element={<Profile />} />
             <Route path="/Wiki" element={<Wiki />} />
-            <Route
-                path="/Rooms/Details/:roomId"
-                element={<RoomDetailsUser />}
-            />
-            <Route
-                path="/ServicePosts"
-                element={<ServicePost />}
-            />
+            <Route path="/ServicePosts" element={<ServicePost />} />
             <Route
                 path="/ServicePosts/Details/:servicePostId"
                 element={<ServicePostDetailsUser />}
             />
+            <Route
+                path="/Rooms/Details/:roomId"
+                element={<RoomDetailsUser />}
+            />
+
             {/* Routes dành cho User */}
             <Route
                 path="/Moneys"
@@ -169,6 +176,10 @@ const RoutesConfig = () => {
 
             {/* Routes dành cho Admin */}
             {/* Account */}
+            <Route
+                path="/Admin/Dashboard"
+                element={user && user.role === "Admin" ? <Dashboard /> : <Navigate to="/Logins" />}
+            />
             <Route
                 path="/Admin/Accounts"
                 element={user && user.role === "Admin" ? <AccountList /> : <Navigate to="/Logins" />}
@@ -291,6 +302,42 @@ const RoutesConfig = () => {
                 path="/Admin/CategoryRooms/:categoryRoomId"
                 element={user && user.role === "Admin" ? <CategoryRoomForm /> : <Navigate to="/Logins" />}
             />
+
+            {/* Gói ưu tiên */}
+            <Route
+                path="/Admin/CategoryPriorityRooms"
+                element={user && user.role === "Admin" ? <CPPRoomList /> : <Navigate to="/Logins" />}
+            />
+            <Route
+                path="/Admin/CategoryPriorityRooms/Creates"
+                element={user && user.role === "Admin" ? <CPPRoomForm /> : <Navigate to="/Logins" />}
+            />
+            <Route
+                path="/Admin/CategoryPriorityRooms/:categoryPriorityPackageRoomId"
+                element={user && user.role === "Admin" ? <CPPRoomForm /> : <Navigate to="/Logins" />}
+            />
+            <Route
+                path="/Admin/CategoryPriorityServices"
+                element={user && user.role === "Admin" ? <CPPServicePostList /> : <Navigate to="/Logins" />}
+            />
+            <Route
+                path="/Admin/CategoryPriorityServices/Creates"
+                element={user && user.role === "Admin" ? <CPPServicePostForm /> : <Navigate to="/Logins" />}
+            />
+            <Route
+                path="/Admin/CategoryPriorityServices/:categoryPriorityPackageServicePostId"
+                element={user && user.role === "Admin" ? <CPPServicePostForm /> : <Navigate to="/Logins" />}
+            />
+
+            <Route
+                path="/Admin/RoomPackages"
+                element={user && user.role === "Admin" ? <RoomPackagesList /> : <Navigate to="/Logins" />}
+            />
+            <Route
+                path="/Admin/ServicePackages"
+                element={user && user.role === "Admin" ? <ServicePackagesList /> : <Navigate to="/Logins" />}
+            />
+
             {/* Transaction */}
             <Route
                 path="/Admin/Withdraws"
@@ -337,6 +384,22 @@ const RoutesConfig = () => {
                 path="/ViewUpRole"
                 element={user ? <ViewUpRole /> : <Navigate to="/" />}
             />
+
+            {/* Routes dành cho ServiceOwner */}
+            {/* Service Post */}
+            <Route
+                path="/ServiceOwner/ManageServices"
+                element={user && user.role === "Service" ? <ServicePostOwner /> : <Navigate to="/" />}
+            />
+            <Route
+                path="/ServiceOwner/ServicePosts/Edit/:servicePostId"
+                element={user && user.role === "Service" ? <ServicePostEdit /> : <Navigate to="/" />}
+            />
+            <Route
+                path="/ServiceOwner/ServicePosts/Create"
+                element={user && user.role === "Service" ? <ServicePostCreate /> : <Navigate to="/" />}
+            />
+
         </Routes>
 
 

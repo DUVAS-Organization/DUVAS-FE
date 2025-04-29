@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const API_URL = 'https://apiduvas1.runasp.net/api';
 const HUB_BASE_URL = 'https://apiduvas1.runasp.net';
-const WS_URL = "wss://localhost:8000/ws/savedPosts";
+const WS_URL = "wss://apiduvas1.runasp.net/ws/savedPosts";
 
 const OtherService = {
     checkImageAzure: async (file) => {

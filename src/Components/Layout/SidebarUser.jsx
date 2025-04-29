@@ -27,8 +27,8 @@ const SidebarUser = () => {
         listLink = "/Room";
     } else if (user.role === "Service") {
         postTitle = "Dịch vụ";
-        createLink = "/ServicePost/Creates";
-        listLink = "/ServicePost";
+        createLink = "/ServiceOwner/ServicePosts/Create";
+        listLink = "/ServiceOwner/ManageServices";
     }
 
     return (

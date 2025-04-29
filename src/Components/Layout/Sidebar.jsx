@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../../Context/AuthProvider';
 import logoAdmin from '../../Assets/Images/logoAdmin.png';
-import { FaUserCircle, FaFileAlt, FaHome, FaBuilding, FaSignOutAlt, FaClone, FaUserEdit, FaChevronDown, FaChevronUp, FaFacebookMessenger } from 'react-icons/fa';
+import { FaUserCircle, FaFileAlt, FaHome, FaBuilding, FaSignOutAlt, FaClone, FaUserEdit, FaChevronDown, FaChevronUp, FaFacebookMessenger, FaStar } from 'react-icons/fa';
 import { MdOutlineCategory } from "react-icons/md";
 import { FaMoneyBillTransfer } from 'react-icons/fa6';
 
@@ -47,17 +47,31 @@ const Sidebar = () => {
             location.pathname.match(/^\/Admin\/edit\/\d+$/) // Route chỉnh sửa phòng, ví dụ: /Admin/edit/123
         );
     };
-
+    // const onClickMenu = () => {
+    //     document.getElementById("root").classList.toggle("short");
+    // }
     return (
-        <div className="w-56 text-black h-screen fixed border-r-2 flex flex-col overflow-y-auto">
+        <div className="w-56 text-black h-screen fixed border-r-2 flex flex-col overflow-y-auto ">
             <div className="flex-shrink-0">
                 <img
                     src={logoAdmin}
                     alt="DUVAS"
                     className="w-full h-40 border-b-2"
+                // onClick={onClickMenu}
                 />
             </div>
             <ul className="flex-1 text-justify text-base font-medium">
+                <li>
+                    <NavLink
+                        to="/Admin/Dashboard"
+                        className={({ isActive }) =>
+                            `block py-2 px-4 hover:bg-blue-400 rounded-3xl ${isActive ? 'bg-blue-500 text-white' : ''}`
+                        }
+                    >
+                        <FaHome className="inline-block mr-2" />
+                        Dashboard
+                    </NavLink>
+                </li>
                 <li>
                     <NavLink
                         to="/Admin/Accounts"
@@ -226,6 +240,48 @@ const Sidebar = () => {
                 </li>
                 <li>
                     <div
+                        className="cursor-pointer flex items-center justify-between py-2 px-4 hover:bg-blue-400 rounded-3xl relative"
+                        onClick={() => toggleDropdown('priorityPackage')}
+                    >
+                        <div className="flex items-center space-x-2">
+                            <FaStar className="text-black-400" />
+                            <span>Gói ưu tiên</span>
+                        </div>
+                        <div>
+                            {dropdownStates.priorityPackage ? <FaChevronUp /> : <FaChevronDown />}
+                        </div>
+                    </div>
+
+                    {dropdownStates.priorityPackage && (
+                        <ul className="pl-8 mt-2 space-y-2">
+                            <li>
+                                <NavLink
+                                    to="/Admin/RoomPackages"
+                                    className={({ isActive }) =>
+                                        `flex items-center space-x-2 py-2 px-4 rounded-3xl hover:bg-blue-400 ${isActive ? 'bg-blue-500 text-white' : ''
+                                        }`
+                                    }
+                                >
+                                    <span>Gói phòng</span>
+                                </NavLink>
+                            </li>
+
+                            <li>
+                                <NavLink
+                                    to="/Admin/ServicePackages"
+                                    className={({ isActive }) =>
+                                        `flex items-center space-x-2 py-2 px-4 rounded-3xl hover:bg-blue-400 ${isActive ? 'bg-blue-500 text-white' : ''
+                                        }`
+                                    }
+                                >
+                                    <span>Gói dịch vụ</span>
+                                </NavLink>
+                            </li>
+                        </ul>
+                    )}
+                </li>
+                <li>
+                    <div
                         className={`cursor-pointer block py-2 px-4 hover:bg-blue-400 rounded-3xl relative `}
                         onClick={() => toggleDropdown('category')}
                     >
@@ -243,16 +299,6 @@ const Sidebar = () => {
                         <ul className="pl-4 mt-2">
                             <li>
                                 <NavLink
-                                    to="/Admin/CategoryServices"
-                                    className={({ isActive }) =>
-                                        `block py-2 px-4 hover:bg-blue-400 rounded-3xl ${isActive ? 'bg-blue-500 text-white' : ''}`
-                                    }
-                                >
-                                    Loại Dịch Vụ
-                                </NavLink>
-                            </li>
-                            <li>
-                                <NavLink
                                     to="/Admin/CategoryRooms"
                                     className={({ isActive }) =>
                                         `block py-2 px-4 hover:bg-blue-400 rounded-3xl ${isActive ? 'bg-blue-500 text-white' : ''}`
@@ -261,10 +307,41 @@ const Sidebar = () => {
                                     Loại Phòng
                                 </NavLink>
                             </li>
+                            <li>
+                                <NavLink
+                                    to="/Admin/CategoryServices"
+                                    className={({ isActive }) =>
+                                        `block py-2 px-4 hover:bg-blue-400 rounded-3xl ${isActive ? 'bg-blue-500 text-white' : ''}`
+                                    }
+                                >
+                                    Loại Dịch Vụ
+                                </NavLink>
+                            </li>
+
+                            <li>
+                                <NavLink
+                                    to="/Admin/CategoryPriorityRooms"
+                                    className={({ isActive }) =>
+                                        `block py-2 px-4 hover:bg-blue-400 rounded-3xl ${isActive ? 'bg-blue-500 text-white' : ''}`
+                                    }
+                                >
+                                    Ưu tiên Phòng
+                                </NavLink>
+                            </li>
+                            <li>
+                                <NavLink
+                                    to="/Admin/CategoryPriorityServices"
+                                    className={({ isActive }) =>
+                                        `block py-2 px-4 hover:bg-blue-400 rounded-3xl ${isActive ? 'bg-blue-500 text-white' : ''}`
+                                    }
+                                >
+                                    Ưu tiên Dịch vụ
+                                </NavLink>
+                            </li>
                         </ul>
                     )}
                 </li>
-            </ul>
+            </ul >
             <div className="mt-2 px-4 py-2 border-t border-gray-700">
                 <div className="flex items-center cursor-pointer" onClick={toggleAdminMenu}>
                     <div className="w-8 h-8 rounded-full border border-gray-300 bg-gray-200 flex items-center justify-center">
@@ -292,7 +369,7 @@ const Sidebar = () => {
                     </ul>
                 )}
             </div>
-        </div>
+        </div >
     );
 };
 
