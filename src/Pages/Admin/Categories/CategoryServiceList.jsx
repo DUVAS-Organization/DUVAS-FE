@@ -52,7 +52,7 @@ const CategoryServiceList = () => {
     };
     return (
         <div className="p-6">
-            <div className='font-bold text-6xl ml-3 my-8 text-blue-500 flex justify-between'>
+            <div className='font-bold text-5xl ml-3 my-8 text-blue-500 flex justify-between'>
                 <h1 >Loại Dịch Vụ</h1>
                 <button
                     onClick={handleCreate}

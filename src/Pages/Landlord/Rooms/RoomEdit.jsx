@@ -4,13 +4,15 @@ import RoomLandlordService from '../../../Services/Landlord/RoomLandlordService'
 import BuildingServices from '../../../Services/Admin/BuildingServices';
 import CategoryRooms from '../../../Services/Admin/CategoryRooms';
 import RoomServices from '../../../Services/Admin/RoomServices';
+import BookingManagementService from '../../../Services/Landlord/BookingManagementService';
+import OtherService from '../../../Services/User/OtherService';
 import { showCustomNotification } from '../../../Components/Notification';
 import { useAuth } from '../../../Context/AuthProvider';
-import { FaTimes, FaPlus, FaMinus, FaChevronUp, FaChevronDown, FaArrowLeft } from "react-icons/fa";
 import Loading from '../../../Components/Loading';
-import PriceInput from '../../../Components/Layout/Range/PriceInput';
 import SidebarUser from '../../../Components/Layout/SidebarUser';
-import OtherService from '../../../Services/User/OtherService';
+import StepConfirmation from '../../../Components/ComponentPage/StepConfirmation';
+import { format } from 'date-fns';
+import PriorityRoomService from '../../../Services/Admin/PriorityRoomService';
 
 const RoomEdit = () => {
     const [room, setRoom] = useState({
@@ -39,6 +41,11 @@ const RoomEdit = () => {
         quanLy: 0,
         chiPhiKhac: 0,
         authorization: 0,
+        startDate: '',
+        endDate: '',
+        priorityPrice: 0,
+        categoryPriorityPackageRoomId: null,
+        duration: 0,
     });
     const [categoryRooms, setCategoryRooms] = useState([]);
     const [buildings, setBuildings] = useState([]);
@@ -57,9 +64,10 @@ const RoomEdit = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
 
-    // Hàm xử lý lỗi chung
+    // Handle API Errors
     const handleApiError = (error, customMessage = "Đã xảy ra lỗi, vui lòng thử lại!") => {
         const apiMessage = error?.response?.data?.message || error.message;
+        console.error('API Error:', { status: error?.response?.status, message: apiMessage });
         if (error?.response?.status === 409) {
             if (apiMessage.includes("Mô tả phòng đã từng được sử dụng")) {
                 showCustomNotification("error", "Mô tả này đã bị trùng với phòng khác trong hệ thống. Vui lòng chỉnh sửa.");
@@ -70,16 +78,16 @@ const RoomEdit = () => {
             }
         } else if (error?.response?.status === 400 && apiMessage.includes("spam")) {
             showCustomNotification("error", "Mô tả có thể bị spam hoặc trùng với AI. Hãy chỉnh sửa để khác biệt hơn.");
+        } else if (error?.response?.status === 401 || apiMessage.includes("Unauthorized")) {
+            showCustomNotification("error", "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!");
+            localStorage.removeItem('authToken');
+            navigate('/Logins');
         } else {
             showCustomNotification("error", apiMessage || customMessage);
         }
-        if (apiMessage.includes("Unauthorized")) {
-            localStorage.removeItem('authToken');
-            navigate('/login');
-        }
     };
 
-    // Fetch dữ liệu ban đầu
+    // Fetch Initial Data
     useEffect(() => {
         if (!roomId) {
             showCustomNotification("error", "Không tìm thấy ID phòng!");
@@ -91,7 +99,7 @@ const RoomEdit = () => {
         Promise.all([
             CategoryRooms.getCategoryRooms(),
             BuildingServices.getBuildings(),
-            RoomLandlordService.getRoom(roomId)
+            RoomLandlordService.getRoom(roomId, user?.token)
         ])
             .then(([categories, buildings, roomData]) => {
                 setCategoryRooms(categories);
@@ -128,6 +136,11 @@ const RoomEdit = () => {
                     quanLy: roomData.quanLy || 0,
                     chiPhiKhac: roomData.chiPhiKhac || 0,
                     authorization: roomData.authorization || 0,
+                    startDate: roomData.startDate || '',
+                    endDate: roomData.endDate || '',
+                    priorityPrice: roomData.priorityPrice || 0,
+                    categoryPriorityPackageRoomId: roomData.categoryPriorityPackageRoomId || null,
+                    duration: roomData.duration || 0,
                 });
                 setExistingImages(images);
             })
@@ -136,9 +149,9 @@ const RoomEdit = () => {
                 handleApiError(error, "Không thể lấy thông tin phòng!");
             })
             .finally(() => setLoading(false));
-    }, [roomId, navigate]);
+    }, [roomId, navigate, user?.token]);
 
-    // Xử lý file ảnh mới
+    // Handle File Change
     const handleFileChange = async (e) => {
         const selectedFiles = Array.from(e.target.files);
         if (selectedFiles.length > 0) {
@@ -175,7 +188,7 @@ const RoomEdit = () => {
         }
     };
 
-    // Xóa file ảnh
+    // Remove File
     const handleRemoveFile = (index, isNew) => {
         if (isNew) {
             setNewFiles(prev => prev.filter((_, i) => i !== index));
@@ -186,7 +199,7 @@ const RoomEdit = () => {
         }
     };
 
-    // Upload file ảnh
+    // Upload File
     const uploadFile = async (file) => {
         const formData = new FormData();
         formData.append('file', file);
@@ -194,7 +207,7 @@ const RoomEdit = () => {
         return data.imageUrl;
     };
 
-    // Xử lý tạo tiêu đề và mô tả với AI
+    // Generate with AI
     const handleGenerateWithAI = async () => {
         setLoading(true);
         try {
@@ -209,7 +222,7 @@ const RoomEdit = () => {
                 NumberOfBathroom: Number(room.numberOfBathroom),
                 Price: Number(room.price),
                 Note: room.note,
-                UserId: user?.UserId || 3,
+                UserId: user?.userId || 3,
                 BuildingId: room.buildingId,
                 CategoryRoomId: Number(room.categoryRoomId),
                 Garret: room.garret,
@@ -226,7 +239,7 @@ const RoomEdit = () => {
                 ChiPhiKhac: Number(room.chiPhiKhac),
                 authorization: Number(room.authorization || 0),
                 User: {
-                    UserId: user?.UserId || 3,
+                    UserId: user?.userId || 3,
                     UserName: user?.["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"] || "Unknown"
                 },
                 RentalLists: []
@@ -238,9 +251,9 @@ const RoomEdit = () => {
                 throw new Error('Vui lòng chọn nội thất hợp lệ.');
             }
             if (!roomData.LocationDetail) throw new Error('Địa chỉ không được để trống.');
-            if (!roomData.User.UserId) throw new Error('UserId không được để trống.');
+            if (!roomData.User.userId) throw new Error('UserId không được để trống.');
 
-            const result = await RoomLandlordService.generateRoomDescription(roomData);
+            const result = await RoomLandlordService.generateRoomDescription(roomData, user?.token);
             setRoom(prev => ({
                 ...prev,
                 title: result.title || prev.title,
@@ -254,7 +267,7 @@ const RoomEdit = () => {
         }
     };
 
-    // Xử lý khóa/mở khóa phòng
+    // Toggle Permission
     const handleTogglePermission = (type) => {
         setAction(type);
         setShowPopup(true);
@@ -265,11 +278,11 @@ const RoomEdit = () => {
         setLoading(true);
         try {
             if (action === 'lock') {
-                await RoomServices.lockRoom(roomId);
+                await RoomServices.lockRoom(roomId, user?.token);
                 setRoom(prev => ({ ...prev, isPermission: 0 }));
                 showCustomNotification("success", "Khóa phòng thành công!");
             } else if (action === 'unlock') {
-                await RoomServices.unlockRoom(roomId);
+                await RoomServices.unlockRoom(roomId, user?.token);
                 setRoom(prev => ({ ...prev, isPermission: 1 }));
                 showCustomNotification("success", "Mở khóa phòng thành công!");
             }
@@ -284,10 +297,11 @@ const RoomEdit = () => {
         setShowPopup(false);
     };
 
-    // Xử lý submit form
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    // Submit Form
+    const handleSubmit = async () => {
+        // Validate inputs
         if (!validateImages()) {
+            showCustomNotification("error", "Vui lòng thay thế các ảnh không phù hợp trước khi tiếp tục.");
             return;
         }
         if (existingImages.length + newFiles.length === 0) {
@@ -306,12 +320,49 @@ const RoomEdit = () => {
             showCustomNotification("error", "Vui lòng chọn loại phòng hợp lệ!");
             return;
         }
+        if (!room.categoryPriorityPackageRoomId || !room.startDate || !room.endDate || !room.priorityPrice) {
+            showCustomNotification("error", "Vui lòng chọn gói ưu tiên và ngày bắt đầu hợp lệ!");
+            return;
+        }
+
+        // Validate user authentication
+        console.log('User object:', user);
+        if (!user || !user.userId || !user.token) {
+            console.error('Authentication failed:', { user });
+            showCustomNotification('error', 'Bạn cần đăng nhập để thực hiện hành động này!');
+            navigate('/Logins');
+            return;
+        }
 
         setLoading(true);
         try {
+            // Check Balance
+            console.log('Checking balance:', { UserId: user.userId, Amount: room.priorityPrice });
+            const checkBalanceData = { UserId: user.userId, Amount: room.priorityPrice };
+            const balanceResponse = await BookingManagementService.checkBalance(checkBalanceData, user.token);
+            console.log('Balance response:', balanceResponse);
+
+            const isBalanceSufficient =
+                (typeof balanceResponse === 'string' && balanceResponse === 'Bạn đủ tiền.') ||
+                (typeof balanceResponse === 'object' && balanceResponse.isSuccess);
+
+            if (!isBalanceSufficient) {
+                showCustomNotification('error', 'Bạn không đủ tiền để thực hiện giao dịch này!');
+                navigate('/Moneys');
+                return;
+            }
+
+            // Update Balance
+            console.log('Updating balance:', { UserId: user.userId, Amount: -room.priorityPrice });
+            const updateBalanceData = { UserId: user.userId, Amount: -room.priorityPrice };
+            await BookingManagementService.updateBalance(updateBalanceData, user.token);
+
+            // Upload Images
+            console.log('Uploading images:', newFiles);
             const uploadedImageUrls = await Promise.all(newFiles.map(uploadFile));
             const finalImageUrls = [...existingImages, ...uploadedImageUrls];
 
+            // Prepare Room Data
             const roomData = {
                 title: room.title,
                 description: room.description,
@@ -338,19 +389,40 @@ const RoomEdit = () => {
                 quanLy: Number(room.quanLy),
                 chiPhiKhac: Number(room.chiPhiKhac),
                 authorization: Number(room.authorization || 0),
+                startDate: room.startDate,
+                endDate: room.endDate,
+                priorityPrice: room.priorityPrice,
+                categoryPriorityPackageRoomId: room.categoryPriorityPackageRoomId,
             };
 
-            await RoomLandlordService.updateRoom(roomId, roomData);
-            showCustomNotification("success", "Cập nhật phòng thành công!");
+            // Update Room
+            console.log('Updating room:', { roomId, roomData });
+            await RoomLandlordService.updateRoom(roomId, roomData, user.token);
+
+            // Create Priority Room
+            const priorityRoomData = {
+                roomId: roomId,
+                categoryPriorityPackageRoomId: room.categoryPriorityPackageRoomId,
+                startDate: room.startDate,
+                endDate: room.endDate,
+                priorityPrice: room.priorityPrice,
+                userId: user.userId,
+                status: 1,
+            };
+            console.log('Creating priority room:', priorityRoomData);
+            await PriorityRoomService.createPriorityRoom(priorityRoomData, user.token);
+
+            showCustomNotification("success", "Cập nhật phòng và tạo priority room thành công!");
             navigate('/Room');
         } catch (error) {
-            handleApiError(error);
+            console.error('Submit error:', error);
+            handleApiError(error, "Không thể cập nhật phòng hoặc tạo priority room!");
         } finally {
             setLoading(false);
         }
     };
 
-    // Validation ảnh
+    // Validate Images
     const validateImages = () => {
         if (invalidImages.some(invalid => invalid)) {
             showCustomNotification("error", "Vui lòng thay thế các ảnh không phù hợp trước khi tiếp tục.");
@@ -359,7 +431,7 @@ const RoomEdit = () => {
         return true;
     };
 
-    // Validation bước
+    // Validate Step
     const validateStep = () => {
         if (step === 1) {
             const newErrors = {};
@@ -390,13 +462,13 @@ const RoomEdit = () => {
         return true;
     };
 
-    // Điều hướng bước
+    // Navigation
     const handleNext = () => {
         if (validateStep()) {
             if (step < 3) {
                 setStep(step + 1);
             } else {
-                handleSubmit(new Event('submit'));
+                handleSubmit();
             }
         }
     };
@@ -405,7 +477,7 @@ const RoomEdit = () => {
         if (step > 1) setStep(step - 1);
     };
 
-    // Tăng/giảm số lượng
+    // Increment/Decrement
     const handleIncrement = (field) => {
         setRoom(prev => ({ ...prev, [field]: (prev[field] || 0) + 1 }));
     };
@@ -414,10 +486,10 @@ const RoomEdit = () => {
         setRoom(prev => ({ ...prev, [field]: Math.max(0, (prev[field] || 0) - 1) }));
     };
 
-    // Toggle chi phí khác
+    // Toggle Costs
     const toggleDropOpen = () => setIsDropOpen(prev => !prev);
 
-    // Kết hợp ảnh preview
+    // Combined Previews
     const combinedPreviews = [
         ...existingImages.map(url => ({ url, isNew: false })),
         ...newPreviews.map((url, idx) => ({ url, isNew: true, index: idx, isInvalid: invalidImages[idx] }))
@@ -438,382 +510,38 @@ const RoomEdit = () => {
                 </ul>
             </div>
             <div className="flex-1 p-8">
-                {step === 1 && (
-                    <div>
-                        <button
-                            onClick={() => navigate(-1)}
-                            className="flex items-center gap-2 text-gray-700 hover:text-red-600 text-sm font-medium transition-colors"
-                        >
-                            <FaArrowLeft className="text-lg" />
-                        </button>
-                        <div className="flex justify-between items-center">
-                            <h2 className="text-xl font-bold mb-2 text-red-600">Chỉnh Sửa Phòng - Bước 1</h2>
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleTogglePermission(room.isPermission === 1 ? 'lock' : 'unlock');
-                                }}
-                                className={`py-1 text-lg ${room.isPermission === 1 ? 'text-red-500 w-16 h-12 hover:bg-red-500 hover:text-white' : 'text-green-500 hover:bg-green-500 hover:text-white w-24 h-12 p-2'} font-semibold bg-white rounded-full border-2`}
-                            >
-                                {room.isPermission === 1 ? "Khóa" : "Mở Khóa"}
-                            </button>
-                        </div>
-                        {showPopup && (
-                            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                                <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
-                                    <h2 className="text-lg font-bold mb-4">
-                                        {action === 'lock' ? 'Xác nhận khóa phòng' : 'Xác nhận mở khóa phòng'}
-                                    </h2>
-                                    <p className="mb-6">
-                                        Bạn có chắc chắn muốn {action === 'lock' ? 'khóa' : 'mở khóa'} phòng này không?
-                                    </p>
-                                    <div className="flex justify-end space-x-4">
-                                        <button
-                                            onClick={closePopup}
-                                            className="px-4 py-2 bg-gray-300 text-black rounded hover:bg-gray-400"
-                                        >
-                                            Hủy
-                                        </button>
-                                        <button
-                                            onClick={confirmTogglePermission}
-                                            className={`px-4 py-2 rounded text-white ${action === 'lock' ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'}`}
-                                        >
-                                            Xác nhận
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                        <div className="border-b-2 border-red-500 w-32 mb-4"></div>
-                        <div className="space-y-4">
-                            <div>
-                                <h3 className="text-lg font-semibold text-gray-800 mb-2">Thông tin Phòng</h3>
-                                <label className="block text-sm font-medium text-gray-700">Tòa Nhà</label>
-                                <select
-                                    value={room.buildingId || ''}
-                                    onChange={(e) => setRoom({ ...room, buildingId: parseInt(e.target.value) || null })}
-                                    className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
-                                >
-                                    <option value="">Không có</option>
-                                    {buildings.map(building => (
-                                        <option key={building.buildingId} value={building.buildingId}>
-                                            {building.buildingName}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">
-                                        Giá (đ/tháng) <span className="text-red-500">*</span>
-                                    </label>
-                                    <PriceInput
-                                        value={room.price}
-                                        onChange={(val) => setRoom({ ...room, price: val })}
-                                    />
-                                    {errors.price && <p className="text-red-500 text-sm mt-1">{errors.price}</p>}
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">
-                                        Loại Phòng <span className="text-red-500">*</span>
-                                    </label>
-                                    <select
-                                        value={room.categoryRoomId}
-                                        onChange={(e) => setRoom({ ...room, categoryRoomId: parseInt(e.target.value) })}
-                                        className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
-                                    >
-                                        <option value="" disabled>Chọn loại phòng...</option>
-                                        {categoryRooms.map(category => (
-                                            <option key={category.categoryRoomId} value={category.categoryRoomId}>
-                                                {category.categoryName}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    {errors.categoryRoomId && <p className="text-red-500 text-sm mt-1">{errors.categoryRoomId}</p>}
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">
-                                        Địa chỉ <span className="text-red-500">*</span>
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={room.locationDetail}
-                                        onChange={(e) => setRoom({ ...room, locationDetail: e.target.value })}
-                                        className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
-                                        placeholder="Nhập Địa chỉ"
-                                    />
-                                    {errors.locationDetail && <p className="text-red-500 text-sm mt-1">{errors.locationDetail}</p>}
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">
-                                        Diện Tích (m²) <span className="text-red-500">*</span>
-                                    </label>
-                                    <input
-                                        type="number"
-                                        value={room.acreage}
-                                        onChange={(e) => {
-                                            const value = e.target.value;
-                                            if (value === '' || Number(value) >= 0) {
-                                                setRoom({ ...room, acreage: value });
-                                            }
-                                        }}
-                                        min="0"
-                                        className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
-                                        placeholder="0"
-                                    />
-                                    {errors.acreage && <p className="text-red-500 text-sm mt-1">{errors.acreage}</p>}
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-3 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">Nội Thất</label>
-                                    <select
-                                        value={room.furniture}
-                                        onChange={(e) => setRoom({ ...room, furniture: e.target.value })}
-                                        className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
-                                    >
-                                        <option value="">Chọn nội thất...</option>
-                                        {['Đầy đủ', 'Cơ bản', 'Không nội thất'].map(option => (
-                                            <option key={option} value={option}>{option}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div className="flex items-center">
-                                    <label className="block text-sm font-medium text-gray-700 w-1/3">
-                                        Phòng tắm <span className="text-red-500">*</span>
-                                    </label>
-                                    <div className="flex-1 flex items-center space-x-2">
-                                        <button
-                                            type="button"
-                                            onClick={() => handleDecrement('numberOfBathroom')}
-                                            className="p-2 bg-gray-200 rounded hover:bg-gray-300"
-                                        >
-                                            <FaMinus />
-                                        </button>
-                                        <span className="text-lg">{room.numberOfBathroom}</span>
-                                        <button
-                                            type="button"
-                                            onClick={() => handleIncrement('numberOfBathroom')}
-                                            className="p-2 bg-gray-200 rounded hover:bg-gray-300"
-                                        >
-                                            <FaPlus />
-                                        </button>
-                                    </div>
-                                    {errors.numberOfBathroom && <p className="text-red-500 text-sm mt-1">{errors.numberOfBathroom}</p>}
-                                </div>
-                                <div className="flex items-center">
-                                    <label className="block text-sm font-medium text-gray-700 w-1/3">
-                                        Giường ngủ <span className="text-red-500">*</span>
-                                    </label>
-                                    <div className="flex-1 flex items-center space-x-2">
-                                        <button
-                                            type="button"
-                                            onClick={() => handleDecrement('numberOfBedroom')}
-                                            className="p-2 bg-gray-200 rounded hover:bg-gray-300"
-                                        >
-                                            <FaMinus />
-                                        </button>
-                                        <span className="text-lg">{room.numberOfBedroom}</span>
-                                        <button
-                                            type="button"
-                                            onClick={() => handleIncrement('numberOfBedroom')}
-                                            className="p-2 bg-gray-200 rounded hover:bg-gray-300"
-                                        >
-                                            <FaPlus />
-                                        </button>
-                                    </div>
-                                    {errors.numberOfBedroom && <p className="text-red-500 text-sm mt-1">{errors.numberOfBedroom}</p>}
-                                </div>
-                            </div>
-                            <div>
-                                <div
-                                    className="flex items-center justify-between cursor-pointer select-none"
-                                    onClick={toggleDropOpen}
-                                >
-                                    <h3 className="text-lg font-semibold text-gray-800 mb-2">Chi phí khác</h3>
-                                    {isDropOpen ? <FaChevronUp className="text-gray-600" /> : <FaChevronDown className="text-gray-600" />}
-                                </div>
-                                {isDropOpen && (
-                                    <div className="grid grid-cols-4 gap-4">
-                                        {[
-                                            { label: 'Điện (đ/kWh)', key: 'dien' },
-                                            { label: 'Nước (đ/m³)', key: 'nuoc' },
-                                            { label: 'Internet (đ/tháng)', key: 'internet' },
-                                            { label: 'Rác (đ/tháng)', key: 'rac' },
-                                            { label: 'Gửi xe (đ/tháng)', key: 'guiXe' },
-                                            { label: 'Quản lý (đ/tháng)', key: 'quanLy' },
-                                            { label: 'Chi phí khác (đ/tháng)', key: 'chiPhiKhac' }
-                                        ].map(({ label, key }) => (
-                                            <div key={key}>
-                                                <label className="block text-sm font-medium text-gray-700">{label}</label>
-                                                <PriceInput
-                                                    value={room[key]}
-                                                    onChange={(val) => setRoom({ ...room, [key]: Number(val) || 0 })}
-                                                />
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                            <div className="rounded-lg bg-white shadow-sm">
-                                <h3 className="text-lg font-semibold text-gray-800 mb-2">Tiêu đề & Mô tả</h3>
-                                <div className="flex justify-between items-center">
-                                    <h3 className="text-sm font-medium text-gray-700 mb-2">Tạo nhanh với AI</h3>
-                                    <button
-                                        type="button"
-                                        onClick={handleGenerateWithAI}
-                                        className="flex items-center space-x-1 px-3 py-2 border border-gray-400 rounded-full shadow-sm text-gray-800 hover:bg-gray-300 font-medium"
-                                    >
-                                        <svg
-                                            className="w-4 h-4 text-green-500"
-                                            fill="currentColor"
-                                            viewBox="0 0 24 24"
-                                            xmlns="http://www.w3.org/2000/svg"
-                                        >
-                                            <path d="M12 2l2.4 7.2h7.6l-6 4.8 2.4 7.2-6-4.8-6 4.8 2.4-7.2-6-4.8h7.6z" />
-                                        </svg>
-                                        <span>Tạo với AI</span>
-                                    </button>
-                                </div>
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700">
-                                            Tiêu Đề <span className="text-red-500">*</span>
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={room.title}
-                                            onChange={(e) => setRoom({ ...room, title: e.target.value })}
-                                            className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
-                                            placeholder="Mô tả ngắn gọn về loại hình phòng, diện tích, địa chỉ"
-                                        />
-                                        {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700">
-                                            Mô tả <span className="text-red-500">*</span>
-                                        </label>
-                                        <textarea
-                                            value={room.description}
-                                            onChange={(e) => setRoom({ ...room, description: e.target.value })}
-                                            className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
-                                            placeholder="Mô tả chi tiết về phòng..."
-                                            rows="5"
-                                        />
-                                        {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description}</p>}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
-                {step === 2 && (
-                    <div className="mt-8">
-                        <h2 className="text-xl font-bold mb-2 text-red-600">Chỉnh Sửa Phòng - Bước 2</h2>
-                        <div className="border-b-2 border-red-500 w-32 mb-4"></div>
-                        <div className="border border-gray-300 rounded-lg p-6 bg-white shadow-sm text-center">
-                            <label className="cursor-pointer bg-gray-200 p-3 rounded-lg flex items-center gap-2 justify-center">
-                                <FaPlus className="text-blue-600" />
-                                <span className="text-gray-700 font-semibold">Thêm ảnh</span>
-                                <input
-                                    type="file"
-                                    multiple
-                                    onChange={handleFileChange}
-                                    accept=".jpeg, .png"
-                                    className="hidden"
-                                />
-                            </label>
-                            <p className="text-gray-500 text-sm mb-3 font-medium text-center mt-2">
-                                Định dạng: JPEG, PNG - Tối đa 5MB
-                            </p>
-                            {combinedPreviews.length > 0 && (
-                                <div className="mt-3">
-                                    <p className="font-semibold text-gray-700">Ảnh đã chọn:</p>
-                                    <div className="grid grid-cols-3 gap-3 mt-2">
-                                        {combinedPreviews.map((item, index) => (
-                                            <div
-                                                key={index}
-                                                className={`relative border p-2 rounded-lg shadow-sm ${item.isInvalid ? 'border-red-500' : ''}`}
-                                            >
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleRemoveFile(item.isNew ? item.index : index, item.isNew)}
-                                                    className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
-                                                >
-                                                    <FaTimes size={14} />
-                                                </button>
-                                                <img
-                                                    src={item.url}
-                                                    alt={`File ${index}`}
-                                                    className="w-full h-20 object-cover rounded-md cursor-pointer"
-                                                    onClick={() => setPreviewImage(item.url)}
-                                                />
-                                                {item.isInvalid && (
-                                                    <p className="text-red-500 text-xs mt-1">Ảnh không phù hợp</p>
-                                                )}
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )}
-                {step === 3 && (
-                    <div className="mt-8">
-                        <h2 className="text-xl font-bold mb-2 text-red-600">Chỉnh Sửa Phòng - Bước 3</h2>
-                        <div className="border-b-2 border-red-500 w-32 mb-4"></div>
-                        <div className="space-y-6">
-                            <p className="text-lg">Vui lòng kiểm tra lại thông tin trước khi cập nhật phòng.</p>
-                            <div className="flex justify-between items-center mt-6">
-                                <button
-                                    onClick={handleBack}
-                                    className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
-                                >
-                                    Quay lại
-                                </button>
-                                <button
-                                    onClick={handleNext}
-                                    className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-                                >
-                                    Cập Nhật Phòng
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-                {step < 3 && (
-                    <div className="flex justify-between mt-8">
-                        {step > 1 && (
-                            <button
-                                onClick={handleBack}
-                                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
-                            >
-                                Quay lại
-                            </button>
-                        )}
-                        <button
-                            onClick={handleNext}
-                            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-                        >
-                            Tiếp tục
-                        </button>
-                    </div>
-                )}
-                {previewImage && (
-                    <div
-                        className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
-                        onClick={() => setPreviewImage(null)}
-                    >
-                        <img
-                            src={previewImage}
-                            alt="Enlarged Preview"
-                            className="max-w-[75%] max-h-[85%] object-cover rounded-lg"
-                        />
-                    </div>
-                )}
+                <StepConfirmation
+                    step={step}
+                    room={room}
+                    setRoom={setRoom}
+                    buildings={buildings}
+                    categoryRooms={categoryRooms}
+                    errors={errors}
+                    roomId={roomId}
+                    user={user}
+                    existingImages={existingImages}
+                    newFiles={newFiles}
+                    newPreviews={newPreviews}
+                    invalidImages={invalidImages}
+                    combinedPreviews={combinedPreviews}
+                    isDropOpen={isDropOpen}
+                    previewImage={previewImage}
+                    handleFileChange={handleFileChange}
+                    handleRemoveFile={handleRemoveFile}
+                    handleGenerateWithAI={handleGenerateWithAI}
+                    handleIncrement={handleIncrement}
+                    handleDecrement={handleDecrement}
+                    toggleDropOpen={toggleDropOpen}
+                    setPreviewImage={setPreviewImage}
+                    handleBack={handleBack}
+                    handleNext={handleNext}
+                    handleSubmit={handleSubmit}
+                    handleTogglePermission={handleTogglePermission}
+                    showPopup={showPopup}
+                    action={action}
+                    confirmTogglePermission={confirmTogglePermission}
+                    closePopup={closePopup}
+                />
             </div>
         </div>
     );

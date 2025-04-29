@@ -74,6 +74,12 @@ import ServicePostCreate from '../Pages/ServiceOwner/ServicePostCreate';
 import ServicePost from '../Pages/User/ServicePosts/ServicePost'
 import ServicePostDetailsUser from '../Pages/User/ServicePosts/ServiePostDetails'
 import Dashboard from '../Components/Layout/Dashboard';
+import CPPRoomForm from '../Pages/Admin/PriorityPackage/CPPRoomForm';
+import CPPRoomList from '../Pages/Admin/PriorityPackage/CPPRoomList';
+import CPPServicePostList from '../Pages/Admin/PriorityPackage/CPPServicePostList';
+import CPPServicePostForm from '../Pages/Admin/PriorityPackage/CPPServicePostForm';
+import ServicePackagesList from '../Pages/Admin/PriorityPackage/ServicePackagesList';
+import RoomPackagesList from '../Pages/Admin/PriorityPackage/RoomPackagesList';
 
 const RoutesConfig = () => {
     const { user } = useAuth();
@@ -296,6 +302,42 @@ const RoutesConfig = () => {
                 path="/Admin/CategoryRooms/:categoryRoomId"
                 element={user && user.role === "Admin" ? <CategoryRoomForm /> : <Navigate to="/Logins" />}
             />
+
+            {/* Gói ưu tiên */}
+            <Route
+                path="/Admin/CategoryPriorityRooms"
+                element={user && user.role === "Admin" ? <CPPRoomList /> : <Navigate to="/Logins" />}
+            />
+            <Route
+                path="/Admin/CategoryPriorityRooms/Creates"
+                element={user && user.role === "Admin" ? <CPPRoomForm /> : <Navigate to="/Logins" />}
+            />
+            <Route
+                path="/Admin/CategoryPriorityRooms/:categoryPriorityPackageRoomId"
+                element={user && user.role === "Admin" ? <CPPRoomForm /> : <Navigate to="/Logins" />}
+            />
+            <Route
+                path="/Admin/CategoryPriorityServices"
+                element={user && user.role === "Admin" ? <CPPServicePostList /> : <Navigate to="/Logins" />}
+            />
+            <Route
+                path="/Admin/CategoryPriorityServices/Creates"
+                element={user && user.role === "Admin" ? <CPPServicePostForm /> : <Navigate to="/Logins" />}
+            />
+            <Route
+                path="/Admin/CategoryPriorityServices/:categoryPriorityPackageServicePostId"
+                element={user && user.role === "Admin" ? <CPPServicePostForm /> : <Navigate to="/Logins" />}
+            />
+
+            <Route
+                path="/Admin/RoomPackages"
+                element={user && user.role === "Admin" ? <RoomPackagesList /> : <Navigate to="/Logins" />}
+            />
+            <Route
+                path="/Admin/ServicePackages"
+                element={user && user.role === "Admin" ? <ServicePackagesList /> : <Navigate to="/Logins" />}
+            />
+
             {/* Transaction */}
             <Route
                 path="/Admin/Withdraws"
