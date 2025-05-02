@@ -224,6 +224,7 @@ const RoomAdminEdit = () => {
                 QuanLy: Number(room.quanLy),
                 ChiPhiKhac: Number(room.chiPhiKhac),
                 authorization: Number(room.authorization || 0),
+                PriorityPackageRooms: [],
                 User: {
                     UserId: user?.UserId || 1,
                     UserName: user?.['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'] || 'Admin',
@@ -337,6 +338,7 @@ const RoomAdminEdit = () => {
                 quanLy: Number(room.quanLy),
                 chiPhiKhac: Number(room.chiPhiKhac),
                 authorization: Number(room.authorization || 0),
+                PriorityPackageRooms: []
             };
 
             await AdminManageRoomService.updateRoom(roomId, roomData);

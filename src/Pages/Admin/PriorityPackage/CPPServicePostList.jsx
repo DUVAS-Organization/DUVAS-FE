@@ -119,7 +119,7 @@ const CPPServicePostList = () => {
                             cppServicePosts.map((servicePost, index) => (
                                 <tr key={servicePost.categoryPriorityPackageServicePostId} className="hover:bg-gray-200 border-collapse border border-gray-300">
                                     <td className="py-2 px-4 text-gray-700 border-b">{index + 1}</td>
-                                    <td className="py-2 px-4 text-gray-700 border-b">{servicePost.categoryPriorityPackageServicePostValue}</td>
+                                    <td className="py-2 px-4 text-gray-700 border-b">{servicePost.categoryPriorityPackageServicePostValue} ngày</td>
                                     <td className="py-2 px-4 text-gray-700 border-b">
                                         {servicePost.price?.toLocaleString('vi-VN')} đ
                                     </td>

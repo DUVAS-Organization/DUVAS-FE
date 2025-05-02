@@ -20,16 +20,12 @@ const RoomPackagesList = () => {
             const rooms = await PriorityRoomService.getPriorityRooms();
             const enrichedRooms = await Promise.all(
                 rooms.map(async (room) => {
-                    // Fetch user name
                     const user = await UserService.getUserById(room.userId).catch(() => ({ name: 'Unknown' }));
-                    // Fetch room title
                     const roomDetails = await RoomService.getRoomById(room.roomId).catch(() => ({ title: 'Unknown' }));
-                    // Fetch category priority package room value
                     const category = await CPPRoomsService.getCPPRoomById(room.categoryPriorityPackageRoomId).catch(() => ({
                         categoryPriorityPackageRoomValue: 'Unknown',
                     }));
 
-                    // Determine status based on startDate and endDate
                     const currentDate = new Date();
                     const startDate = new Date(room.startDate);
                     const endDate = new Date(room.endDate);
@@ -69,26 +65,20 @@ const RoomPackagesList = () => {
         <div className="p-6">
             <div className='font-bold text-5xl ml-3 my-8 text-blue-500 flex justify-between'>
                 <h1>Gói Ưu tiên Phòng</h1>
-                {/* <button
-                    onClick={handleCreate}
-                    className='flex mr-2 items-center text-white bg-blue-500 rounded-3xl h-11 px-2'>
-                    <FiPlus className="mr-2 text-xl" />
-                    <p className="font-semibold text-lg mr-2">Tạo mới</p>
-                </button> */}
             </div>
 
             <div className="overflow-x-auto">
                 <table className="min-w-full bg-white border-collapse border border-gray-300 rounded-lg shadow-md">
                     <thead>
                         <tr className="bg-gray-100">
-                            <th className="py-2 px-4 text-left font-semibold text-black w-12">#</th>
-                            <th className="py-2 px-4 text-left font-semibold text-black">Người Dùng</th>
-                            <th className="py-2 px-4 text-left font-semibold text-black">Phòng</th>
-                            <th className="py-2 px-4 text-left font-semibold text-black">Gói Ưu Tiên</th>
-                            <th className="py-2 px-4 text-left font-semibold text-black">Ngày Bắt Đầu</th>
-                            <th className="py-2 px-4 text-left font-semibold text-black">Ngày Kết Thúc</th>
-                            <th className="py-2 px-4 text-left font-semibold text-black">Giá</th>
-                            <th className="py-2 px-4 text-center font-semibold text-black">Trạng Thái</th>
+                            <th className="py-2 px-4 text-left font-semibold text-black w-12 whitespace-nowrap">#</th>
+                            <th className="py-2 px-4 text-left font-semibold text-black whitespace-nowrap">Người Dùng</th>
+                            <th className="py-2 px-4 text-left font-semibold text-black whitespace-nowrap">Phòng</th>
+                            <th className="py-2 px-4 text-left font-semibold text-black whitespace-nowrap">Gói Ưu Tiên</th>
+                            <th className="py-2 px-4 text-left font-semibold text-black whitespace-nowrap">Ngày Bắt Đầu</th>
+                            <th className="py-2 px-4 text-left font-semibold text-black whitespace-nowrap">Ngày Kết Thúc</th>
+                            <th className="py-2 px-4 text-left font-semibold text-black whitespace-nowrap">Giá</th>
+                            <th className="py-2 px-4 text-center font-semibold text-black whitespace-nowrap">Trạng Thái</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -100,17 +90,17 @@ const RoomPackagesList = () => {
                             priorityRooms.map((priorityRoom, index) => (
                                 <tr key={priorityRoom.priorityPackageRoomId} className="hover:bg-gray-200 border-collapse border border-gray-300">
                                     <td className="py-2 px-4 text-gray-700 border-b w-12">{index + 1}</td>
-                                    <td className="py-2 px-4 text-gray-700 border-b">{priorityRoom.userName}</td>
-                                    <td className="py-2 px-4 text-gray-700 border-b">{priorityRoom.roomTitle}</td>
-                                    <td className="py-2 px-4 text-gray-700 border-b">{priorityRoom.categoryPriorityPackageRoomValue}</td>
-                                    <td className="py-2 px-4 text-gray-700 border-b">{new Date(priorityRoom.startDate).toLocaleDateString('vi-VN')}</td>
-                                    <td className="py-2 px-4 text-gray-700 border-b">{new Date(priorityRoom.endDate).toLocaleDateString('vi-VN')}</td>
-                                    <td className="py-2 px-4 text-gray-700 border-b">
+                                    <td className="py-2 px-4 text-gray-700 border-b min-w-[150px]">{priorityRoom.userName}</td>
+                                    <td className="py-2 px-4 text-gray-700 border-b min-w-[300px]">{priorityRoom.roomTitle}</td>
+                                    <td className="py-2 px-4 text-gray-700 border-b min-w-[150px]">{priorityRoom.categoryPriorityPackageRoomValue} ngày</td>
+                                    <td className="py-2 px-4 text-gray-700 border-b min-w-[120px]">{new Date(priorityRoom.startDate).toLocaleDateString('vi-VN')}</td>
+                                    <td className="py-2 px-4 text-gray-700 border-b min-w-[120px]">{new Date(priorityRoom.endDate).toLocaleDateString('vi-VN')}</td>
+                                    <td className="py-2 px-4 text-gray-700 border-b min-w-[120px]">
                                         {priorityRoom.price.toLocaleString('vi-VN')} đ
                                     </td>
-                                    <td className="py-2 px-4 text-center border-b">
+                                    <td className="py-2 px-4 text-center border-b min-w-[150px]">
                                         <span
-                                            className={`inline-block px-3 py-1 rounded-full text-white text-sm font-medium ${priorityRoom.status === 'Hoạt động' ? 'bg-green-500' : 'bg-red-500'}`}
+                                            className={`inline-block px-2 py-1 rounded-full w-[100px] text-white text-sm font-medium ${priorityRoom.status === 'Hoạt động' ? 'bg-green-500' : 'bg-red-500'}`}
                                         >
                                             {priorityRoom.status}
                                         </span>

@@ -78,8 +78,8 @@ const Step1Information = ({
                             handleTogglePermission(room.isPermission === 1 ? 'lock' : 'unlock');
                         }}
                         className={`py-1 text-lg ${room.isPermission === 1
-                                ? 'text-red-500 w-16 h-12 hover:bg-red-500 hover:text-white'
-                                : 'text-green-500 hover:bg-green-500 hover:text-white w-24 h-12 p-2'
+                            ? 'text-red-500 w-16 h-12 hover:bg-red-500 hover:text-white'
+                            : 'text-green-500 hover:bg-green-500 hover:text-white w-24 h-12 p-2'
                             } font-semibold bg-white rounded-full border-2`}
                     >
                         {room.isPermission === 1 ? 'Khóa' : 'Mở Khóa'}
@@ -582,8 +582,8 @@ const Step3Confirmation = ({ room, setRoom, handleBack, handleSubmit, roomId, us
                             onClick={handleSubmit}
                             disabled={categories.length === 0}
                             className={`px-4 py-2 rounded-lg transition-colors ${categories.length === 0
-                                    ? 'bg-gray-400 cursor-not-allowed'
-                                    : 'bg-red-600 text-white hover:bg-red-700'
+                                ? 'bg-gray-400 cursor-not-allowed'
+                                : 'bg-red-600 text-white hover:bg-red-700'
                                 }`}
                         >
                             {roomId ? 'Cập Nhật Phòng' : 'Tạo Phòng'}
