@@ -10,7 +10,7 @@ const PriorityRoomService = {
             return response.data.map(item => ({
                 priorityPackageRoomId: item.priorityPackageRoomId,
                 userId: item.userId,
-                // roomId: item.roomId,
+                roomId: item.roomId,
                 categoryPriorityPackageRoomId: item.categoryPriorityPackageRoomId,
                 startDate: item.startDate,
                 endDate: item.endDate,
@@ -30,7 +30,7 @@ const PriorityRoomService = {
             return {
                 priorityPackageRoomId: item.priorityPackageRoomId,
                 userId: item.userId,
-                // roomId: item.roomId,
+                roomId: item.roomId,
                 categoryPriorityPackageRoomId: item.categoryPriorityPackageRoomId,
                 startDate: item.startDate,
                 endDate: item.endDate,
@@ -48,18 +48,17 @@ const PriorityRoomService = {
             console.log('Sending PriorityRoom payload:', room); // Debug payload
             const response = await axios.post(API_URL, {
                 userId: room.userId,
-                // roomId: room.roomId,
+                roomId: room.roomId,
                 categoryPriorityPackageRoomId: room.categoryPriorityPackageRoomId,
                 startDate: room.startDate,
                 endDate: room.endDate,
                 price: room.price,
             });
             const item = response.data;
-            console.log('PriorityRoom response:', item); // Debug response
             return {
                 priorityPackageRoomId: item.priorityPackageRoomId,
                 userId: item.userId,
-                // roomId: item.roomId,
+                roomId: item.roomId,
                 categoryPriorityPackageRoomId: item.categoryPriorityPackageRoomId,
                 startDate: item.startDate,
                 endDate: item.endDate,

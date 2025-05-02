@@ -11,6 +11,8 @@ import FAQList from '../../../Components/FAQ/FAQList';
 import Loading from '../../../Components/Loading';
 import { showCustomNotification } from '../../../Components/Notification';
 import OtherService from '../../../Services/User/OtherService';
+import PriorityRoomService from '../../../Services/Admin/PriorityRoomService';
+import CPPRoomsService from '../../../Services/Admin/CPPRoomsService';
 
 const RoomsList = () => {
     const { roomId } = useParams();
@@ -24,6 +26,8 @@ const RoomsList = () => {
         return local ? JSON.parse(local).map(id => Number(id)) : [];
     });
     const [showFullPhoneById, setShowFullPhoneById] = useState({});
+    const [priorityPackages, setPriorityPackages] = useState([]);
+    const [cppRooms, setCppRooms] = useState([]);
 
     const location = useLocation();
     const queryParams = new URLSearchParams(location.search);
@@ -34,8 +38,68 @@ const RoomsList = () => {
     const minArea = queryParams.get("minArea") ? Number(queryParams.get("minArea")) : 0;
     const maxArea = queryParams.get("maxArea") ? Number(queryParams.get("maxArea")) : Infinity;
 
+    // Fetch dữ liệu ưu tiên
+    const fetchPriorityData = async () => {
+        try {
+            const priorityData = await PriorityRoomService.getPriorityRooms();
+            const cppData = await CPPRoomsService.getCPPRooms();
+            setPriorityPackages(priorityData || []);
+            setCppRooms(cppData || []);
+        } catch (error) {
+            console.error('Lỗi khi lấy dữ liệu ưu tiên:', error.message);
+            setPriorityPackages([]);
+            setCppRooms([]);
+        }
+    };
+
+    // Hàm lấy thông tin ưu tiên
+    const getPriorityInfo = (roomId, priorityPackages, cppRooms) => {
+        const priorityRoom = priorityPackages.find(pr => pr.roomId === roomId);
+        if (priorityRoom) {
+            const currentDate = new Date();
+            const startDate = new Date(priorityRoom.startDate);
+            const endDate = new Date(priorityRoom.endDate);
+            const isActive = currentDate >= startDate && currentDate <= endDate;
+
+            if (isActive) {
+                const cppRoom = cppRooms.find(
+                    cpp => cpp.categoryPriorityPackageRoomId === priorityRoom.categoryPriorityPackageRoomId
+                );
+                if (cppRoom) {
+                    return {
+                        value: cppRoom.categoryPriorityPackageRoomValue || 0,
+                        description: getCategoryDescription(cppRoom.categoryPriorityPackageRoomValue),
+                        borderColor: getBorderColor(cppRoom.categoryPriorityPackageRoomValue),
+                    };
+                }
+            }
+        }
+        return {
+            value: 0,
+            description: "",
+            borderColor: "#D1D5DB",
+        };
+    };
+
+    // Hàm lấy mô tả ưu tiên
+    const getCategoryDescription = (value) => {
+        if (Number(value) > 0) {
+            return 'Tin ưu tiên';
+        }
+        return '';
+    };
+
+    // Hàm lấy màu viền
+    const getBorderColor = (value) => {
+        if (Number(value) > 0) {
+            return '#EF4444'; // red-500
+        }
+        return '#D1D5DB'; // gray-200
+    };
+
     useEffect(() => {
         fetchRooms();
+        fetchPriorityData();
     }, []);
 
     useEffect(() => {
@@ -69,51 +133,6 @@ const RoomsList = () => {
             setLoading(false);
         }
     };
-
-    // Thêm hàm mới để lấy danh sách phòng trống và không bị khóa
-    const fetchAvailableRooms = async () => {
-        setLoading(true);
-        try {
-            const availableRoomsData = await RoomService.getAvailableRooms();
-            if (!availableRoomsData || availableRoomsData.length === 0) {
-                setRooms([]);
-                showCustomNotification("info", "Hiện tại không có phòng trống nào khả dụng!");
-                return;
-            }
-            const roomsWithUser = await Promise.all(
-                availableRoomsData.map(async (room) => {
-                    if (!room.User && room.userId) {
-                        try {
-                            const userData = await UserService.getUserById(room.userId);
-                            return { ...room, User: userData };
-                        } catch (error) {
-                            console.error(`Error fetching user for room ${room.roomId}:`, error);
-                            return room;
-                        }
-                    }
-                    return room;
-                })
-            );
-            // Lọc lại để đảm bảo chỉ hiển thị phòng status = 1 và isPermission = 1
-            const filteredRooms = roomsWithUser.filter(room =>
-                room.status === 1 && room.isPermission === 1
-            );
-            setRooms(filteredRooms);
-            if (filteredRooms.length === 0) {
-                showCustomNotification("info", "Hiện tại không có phòng trống nào khả dụng!");
-            }
-        } catch (error) {
-            console.error('Error fetching Available Rooms:', error);
-            // showCustomNotification("error", "Không thể tải danh sách phòng trống! Vui lòng thử lại sau.");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // Thêm useEffect mới để gọi fetchAvailableRooms thay vì fetchRooms
-    useEffect(() => {
-        fetchAvailableRooms();
-    }, []);
 
     const handleLoadMore = () => {
         setVisibleRooms((prev) => prev + 3);
@@ -178,10 +197,8 @@ const RoomsList = () => {
         );
     }
 
-    // **Logic lọc phòng**
     let filteredRooms = rooms;
 
-    // Ưu tiên lọc theo category từ Searchbar
     if (category) {
         if (category === "Phòng trọ") {
             filteredRooms = filteredRooms.filter((r) => r.categoryName === "Phòng trọ" || !r.categoryName);
@@ -189,7 +206,6 @@ const RoomsList = () => {
             filteredRooms = filteredRooms.filter((r) => r.categoryName === category);
         }
     } else {
-        // Nếu không có category, lọc theo tab
         if (tab === "Căn hộ") {
             filteredRooms = filteredRooms.filter((r) => r.categoryName === "Căn hộ");
         } else if (tab === "Nhà nguyên căn") {
@@ -198,16 +214,20 @@ const RoomsList = () => {
             filteredRooms = filteredRooms.filter((r) => r.categoryName === "Phòng trọ" || !r.categoryName);
         }
     }
-    // Loại bỏ các phòng có status = 2 hoặc 3
     filteredRooms = filteredRooms.filter((r) => r.status !== 2 && r.status !== 3);
-    // Loại bỏ các phòng có isPermission = 0
     filteredRooms = filteredRooms.filter((r) => r.isPermission !== 0);
-    // Lọc thêm theo giá và diện tích
     filteredRooms = filteredRooms.filter((r) => r.price >= minPrice && r.price <= maxPrice);
     filteredRooms = filteredRooms.filter((r) => r.acreage >= minArea && r.acreage <= maxArea);
 
+    // Sắp xếp theo categoryPriorityPackageRoomValue (ưu tiên cao hơn lên đầu)
+    filteredRooms.sort((a, b) => {
+        const priorityA = getPriorityInfo(a.roomId, priorityPackages, cppRooms).value || 0;
+        const priorityB = getPriorityInfo(b.roomId, priorityPackages, cppRooms).value || 0;
+        return priorityB - priorityA; // Sắp xếp giảm dần theo giá trị ưu tiên
+    });
+
     return (
-        <div className="bg-white min-h-screen p-4 dark:bg-gray-800 ">
+        <div className="bg-white min-h-screen p-4 dark:bg-gray-800">
             <div className="container mx-auto">
                 <div className="flex items-center justify-between mb-4">
                     <div className="w-full">
@@ -219,14 +239,14 @@ const RoomsList = () => {
                         <h1 className="text-2xl font-semibold">{category || tab}</h1>
                         <div className="flex justify-between">
                             <p className="mb-2">Hiện có {filteredRooms.length} {(category || tab).toLowerCase()}.</p>
-                            <div className="flex items-center">
+                            {/* <div className="flex items-center">
                                 <FaRegBell className="bg-yellow-500 text-white px-2 text-4xl rounded-full" />
                                 <p className="mx-1">Nhận email tin mới</p>
                                 <label className="relative inline-flex items-center cursor-pointer">
                                     <input type="checkbox" className="sr-only peer" />
                                     <div className="w-11 h-6 bg-gray-200 rounded-full peer-checked:bg-red-600 peer-focus:ring-4 peer-focus:ring-white dark:peer-focus:ring-red-800 dark:bg-gray-700 peer-checked:after:translate-x-full after:absolute after:top-0.5 after:left-[2px] after:h-5 after:w-5 after:bg-white after:rounded-full after:transition-all peer-checked:after:border-white"></div>
                                 </label>
-                            </div>
+                            </div> */}
                         </div>
 
                         {filteredRooms.length > 0 ? (
@@ -254,18 +274,19 @@ const RoomsList = () => {
                                         : 'N/A';
 
                                 const isSaved = savedPosts.includes(Number(room.roomId));
+                                const priorityInfo = getPriorityInfo(room.roomId, priorityPackages, cppRooms);
 
                                 if (index < 3) {
                                     return (
                                         <div key={room.roomId}>
                                             <Link to={`/Rooms/Details/${room.roomId}`} className="block">
-                                                <div className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col dark:bg-gray-800 ">
+                                                <div className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col dark:bg-gray-800">
                                                     <div className="relative w-full h-52 overflow-hidden rounded-lg dark:text-white">
                                                         {imageCount < 3 ? (
                                                             <img
                                                                 src={images[0]}
                                                                 alt={room.title}
-                                                                className="w-full h-full object-cover "
+                                                                className="w-full h-full object-cover"
                                                             />
                                                         ) : imageCount === 3 ? (
                                                             <div className="flex h-full">
@@ -338,9 +359,14 @@ const RoomsList = () => {
                                                             </span>
                                                         )}
                                                     </div>
-                                                    <div className="p-4 flex flex-col ">
+                                                    <div className="p-4 flex flex-col">
+                                                        {priorityInfo.description && (
+                                                            <p className="text-sm font-semibold bg-red-500 text-white border w-20 px-1 border-red-500 rounded-lg">
+                                                                {priorityInfo.description}
+                                                            </p>
+                                                        )}
                                                         <h3 className="text-lg font-semibold mb-2 line-clamp-2 dark:text-white">{room.title}</h3>
-                                                        <p className="text-red-500 font-semibold mb-2 ">
+                                                        <p className="text-red-500 font-semibold mb-2">
                                                             {room.price.toLocaleString("vi-VN")} đ • {room.acreage} m²
                                                         </p>
                                                         <p className="text-gray-600 mb-2 flex items-center dark:text-white">
@@ -441,6 +467,11 @@ const RoomsList = () => {
                                                         </div>
                                                     </div>
                                                     <div className="w-3/5 p-4 flex flex-col">
+                                                        {priorityInfo.description && (
+                                                            <p className="text-sm font-semibold bg-red-500 text-white border w-20 px-1 border-red-500 rounded-lg">
+                                                                {priorityInfo.description}
+                                                            </p>
+                                                        )}
                                                         <h3 className="text-lg font-semibold mb-2 line-clamp-2 dark:text-white">{room.title}</h3>
                                                         <p className="text-red-500 font-semibold mb-2 dark:text-white">
                                                             {room.price.toLocaleString("vi-VN")} đ • {room.acreage} m²
@@ -534,7 +565,7 @@ const RoomsList = () => {
                     </div>
 
                     <div className="w-1/4 pl-4">
-                        <div className="bg-white p-4 rounded shadow mb-4 dark:bg-gray-800 dark:text-white" >
+                        <div className="bg-white p-4 rounded shadow mb-4 dark:bg-gray-800 dark:text-white">
                             <h3 className="font-bold mb-2">Lọc theo khoảng giá</h3>
                             <ul>
                                 {[

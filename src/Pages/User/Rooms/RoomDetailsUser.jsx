@@ -42,7 +42,9 @@ import { useAuth } from '../../../Context/AuthProvider';
 import UserRentRoomService from '../../../Services/User/UserRentRoomService';
 import OtherService from '../../../Services/User/OtherService';
 import RoomService from '../../../Services/User/RoomManagementService';
-import FeedbackList from '../../../Components/ComponentPage/FeedbackList'
+import FeedbackList from '../../../Components/ComponentPage/FeedbackList';
+import PriorityRoomService from '../../../Services/Admin/PriorityRoomService';
+import CPPRoomsService from '../../../Services/Admin/CPPRoomsService';
 
 const RoomDetailsUser = () => {
     const { roomId } = useParams();
@@ -64,6 +66,67 @@ const RoomDetailsUser = () => {
     const [duration, setDuration] = useState('');
     const [expirationDate, setExpirationDate] = useState('');
     const [showPhoneAlert, setShowPhoneAlert] = useState(false);
+    const [priorityPackages, setPriorityPackages] = useState([]);
+    const [cppRooms, setCppRooms] = useState([]);
+
+    // Fetch dữ liệu ưu tiên
+    const fetchPriorityData = async () => {
+        try {
+            const priorityData = await PriorityRoomService.getPriorityRooms();
+            const cppData = await CPPRoomsService.getCPPRooms();
+            setPriorityPackages(priorityData || []);
+            setCppRooms(cppData || []);
+        } catch (error) {
+            console.error('Lỗi khi lấy dữ liệu ưu tiên:', error.message);
+            setPriorityPackages([]);
+            setCppRooms([]);
+        }
+    };
+
+    // Hàm lấy thông tin ưu tiên
+    const getPriorityInfo = (roomId, priorityPackages, cppRooms) => {
+        const priorityRoom = priorityPackages.find(pr => pr.roomId === roomId);
+        if (priorityRoom) {
+            const currentDate = new Date();
+            const startDate = new Date(priorityRoom.startDate);
+            const endDate = new Date(priorityRoom.endDate);
+            const isActive = currentDate >= startDate && currentDate <= endDate;
+
+            if (isActive) {
+                const cppRoom = cppRooms.find(
+                    cpp => cpp.categoryPriorityPackageRoomId === priorityRoom.categoryPriorityPackageRoomId
+                );
+                if (cppRoom) {
+                    return {
+                        value: cppRoom.categoryPriorityPackageRoomValue || 0,
+                        description: getCategoryDescription(cppRoom.categoryPriorityPackageRoomValue),
+                        borderColor: getBorderColor(cppRoom.categoryPriorityPackageRoomValue),
+                    };
+                }
+            }
+        }
+        return {
+            value: 0,
+            description: "",
+            borderColor: "#D1D5DB",
+        };
+    };
+
+    // Hàm lấy mô tả ưu tiên
+    const getCategoryDescription = (value) => {
+        if (Number(value) > 0) {
+            return 'Tin ưu tiên';
+        }
+        return '';
+    };
+
+    // Hàm lấy màu viền
+    const getBorderColor = (value) => {
+        if (Number(value) > 0) {
+            return '#EF4444'; // red-500
+        }
+        return '#D1D5DB'; // gray-200
+    };
 
     const getUserName = () => {
         if (user && user.name) return user.name;
@@ -148,6 +211,7 @@ const RoomDetailsUser = () => {
                         showCustomNotification("error", "Không thể tải thông tin phòng!");
                     })
                 : Promise.resolve(),
+            fetchPriorityData(),
         ]).finally(() => {
             setLoading(false);
         });
@@ -518,6 +582,8 @@ const RoomDetailsUser = () => {
     console.log("Room owner ID:", room?.User?.userId);
     console.log("Is landlord:", isLandlord);
 
+    const priorityInfo = getPriorityInfo(parseInt(roomId), priorityPackages, cppRooms);
+
     return (
         <div className="max-w-7xl mx-auto p-4 bg-white dark:bg-gray-800 dark:text-white">
             <div className="flex flex-col md:flex-row gap-4">
@@ -568,6 +634,11 @@ const RoomDetailsUser = () => {
                                 ))}
                             </Swiper>
                         </div>
+                    )}
+                    {priorityInfo.description && (
+                        <p className="text-sm font-semibold bg-red-500 text-white border w-20 px-1 border-red-500 rounded-lg">
+                            {priorityInfo.description}
+                        </p>
                     )}
                     <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
                         {room.title || 'Tiêu đề phòng'}
@@ -648,7 +719,7 @@ const RoomDetailsUser = () => {
                                 });
                             }}
                         >
-                            Nhắn Tin&nbsp;
+                            Nhắn Tin
                         </button>
                         giúp mình nhé.
                     </p>
@@ -799,7 +870,7 @@ const RoomDetailsUser = () => {
                                 <span className="inline">
                                     <span className="font-medium">Lưu ý: </span>
                                     Sau khi bạn nhấn vào
-                                    <span className="font-medium text-red-500">&nbsp;Đặt phòng</span>, thông tin của bạn sẽ được gửi đến chủ nhà để xem xét.
+                                    <span className="font-medium text-red-500"> Đặt phòng</span>, thông tin của bạn sẽ được gửi đến chủ nhà để xem xét.
                                     Chủ nhà có thể chấp nhận hoặc từ chối yêu cầu của bạn.
                                 </span>
                             </div>

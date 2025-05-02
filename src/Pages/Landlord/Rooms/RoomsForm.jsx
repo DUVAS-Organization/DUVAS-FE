@@ -232,15 +232,18 @@ const RoomForm = () => {
                 quanLy: Number(room.quanLy || 0),
                 chiPhiKhac: Number(room.chiPhiKhac || 0),
                 authorization: Number(room.authorization || 0),
+                userId: user.userId,
+                PriorityPackageRooms: []
             };
 
-            if (roomId) {
-                await RoomLandlordService.updateRoom(roomId, roomData);
-                showCustomNotification("success", "Chỉnh sửa thành công!");
-            } else {
-                const response = await RoomLandlordService.addRoom(roomData);
-                showCustomNotification("success", response.message || "Tạo thành công!");
-            }
+            // if (roomId) {
+            //     await RoomLandlordService.updateRoom(roomId, roomData);
+            //     showCustomNotification("success", "Chỉnh sửa thành công!");
+            // }
+
+            const response = await RoomLandlordService.addRoom(roomData);
+            showCustomNotification("success", response.message || "Tạo thành công!");
+
             navigate('/Room');
         } catch (error) {
             console.error('Error in handleSubmit:', error);
@@ -348,6 +351,12 @@ const RoomForm = () => {
     const handleGenerateWithAI = async () => {
         setLoading(true);
         try {
+            if (!user || !user.userId || !user.token) {
+                showCustomNotification("error", "Bạn cần đăng nhập để thực hiện hành động này!");
+                navigate('/login');
+                return;
+            }
+
             const roomData = {
                 Title: room.title || '',
                 Description: room.description || '',
@@ -359,7 +368,7 @@ const RoomForm = () => {
                 NumberOfBathroom: Number(room.numberOfBathroom) || 0,
                 Price: Number(room.price) || 0,
                 Note: room.note || '',
-                UserId: user?.UserId || 3,
+                UserId: user.userId,
                 BuildingId: room.buildingId || null,
                 CategoryRoomId: room.categoryRoomId || 1,
                 Garret: room.garret || false,
@@ -375,10 +384,7 @@ const RoomForm = () => {
                 QuanLy: Number(room.quanLy || 0),
                 ChiPhiKhac: Number(room.chiPhiKhac || 0),
                 Authorization: Number(room.authorization || 0),
-                User: {
-                    UserId: user?.UserId || 3,
-                    UserName: user?.["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"] || "Dang Huu Tu (K16 DN)"
-                },
+                PriorityPackageRooms: [],
                 RentalLists: []
             };
 
@@ -395,12 +401,11 @@ const RoomForm = () => {
             if (!roomData.LocationDetail) {
                 throw new Error('Địa chỉ không được để trống.');
             }
-            if (!roomData.User.UserId) {
+            if (!roomData.UserId) {
                 throw new Error('UserId không được để trống.');
             }
 
-            const result = await RoomLandlordService.generateRoomDescription(roomData);
-
+            const result = await RoomLandlordService.generateRoomDescription(roomData, user.token);
             setRooms(prev => ({
                 ...prev,
                 title: result.title || prev.title,
@@ -409,7 +414,7 @@ const RoomForm = () => {
 
             showCustomNotification("success", "Tạo tiêu đề và mô tả thành công với AI!");
         } catch (error) {
-            console.error('Error in handleSubmit:', error);
+            console.error('Error in handleGenerateWithAI:', error);
 
             const apiMessage = error?.response?.data?.message || error.message;
 
@@ -422,7 +427,6 @@ const RoomForm = () => {
                 showCustomNotification("error", "Phòng với tiêu đề này đã được đăng. Hãy kiểm tra lại.");
                 return;
             }
-
 
             if (error?.response?.status === 400 && apiMessage.includes("spam")) {
                 showCustomNotification("error", "Mô tả có thể bị spam hoặc trùng với AI. Hãy chỉnh sửa để khác biệt hơn.");
