@@ -1,9 +1,17 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FiHome, FiList, FiUsers, FiDollarSign, FiTool, FiSettings, FiMoon, FiBell, FiUser } from "react-icons/fi";
 import { Link } from "react-router-dom";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, Pie, LineChart, Line } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, Pie } from "recharts";
+import AccountsService from "../../Services/Admin/AccountServices";
+import ServicePost from "../../Services/Admin/ServicePost";
+import BuildingServices from "../../Services/Admin/BuildingServices";
+import RoomServices from "../../Services/Admin/RoomServices";
+import OtherService from "../../Services/User/OtherService";
+import AdminWithdrawRequestService from "../../Services/Admin/WithdrawManagementService";
+import UserService from "../../Services/User/UserService";
+import NotificationService from "../../Services/User/NotificationService";
 
-// Dữ liệu giữ nguyên
+// Static data remains unchanged
 const barData = [
     { month: "Th1", occupancy: 85 },
     { month: "Th2", occupancy: 88 },
@@ -11,11 +19,6 @@ const barData = [
     { month: "Th4", occupancy: 90 },
     { month: "Th5", occupancy: 85 },
     { month: "Th6", occupancy: 89 }
-];
-
-const pieData = [
-    { name: "Dân cư", value: 65 },
-    { name: "Thương mại", value: 35 }
 ];
 
 const lineData = [
@@ -84,15 +87,6 @@ const maintenanceData = [
     }
 ];
 
-const kpiData = [
-    { title: "Tổng người dùng", value: "3,421", icon: FiUsers, color: "blue" },
-    { title: "Tổng tòa nhà", value: "253", icon: FiHome, color: "green" },
-    { title: "Tổng phòng", value: "812", icon: FiList, color: "purple" },
-    { title: "Dịch vụ đang hoạt động", value: "119", icon: FiTool, color: "orange" },
-    { title: "Báo cáo đang chờ", value: "7", icon: FiBell, color: "red" },
-    { title: "Yêu cầu rút tiền", value: "4", icon: FiDollarSign, color: "yellow" }
-];
-
 const quickActions = [
     { title: "Quản lý người dùng", description: "Xem/khóa người dùng", icon: FiUsers, color: "blue", link: "/Admin/Accounts" },
     { title: "Quản lý phòng", description: "Xem xét/phê duyệt/sửa phòng", icon: FiHome, color: "green", link: "/Admin/Rooms" },
@@ -102,21 +96,288 @@ const quickActions = [
     { title: "Xử lý báo cáo", description: "Kiểm tra các phòng/dịch vụ bị báo cáo", icon: FiBell, color: "red", link: "/Admin/Reports" }
 ];
 
-const recentActivity = [
-    { id: 1, message: "Nguyễn Văn A vừa đăng ký tài khoản mới", type: "user", time: "5 phút trước" },
-    { id: 2, message: "Phòng ABC123 bị người dùng báo cáo", type: "alert", time: "10 phút trước" },
-    { id: 3, message: "Lê Thị B yêu cầu rút 500.000đ", type: "money", time: "15 phút trước" },
-    { id: 4, message: "Quản trị viên đã phê duyệt Phòng XYZ", type: "success", time: "20 phút trước" },
-    { id: 5, message: "Đăng ký dịch vụ mới đang chờ xem xét", type: "pending", time: "25 phút trước" }
-];
+// Helper function to parse "HH:mm - DD/MM/YYYY" to Date object
+const parseCreatedDate = (dateStr) => {
+    try {
+        const [time, date] = dateStr.split(' - ');
+        const [hours, minutes] = time.split(':').map(Number);
+        const [day, month, year] = date.split('/').map(Number);
+        return new Date(year, month - 1, day, hours, minutes);
+    } catch (error) {
+        console.error('Error parsing createdDate:', dateStr, error);
+        return null;
+    }
+};
+
+// Helper function to format relative time
+const formatRelativeTime = (dateStr) => {
+    const date = parseCreatedDate(dateStr);
+    if (!date) return 'Không rõ thời gian';
+
+    const now = new Date();
+    const diffInSeconds = Math.floor((now - date) / 1000);
+
+    if (diffInSeconds < 60) return `${diffInSeconds} giây trước`;
+    const diffInMinutes = Math.floor(diffInSeconds / 60);
+    if (diffInMinutes < 60) return `${diffInMinutes} phút trước`;
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `${diffInHours} giờ trước`;
+    const diffInDays = Math.floor(diffInHours / 24);
+    return `${diffInDays} ngày trước`;
+};
+
+// Helper function to format amount with thousand separators
+const formatAmount = (amount) => {
+    if (!amount) return '0';
+    // Check if amount contains a comma (e.g., "19000000,0" for InsiderTrading)
+    if (amount.includes(',')) {
+        // Split into integer and decimal parts
+        const [integerPart, decimalPart] = amount.split(',');
+        // Add thousand separators to integer part
+        const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        // Return with decimal part if present
+        return decimalPart ? `${formattedInteger},${decimalPart}` : formattedInteger;
+    }
+    // For WithdrawRequest (e.g., "10.000"), return as-is since it's already formatted
+    return amount;
+};
+
+// Counts component to fetch all KPI data
+const Counts = () => {
+    const [accountCount, setAccountCount] = useState(0);
+    const [postCount, setPostCount] = useState(0);
+    const [buildingCount, setBuildingCount] = useState(0);
+    const [roomCount, setRoomCount] = useState(0);
+    const [reportCount, setReportCount] = useState(0);
+    const [withdrawCount, setWithdrawCount] = useState(0);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                // Fetch accounts
+                const accounts = await AccountsService.getAccounts();
+                setAccountCount(accounts.length);
+
+                // Fetch service posts
+                const posts = await ServicePost.getServicePosts();
+                setPostCount(posts.length);
+
+                // Fetch buildings
+                const buildings = await BuildingServices.getBuildings();
+                setBuildingCount(buildings.length);
+
+                // Fetch rooms
+                const rooms = await RoomServices.getRooms();
+                setRoomCount(rooms.length);
+
+                // Fetch reports with token
+                const token = localStorage.getItem('authToken'); // Adjust based on your auth mechanism
+                if (token) {
+                    const reports = await OtherService.getAllReports(token);
+                    setReportCount(reports.length);
+                } else {
+                    console.error('No auth token found');
+                    setReportCount(0);
+                }
+
+                // Fetch withdraw requests
+                const withdraws = await AdminWithdrawRequestService.getWithdrawRequests();
+                setWithdrawCount(withdraws.length);
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        };
+        fetchData();
+    }, []);
+
+    // Define kpiData dynamically based on fetched counts with links
+    const kpiData = [
+        { title: "Tổng người dùng", value: accountCount.toString(), icon: FiUsers, color: "blue", link: "/Admin/Accounts" },
+        { title: "Tổng tòa nhà", value: buildingCount.toString(), icon: FiHome, color: "green", link: "/Admin/Buildings" },
+        { title: "Tổng phòng", value: roomCount.toString(), icon: FiList, color: "purple", link: "/Admin/Rooms" },
+        { title: "Dịch vụ đang hoạt động", value: postCount.toString(), icon: FiTool, color: "orange", link: "/Admin/ServicePosts" },
+        { title: "Báo cáo đang chờ", value: reportCount.toString(), icon: FiBell, color: "red", link: "/Admin/Reports" },
+        { title: "Yêu cầu rút tiền", value: withdrawCount.toString(), icon: FiDollarSign, color: "yellow", link: "/Admin/Withdraws" }
+    ];
+
+    return (
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-6">
+            {kpiData.map((kpi, index) => (
+                <Link key={index} to={kpi.link} className="block">
+                    <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md p-6 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 border border-gray-100 dark:border-gray-700">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h3 className="text-lg font-semibold mb-2">{kpi.title}</h3>
+                                <p className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">{kpi.value}</p>
+                            </div>
+                            <div className={`p-4 rounded-full bg-${kpi.color}-100 dark:bg-${kpi.color}-900/30`}>
+                                <kpi.icon className={`text-${kpi.color}-500 text-2xl`} />
+                            </div>
+                        </div>
+                    </div>
+                </Link>
+            ))}
+        </div>
+    );
+};
 
 const Dashboard = () => {
     const [darkMode, setDarkMode] = useState(false);
     const [activeSection, setActiveSection] = useState("dashboard");
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [pieData, setPieData] = useState([]);
+    const [recentActivity, setRecentActivity] = useState([]);
 
     const toggleDarkMode = () => setDarkMode(!darkMode);
     const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+
+    useEffect(() => {
+        const fetchUserRoles = async () => {
+            try {
+                const users = await UserService.getUsers();
+                // Count users based on role priority
+                const roleCounts = {
+                    "Quản trị viên": 0,
+                    "Chủ nhà": 0,
+                    "Chủ dịch vụ": 0,
+                    "Người dùng": 0
+                };
+
+                users.forEach(user => {
+                    if (user.roleAdmin === 1) {
+                        roleCounts["Quản trị viên"]++;
+                    } else if (user.roleLandlord === 1) {
+                        roleCounts["Chủ nhà"]++;
+                    } else if (user.roleService === 1) {
+                        roleCounts["Chủ dịch vụ"]++;
+                    } else if (user.roleUser === 1) {
+                        roleCounts["Người dùng"]++;
+                    }
+                });
+
+                // Format pieData, only include roles with count > 0
+                const newPieData = Object.entries(roleCounts)
+                    .filter(([_, count]) => count > 0)
+                    .map(([name, value]) => ({ name, value }));
+
+                setPieData(newPieData);
+            } catch (error) {
+                console.error('Error fetching user roles:', error);
+                setPieData([]); // Fallback to empty array on error
+            }
+        };
+
+        const fetchRecentActivity = async () => {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    console.error('No auth token found');
+                    setRecentActivity([]);
+                    return;
+                }
+
+                const notifications = await NotificationService.getAllNotifications(token);
+                // Filter out notifications with type === "message"
+                const filteredNotifications = notifications.filter(notification => notification.type !== "message");
+                const userCache = new Map(); // Cache user names
+
+                const activityPromises = filteredNotifications.map(async (notification) => {
+                    let message = notification.message;
+                    let primaryUserName = '';
+
+                    // Fetch primary user's name if userId exists
+                    if (notification.userId) {
+                        if (!userCache.has(notification.userId)) {
+                            try {
+                                const user = await UserService.getUserById(notification.userId, token);
+                                userCache.set(notification.userId, user.name || 'Người dùng');
+                            } catch (error) {
+                                console.error(`Error fetching user ${notification.userId}:`, error);
+                                userCache.set(notification.userId, 'Người dùng');
+                            }
+                        }
+                        primaryUserName = userCache.get(notification.userId);
+                    }
+
+                    // Set custom messages based on notification type
+                    switch (notification.type) {
+                        case 'ConfirmReservation':
+                            message = `Chủ nhà vừa đồng ý yêu cầu thuê của ${primaryUserName}`;
+                            break;
+                        case 'RentRoom':
+                            message = `${primaryUserName} đã gửi thành công yêu cầu thuê phòng`;
+                            break;
+                        case 'BankAccount':
+                            message = `${primaryUserName} đã thêm tài khoản ngân hàng thành công.`;
+                            break;
+                        case 'InsiderTrading': {
+                            // Extract amount from message (e.g., #19000000,0 vnđ)
+                            const amountMatch = notification.message.match(/#([\d,]+)/);
+                            const amount = amountMatch ? amountMatch[1] : '0';
+                            message = `${primaryUserName} vừa nhận được ${formatAmount(amount)} đ`;
+                            break;
+                        }
+                        case 'WithdrawRequest': {
+                            // Extract amount from message (e.g., 10.000đ)
+                            const amountMatch = notification.message.match(/([\d.]+)đ/);
+                            const amount = amountMatch ? amountMatch[1] : '0';
+                            message = `${primaryUserName} đã gửi yêu cầu rút ${formatAmount(amount)} đ`;
+                            break;
+                        }
+                        default:
+                            // Handle #<userId> references for other types
+                            const userIdMatch = message.match(/#(\d+)/);
+                            if (userIdMatch) {
+                                const refUserId = parseInt(userIdMatch[1], 10);
+                                if (!userCache.has(refUserId)) {
+                                    try {
+                                        const refUser = await UserService.getUserById(refUserId, token);
+                                        userCache.set(refUserId, refUser.name || 'Người dùng');
+                                    } catch (error) {
+                                        console.error(`Error fetching referenced user ${refUserId}:`, error);
+                                        userCache.set(refUserId, 'Người dùng');
+                                    }
+                                }
+                                // Replace #<userId> with referenced user's name
+                                message = message.replace(userIdMatch[0], userCache.get(refUserId));
+                            }
+                            // Prepend primary user's name if available
+                            if (primaryUserName) {
+                                message = `${primaryUserName} ${message}`;
+                            }
+                            break;
+                    }
+
+                    // Remove "Bạn" from the message
+                    message = message.replace(/\bBạn\b/gi, '').trim();
+
+                    return {
+                        id: notification.notificationId,
+                        message,
+                        type: notification.type,
+                        time: formatRelativeTime(notification.createdDate),
+                        createdDate: notification.createdDate // Store for sorting
+                    };
+                });
+
+                let recentActivityData = await Promise.all(activityPromises);
+                // Sort by createdDate (newest first)
+                recentActivityData = recentActivityData.sort((a, b) => {
+                    const dateA = parseCreatedDate(a.createdDate);
+                    const dateB = parseCreatedDate(b.createdDate);
+                    return dateB - dateA; // Descending order
+                });
+
+                setRecentActivity(recentActivityData);
+            } catch (error) {
+                console.error('Error fetching notifications:', error);
+                setRecentActivity([]); // Fallback to empty array on error
+            }
+        };
+
+        fetchUserRoles();
+        fetchRecentActivity();
+    }, []);
 
     return (
         <div className={`${darkMode ? "dark bg-gradient-to-br from-gray-900 to-gray-800 text-white" : "bg-gradient-to-br from-blue-50 to-indigo-50"}`}>
@@ -127,7 +388,6 @@ const Dashboard = () => {
                         <button onClick={toggleSidebar} className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
                             <FiList className="text-xl" />
                         </button>
-                        {/* Hiển thị navbar ngang khi sidebarOpen là true */}
                         {sidebarOpen && (
                             <nav className="flex space-x-4 flex-grow">
                                 <button onClick={() => setActiveSection("dashboard")} className={`flex items-center p-2 rounded-lg ${activeSection === "dashboard" ? "bg-blue-600 text-white" : "hover:bg-gray-200 dark:hover:bg-gray-700"}`}>
@@ -146,15 +406,9 @@ const Dashboard = () => {
                         )}
                     </div>
                     <div className="flex items-center space-x-4">
-                        {/* <button onClick={toggleDarkMode} className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
-                            <FiMoon className="text-xl" />
-                        </button> */}
                         <button className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
                             <FiBell className="text-xl" />
                         </button>
-                        {/* <button className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
-                            <FiUser className="text-xl" />
-                        </button> */}
                     </div>
                 </div>
             </header>
@@ -164,21 +418,8 @@ const Dashboard = () => {
                 <div className="p-6 max-w-7xl mx-auto">
                     {activeSection === "dashboard" && (
                         <div className="space-y-8">
-                            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-6">
-                                {kpiData.map((kpi, index) => (
-                                    <div key={index} className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md p-6 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 border border-gray-100 dark:border-gray-700">
-                                        <div className="flex items-center justify-between">
-                                            <div>
-                                                <h3 className="text-lg font-semibold mb-2">{kpi.title}</h3>
-                                                <p className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">{kpi.value}</p>
-                                            </div>
-                                            <div className={`p-4 rounded-full bg-${kpi.color}-100 dark:bg-${kpi.color}-900/30`}>
-                                                <kpi.icon className={`text-${kpi.color}-500 text-2xl`} />
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+                            {/* KPI section with original design, powered by Counts */}
+                            <Counts />
 
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                 <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md p-6 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700">
@@ -222,19 +463,28 @@ const Dashboard = () => {
                             <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md p-6 rounded-2xl shadow-xl">
                                 <h3 className="text-lg font-semibold mb-4">Hoạt động gần đây</h3>
                                 <div className="space-y-4 max-h-[400px] overflow-y-auto">
-                                    {recentActivity.map((activity) => (
-                                        <div key={activity.id} className="flex items-center p-3 border-b dark:border-gray-700">
-                                            <div className={`w-2 h-2 rounded-full mr-3 ${activity.type === "alert" ? "bg-red-500" :
-                                                activity.type === "money" ? "bg-yellow-500" :
-                                                    activity.type === "success" ? "bg-green-500" :
-                                                        "bg-blue-500"
-                                                }`} />
-                                            <div className="flex-1">
-                                                <p className="text-sm">{activity.message}</p>
-                                                <span className="text-xs text-gray-500 dark:text-gray-400">{activity.time}</span>
+                                    {recentActivity.length > 0 ? (
+                                        recentActivity.map((activity) => (
+                                            <div key={activity.id} className="flex items-center p-3 border-b dark:border-gray-700">
+                                                <div className={`w-2 h-2 rounded-full mr-3 ${activity.type === "ConfirmReservation" ? "bg-blue-500" :
+                                                    activity.type === "RentRoom" ? "bg-green-500" :
+                                                        activity.type === "InsiderTrading" ? "bg-yellow-500" :
+                                                            activity.type === "WithdrawRequest" ? "bg-orange-500" :
+                                                                activity.type === "alert" ? "bg-red-500" :
+                                                                    activity.type === "money" ? "bg-yellow-500" :
+                                                                        activity.type === "success" ? "bg-green-500" :
+                                                                            activity.type === "pending" ? "bg-blue-500" :
+                                                                                "bg-blue-500"
+                                                    }`} />
+                                                <div className="flex-1">
+                                                    <p className="text-sm">{activity.message}</p>
+                                                    <span className="text-xs text-gray-500 dark:text-gray-400">{activity.time}</span>
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        ))
+                                    ) : (
+                                        <p className="text-gray-500">Không có hoạt động gần đây</p>
+                                    )}
                                 </div>
                             </div>
                         </div>
