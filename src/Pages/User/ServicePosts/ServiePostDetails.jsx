@@ -140,7 +140,6 @@ const ServicePostDetails = () => {
 
     const handleRequestService = async () => {
         if (!servicePost || !user) {
-            console.log("servicePost hoặc user không hợp lệ:", servicePost, user);
             showCustomNotification("error", "Vui lòng đăng nhập để thực hiện yêu cầu!");
             return;
         }

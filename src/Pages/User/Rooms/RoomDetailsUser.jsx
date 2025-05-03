@@ -578,10 +578,6 @@ const RoomDetailsUser = () => {
 
     // Kiểm tra xem người dùng có phải là chủ phòng không
     const isLandlord = user && room && String(user.userId) === String(room.User.userId);
-    console.log("Current user ID:", user?.userId);
-    console.log("Room owner ID:", room?.User?.userId);
-    console.log("Is landlord:", isLandlord);
-
     const priorityInfo = getPriorityInfo(parseInt(roomId), priorityPackages, cppRooms);
 
     const handleMessageClick = (e) => {

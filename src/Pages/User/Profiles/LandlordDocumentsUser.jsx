@@ -14,17 +14,14 @@ const LandlordDocumentsUser = () => {
     const { landlordLicenseId } = useParams();
     const navigate = useNavigate();
     const token = localStorage.getItem('token') || localStorage.getItem('authToken');
-    console.log('Token =', token);
 
     useEffect(() => {
         const fetchData = async () => {
             try {
                 const licenseData = await UpRoleService.getLandlordLicenseById(landlordLicenseId, token);
-                console.log('📌 Landlord License Details:', licenseData);
                 setLicense(licenseData);
 
                 const userData = await UserService.getUserById(licenseData.userId, token);
-                console.log('📌 User Details:', userData);
                 setUser(userData);
 
                 setLoading(false);

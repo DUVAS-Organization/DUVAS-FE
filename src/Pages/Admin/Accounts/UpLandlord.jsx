@@ -20,14 +20,14 @@ const UpLandlord = () => {
         try {
             // Gọi API LandlordLicense
             const licenseData = await UpRoleService.getLandlordLicenses(token);
-            console.log('📌 Landlord Licenses:', licenseData);
+            // console.log('📌 Landlord Licenses:', licenseData);
 
             // Lấy thông tin user cho mỗi userId
             const licensesWithUser = await Promise.all(
                 licenseData.map(async (license) => {
                     try {
                         const user = await UserService.getUserById(license.userId, token);
-                        console.log(`📌 User for userId ${license.userId}:`, user);
+                        // console.log(`📌 User for userId ${license.userId}:`, user);
                         const status = Number(license.status) || 0; // Ép kiểu status thành số
                         const landlordLicenseId = Number(license.landlordLicenseId); // Ép kiểu landlordLicenseId thành số
                         return { ...license, user, status, landlordLicenseId };

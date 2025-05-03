@@ -17,7 +17,6 @@ const ContractService = {
                     'Content-Type': 'application/json',
                 },
             });
-            console.log('📌 Tạo hợp đồng ủy quyền:', response.data);
             return response.data;
         } catch (error) {
             console.error('❌ Lỗi khi tạo hợp đồng ủy quyền:', error.response?.data || error.message);
@@ -58,7 +57,6 @@ const ContractService = {
                     'Content-Type': 'application/json',
                 },
             });
-            console.log('📌 Lấy hợp đồng ủy quyền của tôi:', response.data);
             return response.data;
         } catch (error) {
             console.error('❌ Lỗi:', error.response?.data || error.message);
@@ -79,7 +77,6 @@ const ContractService = {
                     'Content-Type': 'application/json',
                 },
             });
-            console.log('📌 Lấy hợp đồng ủy quyền theo userId:', response.data);
             return response.data;
         } catch (error) {
             console.error('❌ Lỗi khi lấy hợp đồng ủy quyền theo userId:', error.response?.data || error.message);
@@ -101,7 +98,6 @@ const ContractService = {
                     'Content-Type': 'application/json',
                 },
             });
-            console.log('📌 Cập nhật quyền phòng:', response.data);
             return response.data;
         } catch (error) {
             console.error('❌ Lỗi khi cập nhật quyền phòng:', error.response?.data || error.message);
@@ -123,7 +119,6 @@ const ContractService = {
                     'Content-Type': 'application/json',
                 },
             });
-            console.log('📌 Cập nhật trạng thái hợp đồng:', response.data);
             return response.data;
         } catch (error) {
             console.error('❌ Lỗi khi cập nhật trạng thái hợp đồng:', error.response?.data || error.message);

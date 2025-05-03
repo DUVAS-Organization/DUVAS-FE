@@ -657,7 +657,7 @@ const StepConfirmation = ({
             return;
         }
 
-        console.log('User object:', user);
+        // console.log('User object:', user);
         if (!user || !user.userId || !user.token) {
             console.error('Authentication failed:', { user });
             showCustomNotification('error', 'Bạn cần đăng nhập để thực hiện hành động này!');
@@ -731,7 +731,7 @@ const StepConfirmation = ({
                 categoryPriorityPackageRoomId: room.categoryPriorityPackageRoomId || 0,
             };
 
-            console.log('Creating room:', roomData);
+            // console.log('Creating room:', roomData);
             const roomResponse = await RoomLandlordService.addRoom(roomData, user.token);
             const newRoomId = roomResponse.roomId;
 
@@ -745,7 +745,7 @@ const StepConfirmation = ({
                     userId: user.userId,
                     status: 1,
                 };
-                console.log('Creating priority room:', priorityRoomData);
+                // console.log('Creating priority room:', priorityRoomData);
                 await PriorityRoomService.createPriorityRoom(priorityRoomData, user.token);
             }
 

@@ -92,7 +92,6 @@ const ServicePostEdit = () => {
                 if (!Array.isArray(data)) {
                     throw new Error('Dữ liệu gói ưu tiên không hợp lệ');
                 }
-                console.log('Fetched priority packages:', data);
                 const activePackages = data.filter(
                     (pkg) =>
                         pkg.status === 1 &&
@@ -393,7 +392,6 @@ const ServicePostEdit = () => {
                     endDate: endDateFormatted,
                     price: service.priorityPrice,
                 };
-                console.log('PriorityServiceData:', priorityServiceData);
 
                 if (service.priorityPackageServiceId) {
                     await PriorityServiceService.updatePriorityServicePost(
@@ -603,8 +601,8 @@ const ServicePostEdit = () => {
                             <button
                                 onClick={() => handleTogglePermission(service.isPermission === 1 ? 'lock' : 'unlock')}
                                 className={`py-1 text-lg ${service.isPermission === 1
-                                        ? 'text-red-500 w-16 h-12 hover:bg-red-500 hover:text-white'
-                                        : 'text-green-500 hover:bg-green-500 hover:text-white w-24 h-12 p-2'
+                                    ? 'text-red-500 w-16 h-12 hover:bg-red-500 hover:text-white'
+                                    : 'text-green-500 hover:bg-green-500 hover:text-white w-24 h-12 p-2'
                                     } font-semibold bg-white rounded-full border-2`}
                             >
                                 {service.isPermission === 1 ? 'Khóa' : 'Mở Khóa'}
@@ -882,8 +880,8 @@ const ServicePostEdit = () => {
                                         onClick={handleSubmit}
                                         disabled={priorityPackages.length === 0}
                                         className={`px-4 py-2 rounded-lg transition-colors ${priorityPackages.length === 0
-                                                ? 'bg-gray-400 cursor-not-allowed'
-                                                : 'bg-red-600 text-white hover:bg-red-700'
+                                            ? 'bg-gray-400 cursor-not-allowed'
+                                            : 'bg-red-600 text-white hover:bg-red-700'
                                             }`}
                                     >
                                         Cập Nhật Dịch Vụ

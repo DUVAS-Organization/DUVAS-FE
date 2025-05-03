@@ -25,7 +25,7 @@ const SavedPostList = () => {
         // Kết nối WebSocket
         wsRef.current = OtherService.connectWebSocket(userId, {
             onOpen: () => {
-                console.log("WebSocket connected for SavedPostList");
+                // console.log("WebSocket connected for SavedPostList");
             },
             onMessage: (event) => {
                 try {
@@ -62,7 +62,7 @@ const SavedPostList = () => {
                 }
             },
             onClose: () => {
-                console.log("WebSocket disconnected for SavedPostList");
+                // console.log("WebSocket disconnected for SavedPostList");
             },
             onError: (error) => {
                 console.error("WebSocket error for SavedPostList:", error);

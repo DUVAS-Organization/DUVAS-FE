@@ -79,7 +79,6 @@ const CPPRoomForm = () => {
             navigate('/Admin/CategoryPriorityRooms');
         } catch (error) {
             console.error('Lỗi trong handleSubmit:', error);
-            console.log('Chi tiết lỗi API:', error.response?.data);
             showCustomNotification('error', error.response?.data?.message || 'Có lỗi xảy ra, vui lòng thử lại!');
         }
     };
