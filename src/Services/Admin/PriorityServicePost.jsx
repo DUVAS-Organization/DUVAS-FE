@@ -9,8 +9,11 @@ const PriorityServicePostService = {
             const response = await axios.get(API_URL);
             return response.data.map(item => ({
                 priorityPackageServicePostId: item.priorityPackageServicePostId,
-                priorityPackageServicePostValue: item.priorityPackageServicePostValue ? `${item.priorityPackageServicePostValue} ngày` : `ServicePost ${item.priorityPackageServicePostId}`,
-                status: item.status,
+                userId: item.userId,
+                servicePostId: item.servicePostId,
+                categoryPriorityPackageServicePostId: item.categoryPriorityPackageServicePostId,
+                startDate: item.startDate,
+                endDate: item.endDate,
                 price: item.price,
             }));
         } catch (error) {
@@ -26,8 +29,11 @@ const PriorityServicePostService = {
             const item = response.data;
             return {
                 priorityPackageServicePostId: item.priorityPackageServicePostId,
-                priorityPackageServicePostValue: item.priorityPackageServicePostValue ? `${item.priorityPackageServicePostValue} ngày` : `ServicePost ${item.priorityPackageServicePostId}`,
-                status: item.status,
+                userId: item.userId,
+                servicePostId: item.servicePostId,
+                categoryPriorityPackageServicePostId: item.categoryPriorityPackageServicePostId,
+                startDate: item.startDate,
+                endDate: item.endDate,
                 price: item.price,
             };
         } catch (error) {
@@ -40,15 +46,21 @@ const PriorityServicePostService = {
     createPriorityServicePost: async (servicePost) => {
         try {
             const response = await axios.post(API_URL, {
-                priorityPackageServicePostValue: servicePost.priorityPackageServicePostValue || '',
+                userId: servicePost.userId,
+                servicePostId: servicePost.servicePostId,
+                categoryPriorityPackageServicePostId: servicePost.categoryPriorityPackageServicePostId,
+                startDate: servicePost.startDate,
+                endDate: servicePost.endDate,
                 price: servicePost.price,
-                status: servicePost.status,
             });
             const item = response.data;
             return {
                 priorityPackageServicePostId: item.priorityPackageServicePostId,
-                priorityPackageServicePostValue: item.priorityPackageServicePostValue ? `${item.priorityPackageServicePostValue} ngày` : `ServicePost ${item.priorityPackageServicePostId}`,
-                status: item.status,
+                userId: item.userId,
+                servicePostId: item.servicePostId,
+                categoryPriorityPackageServicePostId: item.categoryPriorityPackageServicePostId,
+                startDate: item.startDate,
+                endDate: item.endDate,
                 price: item.price,
             };
         } catch (error) {
@@ -62,15 +74,21 @@ const PriorityServicePostService = {
         try {
             const response = await axios.put(`${API_URL}/${id}`, {
                 priorityPackageServicePostId: id,
-                priorityPackageServicePostValue: servicePost.priorityPackageServicePostValue || '',
+                userId: servicePost.userId,
+                servicePostId: servicePost.servicePostId,
+                categoryPriorityPackageServicePostId: servicePost.categoryPriorityPackageServicePostId,
+                startDate: servicePost.startDate,
+                endDate: servicePost.endDate,
                 price: servicePost.price,
-                status: servicePost.status,
             });
             const item = response.data || {};
             return {
                 priorityPackageServicePostId: item.priorityPackageServicePostId || id,
-                priorityPackageServicePostValue: item.priorityPackageServicePostValue ? `${item.priorityPackageServicePostValue} ngày` : `ServicePost ${item.priorityPackageServicePostId}`,
-                status: item.status,
+                userId: item.userId,
+                servicePostId: item.servicePostId,
+                categoryPriorityPackageServicePostId: item.categoryPriorityPackageServicePostId,
+                startDate: item.startDate,
+                endDate: item.endDate,
                 price: item.price,
             };
         } catch (error) {

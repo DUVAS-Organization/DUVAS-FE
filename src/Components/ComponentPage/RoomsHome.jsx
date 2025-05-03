@@ -10,7 +10,7 @@ import { styled } from '@mui/material/styles';
 import OtherService from '../../Services/User/OtherService';
 
 const CardItem = styled('div')(({ theme }) => {
-    const defaultColor = '#D1D5DB'; // Màu mặc định gray-200
+    const defaultColor = '#D1D5DB';
 
     return {
         borderRadius: '12px',
@@ -20,6 +20,7 @@ const CardItem = styled('div')(({ theme }) => {
         zIndex: 0,
         background: 'white',
         transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
 
         '&::before': {
             content: '""',
@@ -37,7 +38,7 @@ const CardItem = styled('div')(({ theme }) => {
 
         '&:hover': {
             transform: 'scale(1.02)',
-            boxShadow: `0 0 20px ${defaultColor}55`,
+            boxShadow: '0 8px 12px rgba(0, 0, 0, 0.2)',
             '&::before': {
                 background: `linear-gradient(135deg, ${defaultColor}, transparent, ${defaultColor})`,
                 filter: `drop-shadow(0 0 8px ${defaultColor})`,
@@ -59,6 +60,10 @@ const CardItem = styled('div')(({ theme }) => {
 
         ...theme.applyStyles('dark', {
             backgroundColor: '#1A2027',
+            boxShadow: '0 4px 6px rgba(255, 255, 255, 0.1)',
+            '&:hover': {
+                boxShadow: '0 8px 12px rgba(255, 255, 255, 0.2)',
+            },
         }),
     };
 });

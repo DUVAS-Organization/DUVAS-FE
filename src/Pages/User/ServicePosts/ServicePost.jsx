@@ -11,6 +11,8 @@ import Loading from '../../../Components/Loading';
 import { showCustomNotification } from '../../../Components/Notification';
 import { FaPhoneVolume } from 'react-icons/fa6';
 import OtherService from '../../../Services/User/OtherService';
+import PriorityServiceService from '../../../Services/Admin/PriorityServicePost';
+import CPPServiceService from '../../../Services/Admin/CPPServicePostsService';
 
 const ServicePostList = () => {
     const [servicePosts, setServicePosts] = useState([]);
@@ -20,9 +22,11 @@ const ServicePostList = () => {
     const [loading, setLoading] = useState(true);
     const [savedPosts, setSavedPosts] = useState(() => {
         const local = localStorage.getItem('savedPosts');
-        return local ? JSON.parse(local).map(id => Number(id)) : [];
+        return local ? new Set(JSON.parse(local).map(id => Number(id))) : new Set();
     });
     const [showFullPhoneById, setShowFullPhoneById] = useState({});
+    const [priorityPackages, setPriorityPackages] = useState([]);
+    const [cppServices, setCppServices] = useState([]);
 
     const location = useLocation();
     const queryParams = new URLSearchParams(location.search);
@@ -31,8 +35,58 @@ const ServicePostList = () => {
     const minPrice = queryParams.get('minPrice') ? Number(queryParams.get('minPrice')) * 1000000 : 0;
     const maxPrice = queryParams.get('maxPrice') ? Number(queryParams.get('maxPrice')) * 1000000 : Infinity;
 
+    // Fetch priority data
+    const fetchPriorityData = async () => {
+        try {
+            const priorityData = await PriorityServiceService.getPriorityServicePosts();
+            const cppData = await CPPServiceService.getAllCategoryPriorityPackageServicePosts();
+            setPriorityPackages(priorityData || []);
+            setCppServices(cppData || []);
+        } catch (error) {
+            console.error('Lỗi khi lấy dữ liệu ưu tiên:', error.message);
+            setPriorityPackages([]);
+            setCppServices([]);
+        }
+    };
+
+    // Get priority info for a post
+    const getPriorityInfo = (servicePostId, priorityPackages, cppServices) => {
+        const priorityService = priorityPackages.find(pr => pr.servicePostId === servicePostId);
+        if (priorityService) {
+            const currentDate = new Date();
+            const startDate = new Date(priorityService.startDate);
+            const endDate = new Date(priorityService.endDate);
+            const isActive = currentDate >= startDate && currentDate <= endDate;
+
+            if (isActive && priorityService.categoryPriorityPackageServicePostId !== 0) {
+                const cppService = cppServices.find(
+                    cpp => cpp.categoryPriorityPackageServicePostId === priorityService.categoryPriorityPackageServicePostId
+                );
+                if (cppService) {
+                    return {
+                        value: cppService.categoryPriorityPackageServicePostValue || 0,
+                        description: getCategoryDescription(cppService.categoryPriorityPackageServicePostValue),
+                    };
+                }
+            }
+        }
+        return {
+            value: 0,
+            description: '',
+        };
+    };
+
+    // Get priority description
+    const getCategoryDescription = (value) => {
+        if (Number(value) > 0) {
+            return 'Tin ưu tiên';
+        }
+        return '';
+    };
+
     useEffect(() => {
         fetchServicePosts();
+        fetchPriorityData();
     }, [location.search]);
 
     useEffect(() => {
@@ -88,8 +142,10 @@ const ServicePostList = () => {
             const data = await response.json();
             const savedRoomIds = new Set(data.map(item => item.roomId));
             setSavedPosts(savedRoomIds);
+            localStorage.setItem('savedPosts', JSON.stringify([...savedRoomIds]));
         } catch (error) {
             console.error("Lỗi khi lấy danh sách bài đã lưu:", error);
+            setSavedPosts(new Set());
         }
     };
 
@@ -109,6 +165,7 @@ const ServicePostList = () => {
                 } else if (result.status === "saved") {
                     newSaved.add(parseInt(roomId));
                 }
+                localStorage.setItem('savedPosts', JSON.stringify([...newSaved]));
                 return newSaved;
             });
             if (result.status === "saved") {
@@ -132,7 +189,6 @@ const ServicePostList = () => {
         );
     }
 
-    // Lọc bài đăng
     let filteredPosts = servicePosts;
     if (categoryServiceId) {
         filteredPosts = filteredPosts.filter(post => post.categoryServiceId === Number(categoryServiceId));
@@ -141,6 +197,13 @@ const ServicePostList = () => {
         filteredPosts = filteredPosts.filter(post => post.categoryServiceName === tab);
     }
     const priceFilteredPosts = filteredPosts.filter(post => post.price >= minPrice && post.price <= maxPrice);
+
+    // Sort posts by priority value in descending order
+    const sortedPosts = [...priceFilteredPosts].sort((a, b) => {
+        const priorityA = getPriorityInfo(a.servicePostId, priorityPackages, cppServices).value || 0;
+        const priorityB = getPriorityInfo(b.servicePostId, priorityPackages, cppServices).value || 0;
+        return priorityB - priorityA;
+    });
 
     if (servicePosts.length > 0 && !priceFilteredPosts.length) {
         return (
@@ -164,18 +227,10 @@ const ServicePostList = () => {
                     <div className="w-3/4 bg-white p-4 rounded shadow space-y-3 dark:bg-gray-800 dark:text-white">
                         <h1 className="text-2xl font-semibold">{tab ? tab : 'Tất cả dịch vụ'}</h1>
                         <div className="flex justify-between">
-                            <p className="mb-2 flex">Hiện có {priceFilteredPosts.length} dịch vụ {tab ? tab.toLowerCase() : 'tất cả'}.</p>
-                            {/* <div className="flex items-center">
-                                <FaRegBell className="bg-yellow-500 text-white px-2 text-4xl rounded-full" />
-                                <p className="mx-1">Nhận email tin mới</p>
-                                <label className="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" className="sr-only peer" />
-                                    <div className="w-11 h-6 bg-gray-200 rounded-full peer-checked:bg-red-600 peer-focus:ring-4 peer-focus:ring-white dark:peer-focus:ring-red-800 dark:bg-gray-700 peer-checked:after:translate-x-full after:absolute after:top-0.5 after:left-[2px] after:h-5 after:w-5 after:bg-white after:rounded-full after:transition-all peer-checked:after:border-white"></div>
-                                </label>
-                            </div> */}
+                            <p className="mb-2 flex">Hiện có {priceFilteredPosts.length} dịch vụ {tab ? tab.toLowerCase() : ''}</p>
                         </div>
 
-                        {priceFilteredPosts.slice(0, visiblePosts).map((post, index) => {
+                        {sortedPosts.slice(0, visiblePosts).map((post, index) => {
                             let images;
                             try {
                                 images = JSON.parse(post.image);
@@ -198,7 +253,8 @@ const ServicePostList = () => {
                                     ? postUserPhone.slice(0, postUserPhone.length - 3) + '***'
                                     : 'N/A';
 
-                            const isSaved = savedPosts.includes(Number(post.servicePostId));
+                            const isSaved = savedPosts.has(Number(post.servicePostId));
+                            const priorityInfo = getPriorityInfo(post.servicePostId, priorityPackages, cppServices);
 
                             if (index < 3) {
                                 return (
@@ -250,8 +306,14 @@ const ServicePostList = () => {
                                                             {post.categoryServiceName}
                                                         </span>
                                                     )}
+
                                                 </div>
                                                 <div className="p-4 flex flex-col">
+                                                    {priorityInfo.description && (
+                                                        <span className="w-[80px] bg-red-500 text-white text-sm font-semibold p-1 z-10 rounded-lg">
+                                                            {priorityInfo.description}
+                                                        </span>
+                                                    )}
                                                     <h3 className="text-lg font-semibold mb-2 line-clamp-2 dark:text-white">{post.title}</h3>
                                                     <p className="text-red-500 font-semibold mb-2">{post.price.toLocaleString('vi-VN')} đ</p>
                                                     <p className="text-gray-600 mb-2 flex items-center dark:text-white">
@@ -323,6 +385,7 @@ const ServicePostList = () => {
                                                                 {post.categoryServiceName}
                                                             </span>
                                                         )}
+
                                                     </div>
                                                     <div className="w-1/2 h-full flex flex-col gap-0.5">
                                                         {images.slice(1, 4).map((img, i) => (
@@ -338,6 +401,11 @@ const ServicePostList = () => {
                                                     </div>
                                                 </div>
                                                 <div className="w-3/5 p-4 flex flex-col ">
+                                                    {priorityInfo.description && (
+                                                        <span className="w-[80px] bg-red-500 text-white text-sm font-semibold p-1 z-10 rounded-lg">
+                                                            {priorityInfo.description}
+                                                        </span>
+                                                    )}
                                                     <h3 className="text-lg font-semibold mb-2 line-clamp-2 dark:text-white">{post.title}</h3>
                                                     <p className="text-red-500 font-semibold mb-2">{post.price.toLocaleString('vi-VN')} đ</p>
                                                     <p className="text-gray-600 mb-2 flex items-center dark:text-white">
@@ -434,14 +502,6 @@ const ServicePostList = () => {
                                     '40 - 70 triệu',
                                     'Trên 70 triệu',
                                 ].map((item, index) => (
-                                    <li key={index}>{item}</li>
-                                ))}
-                            </ul>
-                        </div>
-                        <div className="bg-white p-4 rounded shadow dark:bg-gray-800 dark:text-white">
-                            <h3 className="font-bold mb-2">Lọc theo thời gian</h3>
-                            <ul>
-                                {['Mới nhất', 'Cũ nhất', 'Gần đây'].map((item, index) => (
                                     <li key={index}>{item}</li>
                                 ))}
                             </ul>

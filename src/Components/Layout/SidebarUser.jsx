@@ -52,7 +52,7 @@ const SidebarUser = () => {
                         <FaUserTie className="inline-block mb-2 mr-2" />
                         Tài Khoản
                     </div>
-                    <ul className="ml-4 ">
+                    <ul className="ml-4">
                         <li>
                             <NavLink
                                 to="/Profile?tab=edit"
@@ -116,14 +116,16 @@ const SidebarUser = () => {
                                     {user.role === "Landlord" ? "Quản Lý Phòng" : "Quản Lý Dịch vụ"}
                                 </NavLink>
                             </li>
-                            <li>
-                                <NavLink
-                                    to="/Landlord/Authorization"
-                                    className={`block py-2 px-4 mb-0.5 hover:bg-red-400 hover:text-white rounded-3xl ${isAuthorizationActive ? "bg-red-500 text-white" : ""}`}
-                                >
-                                    Đơn ủy quyền
-                                </NavLink>
-                            </li>
+                            {user.role === "Landlord" && (
+                                <li>
+                                    <NavLink
+                                        to="/Landlord/Authorization"
+                                        className={`block py-2 px-4 mb-0.5 hover:bg-red-400 hover:text-white rounded-3xl ${isAuthorizationActive ? "bg-red-500 text-white" : ""}`}
+                                    >
+                                        Đơn ủy quyền
+                                    </NavLink>
+                                </li>
+                            )}
                         </ul>
                     </li>
                 )}
@@ -191,7 +193,7 @@ const SidebarUser = () => {
                             <li>
                                 <NavLink
                                     to="/Withdraw/Create"
-                                    className={`block py-2 px-4 hover:bg-red-400 hover:text-white rounded-3xl ${isWithdrawCreateActive ? 'bg-red-500 text-white' : ''}`}
+                                    className={`block py-2 px-4 hover:bg-red-400 hover:text-white rounded-3xl ${isWithdrawCreateActive ? "bg-red-500 text-white" : ""}`}
                                 >
                                     Rút tiền
                                 </NavLink>
