@@ -584,6 +584,23 @@ const RoomDetailsUser = () => {
 
     const priorityInfo = getPriorityInfo(parseInt(roomId), priorityPackages, cppRooms);
 
+    const handleMessageClick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!user) {
+            showCustomNotification("error", "Bạn cần đăng nhập để nhắn tin!");
+        } else {
+            navigate('/Message', {
+                state: {
+                    partnerId: room.User.userId,
+                    partnerName: room.User.name,
+                    partnerAvatar: room.User.profilePicture,
+                    partnerIsActive: room.User.isActive || false,
+                },
+            });
+        }
+    };
+
     return (
         <div className="max-w-7xl mx-auto p-4 bg-white dark:bg-gray-800 dark:text-white">
             <div className="flex flex-col md:flex-row gap-4">
@@ -707,19 +724,9 @@ const RoomDetailsUser = () => {
                         Cám ơn tất cả mọi người đã xem ai có nhu cầu
                         <button
                             className="text-red-500 hover:underline font-medium ml-1"
-                            onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                navigate('/Message', {
-                                    state: {
-                                        partnerId: room.User.userId,
-                                        partnerName: room.User.name,
-                                        partnerAvatar: room.User.profilePicture,
-                                    },
-                                });
-                            }}
+                            onClick={handleMessageClick}
                         >
-                            Nhắn Tin
+                            Nhắn Tin&nbsp;
                         </button>
                         giúp mình nhé.
                     </p>
@@ -834,18 +841,7 @@ const RoomDetailsUser = () => {
                         </div>
                         {!isLandlord && (
                             <button
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    navigate("/Message", {
-                                        state: {
-                                            partnerId: room.User.userId,
-                                            partnerName: room.User.name,
-                                            partnerAvatar: room.User.profilePicture,
-                                            partnerIsActive: room.User.isActive || false,
-                                        },
-                                    });
-                                }}
+                                onClick={handleMessageClick}
                                 className="bg-red-500 p-1 border border-red-500 text-white rounded-full flex items-center gap-1 hover:bg-red-600 transition-colors flex-shrink-0"
                             >
                                 <FaFacebookMessenger className="text-2xl" />
@@ -859,7 +855,11 @@ const RoomDetailsUser = () => {
                                 <button
                                     onClick={(e) => {
                                         e.preventDefault();
-                                        setShowRentModal(true);
+                                        if (!user) {
+                                            showCustomNotification("error", "Bạn cần đăng nhập để đặt phòng!");
+                                        } else {
+                                            setShowRentModal(true);
+                                        }
                                     }}
                                     className="w-48 bg-red-500 text-white font-medium px-4 py-1 rounded-xl hover:bg-red-400 text-sm"
                                 >
@@ -879,18 +879,7 @@ const RoomDetailsUser = () => {
                                 bằng cách
                                 <button
                                     className="text-red-500 hover:underline font-medium ml-1"
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        navigate('/Message', {
-                                            state: {
-                                                partnerId: room.User.userId,
-                                                partnerName: room.User.name,
-                                                partnerAvatar: room.User.profilePicture,
-                                                partnerIsActive: room.User.isActive || false,
-                                            },
-                                        });
-                                    }}
+                                    onClick={handleMessageClick}
                                 >
                                     Nhắn Tin
                                 </button> để nhận ưu đãi tốt nhất.
