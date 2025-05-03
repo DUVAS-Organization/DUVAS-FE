@@ -1,6 +1,5 @@
-// src/Context/AuthProvider.js
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { jwtDecode } from 'jwt-decode'; // Import jwt-decode để giải mã token
+import { jwtDecode } from 'jwt-decode';
 import { useNavigate } from 'react-router-dom';
 import Loading from '../Components/Loading';
 
@@ -12,75 +11,77 @@ export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Lấy token từ localStorage
     const token = localStorage.getItem('authToken');
-    // console.log("Current Token:", token);
     if (token) {
       try {
-        const decodedToken = jwtDecode(token); // Giải mã token
-        // console.log("Decoded Token:", decodedToken); // Log ra để kiểm tra payload
+        const decodedToken = jwtDecode(token);
 
         const newUser = {
-          username: decodedToken["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"], // Trích xuất username từ token
-          role: decodedToken["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"], // Trích xuất role từ token
+          username: decodedToken["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"],
+          role: decodedToken["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"],
           ProfilePicture: decodedToken["ProfilePicture"],
-          userId: decodedToken["UserId"], // Đảm bảo trích xuất UserId đúng
-          token
+          userId: decodedToken["UserId"],
+          token,
+          // Add money fields if they exist in the token
+          money: decodedToken["Money"] || 0,
+          encryptedMoney: decodedToken["EncryptedMoney"],
+          moneyIV: decodedToken["MoneyIV"]
         };
 
-        setUser(newUser); // Lưu thông tin người dùng vào trạng thái
-
+        setUser(newUser);
       } catch (error) {
-        // console.error("Lỗi khi giải mã token:", error);
-        setUser(null); // Nếu có lỗi khi giải mã, setUser null
+        console.error("Error decoding token:", error);
+        setUser(null);
       }
     } else {
-      setUser(null); // Nếu không có token, set user là null
+      setUser(null);
     }
 
-    setLoading(false); // Khi xong, không còn trạng thái loading nữa
+    setLoading(false);
   }, [navigate]);
 
   const login = (token) => {
-    localStorage.setItem('authToken', token); // Lưu token vào localStorage
-    const decodedToken = jwtDecode(token); // Giải mã token
-    // console.log("Decoded Token after login:", decodedToken); // Log ra để kiểm tra payload
+    localStorage.setItem('authToken', token);
+    const decodedToken = jwtDecode(token);
 
     const newUser = {
-      username: decodedToken["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"], // Trích xuất username từ token
-      role: decodedToken["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"], // Trích xuất role từ token
+      username: decodedToken["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"],
+      role: decodedToken["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"],
       ProfilePicture: decodedToken["ProfilePicture"],
-      userId: decodedToken["UserId"], // Đảm bảo trích xuất UserId đúng
-      token
+      userId: decodedToken["UserId"],
+      token,
+      // Add money fields if they exist in the token
+      money: decodedToken["Money"] || 0,
+      encryptedMoney: decodedToken["EncryptedMoney"],
+      moneyIV: decodedToken["MoneyIV"]
     };
 
-    setUser(newUser); // Cập nhật user vào trạng thái
+    setUser(newUser);
 
-    // Điều hướng dựa trên role của user
+    // Navigation logic remains the same
     if (newUser.role === 'User') {
-      navigate('/'); // Điều hướng đến trang dành cho User
+      navigate('/');
     } else if (newUser.role === 'Admin') {
-      navigate('/Admin/Accounts'); // Điều hướng đến trang Admin
+      navigate('/Admin/Accounts');
     }
     else if (newUser.role === 'Landlord') {
-      navigate('/'); // Điều hướng đến trang Landlord
+      navigate('/');
     }
     else if (newUser.role === 'Service') {
-      navigate('/'); // Điều hướng đến trang Service
+      navigate('/');
     } else {
-      navigate('/'); // Điều hướng đến trang chủ cho người dùng không xác định
+      navigate('/');
     }
   };
 
-
   const logout = async () => {
-    localStorage.removeItem('authToken'); // Xóa token khi đăng xuất
-    setUser(null); // Reset user
-    navigate('/Logins'); // Chuyển hướng đến trang đăng nhập
+    localStorage.removeItem('authToken');
+    setUser(null);
+    navigate('/Logins');
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, loading }}>
       {loading ? <Loading /> : children}
     </AuthContext.Provider>
   );

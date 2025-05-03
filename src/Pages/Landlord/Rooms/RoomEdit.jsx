@@ -171,7 +171,6 @@ const RoomEdit = () => {
                 const checks = await Promise.all(
                     selectedFiles.map(async (file) => {
                         const result = await OtherService.checkImageAzure(file);
-                        console.log(`Kiểm tra ảnh ${file.name}:`, result);
                         return {
                             isSafe: result.isSafe !== undefined ? result.isSafe : false,
                             message: result.message || "Không có thông tin kiểm tra."

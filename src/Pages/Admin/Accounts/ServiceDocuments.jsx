@@ -18,11 +18,11 @@ const ServiceDocuments = () => {
         const fetchData = async () => {
             try {
                 const licenseData = await UpRoleService.getServiceLicenseById(serviceLicenseId, token);
-                console.log('📌 Service License Details:', licenseData);
+                // console.log('📌 Service License Details:', licenseData);
                 setLicense(licenseData);
 
                 const userData = await UserService.getUserById(licenseData.userId, token);
-                console.log('📌 User Details:', userData);
+                // console.log('📌 User Details:', userData);
                 setUser(userData);
 
                 setLoading(false);

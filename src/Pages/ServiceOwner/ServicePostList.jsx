@@ -99,7 +99,6 @@ const ServicePostOwner = () => {
         setLoading(true);
         try {
             const response = await ServiceManageService.getMyServices();
-            console.log('API response:', response);
             const postsData = response.services || [];
 
             const formattedPosts = postsData.map((post) => {
@@ -144,7 +143,6 @@ const ServicePostOwner = () => {
         setLoading(true);
         try {
             const response = await ServiceManageService.getMyServices();
-            console.log('API response (filtered):', response);
             const postsData = response.services || [];
 
             const filteredPosts = postsData

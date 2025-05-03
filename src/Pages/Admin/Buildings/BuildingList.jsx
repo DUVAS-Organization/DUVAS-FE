@@ -24,7 +24,6 @@ const BuildingList = () => {
     const fetchData = () => {
         BuildingServices.getBuildings(searchTerm)
             .then(data => {
-                console.log("Fetched Buildings:", data);
                 let sortedBuildings = [...data]; // Tạo bản sao của mảng dữ liệu
 
                 // Sắp xếp danh sách tòa nhà theo buildingName

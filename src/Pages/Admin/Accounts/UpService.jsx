@@ -19,13 +19,13 @@ const UpService = () => {
     const fetchData = async () => {
         try {
             const serviceData = await UpRoleService.getServiceLicenses(token);
-            console.log('📌 Service Licenses:', serviceData);
+            // console.log('📌 Service Licenses:', serviceData);
 
             const licensesWithUser = await Promise.all(
                 serviceData.map(async (license) => {
                     try {
                         const user = await UserService.getUserById(license.userId, token);
-                        console.log(`📌 User for userId ${license.userId}:`, user);
+                        // console.log(`📌 User for userId ${license.userId}:`, user);
                         // Ép kiểu status thành số và mặc định là 0 nếu không hợp lệ
                         const status = Number(license.status) || 0;
                         return { ...license, user, status };

@@ -38,7 +38,6 @@ const Money = () => {
         let status = false;
         while (!status) {
             status = (await UserService.checkTransactionStatus(addInfo)).data.isPaid;
-            console.log(status);
             if (!status) {
                 await new Promise((resolve) => setTimeout(resolve, 1000));
             }

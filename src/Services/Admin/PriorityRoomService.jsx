@@ -45,7 +45,6 @@ const PriorityRoomService = {
     // Create a new PriorityPackageRoom
     createPriorityRoom: async (room) => {
         try {
-            console.log('Sending PriorityRoom payload:', room); // Debug payload
             const response = await axios.post(API_URL, {
                 userId: room.userId,
                 roomId: room.roomId,

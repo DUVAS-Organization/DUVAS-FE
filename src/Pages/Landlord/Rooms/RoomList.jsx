@@ -345,7 +345,6 @@ const RoomList = () => {
     const handleSelectRoom = (roomId) => {
         setSelectedRooms((prev) => {
             const newSelection = prev.includes(roomId) ? prev.filter((id) => id !== roomId) : [...prev, roomId];
-            console.log(newSelection);
             return newSelection;
         });
     };

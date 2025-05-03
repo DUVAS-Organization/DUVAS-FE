@@ -166,7 +166,6 @@ const RoomForm = () => {
                 userId: Number(user.userId),
                 image: JSON.stringify(finalImageUrls)
             };
-            console.log("Dữ liệu gửi đi:", roomData);
 
             if (roomId) {
                 await RoomServices.updateRoom(roomId, { ...roomData, roomId: room.roomId });

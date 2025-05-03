@@ -275,7 +275,6 @@ const RoomRentalConfirmation = () => {
                 price: parseFloat(formData.price) || 0,
             };
 
-            console.log("Data gửi đi:", dataToSend);
             const response = await BookingManagementService.confirmReservation(roomId, dataToSend, token);
 
             Swal.fire({
@@ -302,11 +301,9 @@ const RoomRentalConfirmation = () => {
             const rentalIdLocal = occupantRental?.rentalId;
             const roomPrice = roomData?.price || 0;
             const landlordId = roomData?.landlordId;
-            console.log("➡️ [FE] Xác nhận thuê phòng với rentalId:", rentalIdLocal);
 
             const checkBalanceData = { UserId: user.userId, Amount: roomPrice };
             const balanceResponse = await BookingManagementService.checkBalance(checkBalanceData, user.token);
-            console.log("🔍 [FE] Kiểm tra số dư:", balanceResponse);
 
             if (balanceResponse !== "Bạn đủ tiền.") {
                 Swal.fire("Thông báo", "Bạn không đủ tiền. Vui lòng nạp thêm tiền để tiếp tục.", "warning");
@@ -315,7 +312,6 @@ const RoomRentalConfirmation = () => {
 
             const updateBalanceData = { UserId: user.userId, Amount: -roomPrice };
             await BookingManagementService.updateBalance(updateBalanceData, user.token);
-            console.log("💸 [FE] Đã trừ tiền user:", roomPrice);
 
             const insiderTradingData = {
                 Remitter: user.userId,
@@ -326,11 +322,9 @@ const RoomRentalConfirmation = () => {
                 insiderTradingData,
                 user.token
             );
-            console.log("📝 [FE] Tạo giao dịch nội bộ tháng đầu:", insiderTradingResponse);
 
             const actionDate = new Date().toISOString();
             const insiderTradingId = insiderTradingResponse.InsiderTradingId || 0;
-            console.log("[FE] Dữ liệu lên lịch:", { actionDate, landlordId, money: roomPrice, insiderTradingId });
             await BookingManagementService.scheduleAction(
                 actionDate,
                 landlordId,
@@ -338,10 +332,8 @@ const RoomRentalConfirmation = () => {
                 insiderTradingId,
                 user.token
             );
-            console.log("⏰ [FE] Đã lên lịch giữ tiền 3 ngày.");
 
             await UserRentRoomService.confirmRental(rentalIdLocal, {}, user.token);
-            console.log("✅ [FE] Đã xác nhận thuê phòng.");
 
             setSuccessMessage("Xác nhận thuê phòng thành công!");
             Swal.fire({

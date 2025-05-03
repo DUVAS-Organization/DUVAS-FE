@@ -10,12 +10,10 @@ const BuildingService = {
         axios.get(`${API_URL}/${buildingId}`).then((res) => res.data),
 
     addBuilding: (building) => {
-        console.log("Payload gửi đến API:", building);
         return axios.post(API_URL, building).then((res) => res.data);
     },
 
     updateBuilding: (buildingId, building) => {
-        console.log("Payload gửi đến API:", building);
         return axios.put(`${API_URL}/${buildingId}`, building).then((res) => res.data);
     },
     deleteBuilding: (buildingId) =>
