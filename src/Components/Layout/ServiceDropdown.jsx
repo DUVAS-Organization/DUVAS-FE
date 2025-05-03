@@ -1,13 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import CategoryServices from '../../Services/User/CategoryServices';
 
 const ServiceDropdown = () => {
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [categoriesService, setCategoriesService] = useState([]);
     const dropdownRef = useRef(null);
-    const navigate = useNavigate();
     const location = useLocation();
+    const queryParams = new URLSearchParams(location.search);
+    const tab = queryParams.get("tab") || "";
+
+    // Kiểm tra nếu đường dẫn là /ServicePosts hoặc tab khớp với categoryServiceName
+    const isActiveDropdown =
+        location.pathname === "/ServicePosts" ||
+        categoriesService.some((category) => category.categoryServiceName === tab);
 
     useEffect(() => {
         const fetchCategories = async () => {
@@ -31,36 +37,34 @@ const ServiceDropdown = () => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const handleServiceSelect = (categoryName) => {
-        setDropdownOpen(false);
-        navigate(`/ServicePosts?tab=${encodeURIComponent(categoryName)}`);
-    };
-
-    // Kiểm tra xem đường dẫn hiện tại có phải là `/ServicePosts`
-    const isActive = location.pathname.startsWith("/ServicePosts");
-
     return (
-        <div ref={dropdownRef} className="relative">
-            <button
-                onClick={() => setDropdownOpen(!dropdownOpen)}
-                className={`dark:text-white relative px-3 py-1 text-base font-medium text-gray-800 transition-all
+        <div
+            className="relative"
+            ref={dropdownRef}
+            onMouseEnter={() => setDropdownOpen(true)}
+            onMouseLeave={() => setDropdownOpen(false)}
+        >
+            <NavLink
+                to="/ServicePosts"
+                className={`block mt-0.5 dark:text-white relative px-3 py-0.5 text-base font-medium text-gray-800 transition-all
                 before:content-[''] before:absolute before:bottom-0 before:left-3 before:w-0 before:h-[2px]
                 before:bg-red-500 before:transition-all before:duration-500 before:ease-in-out
                 hover:before:w-[calc(100%-1.5rem)] cursor-pointer 
-                ${isActive ? 'before:w-[calc(100%-1.5rem)] text-red-500 font-semibold' : ''}`}
+                ${isActiveDropdown ? "text-red-500 font-semibold before:w-[calc(100%-1.5rem)]" : ""}`}
             >
                 Tin Dịch vụ
-            </button>
+            </NavLink>
+
             {dropdownOpen && (
-                <div className="absolute top-full left-0 mt-2 w-48 bg-white shadow-lg rounded-md z-50">
+                <div className="absolute top-6 left-0 mt-2 w-48 bg-white shadow-md rounded-md z-50">
                     {categoriesService.map((category) => (
                         <NavLink
                             key={category.categoryServiceId}
                             to={`/ServicePosts?tab=${encodeURIComponent(category.categoryServiceName)}`}
-                            onClick={() => handleServiceSelect(category.categoryServiceName)}
-                            className="flex items-center px-4 py-2 font-medium text-gray-800 hover:bg-red-500 hover:text-white"
+                            onClick={() => setDropdownOpen(false)}
+                            className="block px-4 py-2 text-gray-800 font-medium hover:bg-red-500 hover:text-white transition-colors"
                         >
-                            <span>{category.categoryServiceName}</span>
+                            {category.categoryServiceName}
                         </NavLink>
                     ))}
                 </div>

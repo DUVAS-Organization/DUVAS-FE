@@ -231,7 +231,7 @@ const Navbar = () => {
                         </div>
                     </Link>
                     {/* Menu chính */}
-                    <div className="hidden sm:flex space-x-1">
+                    <div className="hidden sm:flex space-x-0.5">
                         <NavLink
                             to="/"
                             className={({ isActive }) =>

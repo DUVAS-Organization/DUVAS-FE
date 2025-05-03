@@ -108,28 +108,28 @@ const BookingManagementService = {
 
     checkBalance: async (data, token) => {
         try {
-            console.log("[Service] Gửi kiểm tra số dư:", data);
+            // console.log("[Service] Gửi kiểm tra số dư:", data);
             const response = await axios.post(`${API_URL}/check-balance`, data, {
                 headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
             });
-            console.log("[Service] Phản hồi kiểm tra số dư:", response.data);
+            // console.log("[Service] Phản hồi kiểm tra số dư:", response.data);
             return response.data;
         } catch (error) {
-            console.error("[Service] Lỗi kiểm tra số dư:", error.response?.data || error.message);
+            // console.error("[Service] Lỗi kiểm tra số dư:", error.response?.data || error.message);
             throw new Error(error.response?.data || "Không thể kiểm tra số dư");
         }
     },
 
     updateBalance: async (data, token) => {
         try {
-            console.log("[Service] Gửi cập nhật số dư:", data);
+            // console.log("[Service] Gửi cập nhật số dư:", data);
             const response = await axios.put(`${API_URL}/update-balance`, data, {
                 headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
             });
-            console.log("[Service] Phản hồi cập nhật số dư:", response.data);
+            // console.log("[Service] Phản hồi cập nhật số dư:", response.data);
             return response.data;
         } catch (error) {
-            console.error("[Service] Lỗi cập nhật số dư:", error.response?.data || error.message);
+            // console.error("[Service] Lỗi cập nhật số dư:", error.response?.data || error.message);
             throw new Error(error.response?.data || "Không thể cập nhật số dư");
         }
     },

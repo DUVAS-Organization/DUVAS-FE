@@ -668,10 +668,10 @@ const StepConfirmation = ({
         setRoom((prev) => ({ ...prev, loading: true }));
         try {
             if (room.priorityPrice > 0) {
-                console.log('Checking balance:', { UserId: user.userId, Amount: room.priorityPrice });
+                // console.log('Checking balance:', { UserId: user.userId, Amount: room.priorityPrice });
                 const checkBalanceData = { UserId: user.userId, Amount: room.priorityPrice };
                 const balanceResponse = await BookingManagementService.checkBalance(checkBalanceData, user.token);
-                console.log('Balance response:', balanceResponse);
+                // console.log('Balance response:', balanceResponse);
 
                 const isBalanceSufficient =
                     (typeof balanceResponse === 'string' && balanceResponse === 'Bạn đủ tiền.') ||
@@ -683,12 +683,12 @@ const StepConfirmation = ({
                     return;
                 }
 
-                console.log('Updating balance:', { UserId: user.userId, Amount: -room.priorityPrice });
+                // console.log('Updating balance:', { UserId: user.userId, Amount: -room.priorityPrice });
                 const updateBalanceData = { UserId: user.userId, Amount: -room.priorityPrice };
                 await BookingManagementService.updateBalance(updateBalanceData, user.token);
             }
 
-            console.log('Uploading images:', newFiles);
+            // console.log('Uploading images:', newFiles);
             const uploadedImageUrls = await Promise.all(
                 newFiles.map(async (file) => {
                     const formData = new FormData();
