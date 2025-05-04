@@ -41,6 +41,25 @@ const PriorityRoomService = {
             throw error;
         }
     },
+    // Get a single PriorityPackageRoom by ID
+    getPriorityRoomByUserId: async (userId) => {
+        try {
+            const response = await axios.get(`${API_URL}/user/${userId}`);
+            console.log('Priority rooms API response:', response.data); // Debug response
+            return response.data.map(item => ({
+                priorityPackageRoomId: item.priorityPackageRoomId,
+                userId: item.userId,
+                roomId: item.roomId,
+                categoryPriorityPackageRoomId: item.categoryPriorityPackageRoomId,
+                startDate: item.startDate,
+                endDate: item.endDate,
+                price: item.price,
+            }));
+        } catch (error) {
+            console.error(`Error fetching Priority Rooms for userId ${userId}:`, error);
+            throw error;
+        }
+    },
 
     // Create a new PriorityPackageRoom
     createPriorityRoom: async (room) => {
