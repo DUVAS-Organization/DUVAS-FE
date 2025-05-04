@@ -41,7 +41,8 @@ const PriorityRoomService = {
             throw error;
         }
     },
-    // Get a single PriorityPackageRoom by ID
+
+    // Get PriorityPackageRooms by userId
     getPriorityRoomByUserId: async (userId) => {
         try {
             const response = await axios.get(`${API_URL}/user/${userId}`);
@@ -63,6 +64,24 @@ const PriorityRoomService = {
 
     // Create a new PriorityPackageRoom
     createPriorityRoom: async (room) => {
+        // Log dữ liệu gửi lên để kiểm tra
+        console.log('Dữ liệu gửi lên /api/PriorityPackageRoom:', room);
+
+        // Kiểm tra các trường bắt buộc
+        const requiredFields = ['userId', 'roomId', 'categoryPriorityPackageRoomId', 'startDate', 'endDate', 'price'];
+        const missingFields = requiredFields.filter(field => !room[field]);
+        if (missingFields.length > 0) {
+            console.error('Thiếu các trường bắt buộc:', missingFields);
+            throw new Error(`Thiếu các trường bắt buộc: ${missingFields.join(', ')}`);
+        }
+
+        // Kiểm tra định dạng startDate và endDate
+        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+        if (!dateRegex.test(room.startDate) || !dateRegex.test(room.endDate)) {
+            console.error('startDate hoặc endDate không đúng định dạng YYYY-MM-DD');
+            throw new Error('startDate hoặc endDate không đúng định dạng');
+        }
+
         try {
             const response = await axios.post(API_URL, {
                 userId: room.userId,

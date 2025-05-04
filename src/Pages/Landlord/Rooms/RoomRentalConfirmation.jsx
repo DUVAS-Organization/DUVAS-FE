@@ -184,8 +184,8 @@ const RoomRentalConfirmation = () => {
         const price = parseFloat(formData.price);
 
         if (isNaN(price) || price <= 0) newErrors.price = "Giá phải là số dương";
-        if (!formData.deposit || parseFloat(formData.deposit) < 0)
-            newErrors.deposit = "Số tiền gửi phải lớn hơn 0";
+        // if (!formData.deposit || parseFloat(formData.deposit) < 0)
+        //     newErrors.deposit = "Số tiền gửi phải lớn hơn 0";
         if (!formData.startDate) newErrors.startDate = "Vui lòng chọn ngày bắt đầu";
         if (!formData.endDate) newErrors.endDate = "Vui lòng chọn ngày kết thúc";
         if (
@@ -211,7 +211,7 @@ const RoomRentalConfirmation = () => {
     // Event handlers
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        if (name === "price" || name === "deposit") {
+        if (name === "price") {
             const rawValue = value.replace(/[^0-9]/g, "");
             setFormData((prev) => ({ ...prev, [name]: rawValue }));
         } else {
@@ -507,6 +507,7 @@ const RoomRentalConfirmation = () => {
                                                 <input
                                                     type="text"
                                                     name="price"
+                                                    readOnly
                                                     value={formData.price ? Number(formData.price).toLocaleString("vi-VN") : ""}
                                                     onChange={handleInputChange}
                                                     className={`mt-1 block w-full rounded-md border ${errors.price ? "border-red-500" : "border-gray-300"
@@ -515,7 +516,7 @@ const RoomRentalConfirmation = () => {
                                                 />
                                                 {errors.price && <p className="mt-1 text-sm text-red-500">{errors.price}</p>}
                                             </div>
-                                            <div>
+                                            {/* <div>
                                                 <label className="block text-sm font-medium text-gray-700">Số tiền gửi</label>
                                                 <input
                                                     type="text"
@@ -527,7 +528,7 @@ const RoomRentalConfirmation = () => {
                                                     placeholder="Nhập số tiền gửi"
                                                 />
                                                 {errors.deposit && <p className="mt-1 text-sm text-red-500">{errors.deposit}</p>}
-                                            </div>
+                                            </div> */}
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700">Ngày bắt đầu</label>
                                                 <input

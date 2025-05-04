@@ -1,139 +1,163 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import RoomLandlordService from '../../../Services/Landlord/RoomLandlordService';
 import BuildingServices from '../../../Services/Admin/BuildingServices';
 import CategoryRooms from '../../../Services/Admin/CategoryRooms';
+import PriorityRoomService from '../../../Services/Admin/PriorityRoomService';
+import BookingManagementService from '../../../Services/Landlord/BookingManagementService';
+import OtherService from '../../../Services/User/OtherService';
+import CPPRoomsService from '../../../Services/Admin/CPPRoomsService';
 import { showCustomNotification } from '../../../Components/Notification';
 import { useAuth } from '../../../Context/AuthProvider';
-import { FaArrowLeft, FaTimes, FaPlus, FaMinus, FaChevronUp, FaChevronDown } from "react-icons/fa";
 import Loading from '../../../Components/Loading';
-import PriceInput from '../../../Components/Layout/Range/PriceInput';
 import SidebarUser from '../../../Components/Layout/SidebarUser';
-import OtherService from '../../../Services/User/OtherService';
+import PriceInput from '../../../Components/Layout/Range/PriceInput';
+import { FaArrowLeft, FaTimes, FaPlus, FaMinus, FaChevronUp, FaChevronDown, FaCalendarAlt } from "react-icons/fa";
+
+// Helper Functions for Step 3
+const getCategoryName = (value) => {
+    if (value === 0) return 'Gói Miễn Phí';
+    return `Gói ${Number(value)} ngày`;
+};
+
+const getCategoryDescription = (value) => {
+    if (value === 0) return 'Gói cơ bản không ưu tiên';
+    switch (Number(value)) {
+        case 30:
+            return 'Hiển thị trên cùng';
+        case 14:
+            return 'Ưu tiên cao';
+        case 7:
+            return 'Ưu tiên trung bình';
+        case 3:
+            return 'Ưu tiên cơ bản';
+        default:
+            return 'Ưu tiên cơ bản';
+    }
+};
+
+const getBorderColor = (value) => {
+    if (value === 0) return 'border-blue-500';
+    switch (Number(value)) {
+        case 30:
+            return 'border-red-600';
+        case 14:
+            return 'border-yellow-600';
+        case 7:
+            return 'border-green-500';
+        case 3:
+            return 'border-gray-500';
+        default:
+            return 'border-gray-200';
+    }
+};
+
+const getBorderDescription = (price, duration) => {
+    if (price === 0) return 'Miễn phí';
+    return `${(price / duration).toLocaleString('vi-VN')} đ/ngày`;
+};
 
 const RoomForm = () => {
-    const [room, setRooms] = useState({});
+    const [room, setRoom] = useState({
+        buildingId: null,
+        title: '',
+        description: '',
+        locationDetail: '',
+        acreage: 0,
+        furniture: '',
+        numberOfBathroom: 0,
+        numberOfBedroom: 0,
+        garret: false,
+        price: 0,
+        categoryRoomId: null,
+        note: '',
+        status: 1,
+        deposit: 0,
+        isPermission: 1,
+        reputation: 0,
+        dien: 0,
+        nuoc: 0,
+        internet: 0,
+        rac: 0,
+        guiXe: 0,
+        quanLy: 0,
+        chiPhiKhac: 0,
+        authorization: 0,
+        startDate: new Date().toISOString().split('T')[0], // Default start date set to today
+        endDate: '',
+        priorityPrice: 0,
+        categoryPriorityPackageRoomId: 0,
+        duration: 0,
+    });
     const [categoryRooms, setCategoryRooms] = useState([]);
     const [buildings, setBuildings] = useState([]);
-    const { roomId } = useParams();
-    const navigate = useNavigate();
-    const { user } = useAuth();
-    const [loading, setLoading] = useState(false);
-    const [errors, setErrors] = useState({});
+    const [categories, setCategories] = useState([]);
     const [existingImages, setExistingImages] = useState([]);
     const [newFiles, setNewFiles] = useState([]);
     const [newPreviews, setNewPreviews] = useState([]);
+    const [invalidImages, setInvalidImages] = useState([]);
     const [previewImage, setPreviewImage] = useState(null);
     const [isDropOpen, setIsDropOpen] = useState(false);
-    const [invalidImages, setInvalidImages] = useState([]);
+    const [step, setStep] = useState(1);
+    const [errors, setErrors] = useState({});
+    const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
+    const { user } = useAuth();
 
     useEffect(() => {
-        CategoryRooms.getCategoryRooms()
-            .then((data) => setCategoryRooms(data))
-            .catch((error) => console.error('Error fetching categories:', error));
-
-        BuildingServices.getBuildings()
-            .then((data) => setBuildings(data))
-            .catch((error) => console.error('Error fetching Buildings:', error));
-
-        if (roomId) {
-            RoomLandlordService.getRoom(roomId)
-                .then(data => {
-                    let images = [];
-                    try {
-                        images = data.image ? JSON.parse(data.image) : [];
-                    } catch (error) {
-                        images = data.image ? [data.image] : [];
-                    }
-                    setRooms({
-                        roomId: data.roomId,
-                        buildingId: data.buildingId,
-                        title: data.title || '',
-                        description: data.description || '',
-                        locationDetail: data.locationDetail || '',
-                        acreage: data.acreage || 0,
-                        furniture: data.furniture || '',
-                        numberOfBathroom: data.numberOfBathroom || 0,
-                        numberOfBedroom: data.numberOfBedroom || 0,
-                        garret: data.garret || false,
-                        price: data.price || 0,
-                        categoryRoomId: data.categoryRoomId || 1,
-                        note: data.note || '',
-                        status: data.status || 1,
-                        deposit: data.deposit || 0,
-                        isPermission: data.isPermission || 1,
-                        reputation: data.reputation || 0,
-                        dien: data.dien || 0,
-                        nuoc: data.nuoc || 0,
-                        internet: data.internet || 0,
-                        rac: data.rac || 0,
-                        guiXe: data.guiXe || 0,
-                        quanLy: data.quanLy || 0,
-                        chiPhiKhac: data.chiPhiKhac || 0,
-                        authorization: data.authorization || 0,
-                    });
-                    setExistingImages(images);
-                })
-                .catch(error => {
-                    console.error('Error fetching Room:', error);
-                    showCustomNotification("error", error.message || "Không thể lấy thông tin Phòng!");
-                    if (error.message.includes("Unauthorized")) navigate('/login');
-                });
-        } else {
-            setRooms({
-                buildingId: null,
-                title: '',
-                description: '',
-                locationDetail: '',
-                acreage: 0,
-                furniture: '',
-                numberOfBathroom: 0,
-                numberOfBedroom: 0,
-                garret: false,
-                price: 0,
-                categoryRoomId: null,
-                note: '',
-                status: 1,
-                deposit: 0,
-                isPermission: 1,
-                reputation: 0,
-                dien: 0,
-                nuoc: 0,
-                internet: 0,
-                rac: 0,
-                guiXe: 0,
-                quanLy: 0,
-                chiPhiKhac: 0,
-                authorization: 0,
-            });
-        }
-    }, [roomId, navigate]);
-
-    useEffect(() => {
-        if (!roomId && buildings.length > 0 && room.buildingId === null) {
-            setRooms(prev => ({ ...prev, buildingId: null }));
-        }
-    }, [buildings, roomId, room.buildingId]);
-
-    useEffect(() => {
-        if (!roomId && categoryRooms.length > 0 && room.categoryRoomId === null) {
-            setRooms(prev => ({ ...prev, categoryRoomId: categoryRooms[0].categoryRoomId }));
-        }
-    }, [categoryRooms, roomId, room.categoryRoomId]);
+        setLoading(true);
+        Promise.all([
+            CategoryRooms.getCategoryRooms(),
+            BuildingServices.getBuildings(),
+            CPPRoomsService.getCPPRooms(),
+        ])
+            .then(([categories, buildings, priorityCategories]) => {
+                setCategoryRooms(categories);
+                setBuildings(buildings);
+                if (categories.length > 0) {
+                    setRoom(prev => ({ ...prev, categoryRoomId: categories[0].categoryRoomId }));
+                }
+                const activeCategories = priorityCategories.filter(
+                    (category) =>
+                        category.status === 1 &&
+                        !isNaN(Number(category.price)) &&
+                        !isNaN(Number(category.categoryPriorityPackageRoomValue)) &&
+                        category.categoryPriorityPackageRoomId != null
+                );
+                const freePackage = {
+                    categoryPriorityPackageRoomId: 0,
+                    categoryPriorityPackageRoomValue: 0,
+                    price: 0,
+                    status: 1,
+                    description: 'Gói Miễn Phí',
+                };
+                setCategories([freePackage, ...activeCategories]);
+            })
+            .catch(error => {
+                console.error('Error fetching data:', error);
+                showCustomNotification("error", "Không thể lấy dữ liệu ban đầu!");
+            })
+            .finally(() => setLoading(false));
+    }, []);
 
     const handleFileChange = async (e) => {
         const selectedFiles = Array.from(e.target.files);
         if (selectedFiles.length > 0) {
             setLoading(true);
             try {
-                // Generate previews
                 const previews = selectedFiles.map(file => URL.createObjectURL(file));
-
-                // Check images immediately
-                const checks = await Promise.all(selectedFiles.map(file => RoomLandlordService.checkImageAzure(file)));
+                let checks;
+                try {
+                    checks = await Promise.all(
+                        selectedFiles.map(file => OtherService.checkImageAzure(file))
+                    );
+                } catch (azureError) {
+                    console.error('Azure AI check failed:', azureError);
+                    // Bỏ qua kiểm tra nếu Azure AI lỗi
+                    checks = selectedFiles.map(() => ({ isSafe: true }));
+                }
                 const newInvalidImages = checks.map(result => !result.isSafe);
 
-                // Update state only if all images are valid or to show invalid ones
                 setNewFiles(prev => [...prev, ...selectedFiles]);
                 setNewPreviews(prev => [...prev, ...previews]);
                 setInvalidImages(prev => [...prev, ...newInvalidImages]);
@@ -142,7 +166,8 @@ const RoomForm = () => {
                     showCustomNotification("error", "Ảnh không phù hợp. Vui lòng kiểm tra và thay thế.");
                 }
             } catch (error) {
-                showCustomNotification("error", error.message || "Lỗi khi kiểm tra ảnh.");
+                console.error('Lỗi trong handleFileChange:', error);
+                showCustomNotification("error", error.message || "Lỗi khi xử lý ảnh.");
             } finally {
                 setLoading(false);
             }
@@ -162,32 +187,80 @@ const RoomForm = () => {
     const uploadFile = async (file) => {
         const formData = new FormData();
         formData.append('file', file);
+        const data = await OtherService.uploadImage(formData);
+        return data.imageUrl;
+    };
+
+    const handleGenerateWithAI = async () => {
+        setLoading(true);
         try {
-            const data = await OtherService.uploadImage(formData);
-            return data.imageUrl;
+            if (!user || !user.userId || !user.token) {
+                showCustomNotification("error", "Bạn cần đăng nhập để thực hiện hành động này!");
+                navigate('/Logins');
+                return;
+            }
+
+            const roomData = {
+                Title: room.title,
+                Description: room.description,
+                LocationDetail: room.locationDetail,
+                Image: JSON.stringify(existingImages),
+                Acreage: Number(room.acreage),
+                Furniture: room.furniture || 'Không nội thất',
+                NumberOfBedroom: Number(room.numberOfBedroom),
+                NumberOfBathroom: Number(room.numberOfBathroom),
+                Price: Number(room.price),
+                Note: room.note,
+                UserId: user.userId,
+                BuildingId: room.buildingId,
+                CategoryRoomId: Number(room.categoryRoomId),
+                Garret: room.garret,
+                IsPermission: room.isPermission,
+                Deposit: Number(room.deposit),
+                status: room.status,
+                reputation: room.reputation,
+                Dien: Number(room.dien),
+                Nuoc: Number(room.nuoc),
+                Internet: Number(room.internet),
+                Rac: Number(room.rac),
+                GuiXe: Number(room.guiXe),
+                QuanLy: Number(room.quanLy),
+                ChiPhiKhac: Number(room.chiPhiKhac),
+                authorization: Number(room.authorization || 0),
+                PriorityPackageRooms: [],
+                RentalLists: []
+            };
+
+            if (roomData.Acreage <= 0) throw new Error('Diện tích phải lớn hơn 0.');
+            if (roomData.Price <= 0) throw new Error('Giá phải lớn hơn 0.');
+            if (!roomData.LocationDetail) throw new Error('Địa chỉ không được để trống.');
+            if (!roomData.UserId) throw new Error('UserId không được để trống.');
+
+            const result = await RoomLandlordService.generateRoomDescription(roomData, user.token);
+            setRoom(prev => ({
+                ...prev,
+                title: result.title || prev.title,
+                description: result.description || prev.description,
+            }));
+            showCustomNotification("success", "Tạo tiêu đề và mô tả thành công với AI!");
         } catch (error) {
-            console.error("Error uploading file:", error);
-            throw error;
+            console.error('Error in handleGenerateWithAI:', error);
+            showCustomNotification("error", error.message || "Lỗi khi tạo với AI!");
+        } finally {
+            setLoading(false);
         }
     };
 
-    const validateImages = () => {
-        // Since images are validated on upload, check if there are any invalid images
-        if (invalidImages.some(invalid => invalid)) {
+    const handleSubmit = async () => {
+        // Kiểm tra các điều kiện hợp lệ trước khi submit
+        if (!validateImages()) {
             showCustomNotification("error", "Vui lòng thay thế các ảnh không phù hợp trước khi tiếp tục.");
-            return false;
+            return;
         }
-        return true;
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        const totalImagesCount = existingImages.length + newFiles.length;
-        if (totalImagesCount === 0) {
+        if (existingImages.length + newFiles.length === 0) {
             showCustomNotification("error", "Vui lòng chọn ít nhất 1 ảnh!");
             return;
         }
-
         if (!room.title || room.title.length < 3) {
             showCustomNotification("error", "Tiêu đề phải ít nhất 3 ký tự!");
             return;
@@ -196,16 +269,33 @@ const RoomForm = () => {
             showCustomNotification("error", "Mô tả phải ít nhất 50 ký tự!");
             return;
         }
+        if (!room.locationDetail) {
+            showCustomNotification("error", "Địa chỉ không được để trống!");
+            return;
+        }
         if (!room.categoryRoomId || isNaN(room.categoryRoomId)) {
             showCustomNotification("error", "Vui lòng chọn loại phòng hợp lệ!");
             return;
         }
+        if (room.categoryPriorityPackageRoomId !== 0 && (!room.startDate || !room.endDate)) {
+            showCustomNotification("error", "Vui lòng chọn ngày bắt đầu và kết thúc hợp lệ!");
+            return;
+        }
+
+        if (!user || !user.userId || !user.token) {
+            showCustomNotification('error', 'Bạn cần đăng nhập để thực hiện hành động này!');
+            navigate('/Logins');
+            return;
+        }
 
         setLoading(true);
+        let balanceDeducted = false;
         try {
-            const uploadedImageUrls = await Promise.all(newFiles.map(file => uploadFile(file)));
+            // Upload ảnh nếu có
+            const uploadedImageUrls = await Promise.all(newFiles.map(uploadFile));
             const finalImageUrls = [...existingImages, ...uploadedImageUrls];
 
+            // Dữ liệu room (không gửi PriorityPackageRooms để tránh lỗi)
             const roomData = {
                 title: room.title,
                 description: room.description,
@@ -214,119 +304,164 @@ const RoomForm = () => {
                 furniture: room.furniture || 'Không nội thất',
                 numberOfBathroom: Number(room.numberOfBathroom),
                 numberOfBedroom: Number(room.numberOfBedroom),
-                garret: room.garret || false,
+                garret: room.garret,
                 price: Number(room.price),
                 categoryRoomId: Number(room.categoryRoomId),
                 note: room.note || '',
                 buildingId: room.buildingId || null,
                 image: JSON.stringify(finalImageUrls),
-                status: room.status || 1,
-                deposit: Number(room.deposit || 0),
-                isPermission: room.isPermission || 1,
-                reputation: room.reputation || 0,
-                dien: Number(room.dien || 0),
-                nuoc: Number(room.nuoc || 0),
-                internet: Number(room.internet || 0),
-                rac: Number(room.rac || 0),
-                guiXe: Number(room.guiXe || 0),
-                quanLy: Number(room.quanLy || 0),
-                chiPhiKhac: Number(room.chiPhiKhac || 0),
+                status: room.status,
+                deposit: Number(room.deposit),
+                isPermission: room.isPermission,
+                reputation: room.reputation,
+                dien: Number(room.dien),
+                nuoc: Number(room.nuoc),
+                internet: Number(room.internet),
+                rac: Number(room.rac),
+                guiXe: Number(room.guiXe),
+                quanLy: Number(room.quanLy),
+                chiPhiKhac: Number(room.chiPhiKhac),
                 authorization: Number(room.authorization || 0),
                 userId: user.userId,
-                PriorityPackageRooms: []
+                PriorityPackageRooms: [], // Gửi mảng rỗng để vượt qua kiểm tra bắt buộc
             };
 
-            // if (roomId) {
-            //     await RoomLandlordService.updateRoom(roomId, roomData);
-            //     showCustomNotification("success", "Chỉnh sửa thành công!");
-            // }
+            // Kiểm tra và trừ tiền nếu có gói ưu tiên
+            if (room.categoryPriorityPackageRoomId !== 0 && room.priorityPrice > 0) {
+                const checkBalanceData = { UserId: user.userId, Amount: room.priorityPrice };
+                // console.log('Kiểm tra số dư với dữ liệu:', checkBalanceData);
+                const balanceResponse = await BookingManagementService.checkBalance(checkBalanceData, user.token);
+                // console.log('Phản hồi kiểm tra số dư:', balanceResponse);
 
-            const response = await RoomLandlordService.addRoom(roomData);
-            showCustomNotification("success", response.message || "Tạo thành công!");
+                const isBalanceSufficient = typeof balanceResponse === 'string' && balanceResponse === 'Bạn đủ tiền.' || balanceResponse.isSuccess;
+                if (!isBalanceSufficient) {
+                    showCustomNotification('error', 'Bạn không đủ tiền để thực hiện giao dịch này!');
+                    navigate('/Moneys');
+                    return;
+                }
 
+                const updateBalanceData = { UserId: user.userId, Amount: -room.priorityPrice };
+                // console.log('Trừ tiền với dữ liệu:', updateBalanceData);
+                await BookingManagementService.updateBalance(updateBalanceData, user.token);
+                // console.log('Đã trừ tiền cho gói ưu tiên');
+                balanceDeducted = true;
+            }
+
+            // Gọi API để tạo room
+            // console.log('Đang tạo room với dữ liệu:', roomData);
+            const roomResponse = await RoomLandlordService.addRoom(roomData);
+            // console.log('Phản hồi từ API tạo room:', roomResponse);
+
+            // Lấy roomId từ phản hồi
+            const newRoomId = roomResponse.room?.roomId;
+            if (!newRoomId) {
+                throw new Error('Không thể lấy roomId sau khi tạo room');
+            }
+
+            // Tạo Priority Room nếu chọn gói ưu tiên
+            if (room.categoryPriorityPackageRoomId !== 0) {
+                const formatDate = (dateString) => {
+                    const date = new Date(dateString);
+                    return date.toISOString().split('T')[0];
+                };
+
+                const priorityRoomData = {
+                    roomId: newRoomId,
+                    userId: user.userId,
+                    categoryPriorityPackageRoomId: room.categoryPriorityPackageRoomId,
+                    startDate: formatDate(room.startDate),
+                    endDate: formatDate(room.endDate),
+                    price: room.priorityPrice,
+                    status: 1,
+                };
+
+                try {
+                    // console.log('Đang tạo Priority Room với dữ liệu:', priorityRoomData);
+                    const priorityResponse = await PriorityRoomService.createPriorityRoom(priorityRoomData);
+                    // console.log('Phản hồi từ API tạo Priority Room:', priorityResponse);
+                } catch (priorityError) {
+                    console.error('Lỗi khi tạo Priority Room:', priorityError);
+                    if (balanceDeducted) {
+                        const refundBalanceData = { UserId: user.userId, Amount: room.priorityPrice };
+                        // console.log('Hoàn tiền với dữ liệu:', refundBalanceData);
+                        await BookingManagementService.updateBalance(refundBalanceData, user.token);
+                        // console.log('Đã hoàn tiền do lỗi tạo Priority Room');
+                    }
+                    throw new Error('Không thể tạo gói ưu tiên: ' + priorityError.message);
+                }
+            }
+
+            showCustomNotification("success", "Tạo phòng và gói ưu tiên thành công!");
             navigate('/Room');
         } catch (error) {
-            console.error('Error in handleSubmit:', error);
-
-            const apiMessage = error?.response?.data?.message || error.message;
-
-            if (error?.response?.status === 409 && apiMessage.includes("Mô tả phòng đã từng được sử dụng")) {
-                showCustomNotification("error", "Mô tả này đã bị trùng với phòng khác trong hệ thống. Vui lòng chỉnh sửa.");
-                return;
+            console.error('Submit error:', error);
+            if (error.response) {
+                console.error('Response data:', error.response.data);
+                console.error('Response status:', error.response.status);
+                console.error('Response headers:', error.response.headers);
             }
-
-            if (error?.response?.status === 409 && apiMessage.includes("tiêu đề")) {
-                showCustomNotification("error", "Phòng với tiêu đề này đã được đăng. Hãy kiểm tra lại.");
-                return;
+            if (balanceDeducted && error.message !== 'Bạn không đủ tiền để thực hiện giao dịch này!') {
+                try {
+                    const refundBalanceData = { UserId: user.userId, Amount: room.priorityPrice };
+                    // console.log('Hoàn tiền với dữ liệu:', refundBalanceData);
+                    await BookingManagementService.updateBalance(refundBalanceData, user.token);
+                    // console.log('Đã hoàn tiền do lỗi tạo phòng');
+                } catch (refundError) {
+                    console.error('Lỗi khi hoàn tiền:', refundError);
+                    showCustomNotification('error', 'Lỗi khi hoàn tiền, vui lòng liên hệ hỗ trợ!');
+                }
             }
-
-            // if (error?.response?.status === 409 && apiMessage.includes("Địa chỉ phòng đã được sử dụng")) {
-            //     showCustomNotification("error", "Địa chỉ phòng đã được dùng trong hệ thống. Vui lòng nhập địa chỉ khác.");
-            //     return;   
-            // }
-
-            if (error?.response?.status === 400 && apiMessage.includes("spam")) {
-                showCustomNotification("error", "Mô tả có thể bị spam hoặc trùng với AI. Hãy chỉnh sửa để khác biệt hơn.");
-                return;
-            }
-
-            showCustomNotification("error", apiMessage || "Đã xảy ra lỗi, vui lòng thử lại!");
-
-            if (apiMessage.includes("Unauthorized")) {
-                localStorage.removeItem('authToken');
-                navigate('/login');
-            }
+            showCustomNotification("error", error.message || "Không thể tạo phòng!");
         } finally {
             setLoading(false);
         }
     };
 
-    const combinedPreviews = [
-        ...existingImages.map(url => ({ url, isNew: false })),
-        ...newPreviews.map((url, idx) => ({ url, isNew: true, index: idx, isInvalid: invalidImages[idx] }))
-    ];
-
-    const [step, setStep] = useState(1);
-    const [completedSteps, setCompletedSteps] = useState([false, false, false]);
-
-    const validateStep1 = () => {
-        const newErrors = {};
-        if (!room.title) newErrors.title = 'Tiêu đề là bắt buộc';
-        else if (room.title.length < 3) newErrors.title = 'Tiêu đề phải ít nhất 3 ký tự';
-        if (!room.price || isNaN(Number(room.price)) || Number(room.price) <= 0) newErrors.price = 'Giá phải là số dương';
-        if (!room.categoryRoomId) newErrors.categoryRoomId = 'Loại phòng là bắt buộc';
-        if (!room.locationDetail) newErrors.locationDetail = 'Địa chỉ là bắt buộc';
-        if (!room.acreage || isNaN(Number(room.acreage)) || Number(room.acreage) < 0) newErrors.acreage = 'Diện tích phải là số không âm';
-        if (!room.numberOfBathroom && room.numberOfBathroom !== 0 || isNaN(Number(room.numberOfBathroom)) || Number(room.numberOfBathroom) < 0) newErrors.numberOfBathroom = 'Số phòng tắm phải là số không âm';
-        if (!room.numberOfBedroom && room.numberOfBedroom !== 0 || isNaN(Number(room.numberOfBedroom)) || Number(room.numberOfBedroom) < 0) newErrors.numberOfBedroom = 'Số giường ngủ phải là số không âm';
-        if (!room.description) newErrors.description = 'Mô tả là bắt buộc';
-        else if (room.description.length <= 50) newErrors.description = 'Mô tả phải trên 50 ký tự';
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
-
-    const validateStep2 = () => {
-        const totalImagesCount = existingImages.length + newFiles.length;
-        if (totalImagesCount === 0) {
-            showCustomNotification("error", "Vui lòng chọn ít nhất 1 ảnh!");
+    const validateImages = () => {
+        if (invalidImages.some(invalid => invalid)) {
+            showCustomNotification("error", "Vui lòng thay thế các ảnh không phù hợp trước khi tiếp tục.");
             return false;
         }
-        return validateImages();
-    };
-
-    const validateStep3 = () => {
         return true;
     };
 
-    const handleNext = async () => {
-        if (step === 1 && validateStep1()) {
-            setCompletedSteps([true, false, false]);
-            setStep(2);
-        } else if (step === 2 && validateStep2()) {
-            setCompletedSteps([true, true, false]);
-            setStep(3);
-        } else if (step === 3 && validateStep3()) {
-            handleSubmit(new Event('submit'));
+    const validateStep = () => {
+        if (step === 1) {
+            const newErrors = {};
+            if (!room.title) newErrors.title = 'Tiêu đề là bắt buộc';
+            else if (room.title.length < 3) newErrors.title = 'Tiêu đề phải ít nhất 3 ký tự';
+            if (!room.price || isNaN(Number(room.price)) || Number(room.price) <= 0) newErrors.price = 'Giá phải là số dương';
+            if (!room.categoryRoomId) newErrors.categoryRoomId = 'Loại phòng là bắt buộc';
+            if (!room.locationDetail) newErrors.locationDetail = 'Địa chỉ là bắt buộc';
+            if (!room.acreage || isNaN(Number(room.acreage)) || Number(room.acreage) < 0) newErrors.acreage = 'Diện tích phải là số không âm';
+            if (room.numberOfBathroom < 0 || isNaN(Number(room.numberOfBathroom))) newErrors.numberOfBathroom = 'Số phòng tắm phải là số không âm';
+            if (room.numberOfBedroom < 0 || isNaN(Number(room.numberOfBedroom))) newErrors.numberOfBedroom = 'Số giường ngủ phải là số không âm';
+            if (!room.description) newErrors.description = 'Mô tả là bắt buộc';
+            else if (room.description.length <= 50) newErrors.description = 'Mô tả phải trên 50 ký tự';
+            setErrors(newErrors);
+            return Object.keys(newErrors).length === 0;
+        }
+        if (step === 2) {
+            if (existingImages.length + newFiles.length === 0) {
+                showCustomNotification("error", "Vui lòng chọn ít nhất 1 ảnh!");
+                return false;
+            }
+            if (!validateImages()) {
+                return false;
+            }
+            setErrors(prev => ({ ...prev, images: '' }));
+            return true;
+        }
+        return true;
+    };
+
+    const handleNext = () => {
+        if (validateStep()) {
+            if (step < 3) {
+                setStep(step + 1);
+            } else {
+                handleSubmit();
+            }
         }
     };
 
@@ -335,141 +470,84 @@ const RoomForm = () => {
     };
 
     const handleIncrement = (field) => {
-        setRooms(prev => ({
-            ...prev,
-            [field]: (prev[field] || 0) + 1
-        }));
+        setRoom(prev => ({ ...prev, [field]: (prev[field] || 0) + 1 }));
     };
 
     const handleDecrement = (field) => {
-        setRooms(prev => ({
+        setRoom(prev => ({ ...prev, [field]: Math.max(0, (prev[field] || 0) - 1) }));
+    };
+
+    const toggleDropOpen = () => setIsDropOpen(prev => !prev);
+
+    const combinedPreviews = [
+        ...existingImages.map(url => ({ url, isNew: false })),
+        ...newPreviews.map((url, idx) => ({ url, isNew: true, index: idx, isInvalid: invalidImages[idx] }))
+    ];
+
+    const handleCategorySelect = (categoryId) => {
+        setRoom(prev => ({ ...prev, categoryPriorityPackageRoomId: categoryId }));
+    };
+
+    const updateRoomDetails = (category) => {
+        if (!room.startDate || isNaN(new Date(room.startDate).getTime())) {
+            return;
+        }
+
+        const startDate = new Date(room.startDate);
+        const endDate = new Date(startDate);
+        endDate.setDate(startDate.getDate() + Number(category.categoryPriorityPackageRoomValue));
+        const duration = Number(category.categoryPriorityPackageRoomValue);
+        const totalPrice = Number(category.price);
+
+        if (isNaN(totalPrice)) {
+            showCustomNotification('error', `Dữ liệu không hợp lệ cho gói ${category.categoryPriorityPackageRoomId}`);
+            return;
+        }
+
+        setRoom(prev => ({
             ...prev,
-            [field]: Math.max(0, (prev[field] || 0) - 1)
+            endDate: endDate.toISOString().split('T')[0],
+            priorityPrice: totalPrice,
+            duration: duration,
+            categoryPriorityPackageRoomId: category.categoryPriorityPackageRoomId,
         }));
     };
 
-    const handleGenerateWithAI = async () => {
-        setLoading(true);
-        try {
-            if (!user || !user.userId || !user.token) {
-                showCustomNotification("error", "Bạn cần đăng nhập để thực hiện hành động này!");
-                navigate('/login');
-                return;
+    useEffect(() => {
+        if (room.startDate && room.categoryPriorityPackageRoomId) {
+            const selectedCategory = categories.find(c => c.categoryPriorityPackageRoomId === room.categoryPriorityPackageRoomId);
+            if (selectedCategory && selectedCategory.categoryPriorityPackageRoomId !== 0) {
+                updateRoomDetails(selectedCategory);
+            } else {
+                setRoom(prev => ({
+                    ...prev,
+                    endDate: '',
+                    priorityPrice: 0,
+                    duration: 0,
+                    categoryPriorityPackageRoomId: 0,
+                }));
             }
-
-            const roomData = {
-                Title: room.title || '',
-                Description: room.description || '',
-                LocationDetail: room.locationDetail || '',
-                Image: room.image || JSON.stringify(existingImages) || '',
-                Acreage: Number(room.acreage) || 0,
-                Furniture: room.furniture || 'Không nội thất',
-                NumberOfBedroom: Number(room.numberOfBedroom) || 0,
-                NumberOfBathroom: Number(room.numberOfBathroom) || 0,
-                Price: Number(room.price) || 0,
-                Note: room.note || '',
-                UserId: user.userId,
-                BuildingId: room.buildingId || null,
-                CategoryRoomId: room.categoryRoomId || 1,
-                Garret: room.garret || false,
-                IsPermission: room.isPermission || 1,
-                Deposit: Number(room.deposit) || 0,
-                status: room.status || 1,
-                reputation: room.reputation || 0,
-                Dien: Number(room.dien || 0),
-                Nuoc: Number(room.nuoc || 0),
-                Internet: Number(room.internet || 0),
-                Rac: Number(room.rac || 0),
-                GuiXe: Number(room.guiXe || 0),
-                QuanLy: Number(room.quanLy || 0),
-                ChiPhiKhac: Number(room.chiPhiKhac || 0),
-                Authorization: Number(room.authorization || 0),
-                PriorityPackageRooms: [],
-                RentalLists: []
-            };
-
-            if (roomData.Acreage <= 0) {
-                throw new Error('Diện tích phải lớn hơn 0.');
-            }
-            if (roomData.Price <= 0) {
-                throw new Error('Giá phải lớn hơn 0.');
-            }
-            const validFurnitureValues = ['Đầy đủ', 'Cơ bản', 'Không nội thất'];
-            if (!validFurnitureValues.includes(roomData.Furniture)) {
-                throw new Error('Vui lòng chọn nội thất hợp lệ (Đầy đủ, Cơ bản, hoặc Không nội thất).');
-            }
-            if (!roomData.LocationDetail) {
-                throw new Error('Địa chỉ không được để trống.');
-            }
-            if (!roomData.UserId) {
-                throw new Error('UserId không được để trống.');
-            }
-
-            const result = await RoomLandlordService.generateRoomDescription(roomData, user.token);
-            setRooms(prev => ({
-                ...prev,
-                title: result.title || prev.title,
-                description: result.description || prev.description,
-            }));
-
-            showCustomNotification("success", "Tạo tiêu đề và mô tả thành công với AI!");
-        } catch (error) {
-            console.error('Error in handleGenerateWithAI:', error);
-
-            const apiMessage = error?.response?.data?.message || error.message;
-
-            if (error?.response?.status === 409 && apiMessage.includes("Mô tả phòng đã từng được sử dụng")) {
-                showCustomNotification("error", "Mô tả này đã bị trùng với phòng khác trong hệ thống. Vui lòng chỉnh sửa.");
-                return;
-            }
-
-            if (error?.response?.status === 409 && apiMessage.includes("tiêu đề")) {
-                showCustomNotification("error", "Phòng với tiêu đề này đã được đăng. Hãy kiểm tra lại.");
-                return;
-            }
-
-            if (error?.response?.status === 400 && apiMessage.includes("spam")) {
-                showCustomNotification("error", "Mô tả có thể bị spam hoặc trùng với AI. Hãy chỉnh sửa để khác biệt hơn.");
-                return;
-            }
-
-            showCustomNotification("error", apiMessage || "Đã xảy ra lỗi, vui lòng thử lại!");
-
-            if (apiMessage.includes("Unauthorized")) {
-                localStorage.removeItem('authToken');
-                navigate('/login');
-            }
-        } finally {
-            setLoading(false);
         }
-    };
-
-    const toggleDropOpen = () => {
-        setIsDropOpen(prev => !prev);
-    };
+    }, [room.startDate, room.categoryPriorityPackageRoomId, categories]);
 
     return (
         <div className="flex min-h-screen bg-white dark:bg-gray-800 dark:text-white">
             {loading && <Loading />}
             <SidebarUser />
-            <div className="w-64 bg-white dark:bg-gray-800  px-2 py-8 max-w-6xl mx-auto ml-56 h-full border-r border-gray-200">
-                <h1 className="text-2xl font-bold text-red-600 mb-4">{roomId ? 'Chỉnh Sửa Phòng' : 'Tạo Phòng'}</h1>
+            <div className="w-64 bg-white dark:bg-gray-800 px-2 py-8 max-w-6xl mx-auto ml-56 h-full border-r border-gray-200">
+                <h1 className="text-2xl font-bold text-red-600 mb-4">Tạo Phòng</h1>
                 <ul className="space-y-2">
-                    <li className={`text-lg ${step === 1 ? 'text-red-600 font-bold ' : 'text-gray-600 dark:text-white'}`}>
-                        Bước 1: Thông tin Phòng
-                    </li>
-                    <li className={`text-lg ${step === 2 ? 'text-red-600 font-bold' : 'text-gray-600 dark:text-white'}`}>
-                        Bước 2: Hình ảnh
-                    </li>
-                    <li className={`text-lg ${step === 3 ? 'text-red-600 font-bold' : 'text-gray-600 dark:text-white'}`}>
-                        Bước 3: Xác nhận
-                    </li>
+                    {['Thông tin Phòng', 'Hình ảnh', 'Xác nhận'].map((label, idx) => (
+                        <li key={idx} className={`text-lg ${step === idx + 1 ? 'text-red-600 font-bold' : 'text-gray-600'}`}>
+                            Bước {idx + 1}: {label}
+                        </li>
+                    ))}
                 </ul>
             </div>
             <div className="flex-1 p-8">
                 {step === 1 && (
                     <div>
-                        <h2 className="text-xl font-bold mb-2 text-red-600">{roomId ? 'Chỉnh Sửa Phòng - Bước 1' : 'Tạo Phòng - Bước 1'}</h2>
+                        <h2 className="text-xl font-bold mb-2 text-red-600">Tạo Phòng - Bước 1</h2>
                         <div className="border-b-2 border-red-500 w-32 mb-4"></div>
                         <div className="space-y-4">
                             <div className="w-full">
@@ -477,7 +555,7 @@ const RoomForm = () => {
                                 <label className="block text-sm font-medium text-gray-700 dark:text-white">Tòa Nhà</label>
                                 <select
                                     value={room.buildingId || ''}
-                                    onChange={(e) => setRooms({ ...room, buildingId: parseInt(e.target.value) || null })}
+                                    onChange={(e) => setRoom({ ...room, buildingId: parseInt(e.target.value) || null })}
                                     className="block dark:bg-gray-800 dark:text-white w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
                                 >
                                     <option value="">Không có</option>
@@ -494,8 +572,8 @@ const RoomForm = () => {
                                         Giá (đ/tháng) <span className="text-red-500">*</span>
                                     </label>
                                     <PriceInput
-                                        value={room.price || 0}
-                                        onChange={(val) => setRooms({ ...room, price: val })}
+                                        value={room.price || ''}
+                                        onChange={(val) => setRoom({ ...room, price: val })}
                                     />
                                     {errors.price && <p className="text-red-500 text-sm mt-1">{errors.price}</p>}
                                 </div>
@@ -505,7 +583,7 @@ const RoomForm = () => {
                                     </label>
                                     <select
                                         value={room.categoryRoomId || ''}
-                                        onChange={(e) => setRooms({ ...room, categoryRoomId: parseInt(e.target.value) })}
+                                        onChange={(e) => setRoom({ ...room, categoryRoomId: parseInt(e.target.value) })}
                                         required
                                         className="block w-full p-2 dark:bg-gray-800 dark:text-white border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
                                     >
@@ -527,7 +605,7 @@ const RoomForm = () => {
                                     <input
                                         type="text"
                                         value={room.locationDetail}
-                                        onChange={(e) => setRooms({ ...room, locationDetail: e.target.value })}
+                                        onChange={(e) => setRoom({ ...room, locationDetail: e.target.value })}
                                         required
                                         className="block w-full p-2 dark:bg-gray-800 dark:text-white border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
                                         placeholder="Nhập Địa chỉ"
@@ -544,7 +622,7 @@ const RoomForm = () => {
                                         onChange={(e) => {
                                             const value = e.target.value;
                                             if (value === '' || (Number(value) >= 0)) {
-                                                setRooms({ ...room, acreage: value });
+                                                setRoom({ ...room, acreage: value });
                                             }
                                         }}
                                         min="0"
@@ -562,7 +640,7 @@ const RoomForm = () => {
                                     </label>
                                     <select
                                         value={room.furniture}
-                                        onChange={(e) => setRooms({ ...room, furniture: e.target.value })}
+                                        onChange={(e) => setRoom({ ...room, furniture: e.target.value })}
                                         className="block w-full p-2 dark:bg-gray-800 dark:text-white border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
                                     >
                                         <option value="">Chọn nội thất...</option>
@@ -636,49 +714,49 @@ const RoomForm = () => {
                                             <label className="block text-sm font-medium text-gray-700 dark:text-white">Điện (đ/kWh)</label>
                                             <PriceInput
                                                 value={room.dien || 0}
-                                                onChange={(val) => setRooms({ ...room, dien: Number(val) || 0 })}
+                                                onChange={(val) => setRoom({ ...room, dien: Number(val) || 0 })}
                                             />
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 dark:text-white">Nước (đ/m³)</label>
                                             <PriceInput
                                                 value={room.nuoc || 0}
-                                                onChange={(val) => setRooms({ ...room, nuoc: Number(val) || 0 })}
+                                                onChange={(val) => setRoom({ ...room, nuoc: Number(val) || 0 })}
                                             />
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 dark:text-white">Internet (đ/tháng)</label>
                                             <PriceInput
                                                 value={room.internet || 0}
-                                                onChange={(val) => setRooms({ ...room, internet: Number(val) || 0 })}
+                                                onChange={(val) => setRoom({ ...room, internet: Number(val) || 0 })}
                                             />
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 dark:text-white">Rác (đ/tháng)</label>
                                             <PriceInput
                                                 value={room.rac || 0}
-                                                onChange={(val) => setRooms({ ...room, rac: Number(val) || 0 })}
+                                                onChange={(val) => setRoom({ ...room, rac: Number(val) || 0 })}
                                             />
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 dark:text-white">Gửi xe (đ/tháng)</label>
                                             <PriceInput
                                                 value={room.guiXe || 0}
-                                                onChange={(val) => setRooms({ ...room, guiXe: Number(val) || 0 })}
+                                                onChange={(val) => setRoom({ ...room, guiXe: Number(val) || 0 })}
                                             />
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 dark:text-white">Quản lý (đ/tháng)</label>
                                             <PriceInput
                                                 value={room.quanLy || 0}
-                                                onChange={(val) => setRooms({ ...room, quanLy: Number(val) || 0 })}
+                                                onChange={(val) => setRoom({ ...room, quanLy: Number(val) || 0 })}
                                             />
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 dark:text-white">Chi phí khác (đ/tháng)</label>
                                             <PriceInput
                                                 value={room.chiPhiKhac || 0}
-                                                onChange={(val) => setRooms({ ...room, chiPhiKhac: Number(val) || 0 })}
+                                                onChange={(val) => setRoom({ ...room, chiPhiKhac: Number(val) || 0 })}
                                             />
                                         </div>
                                     </div>
@@ -709,15 +787,15 @@ const RoomForm = () => {
                                 <div className="flex space-x-4">
                                     <div className="flex-1 space-y-4">
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 dark:text-white" >
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-white">
                                                 Tiêu Đề <span className="text-red-500">*</span>
                                             </label>
                                             <input
                                                 type="text"
                                                 value={room.title}
-                                                onChange={(e) => setRooms({ ...room, title: e.target.value })}
+                                                onChange={(e) => setRoom({ ...room, title: e.target.value })}
                                                 className="block w-full p-2 dark:bg-gray-800 dark:text-white border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
-                                                placeholder="Mô tả ngắn gọn về loại hình phòng, diện tích, địa chỉ (VD: cho thuê phòng trọ 20m2 tại Hải Châu, Đà Nẵng)"
+                                                placeholder="Mô tả ngắn gọn về loại hình phòng, diện tích, địa chỉ"
                                             />
                                             {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
                                         </div>
@@ -727,15 +805,9 @@ const RoomForm = () => {
                                             </label>
                                             <textarea
                                                 value={room.description}
-                                                onChange={(e) => setRooms({ ...room, description: e.target.value })}
+                                                onChange={(e) => setRoom({ ...room, description: e.target.value })}
                                                 className="block w-full p-2 dark:bg-gray-800 dark:text-white border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
-                                                placeholder="Mô tả chi tiết về:
-                                                            • Loại hình cho thuê
-                                                            • Vị trí
-                                                            • Diện tích
-                                                            • Tình trạng nội thất
-                                                            ...
-                                                            (VD: Phòng trọ có vị trí thuận lợi, gần công viên, trường học...)"
+                                                placeholder="Mô tả chi tiết về phòng"
                                                 rows="5"
                                             />
                                             {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description}</p>}
@@ -746,16 +818,15 @@ const RoomForm = () => {
                         </div>
                     </div>
                 )}
-
                 {step === 2 && (
-                    <div className="mt-8">
-                        <h2 className="text-xl font-bold mb-2 text-red-600">{roomId ? 'Chỉnh Sửa Phòng - Bước 2' : 'Tạo Phòng - Bước 2'}</h2>
+                    <div>
+                        <h2 className="text-xl font-bold mb-2 text-red-600">Tạo Phòng - Bước 2</h2>
                         <div className="border-b-2 border-red-500 w-32 mb-4"></div>
                         <div className="border border-gray-300 rounded-lg p-6 bg-white shadow-sm w-full text-center dark:bg-gray-800 dark:text-white">
                             <div className="flex items-center justify-center">
                                 <label className="cursor-pointer bg-gray-200 p-3 rounded-lg flex items-center gap-2 dark:bg-gray-800 dark:text-white">
                                     <FaPlus className="text-blue-600" />
-                                    <span className="text-gray-700 font-semibold bỏ dark:text-white ">Thêm ảnh</span>
+                                    <span className="text-gray-700 font-semibold dark:text-white">Thêm ảnh</span>
                                     <input
                                         type="file"
                                         multiple
@@ -776,13 +847,7 @@ const RoomForm = () => {
                                             <div key={index} className={`relative border p-2 rounded-lg shadow-sm ${item.isInvalid ? 'border-red-500' : ''}`}>
                                                 <button
                                                     type="button"
-                                                    onClick={() => {
-                                                        if (item.isNew) {
-                                                            handleRemoveFile(item.index, true);
-                                                        } else {
-                                                            handleRemoveFile(index, false);
-                                                        }
-                                                    }}
+                                                    onClick={() => handleRemoveFile(item.isNew ? item.index : index, item.isNew)}
                                                     className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
                                                 >
                                                     <FaTimes size={14} />
@@ -804,50 +869,105 @@ const RoomForm = () => {
                         </div>
                     </div>
                 )}
-
                 {step === 3 && (
-                    <div className="mt-8">
-                        <h2 className="text-xl font-bold mb-2 text-red-600">{roomId ? 'Chỉnh Sửa Phòng - Bước 3' : 'Tạo Phòng - Bước 3'}</h2>
+                    <div>
+                        <h2 className="text-xl font-bold mb-2 text-red-600">Tạo Phòng - Bước 3</h2>
                         <div className="border-b-2 border-red-500 w-32 mb-4"></div>
                         <div className="space-y-6">
-                            <p className="text-lg">Vui lòng kiểm tra lại thông tin trước khi tạo phòng.</p>
+                            <p className="text-lg font-semibold text-gray-900 dark:text-white">Chọn loại tin</p>
+                            {categories.length === 0 ? (
+                                <p className="text-red-500">Không có gói ưu tiên nào khả dụng. Vui lòng thử lại sau!</p>
+                            ) : (
+                                <div className="grid grid-cols-4 gap-4">
+                                    {categories.map((category) => {
+                                        const duration = Number(category.categoryPriorityPackageRoomValue);
+                                        const totalPrice = Number(category.price);
+                                        const pricePerDay = duration > 0 ? totalPrice / duration : 0;
+                                        const isSelected = room.categoryPriorityPackageRoomId === category.categoryPriorityPackageRoomId;
+
+                                        return (
+                                            <div
+                                                key={category.categoryPriorityPackageRoomId}
+                                                className={`border-2 ${getBorderColor(category.categoryPriorityPackageRoomValue)} rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow bg-white dark:bg-gray-700 cursor-pointer ${isSelected ? 'ring-2 ring-gray-400' : ''}`}
+                                                onClick={() => handleCategorySelect(category.categoryPriorityPackageRoomId)}
+                                            >
+                                                <h3 className="font-semibold text-lg text-gray-900 dark:text-white">
+                                                    {getCategoryName(category.categoryPriorityPackageRoomValue)}
+                                                </h3>
+                                                <p className="text-base text-gray-600 dark:text-gray-300 mt-2">
+                                                    {getCategoryDescription(category.categoryPriorityPackageRoomValue)}
+                                                </p>
+                                                <p className="text-base text-gray-600 dark:text-gray-300 mt-1">
+                                                    {duration > 0 ? `${duration} ngày ưu tiên` : 'Không ưu tiên'}
+                                                </p>
+                                                <p className="text-base text-gray-600 dark:text-gray-300 mt-1">
+                                                    {getBorderDescription(totalPrice, duration)}
+                                                </p>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                            {room.categoryPriorityPackageRoomId !== 0 && (
+                                <div className="flex space-x-8 mt-4">
+                                    <div className="flex flex-col">
+                                        <p className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Ngày bắt đầu</p>
+                                        <div className="relative">
+                                            <input
+                                                type="date"
+                                                value={room.startDate}
+                                                onChange={(e) => setRoom({ ...room, startDate: e.target.value })}
+                                                min={new Date().toISOString().split('T')[0]}
+                                                className="border border-gray-300 w-[220px] rounded-lg p-2 pr-2 text-gray-900 dark:text-white dark:bg-gray-800 focus:ring-red-500 focus:border-red-500 appearance-none"
+                                            />
+                                            <FaCalendarAlt className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <p className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Ngày kết thúc</p>
+                                        <div className="relative">
+                                            <input
+                                                type="date"
+                                                value={room.endDate || ''}
+                                                readOnly
+                                                className="border border-gray-300 w-[220px] rounded-lg p-2 pr-2 text-gray-900 dark:text-white dark:bg-gray-800 bg-gray-100 dark:bg-gray-700 cursor-not-allowed"
+                                            />
+                                            <FaCalendarAlt className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                             <div className="flex justify-between items-center mt-6">
-                                <button
-                                    onClick={handleBack}
-                                    className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 dark:bg-gray-800 dark:text-white border dark:border-white"
-                                >
+                                <button onClick={handleBack} className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500">
                                     Quay lại
                                 </button>
-                                <button
-                                    onClick={handleNext}
-                                    className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-                                >
-                                    {roomId ? 'Cập Nhật Phòng' : 'Tạo Phòng'}
-                                </button>
+                                <div className="flex items-center space-x-4">
+                                    <p className="text-lg font-bold text-gray-900 dark:text-white">
+                                        Tổng tiền: {room.priorityPrice ? room.priorityPrice.toLocaleString('vi-VN') : '0'} đ
+                                    </p>
+                                    <button
+                                        onClick={handleSubmit}
+                                        className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800"
+                                    >
+                                        Tạo Phòng
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 )}
-
-                {step < 3 && (
-                    <div className="flex justify-between mt-8">
-                        {step > 1 && (
-                            <button
-                                onClick={handleBack}
-                                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 dark:bg-gray-800 border dark:border-white"
-                            >
-                                Quay lại
-                            </button>
-                        )}
-                        <button
-                            onClick={handleNext}
-                            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-                        >
+                <div className="flex justify-between mt-8">
+                    {step > 1 && step < 3 && (
+                        <button onClick={handleBack} className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500">
+                            Quay lại
+                        </button>
+                    )}
+                    {step < 3 && (
+                        <button onClick={handleNext} className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800">
                             Tiếp tục
                         </button>
-                    </div>
-                )}
-
+                    )}
+                </div>
                 {previewImage && (
                     <div
                         className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
