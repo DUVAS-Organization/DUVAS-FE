@@ -60,7 +60,28 @@ const AdminManageRoomService = {
     getAuthorizedRooms: async () => {
         try {
             const response = await api.get('/authorized-rooms');
-            return response.data.rooms; // [{ RoomId, Title, Image, ... }, …]
+            return response.data; // [{ RoomId, Title, Image, ... }, …]
+        } catch (error) {
+            handleError(error);
+        }
+    },
+    confirmReservation: async (roomId, rentalId, data, token) => {
+        try {
+            const response = await api.post(`/rentals/${rentalId}/confirm`, data, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            return response.data.message || 'Booking confirmed';
+        } catch (error) {
+            handleError(error);
+        }
+    },
+
+    cancelReservation: async (rentalId, token) => {
+        try {
+            const response = await api.post(`/rentals/${rentalId}/cancel`, {}, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            return response.data.message || 'Reservation cancelled';
         } catch (error) {
             handleError(error);
         }

@@ -16,7 +16,7 @@ import CPPRoomsService from '../../../Services/Admin/CPPRoomsService';
 
 const RoomsList = () => {
     const { roomId } = useParams();
-    const [rooms, setRooms] = useState([]);
+    const [visibleRooms, setVisibleRooms] = useState(6);
     const navigate = useNavigate();
     const { user } = useAuth();
     const [loading, setLoading] = useState(false);
@@ -30,14 +30,16 @@ const RoomsList = () => {
 
     const location = useLocation();
     const queryParams = new URLSearchParams(location.search);
-    const tab = queryParams.get("tab") || "";
+    const tab = queryParams.get("tab") || "Phòng trọ";
     const category = queryParams.get("category") || "";
     const minPrice = queryParams.get("minPrice") ? Number(queryParams.get("minPrice")) * 1000000 : 0;
     const maxPrice = queryParams.get("maxPrice") ? Number(queryParams.get("maxPrice")) * 1000000 : Infinity;
     const minArea = queryParams.get("minArea") ? Number(queryParams.get("minArea")) : 0;
     const maxArea = queryParams.get("maxArea") ? Number(queryParams.get("maxArea")) : Infinity;
+    const { searchResults, searchTerm } = location.state || {};
+    const [rooms, setRooms] = useState(searchResults ?? []);
 
-    // Fetch dữ liệu ưu tiên
+    // Fetch priority data
     const fetchPriorityData = async () => {
         try {
             const priorityData = await PriorityRoomService.getPriorityRooms();
@@ -51,7 +53,7 @@ const RoomsList = () => {
         }
     };
 
-    // Hàm lấy thông tin ưu tiên
+    // Get priority information for a room
     const getPriorityInfo = (roomId, priorityPackages, cppRooms) => {
         const priorityRoom = priorityPackages.find(pr => pr.roomId === roomId);
         if (priorityRoom) {
@@ -80,7 +82,7 @@ const RoomsList = () => {
         };
     };
 
-    // Hàm lấy mô tả ưu tiên
+    // Get priority description
     const getCategoryDescription = (value) => {
         if (Number(value) > 0) {
             return 'Tin ưu tiên';
@@ -88,7 +90,7 @@ const RoomsList = () => {
         return '';
     };
 
-    // Hàm lấy màu viền
+    // Get border color for priority
     const getBorderColor = (value) => {
         if (Number(value) > 0) {
             return '#EF4444'; // red-500
@@ -96,16 +98,21 @@ const RoomsList = () => {
         return '#D1D5DB'; // gray-200
     };
 
+    console.log(JSON.stringify(searchResults))
     useEffect(() => {
-        fetchRooms();
         fetchPriorityData();
+        if (searchResults == undefined) {
+            fetchRooms();
+            fetchAvailableRooms();
+        }
     }, []);
 
     useEffect(() => {
         if (user && user.userId) {
             fetchSavedPosts();
         }
-    }, [user]);
+        setRooms(rooms);
+    }, [user, rooms]);
 
     const fetchRooms = async () => {
         setLoading(true);
@@ -133,12 +140,49 @@ const RoomsList = () => {
         }
     };
 
+    const fetchAvailableRooms = async () => {
+        setLoading(true);
+        try {
+            const availableRoomsData = await RoomService.getAvailableRooms();
+            if (!availableRoomsData || availableRoomsData.length === 0) {
+                setRooms([]);
+                showCustomNotification("info", "Hiện tại không có phòng trống nào khả dụng!");
+                return;
+            }
+            const roomsWithUser = await Promise.all(
+                availableRoomsData.map(async (room) => {
+                    if (!room.User && room.userId) {
+                        try {
+                            const userData = await UserService.getUserById(room.userId);
+                            return { ...room, User: userData };
+                        } catch (error) {
+                            console.error(`Error fetching user for room ${room.roomId}:`, error);
+                            return room;
+                        }
+                    }
+                    return room;
+                })
+            );
+            const filteredRooms = roomsWithUser.filter(room =>
+                room.status === 1 && room.isPermission === 1
+            );
+            setRooms(filteredRooms);
+            if (filteredRooms.length === 0) {
+                showCustomNotification("info", "Hiện tại không có phòng trống nào khả dụng!");
+            }
+        } catch (error) {
+            console.error('Error fetching Available Rooms:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const fetchSavedPosts = async () => {
         try {
             const response = await OtherService.getSavedPosts(user.userId);
             if (!response.ok) throw new Error("Lỗi khi lấy danh sách bài đã lưu!");
             const data = await response.json();
-            const savedRoomIds = data.map(item => Number(item.roomId)); // Chuyển thành mảng
+            const savedRoomIds = data.map(item => Number(item.roomId));
             setSavedPosts(savedRoomIds);
             localStorage.setItem("savedPosts", JSON.stringify(savedRoomIds));
         } catch (error) {
@@ -177,55 +221,15 @@ const RoomsList = () => {
         }
     };
 
-    if (loading) {
-        return (
-            <div className="bg-white min-h-screen p-4">
-                <Loading />
-            </div>
-        );
-    }
+    const handleLoadMore = () => {
+        setVisibleRooms((prev) => prev + 3);
+    };
 
-    if (!rooms.length) {
-        return (
-            <div className="bg-white min-h-screen p-4 flex justify-center">
-                <p className="text-black font-semibold">Không tìm thấy phòng nào.</p>
-            </div>
-        );
-    }
+    const handleViewMore = () => {
+        navigate('/Rooms');
+    };
 
-    let filteredRooms = rooms;
-
-    // Lọc phòng theo category hoặc tab
-    if (category) {
-        if (category === "Phòng trọ") {
-            filteredRooms = filteredRooms.filter((r) => r.categoryName === "Phòng trọ" || !r.categoryName);
-        } else {
-            filteredRooms = filteredRooms.filter((r) => r.categoryName === category);
-        }
-    } else if (tab) {
-        if (tab === "Căn hộ") {
-            filteredRooms = filteredRooms.filter((r) => r.categoryName === "Căn hộ");
-        } else if (tab === "Nhà nguyên căn") {
-            filteredRooms = filteredRooms.filter((r) => r.categoryName === "Nhà nguyên căn");
-        } else if (tab === "Phòng trọ") {
-            filteredRooms = filteredRooms.filter((r) => r.categoryName === "Phòng trọ" || !r.categoryName);
-        }
-    }
-
-    // Lọc theo các tiêu chí khác
-    filteredRooms = filteredRooms.filter((r) => r.status !== 2 && r.status !== 3);
-    filteredRooms = filteredRooms.filter((r) => r.isPermission !== 0);
-    filteredRooms = filteredRooms.filter((r) => r.price >= minPrice && r.price <= maxPrice);
-    filteredRooms = filteredRooms.filter((r) => r.acreage >= minArea && r.acreage <= maxArea);
-
-    // Sắp xếp phòng theo priority (ưu tiên cao hơn lên đầu)
-    filteredRooms.sort((a, b) => {
-        const priorityA = getPriorityInfo(a.roomId, priorityPackages, cppRooms).value || 0;
-        const priorityB = getPriorityInfo(b.roomId, priorityPackages, cppRooms).value || 0;
-        return priorityB - priorityA; // Sắp xếp giảm dần theo giá trị ưu tiên
-    });
-
-    // Hàm render phòng
+    // Render room function
     const renderRoom = (room, index) => {
         let images;
         try {
@@ -337,7 +341,7 @@ const RoomsList = () => {
                             </div>
                             <div className="p-4 flex flex-col">
                                 {priorityInfo.description && (
-                                    <p className="text-sm font-semibold bg-red-500 text-white border w-20 px-1 border-red-500 rounded-lg">
+                                    <p className="text-sm font-semibold bg-red-500 text-white border w-20 px-1 border-red-500 rounded-lg mb-2">
                                         {priorityInfo.description}
                                     </p>
                                 )}
@@ -444,7 +448,7 @@ const RoomsList = () => {
                             </div>
                             <div className="w-3/5 p-4 flex flex-col">
                                 {priorityInfo.description && (
-                                    <p className="text-sm font-semibold bg-red-500 text-white border w-20 px-1 border-red-500 rounded-lg">
+                                    <p className="text-sm font-semibold bg-red-500 text-white border w-20 px-1 border-red-500 rounded-lg mb-2">
                                         {priorityInfo.description}
                                     </p>
                                 )}
@@ -515,32 +519,109 @@ const RoomsList = () => {
         }
     };
 
+    if (loading) {
+        return (
+            <div className="bg-white min-h-screen p-4">
+                <Loading />
+            </div>
+        );
+    }
+
+    if (!rooms) {
+        return (
+            <div className="bg-white min-h-screen p-4 flex justify-center">
+                <p className="text-black font-semibold">Không tìm thấy phòng nào.</p>
+            </div>
+        );
+    }
+
+    let filteredRooms = rooms;
+
+    if (filteredRooms) {
+        // Only apply category/tab filters if no searchResults
+        if (!searchResults) {
+            if (category) {
+                if (category === "Phòng trọ") {
+                    filteredRooms = filteredRooms.filter((r) => r.categoryName === "Phòng trọ" || !r.categoryName);
+                } else {
+                    filteredRooms = filteredRooms.filter((r) => r.categoryName === category);
+                }
+            } else {
+                if (tab === "Căn hộ") {
+                    filteredRooms = filteredRooms.filter((r) => r.categoryName === "Căn hộ");
+                } else if (tab === "Nhà nguyên căn") {
+                    filteredRooms = filteredRooms.filter((r) => r.categoryName === "Nhà nguyên căn");
+                } else if (tab === "Phòng trọ") {
+                    filteredRooms = filteredRooms.filter((r) => r.categoryName === "Phòng trọ" || !r.categoryName);
+                }
+            }
+        }
+        // Apply other filters
+        filteredRooms = filteredRooms.filter((r) => r.status !== 2 && r.status !== 3);
+        filteredRooms = filteredRooms.filter((r) => r.isPermission !== 0);
+        filteredRooms = filteredRooms.filter((r) => r.price >= minPrice && r.price <= maxPrice);
+        filteredRooms = filteredRooms.filter((r) => r.acreage >= minArea && r.acreage <= maxArea);
+        // Sort rooms by priority
+        filteredRooms.sort((a, b) => {
+            const priorityA = getPriorityInfo(a.roomId, priorityPackages, cppRooms).value || 0;
+            const priorityB = getPriorityInfo(b.roomId, priorityPackages, cppRooms).value || 0;
+            return priorityB - priorityA;
+        });
+    }
+
     return (
-        <div className="bg-white min-h-screen p-4 dark:bg-gray-800">
+        <div className="bg-white min-h-screen p-4 dark:bg-gray-800 ">
             <div className="container mx-auto">
                 <div className="flex items-center justify-between mb-4">
                     <div className="w-full">
-                        <Searchbar />
+                        <Searchbar searchTerm={searchTerm} />
                     </div>
                 </div>
                 <div className="flex max-w-6xl mx-auto">
                     <div className="w-3/4 bg-white p-4 rounded shadow space-y-3 dark:bg-gray-800 dark:text-white">
-                        <h1 className="text-2xl font-semibold">{category || tab || 'Tất cả phòng'}</h1>
-                        {(category || tab) && (
-                            <div className="flex justify-between">
-                                <p className="mb-2">Hiện có {filteredRooms.length} {(category || tab).toLowerCase()}.</p>
-                            </div>
-                        )}
-                        {filteredRooms.length > 0 ? (
-                            filteredRooms.map((room, index) => renderRoom(room, index))
+                        <h1 className="text-2xl font-semibold">{category || tab}</h1>
+                        <div className="flex justify-between">
+                            <p className="mb-2">Hiện có {filteredRooms?.length ?? 0} {(category || tab).toLowerCase()}.</p>
+                            {/* <div className="flex items-center">
+                                <FaRegBell className="bg-yellow-500 text-white px-2 text-4xl rounded-full" />
+                                <p className="mx-1">Nhận email tin mới</p>
+                                <label className="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" className="sr-only peer" />
+                                    <div className="w-11 h-6 bg-gray-200 rounded-full peer-checked:bg-red-600 peer-focus:ring-4 peer-focus:ring-white dark:peer-focus:ring-red-800 dark:bg-gray-700 peer-checked:after:translate-x-full after:absolute after:top-0.5 after:left-[2px] after:h-5 after:w-5 after:bg-white after:rounded-full after:transition-all peer-checked:after:border-white"></div>
+                                </label>
+                            </div> */}
+                        </div>
+
+                        {filteredRooms && filteredRooms.length > 0 ? (
+                            filteredRooms.slice(0, visibleRooms).map((room, index) => renderRoom(room, index))
                         ) : (
-                            <p className="text-gray-500 dark:text-white">Không có phòng nào để hiển thị.</p>
+                            <p className="text-gray-500 dark:bg-gray-800 dark:text-white">Không có phòng nào để hiển thị.</p>
+                        )}
+
+                        {(filteredRooms && visibleRooms < filteredRooms.length) && (
+                            <div className="flex justify-center mt-6">
+                                {visibleRooms < 99 ? (
+                                    <button
+                                        onClick={handleLoadMore}
+                                        className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition"
+                                    >
+                                        Xem thêm
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={handleViewMore}
+                                        className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition"
+                                    >
+                                        Xem tiếp
+                                    </button>
+                                )}
+                            </div>
                         )}
                         <FAQList />
                     </div>
 
                     <div className="w-1/4 pl-4">
-                        <div className="bg-white p-4 rounded shadow mb-4 dark:bg-gray-800 dark:text-white">
+                        <div className="bg-white p-4 rounded shadow mb-4 dark:bg-gray-800 dark:text-white" >
                             <h3 className="font-bold mb-2">Lọc theo khoảng giá</h3>
                             <ul>
                                 {[

@@ -930,7 +930,7 @@ const RoomForm = () => {
                                                 type="date"
                                                 value={room.endDate || ''}
                                                 readOnly
-                                                className="border border-gray-300 w-[220px] rounded-lg p-2 pr-2 text-gray-900 dark:text-white dark:bg-gray-800 bg-gray-100 dark:bg-gray-700 cursor-not-allowed"
+                                                className="border border-gray-300 w-[220px] rounded-lg p-2 pr-2 text-gray-900 dark:text-white dark:bg-gray-800 bg-gray-100 cursor-not-allowed"
                                             />
                                             <FaCalendarAlt className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                                         </div>
