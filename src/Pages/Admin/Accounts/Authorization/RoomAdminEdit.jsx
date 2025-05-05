@@ -147,7 +147,6 @@ const RoomAdminEdit = () => {
                 const checks = await Promise.all(
                     selectedFiles.map(async file => {
                         const result = await OtherService.checkImageAzure(file);
-                        console.log(`Kiểm tra ảnh ${file.name}:`, result);
                         return {
                             isSafe: result.isSafe !== undefined ? result.isSafe : false,
                             message: result.message || 'Không có thông tin kiểm tra.',
@@ -224,6 +223,7 @@ const RoomAdminEdit = () => {
                 QuanLy: Number(room.quanLy),
                 ChiPhiKhac: Number(room.chiPhiKhac),
                 authorization: Number(room.authorization || 0),
+                PriorityPackageRooms: [],
                 User: {
                     UserId: user?.UserId || 1,
                     UserName: user?.['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'] || 'Admin',
@@ -337,6 +337,7 @@ const RoomAdminEdit = () => {
                 quanLy: Number(room.quanLy),
                 chiPhiKhac: Number(room.chiPhiKhac),
                 authorization: Number(room.authorization || 0),
+                PriorityPackageRooms: []
             };
 
             await AdminManageRoomService.updateRoom(roomId, roomData);

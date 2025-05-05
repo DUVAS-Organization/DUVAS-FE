@@ -286,7 +286,6 @@ const Profile = () => {
     };
 
     const handleConfirm = () => {
-        console.log("Xác nhận thông tin:", { cccdNumber });
         setShowConfirm(false);
     };
 

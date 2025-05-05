@@ -112,7 +112,6 @@ const UpRoleService = {
             const response = await axios.post(`${API_BASE_URL}/Create-ServiceLicence`, data, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            console.log('📌 Tạo giấy phép dịch vụ thành công:', response.data);
             return response.data;
         } catch (error) {
             console.error('❌ Lỗi khi tạo giấy phép dịch vụ:', error.response?.data || error.message);
@@ -149,7 +148,6 @@ const UpRoleService = {
             const response = await axios.get(`${API_BASE_URL}/service/${id}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            console.log('📌 Lấy thông tin giấy phép dịch vụ:', response.data);
             return response.data;
         } catch (error) {
             console.error('❌ Lỗi khi lấy thông tin giấy phép dịch vụ:', error.response?.data || error.message);
@@ -169,7 +167,6 @@ const UpRoleService = {
             await axios.put(`${API_BASE_URL}/service/${id}`, data, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            console.log('✅ Cập nhật giấy phép dịch vụ thành công');
         } catch (error) {
             console.error('❌ Lỗi khi cập nhật giấy phép dịch vụ:', error.response?.data || error.message);
             throw error;
@@ -186,7 +183,6 @@ const UpRoleService = {
             await axios.delete(`${API_BASE_URL}/service/${id}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            console.log('✅ Xóa giấy phép dịch vụ thành công');
         } catch (error) {
             console.error('❌ Lỗi khi xóa giấy phép dịch vụ:', error.response?.data || error.message);
             throw error;
@@ -206,7 +202,6 @@ const UpRoleService = {
             await axios.put(`${API_BASE_URL}/${userId}/UpdateRoleLandlord`, body, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            console.log('✅ Cập nhật vai trò thành chủ nhà thành công');
         } catch (error) {
             console.error('❌ Lỗi khi cập nhật vai trò chủ nhà:', error.response?.data || error.message);
             throw error;
@@ -224,7 +219,6 @@ const UpRoleService = {
             await axios.put(`${API_BASE_URL}/${userId}/UpdateRoleService`, body, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            console.log('✅ Cập nhật vai trò thành nhà cung cấp dịch vụ thành công');
         } catch (error) {
             console.error('❌ Lỗi khi cập nhật vai trò dịch vụ:', error.response?.data || error.message);
             throw error;

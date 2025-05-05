@@ -3,14 +3,18 @@ import { useNavigate, useParams } from 'react-router-dom';
 import SidebarUser from '../../Components/Layout/SidebarUser';
 import Loading from '../../Components/Loading';
 import PriceInput from '../../Components/Layout/Range/PriceInput';
-import { FaTimes, FaPlus, FaArrowLeft } from 'react-icons/fa';
+import { FaTimes, FaPlus, FaArrowLeft, FaCalendarAlt } from 'react-icons/fa';
 import { showCustomNotification } from '../../Components/Notification';
 import { useAuth } from '../../Context/AuthProvider';
 import ServiceManageService from '../../Services/ServiceOwner/ServiceManageService';
 import OtherService from '../../Services/User/OtherService';
 import CategoryServices from '../../Services/User/CategoryServices';
+import BookingManagementService from '../../Services/Landlord/BookingManagementService';
+import CPPServiceService from '../../Services/Admin/CPPServicePostsService';
+import PriorityServiceService from '../../Services/Admin/PriorityServicePost';
 
 const ServicePostEdit = () => {
+    const today = new Date().toISOString().split('T')[0];
     const [service, setService] = useState({
         servicePostId: '',
         title: '',
@@ -21,6 +25,12 @@ const ServicePostEdit = () => {
         phoneNumber: '',
         image: [],
         isPermission: 1,
+        priorityPrice: 0,
+        categoryPriorityPackageServicePostId: 0,
+        startDate: today,
+        endDate: '',
+        priorityPackageServiceId: null,
+        duration: 0,
     });
     const [existingImages, setExistingImages] = useState([]);
     const [newFiles, setNewFiles] = useState([]);
@@ -32,19 +42,43 @@ const ServicePostEdit = () => {
     const [loading, setLoading] = useState(false);
     const [showPopup, setShowPopup] = useState(false);
     const [action, setAction] = useState('');
+    const [currentPriorityPackageId, setCurrentPriorityPackageId] = useState(null);
+    const [isPackageExpired, setIsPackageExpired] = useState(false);
     const { servicePostId } = useParams();
     const navigate = useNavigate();
     const { user } = useAuth();
     const [categoryServices, setCategoryServices] = useState([]);
     const [categoryServiceName, setCategoryServiceName] = useState('');
+    const [priorityPackages, setPriorityPackages] = useState([]);
+
+    // Handle API Errors
+    const handleApiError = (error, customMessage = "Đã xảy ra lỗi, vui lòng thử lại!") => {
+        const apiMessage = error?.response?.data?.message || error.message;
+        console.error('API Error:', { status: error?.response?.status, message: apiMessage });
+        if (error?.response?.status === 409) {
+            showCustomNotification("error", apiMessage || "Dữ liệu bị trùng, vui lòng kiểm tra lại.");
+        } else if (error?.response?.status === 400 && apiMessage.includes("spam")) {
+            showCustomNotification("error", "Mô tả có thể bị spam hoặc trùng với AI. Hãy chỉnh sửa để khác biệt hơn.");
+        } else if (error?.response?.status === 400 && apiMessage.includes("CategoryPriorityPackageServicePost không tồn tại")) {
+            showCustomNotification("error", "Gói ưu tiên không hợp lệ. Vui lòng chọn gói khác hoặc liên hệ hỗ trợ.");
+        } else if (error?.response?.status === 400 && apiMessage.includes("datetime")) {
+            showCustomNotification("error", "Ngày bắt đầu hoặc kết thúc không hợp lệ. Vui lòng kiểm tra lại.");
+        } else if (error?.response?.status === 401 || apiMessage.includes("Unauthorized")) {
+            showCustomNotification("error", "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!");
+            localStorage.removeItem('authToken');
+            navigate('/login');
+        } else if (error?.response?.status === 404 && apiMessage.includes("Không tìm thấy PriorityPackageService")) {
+            console.log("No existing PriorityPackageService found, will create a new one.");
+        } else {
+            showCustomNotification("error", apiMessage || customMessage);
+        }
+    };
 
     // Fetch initial data
     useEffect(() => {
-        // Fetch danh sách loại dịch vụ
         const fetchCategoryServices = async () => {
             try {
                 const data = await CategoryServices.getCategoryServices();
-                console.log('Category Services:', data); // Debug dữ liệu
                 setCategoryServices(data);
             } catch (error) {
                 console.error('Error fetching category services:', error);
@@ -52,7 +86,34 @@ const ServicePostEdit = () => {
             }
         };
 
-        // Fetch dữ liệu dịch vụ hiện tại
+        const fetchPriorityPackages = async () => {
+            try {
+                const data = await CPPServiceService.getAllCategoryPriorityPackageServicePosts();
+                if (!Array.isArray(data)) {
+                    throw new Error('Dữ liệu gói ưu tiên không hợp lệ');
+                }
+                const activePackages = data.filter(
+                    (pkg) =>
+                        pkg.status === 1 &&
+                        !isNaN(Number(pkg.price)) &&
+                        !isNaN(Number(pkg.categoryPriorityPackageServicePostValue)) &&
+                        pkg.categoryPriorityPackageServicePostId != null
+                );
+                const freePackage = {
+                    categoryPriorityPackageServicePostId: 0,
+                    categoryPriorityPackageServicePostValue: 0,
+                    price: 0,
+                    status: 1,
+                    name: 'Gói Miễn Phí',
+                    description: 'Gói cơ bản không ưu tiên',
+                };
+                setPriorityPackages([freePackage, ...activePackages]);
+            } catch (error) {
+                console.error('Error fetching priority packages:', error);
+                showCustomNotification('error', 'Không thể lấy danh sách gói ưu tiên!');
+            }
+        };
+
         const fetchServiceData = async () => {
             if (!servicePostId) {
                 showCustomNotification('error', 'Không tìm thấy ID dịch vụ!');
@@ -62,8 +123,17 @@ const ServicePostEdit = () => {
 
             setLoading(true);
             try {
-                const data = await ServiceManageService.getMyServices();
-                const serviceData = data.services.find((s) => s.servicePostId === parseInt(servicePostId));
+                const [serviceResponse, priorityService] = await Promise.all([
+                    ServiceManageService.getMyServices(),
+                    PriorityServiceService.getPriorityServicePostById(servicePostId).catch((error) => {
+                        if (error?.response?.status === 404) {
+                            return null;
+                        }
+                        throw error;
+                    }),
+                ]);
+
+                const serviceData = serviceResponse.services.find((s) => s.servicePostId === parseInt(servicePostId));
                 if (!serviceData) {
                     throw new Error('Dịch vụ không tồn tại');
                 }
@@ -73,7 +143,9 @@ const ServicePostEdit = () => {
                 } catch {
                     images = serviceData.image ? [serviceData.image] : [];
                 }
-                setService({
+                const startDate = priorityService?.startDate ? new Date(priorityService.startDate).toISOString().split('T')[0] : today;
+                setService((prev) => ({
+                    ...prev,
                     servicePostId: serviceData.servicePostId || '',
                     title: serviceData.title || '',
                     description: serviceData.description || '',
@@ -83,23 +155,72 @@ const ServicePostEdit = () => {
                     phoneNumber: serviceData.phoneNumber || '',
                     image: images,
                     isPermission: serviceData.isPermission ?? 1,
-                });
+                    priorityPrice: priorityService?.price || 0,
+                    categoryPriorityPackageServicePostId: priorityService?.categoryPriorityPackageServicePostId || 0,
+                    startDate: startDate,
+                    endDate: priorityService?.endDate ? new Date(priorityService.endDate).toISOString().split('T')[0] : '',
+                    priorityPackageServiceId: priorityService?.priorityPackageServicePostId || null,
+                    duration: priorityService?.duration || 0,
+                }));
                 setExistingImages(images);
+                setCurrentPriorityPackageId(priorityService?.categoryPriorityPackageServicePostId || null);
+                if (priorityService && priorityService.endDate) {
+                    const currentDate = new Date();
+                    const endDate = new Date(priorityService.endDate);
+                    setIsPackageExpired(currentDate > endDate);
+                }
                 if (serviceData.categoryServiceId) {
                     const categoryData = await CategoryServices.getCategoryServiceById(serviceData.categoryServiceId);
                     setCategoryServiceName(categoryData.categoryServiceName);
                 }
             } catch (error) {
                 console.error('Error fetching data:', error);
-                showCustomNotification('error', error.message || 'Không thể lấy thông tin dịch vụ!');
+                handleApiError(error, 'Không thể lấy thông tin dịch vụ!');
             } finally {
                 setLoading(false);
             }
         };
 
         fetchCategoryServices();
+        fetchPriorityPackages();
         fetchServiceData();
-    }, [servicePostId, navigate]);
+    }, [servicePostId, navigate, today]);
+
+    // Update endDate and priority details when startDate or package changes
+    useEffect(() => {
+        if (
+            (!currentPriorityPackageId || isPackageExpired) &&
+            service.categoryPriorityPackageServicePostId
+        ) {
+            const selectedPackage = priorityPackages.find(
+                (p) => p.categoryPriorityPackageServicePostId === service.categoryPriorityPackageServicePostId
+            );
+            if (selectedPackage && selectedPackage.categoryPriorityPackageServicePostId !== 0) {
+                const startDate = service.startDate ? new Date(service.startDate) : new Date();
+                if (isNaN(startDate.getTime())) {
+                    console.warn('Invalid startDate, setting to today:', service.startDate);
+                    setService((prev) => ({ ...prev, startDate: today }));
+                    return;
+                }
+                const endDate = new Date(startDate);
+                endDate.setDate(startDate.getDate() + Number(selectedPackage.categoryPriorityPackageServicePostValue));
+                setService((prev) => ({
+                    ...prev,
+                    endDate: endDate.toISOString().split('T')[0],
+                    priorityPrice: Number(selectedPackage.price),
+                    duration: Number(selectedPackage.categoryPriorityPackageServicePostValue),
+                }));
+            } else {
+                setService((prev) => ({
+                    ...prev,
+                    endDate: '',
+                    priorityPrice: 0,
+                    duration: 0,
+                    categoryPriorityPackageServicePostId: 0,
+                }));
+            }
+        }
+    }, [service.startDate, service.categoryPriorityPackageServicePostId, priorityPackages, currentPriorityPackageId, isPackageExpired, today]);
 
     // Handle file change with checkAzureImage
     const handleFileChange = async (e) => {
@@ -156,6 +277,23 @@ const ServicePostEdit = () => {
         return data.imageUrl;
     };
 
+    // Format date to ISO 8601 (YYYY-MM-DDTHH:mm:ss)
+    const formatDate = (dateString) => {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) {
+            console.warn('Invalid date:', dateString);
+            return '';
+        }
+        // Ensure date is after 1753-01-01 (SQL datetime min)
+        const minDate = new Date('1753-01-01');
+        if (date < minDate) {
+            console.warn('Date out of range (before 1753):', dateString);
+            return '';
+        }
+        // Return ISO 8601 format in UTC
+        return date.toISOString().split('.')[0]; // e.g., 2025-05-03T00:00:00
+    };
+
     // Handle submit
     const handleSubmit = async () => {
         if (!validateImages()) {
@@ -169,17 +307,65 @@ const ServicePostEdit = () => {
             showCustomNotification('error', 'Tiêu đề phải ít nhất 3 ký tự!');
             return;
         }
-        // if (!service.description || service.description.length < 50) {
-        //     showCustomNotification('error', 'Mô tả phải ít nhất 50 ký tự!');
-        //     return;
-        // }
         if (!service.categoryServiceId || isNaN(service.categoryServiceId)) {
             showCustomNotification('error', 'Vui lòng chọn loại dịch vụ hợp lệ!');
+            return;
+        }
+        if (
+            !currentPriorityPackageId &&
+            service.categoryPriorityPackageServicePostId !== 0 &&
+            (!service.startDate || !service.endDate)
+        ) {
+            showCustomNotification('error', 'Vui lòng chọn ngày bắt đầu và kết thúc hợp lệ cho gói ưu tiên!');
+            return;
+        }
+
+        if (!user || !user.userId || !user.token) {
+            showCustomNotification('error', 'Bạn cần đăng nhập để thực hiện hành động này!');
+            navigate('/login');
             return;
         }
 
         setLoading(true);
         try {
+            // Validate categoryPriorityPackageServicePostId
+            if (service.categoryPriorityPackageServicePostId !== 0) {
+                const selectedPackage = priorityPackages.find(
+                    (p) => p.categoryPriorityPackageServicePostId === service.categoryPriorityPackageServicePostId
+                );
+                if (!selectedPackage) {
+                    console.error('Invalid categoryPriorityPackageServicePostId:', service.categoryPriorityPackageServicePostId);
+                    showCustomNotification('error', 'Gói ưu tiên không hợp lệ. Vui lòng chọn lại.');
+                    return;
+                }
+            }
+
+            // Validate dates
+            const startDateFormatted = formatDate(service.startDate);
+            const endDateFormatted = formatDate(service.endDate);
+            if (!startDateFormatted || !endDateFormatted) {
+                showCustomNotification('error', 'Ngày bắt đầu hoặc kết thúc không hợp lệ!');
+                return;
+            }
+
+            // Check balance for new paid packages
+            if (!currentPriorityPackageId && service.priorityPrice > 0) {
+                const checkBalanceData = { UserId: user.userId, Amount: service.priorityPrice };
+                const balanceResponse = await BookingManagementService.checkBalance(checkBalanceData, user.token);
+                const isBalanceSufficient =
+                    (typeof balanceResponse === 'string' && balanceResponse === 'Bạn đủ tiền.') ||
+                    (typeof balanceResponse === 'object' && balanceResponse.isSuccess);
+
+                if (!isBalanceSufficient) {
+                    showCustomNotification('error', 'Bạn không đủ tiền để thực hiện giao dịch này!');
+                    navigate('/Moneys');
+                    return;
+                }
+
+                const updateBalanceData = { UserId: user.userId, Amount: -service.priorityPrice };
+                await BookingManagementService.updateBalance(updateBalanceData, user.token);
+            }
+
             const uploadedImageUrls = await Promise.all(newFiles.map(uploadFile));
             const finalImageUrls = [...existingImages, ...uploadedImageUrls];
 
@@ -195,10 +381,33 @@ const ServicePostEdit = () => {
             };
 
             await ServiceManageService.editService(servicePostId, serviceData);
+
+            // Handle Priority Service for new paid packages
+            if (!currentPriorityPackageId && service.categoryPriorityPackageServicePostId !== 0) {
+                const priorityServiceData = {
+                    servicePostId: parseInt(servicePostId),
+                    userId: user.userId,
+                    categoryPriorityPackageServicePostId: service.categoryPriorityPackageServicePostId,
+                    startDate: startDateFormatted,
+                    endDate: endDateFormatted,
+                    price: service.priorityPrice,
+                };
+
+                if (service.priorityPackageServiceId) {
+                    await PriorityServiceService.updatePriorityServicePost(
+                        service.priorityPackageServiceId,
+                        priorityServiceData
+                    );
+                } else {
+                    await PriorityServiceService.createPriorityServicePost(priorityServiceData);
+                }
+            }
+
             showCustomNotification('success', 'Cập nhật dịch vụ thành công!');
             navigate('/ServiceOwner/ManageServices');
         } catch (error) {
-            showCustomNotification('error', error.message || 'Lỗi khi cập nhật dịch vụ!');
+            console.error('Submit error:', error);
+            handleApiError(error, 'Lỗi khi cập nhật dịch vụ!');
         } finally {
             setLoading(false);
         }
@@ -224,7 +433,6 @@ const ServicePostEdit = () => {
             if (!service.categoryServiceId) newErrors.categoryServiceId = 'Loại dịch vụ là bắt buộc';
             if (!service.location) newErrors.location = 'Địa chỉ là bắt buộc';
             if (!service.description) newErrors.description = 'Mô tả là bắt buộc';
-            // else if (service.description.length <= 50) newErrors.description = 'Mô tả phải trên 50 ký tự';
             setErrors(newErrors);
             return Object.keys(newErrors).length === 0;
         }
@@ -238,6 +446,16 @@ const ServicePostEdit = () => {
             }
             setErrors((prev) => ({ ...prev, images: '' }));
             return true;
+        }
+        if (step === 3) {
+            const newErrors = {};
+            if (!currentPriorityPackageId && service.categoryPriorityPackageServicePostId !== 0) {
+                if (!service.startDate) newErrors.startDate = 'Ngày bắt đầu là bắt buộc';
+                if (!service.endDate) newErrors.endDate = 'Ngày kết thúc là bắt buộc';
+                if (service.priorityPrice <= 0) newErrors.priorityPrice = 'Giá gói ưu tiên phải là số dương';
+            }
+            setErrors(newErrors);
+            return Object.keys(newErrors).length === 0;
         }
         return true;
     };
@@ -298,6 +516,60 @@ const ServicePostEdit = () => {
         ...newPreviews.map((url, idx) => ({ url, isNew: true, index: idx, isInvalid: invalidImages[idx] })),
     ];
 
+    // Helper functions for priority package display
+    const getCategoryName = (value) => {
+        if (value === 0) return 'Gói Miễn Phí';
+        return `Gói ${Number(value)} ngày`;
+    };
+
+    const getCategoryDescription = (value) => {
+        if (value === 0) return 'Gói cơ bản không ưu tiên';
+        switch (Number(value)) {
+            case 30:
+                return 'Hiển thị trên cùng';
+            case 14:
+                return 'Ưu tiên cao';
+            case 7:
+                return 'Ưu tiên trung bình';
+            case 3:
+                return 'Ưu tiên cơ bản';
+            default:
+                return 'Ưu tiên cơ bản';
+        }
+    };
+
+    const getBorderColor = (value) => {
+        if (value === 0) return 'border-blue-500';
+        switch (Number(value)) {
+            case 30:
+                return 'border-red-600';
+            case 14:
+                return 'border-yellow-600';
+            case 7:
+                return 'border-green-500';
+            case 3:
+                return 'border-gray-500';
+            default:
+                return 'border-gray-200';
+        }
+    };
+
+    const getBorderDescription = (price, duration) => {
+        if (price === 0) return 'Miễn phí';
+        return `${(price / duration).toLocaleString('vi-VN')} đ/ngày`;
+    };
+
+    // Handle priority package selection
+    const handlePriorityPackageSelect = (packageId) => {
+        if (!currentPriorityPackageId || isPackageExpired) {
+            setService((prev) => ({
+                ...prev,
+                categoryPriorityPackageServicePostId: packageId,
+                startDate: prev.startDate || today,
+            }));
+        }
+    };
+
     return (
         <div className="flex min-h-screen bg-white">
             {loading && <Loading />}
@@ -305,7 +577,7 @@ const ServicePostEdit = () => {
             <div className="w-64 bg-white px-2 py-8 max-w-6xl mx-auto ml-56 h-full border-r border-gray-200">
                 <h1 className="text-2xl font-bold text-red-600 mb-4">Chỉnh Sửa Dịch Vụ</h1>
                 <ul className="space-y-2">
-                    {['Thông tin Dịch Vụ', 'Hình ảnh', 'Xác nhận'].map((label, idx) => (
+                    {['Thông tin Dịch Vụ', 'Hình ảnh', 'Gói Ưu Tiên & Xác nhận'].map((label, idx) => (
                         <li
                             key={idx}
                             className={`text-lg ${step === idx + 1 ? 'text-red-600 font-bold' : 'text-gray-600'}`}
@@ -354,9 +626,7 @@ const ServicePostEdit = () => {
                                         </button>
                                         <button
                                             onClick={confirmTogglePermission}
-                                            className={`px-4 py-2 rounded text-white ${action === 'lock'
-                                                ? 'bg-red-500 hover:bg-red-600'
-                                                : 'bg-green-500 hover:bg-green-600'
+                                            className={`px-4 py-2 rounded text-white ${action === 'lock' ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'
                                                 }`}
                                         >
                                             Xác nhận
@@ -373,17 +643,12 @@ const ServicePostEdit = () => {
                                     {categoryServices.length > 0 ? (
                                         <select
                                             value={service.categoryServiceId}
-                                            onChange={(e) =>
-                                                setService({ ...service, categoryServiceId: e.target.value })
-                                            }
+                                            onChange={(e) => setService({ ...service, categoryServiceId: e.target.value })}
                                             className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
                                         >
                                             <option value="">Chọn loại dịch vụ...</option>
                                             {categoryServices.map((category) => (
-                                                <option
-                                                    key={category.categoryServiceId}
-                                                    value={category.categoryServiceId}
-                                                >
+                                                <option key={category.categoryServiceId} value={category.categoryServiceId}>
                                                     {category.categoryServiceName}
                                                 </option>
                                             ))}
@@ -391,11 +656,6 @@ const ServicePostEdit = () => {
                                     ) : (
                                         <p className="text-gray-600">Đang tải danh sách loại dịch vụ...</p>
                                     )}
-                                    {/* {categoryServiceName && (
-                                        <p className="text-sm text-gray-600 mt-1">
-                                            Loại dịch vụ hiện tại: {categoryServiceName}
-                                        </p>
-                                    )} */}
                                     {errors.categoryServiceId && (
                                         <p className="text-red-500 text-sm mt-1">{errors.categoryServiceId}</p>
                                     )}
@@ -406,10 +666,7 @@ const ServicePostEdit = () => {
                                     <label className="block text-sm font-medium text-gray-700">
                                         Giá (đ) <span className="text-red-500">*</span>
                                     </label>
-                                    <PriceInput
-                                        value={service.price}
-                                        onChange={(val) => setService({ ...service, price: val })}
-                                    />
+                                    <PriceInput value={service.price} onChange={(val) => setService({ ...service, price: val })} />
                                     {errors.price && <p className="text-red-500 text-sm mt-1">{errors.price}</p>}
                                 </div>
                                 <div>
@@ -465,9 +722,7 @@ const ServicePostEdit = () => {
                                             placeholder="Mô tả chi tiết về dịch vụ..."
                                             rows="5"
                                         />
-                                        {errors.description && (
-                                            <p className="text-red-500 text-sm mt-1">{errors.description}</p>
-                                        )}
+                                        {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description}</p>}
                                     </div>
                                 </div>
                             </div>
@@ -500,8 +755,7 @@ const ServicePostEdit = () => {
                                         {combinedPreviews.map((item, index) => (
                                             <div
                                                 key={index}
-                                                className={`relative border p-2 rounded-lg shadow-sm ${item.isInvalid ? 'border-red-500' : ''
-                                                    }`}
+                                                className={`relative border p-2 rounded-lg shadow-sm ${item.isInvalid ? 'border-red-500' : ''}`}
                                             >
                                                 <button
                                                     type="button"
@@ -516,9 +770,7 @@ const ServicePostEdit = () => {
                                                     className="w-full h-20 object-cover rounded-md cursor-pointer"
                                                     onClick={() => setPreviewImage(item.url)}
                                                 />
-                                                {item.isInvalid && (
-                                                    <p className="text-red-500 text-xs mt-1">Ảnh không phù hợp</p>
-                                                )}
+                                                {item.isInvalid && <p className="text-red-500 text-xs mt-1">Ảnh không phù hợp</p>}
                                             </div>
                                         ))}
                                     </div>
@@ -532,20 +784,109 @@ const ServicePostEdit = () => {
                         <h2 className="text-xl font-bold mb-2 text-red-600">Chỉnh Sửa Dịch Vụ - Bước 3</h2>
                         <div className="border-b-2 border-red-500 w-32 mb-4"></div>
                         <div className="space-y-6">
+                            <p className="text-lg font-semibold text-gray-900">Chọn loại tin</p>
+                            {currentPriorityPackageId && !isPackageExpired && (
+                                <p className="text-red-500 mb-4">
+                                    Dịch vụ đang có gói ưu tiên hoạt động. Không thể thay đổi gói ưu tiên hoặc ngày bắt đầu.
+                                </p>
+                            )}
+                            {currentPriorityPackageId && isPackageExpired && (
+                                <p className="text-green-500 mb-4">
+                                    Gói ưu tiên hiện tại đã hết hạn. Bạn có thể chọn gói ưu tiên mới.
+                                </p>
+                            )}
+                            {priorityPackages.length === 0 ? (
+                                <p className="text-red-500">Không có gói ưu tiên nào khả dụng. Vui lòng thử lại sau!</p>
+                            ) : (
+                                <div className="grid grid-cols-4 gap-4">
+                                    {priorityPackages.map((pkg) => {
+                                        const duration = Number(pkg.categoryPriorityPackageServicePostValue);
+                                        const totalPrice = Number(pkg.price);
+                                        const isSelected =
+                                            service.categoryPriorityPackageServicePostId === pkg.categoryPriorityPackageServicePostId;
+                                        const isDisabled = currentPriorityPackageId && !isPackageExpired && !isSelected;
+
+                                        return (
+                                            <div
+                                                key={pkg.categoryPriorityPackageServicePostId}
+                                                className={`border-2 ${getBorderColor(
+                                                    pkg.categoryPriorityPackageServicePostValue
+                                                )} rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow bg-white ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                                                    } ${isSelected ? 'ring-2 ring-gray-400' : ''}`}
+                                                onClick={() => !isDisabled && handlePriorityPackageSelect(pkg.categoryPriorityPackageServicePostId)}
+                                            >
+                                                <h3 className="font-semibold text-lg text-gray-900">
+                                                    {getCategoryName(pkg.categoryPriorityPackageServicePostValue)}
+                                                    {isSelected && currentPriorityPackageId && !isPackageExpired && (
+                                                        <span className="ml-2 text-green-500">(Đang sử dụng)</span>
+                                                    )}
+                                                </h3>
+                                                <p className="text-base text-gray-600 mt-2">
+                                                    {getCategoryDescription(pkg.categoryPriorityPackageServicePostValue)}
+                                                </p>
+                                                <p className="text-base text-gray-600 mt-1">
+                                                    {duration > 0 ? `${duration} ngày ưu tiên` : 'Không ưu tiên'}
+                                                </p>
+                                                <p className="text-base text-gray-600 mt-1">
+                                                    {getBorderDescription(totalPrice, duration)}
+                                                </p>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                            {(!currentPriorityPackageId || isPackageExpired) &&
+                                service.categoryPriorityPackageServicePostId !== 0 && (
+                                    <div className="flex space-x-8 mt-4">
+                                        <div className="flex flex-col">
+                                            <p className="text-lg font-semibold text-gray-900 mb-2">Ngày bắt đầu</p>
+                                            <div className="relative">
+                                                <input
+                                                    type="date"
+                                                    value={service.startDate || today}
+                                                    onChange={(e) => setService({ ...service, startDate: e.target.value })}
+                                                    min={today}
+                                                    className="border border-gray-300 w-[220px] rounded-lg p-2 pr-2 text-gray-900 focus:ring-red-500 focus:border-red-500 appearance-none"
+                                                />
+                                                <FaCalendarAlt className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                                            </div>
+                                            {errors.startDate && <p className="text-red-500 text-sm mt-1">{errors.startDate}</p>}
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <p className="text-lg font-semibold text-gray-900 mb-2">Ngày kết thúc</p>
+                                            <div className="relative">
+                                                <input
+                                                    type="date"
+                                                    value={service.endDate || ''}
+                                                    readOnly
+                                                    className="border border-gray-300 w-[220px] rounded-lg p-2 pr-2 text-gray-900 bg-gray-100 cursor-not-allowed"
+                                                />
+                                                <FaCalendarAlt className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                                            </div>
+                                            {errors.endDate && <p className="text-red-500 text-sm mt-1">{errors.endDate}</p>}
+                                        </div>
+                                    </div>
+                                )}
                             <p className="text-lg">Vui lòng kiểm tra lại thông tin trước khi cập nhật dịch vụ.</p>
                             <div className="flex justify-between items-center mt-6">
-                                <button
-                                    onClick={handleBack}
-                                    className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
-                                >
+                                <button onClick={handleBack} className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">
                                     Quay lại
                                 </button>
-                                <button
-                                    onClick={handleNext}
-                                    className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-                                >
-                                    Cập Nhật Dịch Vụ
-                                </button>
+                                <div className="flex items-center space-x-4">
+                                    <p className="text-lg font-bold text-gray-900">
+                                        Tổng tiền: {service.priorityPrice ? service.priorityPrice.toLocaleString('vi-VN') : '0'} đ
+                                    </p>
+                                    <button
+                                        onClick={handleSubmit}
+                                        disabled={priorityPackages.length === 0}
+                                        className={`px-4 py-2 rounded-lg transition-colors ${priorityPackages.length === 0
+                                            ? 'bg-gray-400 cursor-not-allowed'
+                                            : 'bg-red-600 text-white hover:bg-red-700'
+                                            }`}
+                                    >
+                                        Cập Nhật Dịch Vụ
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -553,10 +894,7 @@ const ServicePostEdit = () => {
                 {step < 3 && (
                     <div className="flex justify-between mt-8">
                         {step > 1 && (
-                            <button
-                                onClick={handleBack}
-                                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
-                            >
+                            <button onClick={handleBack} className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">
                                 Quay lại
                             </button>
                         )}

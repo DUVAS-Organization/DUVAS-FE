@@ -108,39 +108,37 @@ const BookingManagementService = {
 
     checkBalance: async (data, token) => {
         try {
-            console.log("[Service] Gửi kiểm tra số dư:", data);
+            // console.log("[Service] Gửi kiểm tra số dư:", data);
             const response = await axios.post(`${API_URL}/check-balance`, data, {
                 headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
             });
-            console.log("[Service] Phản hồi kiểm tra số dư:", response.data);
+            // console.log("[Service] Phản hồi kiểm tra số dư:", response.data);
             return response.data;
         } catch (error) {
-            console.error("[Service] Lỗi kiểm tra số dư:", error.response?.data || error.message);
+            // console.error("[Service] Lỗi kiểm tra số dư:", error.response?.data || error.message);
             throw new Error(error.response?.data || "Không thể kiểm tra số dư");
         }
     },
 
     updateBalance: async (data, token) => {
         try {
-            console.log("[Service] Gửi cập nhật số dư:", data);
+            // console.log("[Service] Gửi cập nhật số dư:", data);
             const response = await axios.put(`${API_URL}/update-balance`, data, {
                 headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
             });
-            console.log("[Service] Phản hồi cập nhật số dư:", response.data);
+            // console.log("[Service] Phản hồi cập nhật số dư:", response.data);
             return response.data;
         } catch (error) {
-            console.error("[Service] Lỗi cập nhật số dư:", error.response?.data || error.message);
+            // console.error("[Service] Lỗi cập nhật số dư:", error.response?.data || error.message);
             throw new Error(error.response?.data || "Không thể cập nhật số dư");
         }
     },
 
     firstMonthInsiderTrading: async (data, token) => {
         try {
-            console.log("[Service] Gửi first-month-insider-trading:", data);
             const response = await axios.post(`${API_URL}/first-month-insider-trading`, data, {
                 headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
             });
-            console.log("[Service] Phản hồi first-month-insider-trading:", response.data);
             return response.data;
         } catch (error) {
             console.error("[Service] Lỗi firstMonthInsiderTrading:", error.response?.data || error.message);
@@ -150,7 +148,6 @@ const BookingManagementService = {
 
     scheduleAction: async (actionDate, landlordId, money, insiderTradingId, token) => {
         try {
-            console.log("[Service] Gửi schedule-action:", { actionDate, landlordId, money, insiderTradingId });
             const response = await axios.post(
                 `${API_URL}/schedule-action?landlordId=${landlordId}&money=${money}&insiderTradingId=${insiderTradingId}`,
                 `"${actionDate}"`, // Gửi actionDate trong body dưới dạng chuỗi ISO
@@ -161,7 +158,6 @@ const BookingManagementService = {
                     },
                 }
             );
-            console.log("[Service] Phản hồi schedule-action:", response.data);
             return response.data;
         } catch (error) {
             console.error("[Service] Lỗi scheduleAction:", error.response?.data || error.message);
@@ -171,11 +167,9 @@ const BookingManagementService = {
 
     cancelScheduledAction: async (data, token) => {
         try {
-            console.log("[Service] Gửi cancel-scheduled-action:", data);
             const response = await axios.post(`${API_URL}/cancel-scheduled-action`, data, {
                 headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
             });
-            console.log("[Service] Phản hồi cancel-scheduled-action:", response.data);
             return response.data;
         } catch (error) {
             console.error("[Service] Lỗi cancelScheduledAction:", error.response?.data || error.message);

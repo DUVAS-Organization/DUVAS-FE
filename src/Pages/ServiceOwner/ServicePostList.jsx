@@ -6,9 +6,11 @@ import Grid from '@mui/material/Grid2';
 import SidebarUser from '../../Components/Layout/SidebarUser';
 import { useNavigate } from 'react-router-dom';
 import Loading from '../../Components/Loading';
-import { FaMapMarkerAlt, FaEdit, FaTrash } from 'react-icons/fa';
+import { FaMapMarkerAlt, FaEdit, FaTrash, FaClock } from 'react-icons/fa';
 import Footer from '../../Components/Layout/Footer';
 import ServiceManageService from '../../Services/ServiceOwner/ServiceManageService';
+import PriorityServiceService from '../../Services/Admin/PriorityServicePost';
+import CPPServiceService from '../../Services/Admin/CPPServicePostsService';
 import { useAuth } from '../../Context/AuthProvider';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
@@ -22,8 +24,8 @@ const Item = styled(Paper)(({ theme }) => ({
     color: theme.palette.text.secondary,
     cursor: 'pointer',
     transition: 'transform 0.2s',
-    width: '250px',
-    height: '350px',
+    width: '270px', // Adjusted to match screenshot
+    height: '400px', // Adjusted to match screenshot
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'space-between',
@@ -35,18 +37,68 @@ const Item = styled(Paper)(({ theme }) => ({
     }),
 }));
 
+// Hàm lấy thông tin ưu tiên
+const getPriorityInfo = (servicePostId, priorityPackages, cppServices) => {
+    const priorityService = priorityPackages.find(pr => pr.servicePostId === servicePostId);
+    if (priorityService) {
+        const currentDate = new Date();
+        const startDate = new Date(priorityService.startDate);
+        const endDate = new Date(priorityService.endDate);
+        const isActive = currentDate >= startDate && currentDate <= endDate;
+
+        if (isActive && priorityService.categoryPriorityPackageServicePostId !== 0) {
+            const cppService = cppServices.find(
+                cpp => cpp.categoryPriorityPackageServicePostId === priorityService.categoryPriorityPackageServicePostId
+            );
+            if (cppService) {
+                return {
+                    value: cppService.categoryPriorityPackageServicePostValue || 0,
+                    description: getCategoryDescription(cppService.categoryPriorityPackageServicePostValue),
+                    endDate: format(new Date(priorityService.endDate), 'dd-MM-yyyy', { locale: vi }),
+                };
+            }
+        }
+    }
+    return {
+        value: 0,
+        description: '',
+        endDate: null,
+    };
+};
+
+// Hàm lấy mô tả ưu tiên
+const getCategoryDescription = (value) => {
+    if (Number(value) > 0) {
+        return 'Tin ưu tiên';
+    }
+    return '';
+};
+
 const ServicePostOwner = () => {
     const navigate = useNavigate();
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [activeStatus, setActiveStatus] = useState(null);
+    const [priorityPackages, setPriorityPackages] = useState([]);
+    const [cppServices, setCppServices] = useState([]);
     const { user } = useAuth();
+
+    // Fetch dữ liệu ưu tiên
+    const fetchPriorityData = async () => {
+        try {
+            const priorityData = await PriorityServiceService.getPriorityServicePosts();
+            const cppData = await CPPServiceService.getAllCategoryPriorityPackageServicePosts();
+            setPriorityPackages(priorityData);
+            setCppServices(cppData);
+        } catch (error) {
+            console.error('Lỗi khi lấy dữ liệu ưu tiên:', error.message);
+        }
+    };
 
     const fetchAllPosts = async () => {
         setLoading(true);
         try {
             const response = await ServiceManageService.getMyServices();
-            console.log('API response:', response); // Log để debug
             const postsData = response.services || [];
 
             const formattedPosts = postsData.map((post) => {
@@ -91,7 +143,6 @@ const ServicePostOwner = () => {
         setLoading(true);
         try {
             const response = await ServiceManageService.getMyServices();
-            console.log('API response (filtered):', response);
             const postsData = response.services || [];
 
             const filteredPosts = postsData
@@ -169,6 +220,7 @@ const ServicePostOwner = () => {
             return;
         }
         fetchAllPosts();
+        fetchPriorityData();
     }, [user, navigate]);
 
     if (loading) {
@@ -210,69 +262,86 @@ const ServicePostOwner = () => {
                             : `Không có bài đăng nào ${activeStatus === 1 ? 'đang hoạt động' : 'không hoạt động'}.`}
                     </p>
                 ) : (
-                    <Grid container spacing={8} className="mt-4">
-                        {posts.map((post) => (
-                            <Grid key={post.servicePostId} item xs={12} sm={6} md={4}>
-                                <Item onClick={() => navigate(`/ServiceOwner/ServicePosts/Edit/${post.servicePostId}`)}>
-                                    <div className="flex flex-col h-full dark:bg-gray-800 dark:text-white">
-                                        <div className="relative">
-                                            <img
-                                                className={`rounded-t-lg shadow-md overflow-hidden w-full h-48 object-cover ${post.isPermission === 0 ? 'opacity-30' : ''}`}
-                                                alt={post.title || 'Image of a service'}
-                                                src={post.image}
-                                            />
-                                            {post.isPermission === 0 && (
-                                                <div className="absolute inset-0 flex items-center justify-center">
-                                                    <div className="relative w-full h-full">
-                                                        <div className="absolute top-0 left-0 w-full h-full bg-transparent flex items-center justify-center">
-                                                            <span className="text-red-700 text-2xl font-bold transform -rotate-45">
-                                                                Đã bị khóa
-                                                            </span>
+                    <Grid container spacing={4} className="mt-4" justifyContent="flex-start">
+                        {posts.map((post) => {
+                            const priorityInfo = getPriorityInfo(post.servicePostId, priorityPackages, cppServices);
+
+                            return (
+                                <Grid key={post.servicePostId} item xs={12} sm={6} md={3}>
+                                    <Item onClick={() => navigate(`/ServiceOwner/ServicePosts/Edit/${post.servicePostId}`)}>
+                                        <div className="flex flex-col h-full dark:bg-gray-800 dark:text-white">
+                                            <div className="relative">
+                                                <img
+                                                    className={`rounded-t-lg shadow-md overflow-hidden w-full h-56 object-cover ${post.isPermission === 0 ? 'opacity-30' : ''}`}
+                                                    alt={post.title || 'Image of a service'}
+                                                    src={post.image}
+                                                />
+                                                {post.isPermission === 0 && (
+                                                    <div className="absolute inset-0 flex items-center justify-center">
+                                                        <div className="relative w-full h-full">
+                                                            <div className="absolute top-0 left-0 w-full h-full bg-transparent flex items-center justify-center">
+                                                                <span className="text-red-700 text-2xl font-bold transform -rotate-45">
+                                                                    Đã bị khóa
+                                                                </span>
+                                                            </div>
+                                                            <div className="absolute top-1/2 left-1/2 w-36 h-36 rounded-full border-8 border-red-700 transform -rotate-45 -translate-x-1/2 -translate-y-1/2"></div>
                                                         </div>
-                                                        <div className="absolute top-1/2 left-1/2 w-36 h-36 rounded-full border-8 border-red-700 transform -rotate-45 -translate-x-1/2 -translate-y-1/2"></div>
                                                     </div>
+                                                )}
+                                                <div
+                                                    className="absolute top-2 right-0 bg-white bg-opacity-70 px-2 py-1 rounded cursor-pointer hover:bg-opacity-100"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        navigate(`/ServiceOwner/ServicePosts/Edit/${post.servicePostId}`);
+                                                    }}
+                                                    title="Chỉnh sửa bài đăng"
+                                                >
+                                                    <FaEdit className="text-red-500 text-2xl" />
                                                 </div>
-                                            )}
-                                            <div
-                                                className="absolute top-2 right-0 bg-white bg-opacity-70 px-2 py-1 rounded cursor-pointer hover:bg-opacity-100"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    navigate(`/ServiceOwner/ServicePosts/Edit/${post.servicePostId}`);
-                                                }}
-                                                title="Chỉnh sửa bài đăng"
-                                            >
-                                                <FaEdit className="text-red-500 text-2xl" />
+                                                {/* <div
+                                                    className="absolute top-10 right-0 bg-white bg-opacity-70 px-2 py-1 rounded cursor-pointer hover:bg-opacity-100"
+                                                    onClick={(e) => handleDeletePost(post.servicePostId, e)}
+                                                    title="Xóa bài đăng"
+                                                >
+                                                    <FaTrash className="text-red-500 text-2xl" />
+                                                </div> */}
                                             </div>
-                                            {/* <div
-                                                className="absolute top-10 right-0 bg-white bg-opacity-70 px-2 py-1 rounded cursor-pointer hover:bg-opacity-100"
-                                                onClick={(e) => handleDeletePost(post.servicePostId, e)}
-                                                title="Xóa bài đăng"
-                                            >
-                                                <FaTrash className="text-red-500 text-2xl" />
-                                            </div> */}
+                                            <div className="flex flex-col flex-grow p-2 justify-between max-h-[390px]">
+                                                <div className="flex justify-between items-center w-full">
+                                                    {priorityInfo.description && (
+                                                        <p className="text-sm font-semibold bg-red-500 text-white border w-20 px-1 border-red-500 rounded-lg">
+                                                            {priorityInfo.description}
+                                                        </p>
+                                                    )}
+                                                    {priorityInfo.endDate && (
+                                                        <p className="text-sm text-gray-600 flex items-center dark:text-gray-300">
+                                                            <FaClock className="mr-1 text-gray-500" />
+                                                            Hết hạn: {priorityInfo.endDate}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                                <p className="text-black text-base font-semibold truncate max-w-[250px] dark:text-white">
+                                                    {post.title}
+                                                </p>
+                                                <p className="text-gray-600 flex items-center mt-1 text-sm truncate max-w-[250px] dark:text-white">
+                                                    <FaMapMarkerAlt className="absolute" />
+                                                    <span className="ml-5">{post.location || 'Vị trí không xác định'}</span>
+                                                </p>
+                                                <p className="text-gray-600 text-sm mt-1 dark:text-white">
+                                                    Danh mục: {post.categoryServiceName}
+                                                </p>
+                                                <p className="text-red-500 font-medium text-base mt-1">
+                                                    {post.price ? `${post.price.toLocaleString('vi-VN')} đ` : 'Thỏa thuận'}
+                                                </p>
+                                                <p className="text-gray-600 text-sm mt-1 dark:text-white">
+                                                    Ngày đăng: {format(new Date(post.createdDate), 'dd-MM-yyyy HH:mm:ss', { locale: vi })}
+                                                </p>
+                                            </div>
                                         </div>
-                                        <div className="flex flex-col flex-grow p-2 justify-between max-h-[355px]">
-                                            <p className="text-black text-base font-semibold truncate max-w-[250px] dark:text-white">
-                                                {post.title}
-                                            </p>
-                                            <p className="text-gray-600 flex items-center mt-1 text-sm truncate max-w-[250px] dark:text-white">
-                                                <FaMapMarkerAlt className="absolute" />
-                                                <span className="ml-5">{post.location || 'Vị trí không xác định'}</span>
-                                            </p>
-                                            <p className="text-gray-600 text-sm mt-1 dark:text-white">
-                                                Danh mục: {post.categoryServiceName}
-                                            </p>
-                                            <p className="text-red-500 font-medium text-base mt-1">
-                                                {post.price ? `${post.price.toLocaleString('vi-VN')} đ` : 'Thỏa thuận'}
-                                            </p>
-                                            <p className="text-gray-600 text-sm mt-1 dark:text-white">
-                                                Ngày đăng: {format(new Date(post.createdDate), 'dd-MM-yyyy HH:mm:ss', { locale: vi })}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </Item>
-                            </Grid>
-                        ))}
+                                    </Item>
+                                </Grid>
+                            );
+                        })}
                     </Grid>
                 )}
             </Box>

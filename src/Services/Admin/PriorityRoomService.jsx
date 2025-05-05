@@ -10,7 +10,7 @@ const PriorityRoomService = {
             return response.data.map(item => ({
                 priorityPackageRoomId: item.priorityPackageRoomId,
                 userId: item.userId,
-                // roomId: item.roomId,
+                roomId: item.roomId,
                 categoryPriorityPackageRoomId: item.categoryPriorityPackageRoomId,
                 startDate: item.startDate,
                 endDate: item.endDate,
@@ -30,7 +30,7 @@ const PriorityRoomService = {
             return {
                 priorityPackageRoomId: item.priorityPackageRoomId,
                 userId: item.userId,
-                // roomId: item.roomId,
+                roomId: item.roomId,
                 categoryPriorityPackageRoomId: item.categoryPriorityPackageRoomId,
                 startDate: item.startDate,
                 endDate: item.endDate,
@@ -42,24 +42,60 @@ const PriorityRoomService = {
         }
     },
 
+    // Get PriorityPackageRooms by userId
+    getPriorityRoomByUserId: async (userId) => {
+        try {
+            const response = await axios.get(`${API_URL}/user/${userId}`);
+            console.log('Priority rooms API response:', response.data); // Debug response
+            return response.data.map(item => ({
+                priorityPackageRoomId: item.priorityPackageRoomId,
+                userId: item.userId,
+                roomId: item.roomId,
+                categoryPriorityPackageRoomId: item.categoryPriorityPackageRoomId,
+                startDate: item.startDate,
+                endDate: item.endDate,
+                price: item.price,
+            }));
+        } catch (error) {
+            console.error(`Error fetching Priority Rooms for userId ${userId}:`, error);
+            throw error;
+        }
+    },
+
     // Create a new PriorityPackageRoom
     createPriorityRoom: async (room) => {
+        // Log dữ liệu gửi lên để kiểm tra
+        console.log('Dữ liệu gửi lên /api/PriorityPackageRoom:', room);
+
+        // Kiểm tra các trường bắt buộc
+        const requiredFields = ['userId', 'roomId', 'categoryPriorityPackageRoomId', 'startDate', 'endDate', 'price'];
+        const missingFields = requiredFields.filter(field => !room[field]);
+        if (missingFields.length > 0) {
+            console.error('Thiếu các trường bắt buộc:', missingFields);
+            throw new Error(`Thiếu các trường bắt buộc: ${missingFields.join(', ')}`);
+        }
+
+        // Kiểm tra định dạng startDate và endDate
+        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+        if (!dateRegex.test(room.startDate) || !dateRegex.test(room.endDate)) {
+            console.error('startDate hoặc endDate không đúng định dạng YYYY-MM-DD');
+            throw new Error('startDate hoặc endDate không đúng định dạng');
+        }
+
         try {
-            console.log('Sending PriorityRoom payload:', room); // Debug payload
             const response = await axios.post(API_URL, {
                 userId: room.userId,
-                // roomId: room.roomId,
+                roomId: room.roomId,
                 categoryPriorityPackageRoomId: room.categoryPriorityPackageRoomId,
                 startDate: room.startDate,
                 endDate: room.endDate,
                 price: room.price,
             });
             const item = response.data;
-            console.log('PriorityRoom response:', item); // Debug response
             return {
                 priorityPackageRoomId: item.priorityPackageRoomId,
                 userId: item.userId,
-                // roomId: item.roomId,
+                roomId: item.roomId,
                 categoryPriorityPackageRoomId: item.categoryPriorityPackageRoomId,
                 startDate: item.startDate,
                 endDate: item.endDate,

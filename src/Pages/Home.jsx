@@ -26,7 +26,7 @@ const images = [
         src: carousel3,
         title: "Dịch vụ sinh viên giá rẻ",
         btnText: "Khám phá ngay",
-        link: "/ServicePosts?tab=Vệ%20sinh"
+        link: "/ServicePosts"
     },
 ];
 
@@ -103,7 +103,7 @@ const Home = () => {
                 <div className="flex flex-col md:flex-row justify-between p-4">
                     <h2 className="text-lg md:text-xl text-gray-800 font-bold dark:text-white">Tin dịch vụ</h2>
                     <Link
-                        to="/ServicePosts?tab=Dịch%20vụ%20sửa%20chữa"
+                        to="/ServicePosts"
                         className="text-red-600 font-semibold flex items-center hover:scale-105 transition duration-100 mt-2 md:mt-0"
                     >
                         Xem thêm <FaArrowRight className="ml-1 text-sm mt-1" />

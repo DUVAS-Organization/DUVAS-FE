@@ -24,7 +24,6 @@ const ServicePostDetails = () => {
             // Nếu có servicePostId => fetch dữ liệu từ API
             ServicePost.getServicePostById(servicePostId)
                 .then(data => {
-                    console.log(data);
                     let images = [];
                     try {
                         images = data.image ? JSON.parse(data.image) : [];

@@ -3,31 +3,79 @@ import { FaCamera, FaMapMarkerAlt, FaRegHeart, FaHeart } from 'react-icons/fa';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../Context/AuthProvider';
 import RoomManagementService from '../../Services/User/RoomManagementService';
+import PriorityRoomService from '../../Services/Admin/PriorityRoomService';
+import CPPRoomsService from '../../Services/Admin/CPPRoomsService';
 import { showCustomNotification } from '../Notification';
 import { styled } from '@mui/material/styles';
 import OtherService from '../../Services/User/OtherService';
 
-const CardItem = styled('div')(({ theme }) => ({
-    backgroundColor: '#fff',
-    borderRadius: '8px',
-    overflow: 'hidden',
-    transition: 'transform 0.2s, box-shadow 0.2s',
-    cursor: 'pointer',
-    boxShadow: theme.shadows[3],
-    '&:hover': {
-        transform: 'scale(1.02)',
-        boxShadow: theme.shadows[6],
-    },
-    ...theme.applyStyles('dark', {
-        backgroundColor: '#1A2027',
-    }),
-}));
+const CardItem = styled('div')(({ theme }) => {
+    const defaultColor = '#D1D5DB';
+
+    return {
+        borderRadius: '12px',
+        overflow: 'hidden',
+        cursor: 'pointer',
+        position: 'relative',
+        zIndex: 0,
+        background: 'white',
+        transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+
+        '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: '-3px',
+            left: '-3px',
+            right: '-3px',
+            bottom: '-3px',
+            zIndex: -1,
+            borderRadius: '14px',
+            background: 'transparent',
+            backgroundSize: '400% 400%',
+            opacity: 1,
+        },
+
+        '&:hover': {
+            transform: 'scale(1.02)',
+            boxShadow: '0 8px 12px rgba(0, 0, 0, 0.2)',
+            '&::before': {
+                background: `linear-gradient(135deg, ${defaultColor}, transparent, ${defaultColor})`,
+                filter: `drop-shadow(0 0 8px ${defaultColor})`,
+                animation: 'neon-glow 6s linear infinite',
+            },
+        },
+
+        '@keyframes neon-glow': {
+            '0%': {
+                backgroundPosition: '0% 50%',
+            },
+            '50%': {
+                backgroundPosition: '100% 50%',
+            },
+            '100%': {
+                backgroundPosition: '0% 50%',
+            },
+        },
+
+        ...theme.applyStyles('dark', {
+            backgroundColor: '#1A2027',
+            boxShadow: '0 4px 6px rgba(255, 255, 255, 0.1)',
+            '&:hover': {
+                boxShadow: '0 8px 12px rgba(255, 255, 255, 0.2)',
+            },
+        }),
+    };
+});
 
 const RoomsHome = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
     const [rooms, setRooms] = useState([]);
+    const [priorityPackages, setPriorityPackages] = useState([]);
+    const [cppRooms, setCppRooms] = useState([]);
     const [savedPosts, setSavedPosts] = useState(new Set());
+    const [loading, setLoading] = useState(true);
     const defaultVisible = 4;
     const [visibleRoomsByCategory, setVisibleRoomsByCategory] = useState({});
 
@@ -46,7 +94,24 @@ const RoomsHome = () => {
     };
 
     useEffect(() => {
-        fetchRooms();
+        const fetchData = async () => {
+            try {
+                const [roomsData, priorityData, cppData] = await Promise.all([
+                    RoomManagementService.getAvailableRooms(),
+                    PriorityRoomService.getPriorityRooms(),
+                    CPPRoomsService.getCPPRooms(),
+                ]);
+                setRooms(roomsData);
+                setPriorityPackages(priorityData);
+                setCppRooms(cppData);
+                setLoading(false);
+            } catch (error) {
+                console.error('Lỗi khi lấy dữ liệu:', error);
+                showCustomNotification("error", error.message || "Không thể tải dữ liệu!");
+                setLoading(false);
+            }
+        };
+        fetchData();
     }, []);
 
     useEffect(() => {
@@ -54,16 +119,6 @@ const RoomsHome = () => {
             fetchSavedPosts();
         }
     }, [user]);
-
-    const fetchRooms = async () => {
-        try {
-            const data = await RoomManagementService.getAvailableRooms();
-            setRooms(data);
-        } catch (error) {
-            console.error('Lỗi khi lấy danh sách phòng trống:', error);
-            showCustomNotification("error", error.message || "Không thể tải danh sách phòng!");
-        }
-    };
 
     const fetchSavedPosts = async () => {
         try {
@@ -102,12 +157,67 @@ const RoomsHome = () => {
         }
     };
 
-    const filteredRooms = rooms.filter(room => {
-        const categoryMatch = categoryQuery ? String(room.categoryRoomId) === categoryQuery : true;
-        const priceMatch = room.price >= minPriceQuery && room.price <= maxPriceQuery;
-        const areaMatch = room.acreage >= minAreaQuery && room.acreage <= maxAreaQuery;
-        return categoryMatch && priceMatch && areaMatch;
-    });
+    const getPriorityInfo = (roomId) => {
+        const priorityRoom = priorityPackages.find(pr => pr.roomId === roomId);
+        if (priorityRoom) {
+            const currentDate = new Date();
+            const startDate = new Date(priorityRoom.startDate);
+            const endDate = new Date(priorityRoom.endDate);
+            const isActive = currentDate >= startDate && currentDate <= endDate;
+
+            if (isActive) {
+                const cppRoom = cppRooms.find(
+                    cpp => cpp.categoryPriorityPackageRoomId === priorityRoom.categoryPriorityPackageRoomId
+                );
+                if (cppRoom) {
+                    return {
+                        value: cppRoom.categoryPriorityPackageRoomValue || 0,
+                        description: getCategoryDescription(cppRoom.categoryPriorityPackageRoomValue),
+                        borderColor: getBorderColor(cppRoom.categoryPriorityPackageRoomValue),
+                    };
+                }
+            }
+        }
+        return {
+            value: 0,
+            description: "",
+            borderColor: "#D1D5DB", // Default gray-200
+        };
+    };
+
+    const getCategoryDescription = (value) => {
+        if (Number(value) > 0) {
+            return 'Tin ưu tiên';
+        }
+        return '';
+    };
+
+    const getBorderColor = (value) => {
+        if (Number(value) > 0) {
+            return '#EF4444'; // red-500
+        }
+        return '#D1D5DB'; // gray-200
+    };
+
+    const hexToRgba = (hex, alpha) => {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    };
+
+    const filteredRooms = rooms
+        .filter(room => {
+            const categoryMatch = categoryQuery ? String(room.categoryRoomId) === categoryQuery : true;
+            const priceMatch = room.price >= minPriceQuery && room.price <= maxPriceQuery;
+            const areaMatch = room.acreage >= minAreaQuery && room.acreage <= maxAreaQuery;
+            return categoryMatch && priceMatch && areaMatch;
+        })
+        .sort((a, b) => {
+            const aPriority = getPriorityInfo(a.roomId).value;
+            const bPriority = getPriorityInfo(b.roomId).value;
+            return bPriority - aPriority;
+        });
 
     let groupedRooms;
     if (categoryQuery) {
@@ -124,6 +234,14 @@ const RoomsHome = () => {
         }, {});
     }
 
+    if (loading) {
+        return (
+            <div className="bg-white p-4 flex justify-center">
+                <p className="text-black font-semibold">Đang tải dữ liệu...</p>
+            </div>
+        );
+    }
+
     if (!rooms.length) {
         return (
             <div className="bg-white p-4 flex justify-center">
@@ -134,6 +252,37 @@ const RoomsHome = () => {
 
     return (
         <div className="bg-white mt-2 dark:bg-gray-800 dark:text-white">
+            <style>
+                {`
+                    @keyframes contentGlow {
+                        0% {
+                            backgroundPosition: 0% 50%;
+                        }
+                        50% {
+                            backgroundPosition: 100% 50%;
+                        }
+                        100% {
+                            backgroundPosition: 0% 50%;
+                        }
+                    }
+                    .content-section {
+                        transition: background 0.3s ease;
+                    }
+                    .neumorph-card:hover .content-section {
+                        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.1))',
+                        backgroundSize: '400% 400%',
+                        animation: 'contentGlow 6s linear infinite',
+                    }
+                    .dark .content-section {
+                        background: 'transparent',
+                    }
+                    .dark .neumorph-card:hover .content-section {
+                        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05))',
+                        backgroundSize: '400% 400%',
+                        animation: 'contentGlow 6s linear infinite',
+                    }
+                `}
+            </style>
             <div className="container mx-auto px-4">
                 {Object.entries(groupedRooms).map(([category, roomsInCategory]) => {
                     const visibleCount = visibleRoomsByCategory[category] || defaultVisible;
@@ -152,9 +301,13 @@ const RoomsHome = () => {
                                     const firstImage = Array.isArray(images) ? images[0] : images;
                                     const isSaved = savedPosts.has(room.roomId);
                                     const categoryName = categoryMap[room.categoryRoomId] || "Khác";
+                                    const priorityInfo = getPriorityInfo(room.roomId);
+
                                     return (
                                         <Link key={room.roomId} to={`/Rooms/Details/${room.roomId}`} className="block">
-                                            <CardItem className="bg-white rounded-lg shadow-md overflow-hidden h-[400px] flex flex-col">
+                                            <CardItem
+                                                className={`neumorph-card bg-white rounded-lg overflow-hidden h-[415px] flex flex-col dark:bg-gray-800 dark:neumorph-card-dark`}
+                                            >
                                                 {room.image && room.image !== '' && (
                                                     <div className="relative w-full h-52 rounded-lg overflow-hidden">
                                                         <img
@@ -167,13 +320,18 @@ const RoomsHome = () => {
                                                         </span>
                                                     </div>
                                                 )}
-                                                <div className="p-4 flex-1 flex flex-col dark:bg-gray-800 dark:text-white">
+                                                <div className="px-4 py-3 flex-1 flex flex-col dark:text-white content-section">
+                                                    <p className="text-sm font-semibold bg-red-500 text-white w-20 px-1 rounded-lg">
+                                                        {priorityInfo.description}
+                                                    </p>
                                                     <h3 className="text-lg font-semibold mb-2 line-clamp-2">{room.title}</h3>
+
                                                     <p className="text-red-500 font-semibold mb-2">
                                                         {room.price.toLocaleString('vi-VN')} đ • {room.acreage} m²
                                                     </p>
+
                                                     <p className="text-gray-600 mb-2 flex items-center truncate max-w-[240px] dark:text-white">
-                                                        <FaMapMarkerAlt className="mr-1 absolute " />
+                                                        <FaMapMarkerAlt className="mr-1 absolute" />
                                                         <p className="ml-5">{room.locationDetail}</p>
                                                     </p>
                                                     <div className="mt-auto flex justify-between items-center border-t pt-2">

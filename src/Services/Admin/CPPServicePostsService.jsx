@@ -10,8 +10,8 @@ const CPPServicePostsService = {
             return response.data.map(item => ({
                 categoryPriorityPackageServicePostId: item.categoryPriorityPackageServicePostId,
                 categoryPriorityPackageServicePostValue: item.categoryPriorityPackageServicePostValue
-                    ? `${item.categoryPriorityPackageServicePostValue} ngày`
-                    : `ServicePost ${item.categoryPriorityPackageServicePostId}`,
+                    ? `${item.categoryPriorityPackageServicePostValue}`
+                    : `${item.categoryPriorityPackageServicePostId}`,
                 price: item.price,
                 status: item.status,
             }));
@@ -29,8 +29,8 @@ const CPPServicePostsService = {
             return {
                 categoryPriorityPackageServicePostId: item.categoryPriorityPackageServicePostId,
                 categoryPriorityPackageServicePostValue: item.categoryPriorityPackageServicePostValue
-                    ? `${item.categoryPriorityPackageServicePostValue} ngày`
-                    : `ServicePost ${item.categoryPriorityPackageServicePostId}`,
+                    ? `${item.categoryPriorityPackageServicePostValue}`
+                    : `${item.categoryPriorityPackageServicePostId}`,
                 price: item.price,
                 status: item.status,
             };
@@ -52,8 +52,8 @@ const CPPServicePostsService = {
             return {
                 categoryPriorityPackageServicePostId: item.categoryPriorityPackageServicePostId,
                 categoryPriorityPackageServicePostValue: item.categoryPriorityPackageServicePostValue
-                    ? `${item.categoryPriorityPackageServicePostValue} ngày`
-                    : `ServicePost ${item.categoryPriorityPackageServicePostId}`,
+                    ? `${item.categoryPriorityPackageServicePostValue}`
+                    : `${item.categoryPriorityPackageServicePostId}`,
                 price: item.price,
                 status: item.status,
             };
@@ -76,8 +76,8 @@ const CPPServicePostsService = {
             return {
                 categoryPriorityPackageServicePostId: item.categoryPriorityPackageServicePostId || id,
                 categoryPriorityPackageServicePostValue: item.categoryPriorityPackageServicePostValue
-                    ? `${item.categoryPriorityPackageServicePostValue} ngày`
-                    : `ServicePost ${item.categoryPriorityPackageServicePostId}`,
+                    ? `${item.categoryPriorityPackageServicePostValue}`
+                    : `${item.categoryPriorityPackageServicePostId}`,
                 price: item.price,
                 status: item.status,
             };

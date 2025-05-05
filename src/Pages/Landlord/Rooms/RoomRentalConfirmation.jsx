@@ -184,8 +184,8 @@ const RoomRentalConfirmation = () => {
         const price = parseFloat(formData.price);
 
         if (isNaN(price) || price <= 0) newErrors.price = "Giá phải là số dương";
-        if (!formData.deposit || parseFloat(formData.deposit) < 0)
-            newErrors.deposit = "Số tiền gửi phải lớn hơn 0";
+        // if (!formData.deposit || parseFloat(formData.deposit) < 0)
+        //     newErrors.deposit = "Số tiền gửi phải lớn hơn 0";
         if (!formData.startDate) newErrors.startDate = "Vui lòng chọn ngày bắt đầu";
         if (!formData.endDate) newErrors.endDate = "Vui lòng chọn ngày kết thúc";
         if (
@@ -211,7 +211,7 @@ const RoomRentalConfirmation = () => {
     // Event handlers
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        if (name === "price" || name === "deposit") {
+        if (name === "price") {
             const rawValue = value.replace(/[^0-9]/g, "");
             setFormData((prev) => ({ ...prev, [name]: rawValue }));
         } else {
@@ -275,7 +275,6 @@ const RoomRentalConfirmation = () => {
                 price: parseFloat(formData.price) || 0,
             };
 
-            console.log("Data gửi đi:", dataToSend);
             const response = await BookingManagementService.confirmReservation(roomId, dataToSend, token);
 
             Swal.fire({
@@ -302,11 +301,9 @@ const RoomRentalConfirmation = () => {
             const rentalIdLocal = occupantRental?.rentalId;
             const roomPrice = roomData?.price || 0;
             const landlordId = roomData?.landlordId;
-            console.log("➡️ [FE] Xác nhận thuê phòng với rentalId:", rentalIdLocal);
 
             const checkBalanceData = { UserId: user.userId, Amount: roomPrice };
             const balanceResponse = await BookingManagementService.checkBalance(checkBalanceData, user.token);
-            console.log("🔍 [FE] Kiểm tra số dư:", balanceResponse);
 
             if (balanceResponse !== "Bạn đủ tiền.") {
                 Swal.fire("Thông báo", "Bạn không đủ tiền. Vui lòng nạp thêm tiền để tiếp tục.", "warning");
@@ -315,7 +312,6 @@ const RoomRentalConfirmation = () => {
 
             const updateBalanceData = { UserId: user.userId, Amount: -roomPrice };
             await BookingManagementService.updateBalance(updateBalanceData, user.token);
-            console.log("💸 [FE] Đã trừ tiền user:", roomPrice);
 
             const insiderTradingData = {
                 Remitter: user.userId,
@@ -326,11 +322,9 @@ const RoomRentalConfirmation = () => {
                 insiderTradingData,
                 user.token
             );
-            console.log("📝 [FE] Tạo giao dịch nội bộ tháng đầu:", insiderTradingResponse);
 
             const actionDate = new Date().toISOString();
             const insiderTradingId = insiderTradingResponse.InsiderTradingId || 0;
-            console.log("[FE] Dữ liệu lên lịch:", { actionDate, landlordId, money: roomPrice, insiderTradingId });
             await BookingManagementService.scheduleAction(
                 actionDate,
                 landlordId,
@@ -338,10 +332,8 @@ const RoomRentalConfirmation = () => {
                 insiderTradingId,
                 user.token
             );
-            console.log("⏰ [FE] Đã lên lịch giữ tiền 3 ngày.");
 
             await UserRentRoomService.confirmRental(rentalIdLocal, {}, user.token);
-            console.log("✅ [FE] Đã xác nhận thuê phòng.");
 
             setSuccessMessage("Xác nhận thuê phòng thành công!");
             Swal.fire({
@@ -515,6 +507,7 @@ const RoomRentalConfirmation = () => {
                                                 <input
                                                     type="text"
                                                     name="price"
+                                                    readOnly
                                                     value={formData.price ? Number(formData.price).toLocaleString("vi-VN") : ""}
                                                     onChange={handleInputChange}
                                                     className={`mt-1 block w-full rounded-md border ${errors.price ? "border-red-500" : "border-gray-300"
@@ -523,7 +516,7 @@ const RoomRentalConfirmation = () => {
                                                 />
                                                 {errors.price && <p className="mt-1 text-sm text-red-500">{errors.price}</p>}
                                             </div>
-                                            <div>
+                                            {/* <div>
                                                 <label className="block text-sm font-medium text-gray-700">Số tiền gửi</label>
                                                 <input
                                                     type="text"
@@ -535,7 +528,7 @@ const RoomRentalConfirmation = () => {
                                                     placeholder="Nhập số tiền gửi"
                                                 />
                                                 {errors.deposit && <p className="mt-1 text-sm text-red-500">{errors.deposit}</p>}
-                                            </div>
+                                            </div> */}
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700">Ngày bắt đầu</label>
                                                 <input

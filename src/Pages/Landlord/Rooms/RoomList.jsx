@@ -6,17 +6,20 @@ import Grid from '@mui/material/Grid2';
 import SidebarUser from '../../../Components/Layout/SidebarUser';
 import { useNavigate } from 'react-router-dom';
 import Loading from '../../../Components/Loading';
-import { FaMapMarkerAlt, FaCheckCircle, FaHourglassHalf, FaTimesCircle, FaEdit } from 'react-icons/fa';
+import { FaMapMarkerAlt, FaCheckCircle, FaHourglassHalf, FaTimesCircle, FaEdit, FaClock } from 'react-icons/fa';
 import { FaChartArea } from 'react-icons/fa6';
 import Footer from '../../../Components/Layout/Footer';
 import RoomLandlordService from '../../../Services/Landlord/RoomLandlordService';
 import BookingManagementService from '../../../Services/Landlord/BookingManagementService';
 import UserService from '../../../Services/User/UserService';
+import ContractService from '../../../Services/Landlord/ContractService';
 import { useAuth } from '../../../Context/AuthProvider';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { showCustomNotification } from '../../../Components/Notification';
 import AuthorizationModal from '../../../Components/ComponentPage/AuthorizationModal';
+import PriorityRoomService from '../../../Services/Admin/PriorityRoomService';
+import CPPRoomsService from '../../../Services/Admin/CPPRoomsService';
 
 const Item = styled(Paper)(({ theme }) => ({
     backgroundColor: '#fff',
@@ -26,8 +29,8 @@ const Item = styled(Paper)(({ theme }) => ({
     color: theme.palette.text.secondary,
     cursor: 'pointer',
     transition: 'transform 0.2s',
-    width: '250px',
-    height: '350px',
+    width: '270px',
+    height: '380px',
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'space-between',
@@ -111,6 +114,53 @@ const determineDisplayStatus = (room, booking) => {
     return 1;
 };
 
+// Hàm lấy thông tin ưu tiên
+const getPriorityInfo = (roomId, priorityPackages, cppRooms) => {
+    const priorityRoom = priorityPackages.find(pr => pr.roomId === roomId);
+    if (priorityRoom) {
+        const currentDate = new Date();
+        const startDate = new Date(priorityRoom.startDate);
+        const endDate = new Date(priorityRoom.endDate);
+        const isActive = currentDate >= startDate && currentDate <= endDate;
+
+        if (isActive) {
+            const cppRoom = cppRooms.find(
+                cpp => cpp.categoryPriorityPackageRoomId === priorityRoom.categoryPriorityPackageRoomId
+            );
+            if (cppRoom) {
+                return {
+                    value: cppRoom.categoryPriorityPackageRoomValue || 0,
+                    description: getCategoryDescription(cppRoom.categoryPriorityPackageRoomValue),
+                    borderColor: getBorderColor(cppRoom.categoryPriorityPackageRoomValue),
+                    endDate: format(new Date(priorityRoom.endDate), 'dd-MM-yyyy', { locale: vi }),
+                };
+            }
+        }
+    }
+    return {
+        value: 0,
+        description: "",
+        borderColor: "#D1D5DB",
+        endDate: null,
+    };
+};
+
+// Hàm lấy mô tả ưu tiên
+const getCategoryDescription = (value) => {
+    if (Number(value) > 0) {
+        return 'Tin ưu tiên';
+    }
+    return '';
+};
+
+// Hàm lấy màu viền
+const getBorderColor = (value) => {
+    if (Number(value) > 0) {
+        return '#EF4444'; // red-500
+    }
+    return '#D1D5DB'; // gray-200
+};
+
 // Thứ tự sắp xếp: status 2 -> 4 -> 3 -> 1
 const sortOrder = { 2: 1, 4: 2, 3: 3, 1: 4 };
 
@@ -124,6 +174,9 @@ const RoomList = () => {
     const [showModal, setShowModal] = useState(false);
     const { user } = useAuth();
     const [adminData, setAdminData] = useState(null);
+    const [priorityPackages, setPriorityPackages] = useState([]);
+    const [cppRooms, setCppRooms] = useState([]);
+    const [authorizedRooms, setAuthorizedRooms] = useState([]);
 
     const fetchAdminData = async () => {
         try {
@@ -140,6 +193,34 @@ const RoomList = () => {
                 partyBName: 'Admin',
                 partyBAddress: 'Đà Nẵng',
             });
+        }
+    };
+
+    // Fetch dữ liệu hợp đồng ủy quyền
+    const fetchAuthorizedRooms = async () => {
+        try {
+            const response = await ContractService.getAllAuthorizationContracts(user.token);
+            // Xử lý roomList từ chuỗi phân tách bằng dấu phẩy
+            const authorizedRoomIds = response
+                .filter(contract => contract.status === 3) // Chỉ lấy hợp đồng có status = 3 (đang hiệu lực)
+                .flatMap(contract => contract.roomList.split(',').map(id => parseInt(id.trim(), 10)))
+                .filter(id => !isNaN(id)); // Loại bỏ các ID không hợp lệ
+            setAuthorizedRooms(authorizedRoomIds);
+        } catch (error) {
+            console.error('Lỗi khi lấy danh sách hợp đồng ủy quyền:', error.message, error.stack);
+            setAuthorizedRooms([]);
+        }
+    };
+
+    // Fetch dữ liệu ưu tiên
+    const fetchPriorityData = async () => {
+        try {
+            const priorityData = await PriorityRoomService.getPriorityRooms();
+            const cppData = await CPPRoomsService.getCPPRooms();
+            setPriorityPackages(priorityData);
+            setCppRooms(cppData);
+        } catch (error) {
+            console.error('Lỗi khi lấy dữ liệu ưu tiên:', error.message);
         }
     };
 
@@ -282,7 +363,6 @@ const RoomList = () => {
     const handleSelectRoom = (roomId) => {
         setSelectedRooms((prev) => {
             const newSelection = prev.includes(roomId) ? prev.filter((id) => id !== roomId) : [...prev, roomId];
-            console.log(newSelection);
             return newSelection;
         });
     };
@@ -292,7 +372,9 @@ const RoomList = () => {
         if (selectedRooms.length === cards.length) {
             setSelectedRooms([]);
         } else {
-            const allRoomIds = cards.map((card) => card.roomId);
+            const allRoomIds = cards
+                .filter((card) => !authorizedRooms.includes(card.roomId))
+                .map((card) => card.roomId);
             setSelectedRooms(allRoomIds);
         }
     };
@@ -308,11 +390,14 @@ const RoomList = () => {
     };
 
     // Xử lý sau khi ủy quyền thành công
-    const handleAuthorizationSuccess = () => {
+    const handleAuthorizationSuccess = async () => {
         setSelectedRooms([]);
         setIsAuthorizing(false);
         setAdminData(null);
-        fetchAllCards();
+        setShowModal(false);
+        await fetchAllCards();
+        await fetchAuthorizedRooms();
+        showCustomNotification('success', 'Ủy quyền phòng thành công!');
     };
 
     // Xử lý kích hoạt chế độ ủy quyền
@@ -324,6 +409,8 @@ const RoomList = () => {
     useEffect(() => {
         if (user?.token && user?.userId) {
             fetchAllCards();
+            fetchPriorityData();
+            fetchAuthorizedRooms();
         } else {
             setLoading(false);
         }
@@ -426,6 +513,8 @@ const RoomList = () => {
                             }
                             if (!Array.isArray(images)) images = [images];
                             const firstImage = images[0] || 'https://via.placeholder.com/250x350';
+                            const priorityInfo = getPriorityInfo(card.roomId, priorityPackages, cppRooms);
+                            const isAuthorized = authorizedRooms.includes(card.roomId);
 
                             return (
                                 <Grid key={`${card.roomId}-${card.booking ? card.booking.rentalId : 'null'}`} item xs={12} sm={6} md={4}>
@@ -450,7 +539,7 @@ const RoomList = () => {
                                                     </div>
                                                 )}
                                                 {card.isPermission !== 0 && getStatusOverlay(card.status)}
-                                                {isAuthorizing && (
+                                                {isAuthorizing && !isAuthorized && (
                                                     <div
                                                         className="absolute top-2 right-1 z-10"
                                                         onClick={(e) => e.stopPropagation()}
@@ -479,7 +568,20 @@ const RoomList = () => {
                                                     </div>
                                                 )}
                                             </div>
-                                            <div className="flex flex-col flex-grow p-2 justify-between max-h-[355px] ">
+                                            <div className="flex flex-col flex-grow p-2 justify-between max-h-[390px]">
+                                                <div className="flex justify-between items-center w-full">
+                                                    {priorityInfo.description && (
+                                                        <p className="text-sm font-semibold bg-red-500 text-white border w-20 px-1 border-red-500 rounded-lg">
+                                                            {priorityInfo.description}
+                                                        </p>
+                                                    )}
+                                                    {priorityInfo.endDate && (
+                                                        <p className="text-sm text-gray-600 flex items-center dark:text-gray-300">
+                                                            <FaClock className="mr-1 text-gray-500" />
+                                                            Hết hạn: {priorityInfo.endDate}
+                                                        </p>
+                                                    )}
+                                                </div>
                                                 <p className="text-black text-base font-semibold truncate max-w-[250px] dark:text-white">
                                                     {card.title}
                                                 </p>

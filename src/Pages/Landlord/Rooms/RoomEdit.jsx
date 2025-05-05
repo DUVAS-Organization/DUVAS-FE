@@ -11,7 +11,6 @@ import { useAuth } from '../../../Context/AuthProvider';
 import Loading from '../../../Components/Loading';
 import SidebarUser from '../../../Components/Layout/SidebarUser';
 import StepConfirmation from '../../../Components/ComponentPage/StepConfirmation';
-import { format } from 'date-fns';
 import PriorityRoomService from '../../../Services/Admin/PriorityRoomService';
 
 const RoomEdit = () => {
@@ -44,8 +43,9 @@ const RoomEdit = () => {
         startDate: '',
         endDate: '',
         priorityPrice: 0,
-        categoryPriorityPackageRoomId: null,
+        categoryPriorityPackageRoomId: 0,
         duration: 0,
+        priorityPackageRoomId: null,
     });
     const [categoryRooms, setCategoryRooms] = useState([]);
     const [buildings, setBuildings] = useState([]);
@@ -60,6 +60,7 @@ const RoomEdit = () => {
     const [loading, setLoading] = useState(false);
     const [showPopup, setShowPopup] = useState(false);
     const [action, setAction] = useState('');
+    const [currentPriorityPackageId, setCurrentPriorityPackageId] = useState(null);
     const { roomId } = useParams();
     const navigate = useNavigate();
     const { user } = useAuth();
@@ -82,6 +83,8 @@ const RoomEdit = () => {
             showCustomNotification("error", "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!");
             localStorage.removeItem('authToken');
             navigate('/Logins');
+        } else if (error?.response?.status === 404 && apiMessage.includes("Không tìm thấy PriorityPackageRoom")) {
+            console.log("No existing PriorityPackageRoom found, will create a new one.");
         } else {
             showCustomNotification("error", apiMessage || customMessage);
         }
@@ -99,9 +102,13 @@ const RoomEdit = () => {
         Promise.all([
             CategoryRooms.getCategoryRooms(),
             BuildingServices.getBuildings(),
-            RoomLandlordService.getRoom(roomId, user?.token)
+            RoomLandlordService.getRoom(roomId, user?.token),
+            PriorityRoomService.getPriorityRooms().then(rooms =>
+                rooms.find(room => room.roomId === parseInt(roomId)) || null
+            ),
         ])
-            .then(([categories, buildings, roomData]) => {
+            .then(([categories, buildings, roomData, priorityRoom]) => {
+                // console.log('API data:', { categories, buildings, roomData, priorityRoom });
                 setCategoryRooms(categories);
                 setBuildings(buildings);
                 let images = [];
@@ -110,6 +117,7 @@ const RoomEdit = () => {
                 } catch {
                     images = roomData.image ? [roomData.image] : [];
                 }
+
                 setRoom({
                     roomId: roomData.roomId || '',
                     buildingId: roomData.buildingId || null,
@@ -136,13 +144,15 @@ const RoomEdit = () => {
                     quanLy: roomData.quanLy || 0,
                     chiPhiKhac: roomData.chiPhiKhac || 0,
                     authorization: roomData.authorization || 0,
-                    startDate: roomData.startDate || '',
-                    endDate: roomData.endDate || '',
-                    priorityPrice: roomData.priorityPrice || 0,
-                    categoryPriorityPackageRoomId: roomData.categoryPriorityPackageRoomId || null,
+                    startDate: priorityRoom?.startDate || '',
+                    endDate: priorityRoom?.endDate || '',
+                    priorityPrice: priorityRoom?.price || 0,
+                    categoryPriorityPackageRoomId: priorityRoom?.categoryPriorityPackageRoomId || 0,
                     duration: roomData.duration || 0,
+                    priorityPackageRoomId: priorityRoom?.priorityPackageRoomId || null,
                 });
                 setExistingImages(images);
+                setCurrentPriorityPackageId(priorityRoom?.categoryPriorityPackageRoomId || null);
             })
             .catch(error => {
                 console.error('Error fetching data:', error);
@@ -161,7 +171,6 @@ const RoomEdit = () => {
                 const checks = await Promise.all(
                     selectedFiles.map(async (file) => {
                         const result = await OtherService.checkImageAzure(file);
-                        console.log(`Kiểm tra ảnh ${file.name}:`, result);
                         return {
                             isSafe: result.isSafe !== undefined ? result.isSafe : false,
                             message: result.message || "Không có thông tin kiểm tra."
@@ -211,6 +220,12 @@ const RoomEdit = () => {
     const handleGenerateWithAI = async () => {
         setLoading(true);
         try {
+            if (!user || !user.userId || !user.token) {
+                showCustomNotification("error", "Bạn cần đăng nhập để thực hiện hành động này!");
+                navigate('/Logins');
+                return;
+            }
+
             const roomData = {
                 Title: room.title,
                 Description: room.description,
@@ -222,7 +237,7 @@ const RoomEdit = () => {
                 NumberOfBathroom: Number(room.numberOfBathroom),
                 Price: Number(room.price),
                 Note: room.note,
-                UserId: user?.userId || 3,
+                UserId: user.userId,
                 BuildingId: room.buildingId,
                 CategoryRoomId: Number(room.categoryRoomId),
                 Garret: room.garret,
@@ -238,10 +253,7 @@ const RoomEdit = () => {
                 QuanLy: Number(room.quanLy),
                 ChiPhiKhac: Number(room.chiPhiKhac),
                 authorization: Number(room.authorization || 0),
-                User: {
-                    UserId: user?.userId || 3,
-                    UserName: user?.["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"] || "Unknown"
-                },
+                PriorityPackageRooms: [],
                 RentalLists: []
             };
 
@@ -251,9 +263,9 @@ const RoomEdit = () => {
                 throw new Error('Vui lòng chọn nội thất hợp lệ.');
             }
             if (!roomData.LocationDetail) throw new Error('Địa chỉ không được để trống.');
-            if (!roomData.User.userId) throw new Error('UserId không được để trống.');
+            if (!roomData.UserId) throw new Error('UserId không được để trống.');
 
-            const result = await RoomLandlordService.generateRoomDescription(roomData, user?.token);
+            const result = await RoomLandlordService.generateRoomDescription(roomData, user.token);
             setRoom(prev => ({
                 ...prev,
                 title: result.title || prev.title,
@@ -316,17 +328,28 @@ const RoomEdit = () => {
             showCustomNotification("error", "Mô tả phải ít nhất 50 ký tự!");
             return;
         }
+        if (!room.furniture) {
+            showCustomNotification("error", "Vui lòng chọn nội thất!");
+            return;
+        }
+        if (!room.locationDetail) {
+            showCustomNotification("error", "Địa chỉ không được để trống!");
+            return;
+        }
         if (!room.categoryRoomId || isNaN(room.categoryRoomId)) {
             showCustomNotification("error", "Vui lòng chọn loại phòng hợp lệ!");
             return;
         }
-        if (!room.categoryPriorityPackageRoomId || !room.startDate || !room.endDate || !room.priorityPrice) {
-            showCustomNotification("error", "Vui lòng chọn gói ưu tiên và ngày bắt đầu hợp lệ!");
+        if (!room.categoryPriorityPackageRoomId && room.categoryPriorityPackageRoomId !== 0) {
+            showCustomNotification("error", "Vui lòng chọn gói ưu tiên!");
+            return;
+        }
+        if (!currentPriorityPackageId && room.categoryPriorityPackageRoomId !== 0 && (!room.startDate || !room.endDate)) {
+            showCustomNotification("error", "Vui lòng chọn ngày bắt đầu hợp lệ!");
             return;
         }
 
         // Validate user authentication
-        console.log('User object:', user);
         if (!user || !user.userId || !user.token) {
             console.error('Authentication failed:', { user });
             showCustomNotification('error', 'Bạn cần đăng nhập để thực hiện hành động này!');
@@ -336,29 +359,25 @@ const RoomEdit = () => {
 
         setLoading(true);
         try {
-            // Check Balance
-            console.log('Checking balance:', { UserId: user.userId, Amount: room.priorityPrice });
-            const checkBalanceData = { UserId: user.userId, Amount: room.priorityPrice };
-            const balanceResponse = await BookingManagementService.checkBalance(checkBalanceData, user.token);
-            console.log('Balance response:', balanceResponse);
+            // Check balance for new paid packages
+            if (!currentPriorityPackageId && room.priorityPrice > 0) {
+                const checkBalanceData = { UserId: user.userId, Amount: room.priorityPrice };
+                const balanceResponse = await BookingManagementService.checkBalance(checkBalanceData, user.token);
+                const isBalanceSufficient =
+                    (typeof balanceResponse === 'string' && balanceResponse === 'Bạn đủ tiền.') ||
+                    (typeof balanceResponse === 'object' && balanceResponse.isSuccess);
 
-            const isBalanceSufficient =
-                (typeof balanceResponse === 'string' && balanceResponse === 'Bạn đủ tiền.') ||
-                (typeof balanceResponse === 'object' && balanceResponse.isSuccess);
+                if (!isBalanceSufficient) {
+                    showCustomNotification('error', 'Bạn không đủ tiền để thực hiện giao dịch này!');
+                    navigate('/Moneys');
+                    return;
+                }
 
-            if (!isBalanceSufficient) {
-                showCustomNotification('error', 'Bạn không đủ tiền để thực hiện giao dịch này!');
-                navigate('/Moneys');
-                return;
+                const updateBalanceData = { UserId: user.userId, Amount: -room.priorityPrice };
+                await BookingManagementService.updateBalance(updateBalanceData, user.token);
             }
 
-            // Update Balance
-            console.log('Updating balance:', { UserId: user.userId, Amount: -room.priorityPrice });
-            const updateBalanceData = { UserId: user.userId, Amount: -room.priorityPrice };
-            await BookingManagementService.updateBalance(updateBalanceData, user.token);
-
             // Upload Images
-            console.log('Uploading images:', newFiles);
             const uploadedImageUrls = await Promise.all(newFiles.map(uploadFile));
             const finalImageUrls = [...existingImages, ...uploadedImageUrls];
 
@@ -389,34 +408,41 @@ const RoomEdit = () => {
                 quanLy: Number(room.quanLy),
                 chiPhiKhac: Number(room.chiPhiKhac),
                 authorization: Number(room.authorization || 0),
-                startDate: room.startDate,
-                endDate: room.endDate,
-                priorityPrice: room.priorityPrice,
-                categoryPriorityPackageRoomId: room.categoryPriorityPackageRoomId,
+                PriorityPackageRooms: []
             };
 
             // Update Room
-            console.log('Updating room:', { roomId, roomData });
             await RoomLandlordService.updateRoom(roomId, roomData, user.token);
 
-            // Create Priority Room
-            const priorityRoomData = {
-                roomId: roomId,
-                categoryPriorityPackageRoomId: room.categoryPriorityPackageRoomId,
-                startDate: room.startDate,
-                endDate: room.endDate,
-                priorityPrice: room.priorityPrice,
-                userId: user.userId,
-                status: 1,
-            };
-            console.log('Creating priority room:', priorityRoomData);
-            await PriorityRoomService.createPriorityRoom(priorityRoomData, user.token);
+            // Handle Priority Room for new paid packages
+            if (!currentPriorityPackageId && room.categoryPriorityPackageRoomId !== 0) {
+                const formatDate = (dateString) => {
+                    const date = new Date(dateString);
+                    return date.toISOString().split('T')[0];
+                };
 
-            showCustomNotification("success", "Cập nhật phòng và tạo priority room thành công!");
+                const priorityRoomData = {
+                    roomId: roomId,
+                    userId: user.userId,
+                    categoryPriorityPackageRoomId: room.categoryPriorityPackageRoomId,
+                    startDate: formatDate(room.startDate),
+                    endDate: formatDate(room.endDate),
+                    price: room.priorityPrice,
+                    status: 1,
+                };
+
+                if (room.priorityPackageRoomId) {
+                    await PriorityRoomService.updatePriorityRoom(room.priorityPackageRoomId, priorityRoomData);
+                } else {
+                    await PriorityRoomService.createPriorityRoom(priorityRoomData);
+                }
+            }
+
+            showCustomNotification("success", "Cập nhật phòng thành công!");
             navigate('/Room');
         } catch (error) {
             console.error('Submit error:', error);
-            handleApiError(error, "Không thể cập nhật phòng hoặc tạo priority room!");
+            handleApiError(error, "Không thể cập nhật phòng!");
         } finally {
             setLoading(false);
         }
@@ -441,6 +467,7 @@ const RoomEdit = () => {
             if (!room.categoryRoomId) newErrors.categoryRoomId = 'Loại phòng là bắt buộc';
             if (!room.locationDetail) newErrors.locationDetail = 'Địa chỉ là bắt buộc';
             if (!room.acreage || isNaN(Number(room.acreage)) || Number(room.acreage) < 0) newErrors.acreage = 'Diện tích phải là số không âm';
+            if (!room.furniture) newErrors.furniture = 'Nội thất là bắt buộc';
             if (room.numberOfBathroom < 0 || isNaN(Number(room.numberOfBathroom))) newErrors.numberOfBathroom = 'Số phòng tắm phải là số không âm';
             if (room.numberOfBedroom < 0 || isNaN(Number(room.numberOfBedroom))) newErrors.numberOfBedroom = 'Số giường ngủ phải là số không âm';
             if (!room.description) newErrors.description = 'Mô tả là bắt buộc';
@@ -473,6 +500,7 @@ const RoomEdit = () => {
         }
     };
 
+    // Handle Back
     const handleBack = () => {
         if (step > 1) setStep(step - 1);
     };
@@ -541,6 +569,7 @@ const RoomEdit = () => {
                     action={action}
                     confirmTogglePermission={confirmTogglePermission}
                     closePopup={closePopup}
+                    currentPriorityPackageId={currentPriorityPackageId}
                 />
             </div>
         </div>

@@ -21,7 +21,7 @@ const FeedbackList = ({ roomId }) => {
             try {
                 const feedbackData = await UserRentRoomService.getUserFeedbackByRoomId(roomId);
 
-                console.log("Received feedbackData:", feedbackData);  // Log the data to check
+                // console.log("Received feedbackData:", feedbackData);  // Log the data to check
 
                 if (Array.isArray(feedbackData)) {
                     setFeedbacks(feedbackData);  // Update state with the feedback data
@@ -39,11 +39,11 @@ const FeedbackList = ({ roomId }) => {
         };
 
         fetchFeedbacks();
-        console.log(feedbacks);
+        // console.log(feedbacks);
     }, [roomId]);
 
     useEffect(() => {
-        console.log("Current feedbacks state:", feedbacks);
+        // console.log("Current feedbacks state:", feedbacks);
     }, [feedbacks]);
 
     if (loading) return <p>Đang tải đánh giá...</p>;

@@ -9,7 +9,6 @@ const UserRentRoomService = {
             const response = await axios.get(`${API_BASE_URL}/rental-list-of-user/${userId}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            console.log("📌 API Response (Pending Rentals):", response.data);
             return response.data?.rentalList || [];
         } catch (error) {
             console.error("❌ Error fetching pending rentals:", error);
@@ -23,7 +22,6 @@ const UserRentRoomService = {
             const response = await axios.get(`${API_BASE_URL}/rental-list-of-rent-user/${userId}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            console.log("📌 API Response (Renting Rooms):", response.data);
             return response.data?.rentalList || [];
         } catch (error) {
             console.error("❌ Error fetching renting rooms:", error);
@@ -37,7 +35,6 @@ const UserRentRoomService = {
             const response = await axios.get(`${API_BASE_URL}/rental-list-of-rented-user/${userId}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            console.log("📌 API Response (Rented Rooms):", response.data);
             return response.data?.rentalList || [];
         } catch (error) {
             console.error("❌ Error fetching rented rooms:", error);
@@ -51,7 +48,6 @@ const UserRentRoomService = {
             const response = await axios.get(`${API_BASE_URL}/rental-list-of-cancel-user/${userId}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            console.log("📌 API Response (Cancelled Rentals):", response.data);
             return response.data?.rentalList || [];
         } catch (error) {
             console.error("❌ Error fetching canceled rentals:", error);
@@ -65,7 +61,6 @@ const UserRentRoomService = {
             const response = await axios.get(`${API_BASE_URL}/rental-list-by-id/${rentalId}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            console.log("📌 API Response (Rental Details):", response.data);
             return response.data || null;
         } catch (error) {
             console.error("❌ Error fetching rental details:", error);
@@ -101,7 +96,6 @@ const UserRentRoomService = {
             const response = await axios.get(`${API_BASE_URL}/check-phone/${userId}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            console.log("📌 API Response (Check Phone):", response.data);
             return response.data;
         } catch (error) {
             console.error("❌ Error checking user phone:", error);
@@ -116,7 +110,6 @@ const UserRentRoomService = {
                     "Content-Type": "application/json",
                 }
             });
-            console.log("📌 API Response:", response.data);
             return response;
         } catch (error) {
             console.error("❌ Error sending feedback:", error.response?.data || error.message);

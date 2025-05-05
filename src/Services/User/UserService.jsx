@@ -267,7 +267,6 @@ const UserService = {
             const response = await axios.get(`${API_URL}/service-license/${userId}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            console.log('📌 Lấy thông tin giấy phép dịch vụ:', response.data);
             return response.data;
         } catch (error) {
             console.error('❌ Lỗi khi lấy thông tin giấy phép dịch vụ:', error.response?.data || error.message);
@@ -279,7 +278,6 @@ const UserService = {
             const response = await axios.get(`${API_URL}/service-license/${userId}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            console.log('📌 Lấy thông tin giấy phép dịch vụ:', response.data);
             return response.data;
         } catch (error) {
             console.error('❌ Lỗi khi lấy thông tin giấy phép dịch vụ:', error.response?.data || error.message);
@@ -291,7 +289,6 @@ const UserService = {
             const response = await axios.get(`${API_URL}/landlord-license/${userId}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            console.log('📌 Lấy thông tin giấy phép dịch vụ:', response.data);
             return response.data;
         } catch (error) {
             console.error('❌ Lỗi khi lấy thông tin giấy phép dịch vụ:', error.response?.data || error.message);
@@ -303,7 +300,6 @@ const UserService = {
             const response = await axios.get(`${API_URL}/one-landlord-license/${userId}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            console.log('📌 Lấy thông tin giấy phép dịch vụ:', response.data);
             return response.data;
         } catch (error) {
             console.error('❌ Lỗi khi lấy thông tin giấy phép dịch vụ:', error.response?.data || error.message);

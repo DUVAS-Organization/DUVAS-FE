@@ -504,9 +504,15 @@ export default function RentalList() {
 
             {showConfirmPopup && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                    <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+                    <div className="bg-white p-6 rounded-lg shadow-lg w-[500px]">
                         <h3 className="text-lg font-bold mb-4">Xác nhận thuê phòng</h3>
-                        <p className="mb-4">Bạn có chắc chắn muốn xác nhận thuê phòng này không?</p>
+
+                        <ul className="list-disc list-inside text-gray-800 mb-3 space-y-1">
+                            <li>Sau khi nhấn "Xác nhận" sẽ hoàn tất quá trình thuê phòng.</li>
+                            <li>Phòng sẽ được đánh dấu là “Đang thuê” và bạn sẽ không thể hoàn tác.</li>
+                            <li>Vui lòng kiểm tra kỹ thông tin hợp đồng trước khi tiếp tục.</li>
+                        </ul>
+                        {/* <p className="mb-4">Bạn có chắc chắn muốn xác nhận thuê phòng này?</p> */}
                         <div className="flex justify-between">
                             <button onClick={() => { setShowConfirmPopup(false); }}
                                 className="bg-gray-300 text-black px-6 py-2 rounded-lg hover:bg-gray-400 transition">Hủy</button>

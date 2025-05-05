@@ -45,7 +45,7 @@ const Navbar = () => {
     const queryParams = new URLSearchParams(location.search);
     const tab = queryParams.get('tab') || '';
 
-    // Đóng dropdown khi click bên ngoài
+    // Close dropdown when clicking outside
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -56,7 +56,7 @@ const Navbar = () => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [dropdownRef]);
 
-    // Lấy thông tin chi tiết người dùng
+    // Fetch user profile with encrypted money handling
     useEffect(() => {
         const fetchUserProfile = async () => {
             if (user && user.userId) {
@@ -66,7 +66,10 @@ const Navbar = () => {
                         userName: profileData.userName || user.username,
                         name: profileData.name || '',
                         profilePicture: profileData.profilePicture || 'https://www.gravatar.com/avatar/?d=mp',
+                        // Use decrypted money value from backend
                         money: profileData.money || 0,
+                        encryptedMoney: profileData.encryptedMoney,
+                        moneyIV: profileData.moneyIV
                     });
                 } catch (error) {
                     console.error('Error fetching user profile:', error);
@@ -75,6 +78,8 @@ const Navbar = () => {
                         name: '',
                         profilePicture: 'https://www.gravatar.com/avatar/?d=mp',
                         money: 0,
+                        encryptedMoney: null,
+                        moneyIV: null
                     });
                 }
             }
@@ -100,7 +105,7 @@ const Navbar = () => {
                     <div className="flex justify-between mb-2">
                         <h2 className="text-sm font-semibold dark:text-white">Số dư tài khoản: </h2>
                         <span className="text-sm font-bold text-red-600 dark:text-red-500">
-                            {userProfile?.money.toLocaleString() || '0'} đ
+                            {userProfile?.money?.toLocaleString('vi-VN') || '0'} đ
                         </span>
                     </div>
                 </div>
@@ -179,7 +184,6 @@ const Navbar = () => {
         );
     };
 
-    // Hàm xử lý khi nhấn nút "Đăng tin"
     const handlePostClick = async () => {
         if (!user) {
             setShowRolePopup(true);
@@ -187,11 +191,9 @@ const Navbar = () => {
         }
 
         try {
-            // Gọi UserService.getUserById để lấy thông tin người dùng
             const userData = await UserService.getUserById(user.userId);
-            console.log('User Data:', userData); // Debug
+            // console.log('User Data:', userData);
 
-            // Kiểm tra vai trò dựa trên RoleLandlord và RoleService
             const isLandlord = userData.RoleLandlord === 1;
             const isService = userData.RoleService === 1;
 
@@ -206,11 +208,10 @@ const Navbar = () => {
             }
         } catch (error) {
             console.error('Error fetching user data:', error);
-            setShowRolePopup(true); // Hiển thị popup nếu lỗi
+            setShowRolePopup(true);
         }
     };
 
-    // Hàm xử lý chọn loại bài đăng trong modal
     const handlePostSelection = (type) => {
         setShowPostSelectionModal(false);
         if (type === 'room') {
@@ -230,7 +231,7 @@ const Navbar = () => {
                             <img src={Image_Logo} alt="DUVAS" className="max-w-[110px]" />
                         </div>
                     </Link>
-                    {/* Menu chính */}
+                    {/* Main menu */}
                     <div className="hidden sm:flex space-x-1">
                         <NavLink
                             to="/"
@@ -299,7 +300,7 @@ const Navbar = () => {
                                         </div>
                                     )}
                                 </div>
-                                {/* Nút Đăng tin */}
+                                {/* Post button */}
                                 <button
                                     onClick={handlePostClick}
                                     className="dark:text-white dark:bg-red-500 text-red-500 px-3 py-2 rounded-md text-base font-medium border border-red-400 hover:bg-red-500 hover:text-white transition-colors duration-150"
@@ -391,7 +392,7 @@ const Navbar = () => {
                 </div>
             )}
 
-            {/* Popup thông báo vai trò */}
+            {/* Role notification popup */}
             {showRolePopup && (
                 <div className="fixed inset-0 top-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white p-6 rounded-lg shadow-lg w-96 dark:bg-gray-800">
@@ -422,7 +423,7 @@ const Navbar = () => {
                 </div>
             )}
 
-            {/* Modal chọn loại bài đăng */}
+            {/* Post type selection modal */}
             {showPostSelectionModal && (
                 <div className="fixed inset-0 top-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white p-8 rounded-lg shadow-lg w-96 dark:bg-gray-800">

@@ -65,7 +65,6 @@ const AdminTransaction = () => {
                 setIsModalOpen(true);
             }
         } catch (error) {
-            console.log("Error when getting payment link", error);
             showCustomNotification("error", "Lỗi khi nhận thông tin thanh toán!");
         }
     };
@@ -117,7 +116,6 @@ const AdminTransaction = () => {
                 try {
                     const response = await UserService.checkTransactionStatus(addInfo);
                     status = response?.data?.isPaid || false;
-                    console.log("Payment Status:", status);
 
                     if (!status) {
                         retries++;
@@ -130,7 +128,6 @@ const AdminTransaction = () => {
             }
 
             if (status) {
-                console.log("Payment confirmed!");
                 showCustomNotification("success", "Giao dịch đã được xác nhận!");
                 setIsModalOpen(false);
                 getTransactions();

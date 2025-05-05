@@ -10,31 +10,47 @@ import { useNavigate } from 'react-router-dom';
 import PriorityRoomService from '../../Services/Admin/PriorityRoomService';
 
 // Helper Functions
-const getCategoryName = (value) => `Gói ${value} ngày`;
+const getCategoryName = (value) => {
+    if (value === 0) return 'Gói Miễn Phí';
+    return `Gói ${Number(value)} ngày`;
+};
 
 const getCategoryDescription = (value) => {
-    switch (value) {
-        case 30: return 'Hiển thị trên cùng';
-        case 14: return 'Ưu tiên cao';
-        case 7: return 'Ưu tiên trung bình';
-        case 3: return 'Ưu tiên cơ bản';
-        default: return 'Ưu tiên cơ bản';
+    if (value === 0) return 'Gói cơ bản không ưu tiên';
+    switch (Number(value)) {
+        case 30:
+            return 'Hiển thị trên cùng';
+        case 14:
+            return 'Ưu tiên cao';
+        case 7:
+            return 'Ưu tiên trung bình';
+        case 3:
+            return 'Ưu tiên cơ bản';
+        default:
+            return 'Ưu tiên cơ bản';
     }
 };
 
 const getBorderColor = (value) => {
-    switch (value) {
-        case 30: return 'border-red-500';
-        case 14: return 'border-yellow-500';
-        case 7: return 'border-green-500';
-        default: return 'border-gray-200';
+    if (value === 0) return 'border-blue-500';
+    switch (Number(value)) {
+        case 30:
+            return 'border-red-600';
+        case 14:
+            return 'border-yellow-600';
+        case 7:
+            return 'border-green-500';
+        case 3:
+            return 'border-gray-500';
+        default:
+            return 'border-gray-200';
     }
 };
 
-const getBorderDescription = (price) => {
-    return `${price.toLocaleString('vi-VN')} đ/ngày`;
+const getBorderDescription = (price, duration) => {
+    if (price === 0) return 'Miễn phí';
+    return `${(price / duration).toLocaleString('vi-VN')} đ/ngày`;
 };
-
 
 // Step 1: Information
 const Step1Information = ({
@@ -61,9 +77,12 @@ const Step1Information = ({
                             e.stopPropagation();
                             handleTogglePermission(room.isPermission === 1 ? 'lock' : 'unlock');
                         }}
-                        className={`py-1 text-lg ${room.isPermission === 1 ? 'text-red-500 w-16 h-12 hover:bg-red-500 hover:text-white' : 'text-green-500 hover:bg-green-500 hover:text-white w-24 h-12 p-2'} font-semibold bg-white rounded-full border-2`}
+                        className={`py-1 text-lg ${room.isPermission === 1
+                            ? 'text-red-500 w-16 h-12 hover:bg-red-500 hover:text-white'
+                            : 'text-green-500 hover:bg-green-500 hover:text-white w-24 h-12 p-2'
+                            } font-semibold bg-white rounded-full border-2`}
                     >
-                        {room.isPermission === 1 ? "Khóa" : "Mở Khóa"}
+                        {room.isPermission === 1 ? 'Khóa' : 'Mở Khóa'}
                     </button>
                 )}
             </div>
@@ -90,10 +109,7 @@ const Step1Information = ({
                         <label className="block text-sm font-medium text-gray-700">
                             Giá (đ/tháng) <span className="text-red-500">*</span>
                         </label>
-                        <PriceInput
-                            value={room.price || 0}
-                            onChange={(val) => setRoom({ ...room, price: val })}
-                        />
+                        <PriceInput value={room.price || 0} onChange={(val) => setRoom({ ...room, price: val })} />
                         {errors.price && <p className="text-red-500 text-sm mt-1">{errors.price}</p>}
                     </div>
                     <div>
@@ -105,7 +121,9 @@ const Step1Information = ({
                             onChange={(e) => setRoom({ ...room, categoryRoomId: parseInt(e.target.value) })}
                             className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
                         >
-                            <option value="" disabled>Chọn loại phòng...</option>
+                            <option value="" disabled>
+                                Chọn loại phòng...
+                            </option>
                             {categoryRooms.map((categoryRoom) => (
                                 <option key={categoryRoom.categoryRoomId} value={categoryRoom.categoryRoomId}>
                                     {categoryRoom.categoryName}
@@ -151,17 +169,22 @@ const Step1Information = ({
                 </div>
                 <div className="grid grid-cols-3 gap-4">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Nội Thất</label>
+                        <label className="block text-sm font-medium text-gray-700">
+                            Nội Thất <span className="text-red-500">*</span>
+                        </label>
                         <select
                             value={room.furniture}
                             onChange={(e) => setRoom({ ...room, furniture: e.target.value })}
                             className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
                         >
                             <option value="">Chọn nội thất...</option>
-                            {['Đầy đủ', 'Cơ bản', 'Không nội thất'].map(option => (
-                                <option key={option} value={option}>{option}</option>
+                            {['Đầy đủ', 'Cơ bản', 'Không nội thất'].map((option) => (
+                                <option key={option} value={option}>
+                                    {option}
+                                </option>
                             ))}
                         </select>
+                        {errors.furniture && <p className="text-red-500 text-sm mt-1">{errors.furniture}</p>}
                     </div>
                     <div className="flex items-center">
                         <label className="block text-sm font-medium text-gray-700 w-1/3">
@@ -211,10 +234,7 @@ const Step1Information = ({
                     </div>
                 </div>
                 <div>
-                    <div
-                        className="flex items-center justify-between cursor-pointer select-none"
-                        onClick={toggleDropOpen}
-                    >
+                    <div className="flex items-center justify-between cursor-pointer select-none" onClick={toggleDropOpen}>
                         <h3 className="text-lg font-semibold text-gray-800 mb-2">Chi phí khác</h3>
                         {isDropOpen ? <FaChevronUp className="text-gray-600" /> : <FaChevronDown className="text-gray-600" />}
                     </div>
@@ -227,14 +247,11 @@ const Step1Information = ({
                                 { label: 'Rác (đ/tháng)', key: 'rac' },
                                 { label: 'Gửi xe (đ/tháng)', key: 'guiXe' },
                                 { label: 'Quản lý (đ/tháng)', key: 'quanLy' },
-                                { label: 'Chi phí khác (đ/tháng)', key: 'chiPhiKhac' }
+                                { label: 'Chi phí khác (đ/tháng)', key: 'chiPhiKhac' },
                             ].map(({ label, key }) => (
                                 <div key={key}>
                                     <label className="block text-sm font-medium text-gray-700">{label}</label>
-                                    <PriceInput
-                                        value={room[key]}
-                                        onChange={(val) => setRoom({ ...room, [key]: Number(val) || 0 })}
-                                    />
+                                    <PriceInput value={room[key]} onChange={(val) => setRoom({ ...room, [key]: Number(val) || 0 })} />
                                 </div>
                             ))}
                         </div>
@@ -247,14 +264,9 @@ const Step1Information = ({
                         <button
                             type="button"
                             onClick={handleGenerateWithAI}
-                            className="flex items-center space-x-1 px-3 py-2 border border-gray-400 rounded-full shadow-sm text-gray-800 hover:bg-gray-300 font-medium"
+                            className="flex items-center space-x-1 px-3 py-2 border border-gray-400 rounded-full shadow-sm text-gray-600 hover:bg-gray-300 font-medium"
                         >
-                            <svg
-                                className="w-4 h-4 text-green-500"
-                                fill="currentColor"
-                                viewBox="0 0 24 24"
-                                xmlns="http://www.w3.org/2000/svg"
-                            >
+                            <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M12 2l2.4 7.2h7.6l-6 4.8 2.4 7.2-6-4.8-6 4.8 2.4-7.2-6-4.8h7.6z" />
                             </svg>
                             <span>Tạo với AI</span>
@@ -304,17 +316,9 @@ const Step2Images = ({ roomId, handleFileChange, combinedPreviews, handleRemoveF
                 <label className="cursor-pointer bg-gray-200 p-3 rounded-lg flex items-center gap-2 justify-center">
                     <FaPlus className="text-blue-600" />
                     <span className="text-gray-700 font-semibold">Thêm ảnh</span>
-                    <input
-                        type="file"
-                        multiple
-                        onChange={handleFileChange}
-                        accept=".jpeg, .png"
-                        className="hidden"
-                    />
+                    <input type="file" multiple onChange={handleFileChange} accept=".jpeg, .png" className="hidden" />
                 </label>
-                <p className="text-gray-500 text-sm mb-3 font-medium text-center mt-2">
-                    Định dạng: JPEG, PNG - Tối đa 5MB
-                </p>
+                <p className="text-gray-500 text-sm mb-3 font-medium text-center mt-2">Định dạng: JPEG, PNG - Tối đa 5MB</p>
                 {combinedPreviews.length > 0 && (
                     <div className="mt-3">
                         <p className="font-semibold text-gray-700">Ảnh đã chọn:</p>
@@ -337,9 +341,7 @@ const Step2Images = ({ roomId, handleFileChange, combinedPreviews, handleRemoveF
                                         className="w-full h-20 object-cover rounded-md cursor-pointer"
                                         onClick={() => setPreviewImage(item.url)}
                                     />
-                                    {item.isInvalid && (
-                                        <p className="text-red-500 text-xs mt-1">Ảnh không phù hợp</p>
-                                    )}
+                                    {item.isInvalid && <p className="text-red-500 text-xs mt-1">Ảnh không phù hợp</p>}
                                 </div>
                             ))}
                         </div>
@@ -351,10 +353,12 @@ const Step2Images = ({ roomId, handleFileChange, combinedPreviews, handleRemoveF
 };
 
 // Step 3: Confirmation
-const Step3Confirmation = ({ room, setRoom, handleBack, handleSubmit, roomId, user }) => {
+const Step3Confirmation = ({ room, setRoom, handleBack, handleSubmit, roomId, user, currentPriorityPackageId }) => {
     const [categories, setCategories] = useState([]);
-    const [selectedCategoryId, setSelectedCategoryId] = useState(room.categoryPriorityPackageRoomId || null);
+    const [selectedCategoryId, setSelectedCategoryId] = useState(room.categoryPriorityPackageRoomId || 0);
+    const [isPackageExpired, setIsPackageExpired] = useState(false);
     const navigate = useNavigate();
+    const hasExistingPackage = !!currentPriorityPackageId;
 
     useEffect(() => {
         const fetchCategories = async () => {
@@ -372,17 +376,32 @@ const Step3Confirmation = ({ room, setRoom, handleBack, handleSubmit, roomId, us
                         category.categoryPriorityPackageRoomId != null
                 );
 
-                setCategories(activeCategories);
+                const freePackage = {
+                    categoryPriorityPackageRoomId: 0,
+                    categoryPriorityPackageRoomValue: 0,
+                    price: 0,
+                    status: 1,
+                    description: 'Gói Miễn Phí',
+                };
+                setCategories([freePackage, ...activeCategories]);
 
-                if (activeCategories.length > 0) {
-                    let defaultCategory = activeCategories.find(
-                        (c) => c.categoryPriorityPackageRoomId === room.categoryPriorityPackageRoomId
-                    );
-                    if (!defaultCategory) {
-                        defaultCategory = activeCategories[0];
+                if (activeCategories.length > 0 || !hasExistingPackage) {
+                    let defaultCategory;
+                    if (hasExistingPackage) {
+                        defaultCategory = activeCategories.find(
+                            (c) => c.categoryPriorityPackageRoomId === currentPriorityPackageId
+                        ) || freePackage;
+                    } else {
+                        defaultCategory = room.categoryPriorityPackageRoomId
+                            ? activeCategories.find(
+                                (c) => c.categoryPriorityPackageRoomId === room.categoryPriorityPackageRoomId
+                            ) || freePackage
+                            : freePackage;
                     }
                     setSelectedCategoryId(defaultCategory.categoryPriorityPackageRoomId);
-                    updateRoomDetails(defaultCategory);
+                    if (!hasExistingPackage && defaultCategory.categoryPriorityPackageRoomId !== 0) {
+                        updateRoomDetails(defaultCategory);
+                    }
                 } else {
                     showCustomNotification('error', 'Không có gói ưu tiên hợp lệ nào!');
                 }
@@ -394,30 +413,52 @@ const Step3Confirmation = ({ room, setRoom, handleBack, handleSubmit, roomId, us
 
         fetchCategories();
 
-        if (!room.startDate) {
+        // Kiểm tra nếu ngày hiện tại > endDate
+        if (hasExistingPackage && room.endDate) {
+            const currentDate = new Date();
+            const endDate = new Date(room.endDate);
+            if (currentDate > endDate) {
+                setIsPackageExpired(true);
+            }
+        }
+
+        // Đặt startDate mặc định là ngày hiện tại nếu chưa có
+        if (!room.startDate && (!hasExistingPackage || isPackageExpired)) {
             const today = new Date().toISOString().split('T')[0];
             setRoom({ ...room, startDate: today });
         }
-    }, [setRoom]);
+    }, [setRoom, hasExistingPackage, currentPriorityPackageId, room.endDate, isPackageExpired]);
 
     useEffect(() => {
-        if (room.startDate && selectedCategoryId) {
-            const selectedCategory = categories.find(
-                (c) => c.categoryPriorityPackageRoomId === selectedCategoryId
-            );
-            if (selectedCategory) {
+        if ((!hasExistingPackage || isPackageExpired) && room.startDate && selectedCategoryId) {
+            const selectedCategory = categories.find((c) => c.categoryPriorityPackageRoomId === selectedCategoryId);
+            if (selectedCategory && selectedCategory.categoryPriorityPackageRoomId !== 0) {
                 updateRoomDetails(selectedCategory);
+            } else {
+                setRoom({
+                    ...room,
+                    endDate: '',
+                    priorityPrice: 0,
+                    duration: 0,
+                    categoryPriorityPackageRoomId: 0,
+                });
             }
         }
-    }, [room.startDate, selectedCategoryId, categories]);
+    }, [room.startDate, selectedCategoryId, categories, hasExistingPackage, isPackageExpired]);
 
     const handleCategorySelect = (categoryId) => {
-        setSelectedCategoryId(categoryId);
+        if (!hasExistingPackage || isPackageExpired) {
+            setSelectedCategoryId(categoryId);
+        }
+    };
+
+    const formatDate = (dateString) => {
+        const date = new Date(dateString);
+        return date.toISOString().split('T')[0];
     };
 
     const updateRoomDetails = (category) => {
         if (!room.startDate || isNaN(new Date(room.startDate).getTime())) {
-            showCustomNotification('error', 'Ngày bắt đầu không hợp lệ!');
             return;
         }
 
@@ -427,13 +468,8 @@ const Step3Confirmation = ({ room, setRoom, handleBack, handleSubmit, roomId, us
         const duration = Number(category.categoryPriorityPackageRoomValue);
         const totalPrice = Number(category.price);
 
-        const pricePerDay = duration > 0 ? totalPrice / duration : 0;
-
         if (isNaN(totalPrice)) {
-            showCustomNotification(
-                'error',
-                `Dữ liệu không hợp lệ cho gói ${category.categoryPriorityPackageRoomId}`
-            );
+            showCustomNotification('error', `Dữ liệu không hợp lệ cho gói ${category.categoryPriorityPackageRoomId}`);
             return;
         }
 
@@ -441,8 +477,8 @@ const Step3Confirmation = ({ room, setRoom, handleBack, handleSubmit, roomId, us
             ...room,
             endDate: endDate.toISOString().split('T')[0],
             priorityPrice: totalPrice,
-            categoryPriorityPackageRoomId: category.categoryPriorityPackageRoomId,
             duration: duration,
+            categoryPriorityPackageRoomId: category.categoryPriorityPackageRoomId,
         });
     };
 
@@ -455,89 +491,92 @@ const Step3Confirmation = ({ room, setRoom, handleBack, handleSubmit, roomId, us
             <div className="space-y-6">
                 <p className="text-lg font-semibold text-gray-900">Chọn loại tin</p>
 
-                {categories.length === 0 ? (
-                    <p className="text-red-500">
-                        Không có gói ưu tiên nào khả dụng. Vui lòng thử lại sau!
+                {hasExistingPackage && !isPackageExpired && (
+                    <p className="text-red-500 mb-4">
+                        Phòng đang có gói ưu tiên hoạt động. Không thể thay đổi gói ưu tiên hoặc ngày bắt đầu.
                     </p>
+                )}
+
+                {hasExistingPackage && isPackageExpired && (
+                    <p className="text-green-500 mb-4">
+                        Gói ưu tiên hiện tại đã hết hạn. Bạn có thể chọn gói ưu tiên mới.
+                    </p>
+                )}
+
+                {categories.length === 0 ? (
+                    <p className="text-red-500">Không có gói ưu tiên nào khả dụng. Vui lòng thử lại sau!</p>
                 ) : (
                     <div className="grid grid-cols-4 gap-4">
                         {categories.map((category) => {
                             const duration = Number(category.categoryPriorityPackageRoomValue);
                             const totalPrice = Number(category.price);
                             const pricePerDay = duration > 0 ? totalPrice / duration : 0;
+                            const isSelected = selectedCategoryId === category.categoryPriorityPackageRoomId;
+                            const isDisabled = hasExistingPackage && !isPackageExpired && !isSelected;
 
                             return (
                                 <div
                                     key={category.categoryPriorityPackageRoomId}
-                                    className={`border-2 ${getBorderColor(
-                                        category.categoryPriorityPackageRoomValue
-                                    )} rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow bg-white cursor-pointer ${selectedCategoryId === category.categoryPriorityPackageRoomId
-                                        ? 'ring-2 ring-black'
-                                        : ''
-                                        }`}
-                                    onClick={() => handleCategorySelect(category.categoryPriorityPackageRoomId)}
+                                    className={`border-2 ${getBorderColor(category.categoryPriorityPackageRoomValue)} rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow bg-white ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                                        } ${isSelected ? 'ring-2 ring-gray-400' : ''}`}
+                                    onClick={() => !isDisabled && handleCategorySelect(category.categoryPriorityPackageRoomId)}
                                 >
                                     <h3 className="font-semibold text-lg text-gray-900">
                                         {getCategoryName(category.categoryPriorityPackageRoomValue)}
+                                        {isSelected && hasExistingPackage && !isPackageExpired && (
+                                            <span className="ml-2 text-green-500">(Đang sử dụng)</span>
+                                        )}
                                     </h3>
                                     <p className="text-base text-gray-600 mt-2">
                                         {getCategoryDescription(category.categoryPriorityPackageRoomValue)}
                                     </p>
                                     <p className="text-base text-gray-600 mt-1">
-                                        {category.categoryPriorityPackageRoomValue} ngày ưu tiên
+                                        {duration > 0 ? `${duration} ngày ưu tiên` : 'Không ưu tiên'}
                                     </p>
-                                    <p className="text-base text-gray-600 mt-1">
-                                        {pricePerDay.toLocaleString('vi-VN')} đ/ngày
-                                    </p>
+                                    <p className="text-base text-gray-600 mt-1">{getBorderDescription(totalPrice, duration)}</p>
                                 </div>
                             );
                         })}
                     </div>
                 )}
 
-                <div className="flex space-x-8 mt-4">
-                    <div className="flex flex-col">
-                        <p className="text-lg font-semibold text-gray-900 mb-2">
-                            Ngày bắt đầu
-                        </p>
-                        <div className="relative">
-                            <input
-                                type="date"
-                                value={room.startDate || ''}
-                                onChange={(e) => setRoom({ ...room, startDate: e.target.value })}
-                                min={new Date().toISOString().split('T')[0]}
-                                className="border border-gray-300 w-[220px] rounded-lg p-2 pr-2 text-gray-900 focus:ring-red-500 focus:border-red-500 appearance-none"
-                            />
-                            <FaCalendarAlt className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                {(!hasExistingPackage || isPackageExpired) && selectedCategoryId !== 0 && (
+                    <div className="flex space-x-8 mt-4">
+                        <div className="flex flex-col">
+                            <p className="text-lg font-semibold text-gray-900 mb-2">Ngày bắt đầu</p>
+                            <div className="relative">
+                                <input
+                                    type="date"
+                                    value={room.startDate ? formatDate(room.startDate) : ''}
+                                    onChange={(e) => setRoom({ ...room, startDate: e.target.value })}
+                                    min={new Date().toISOString().split('T')[0]}
+                                    className="border border-gray-300 w-[220px] rounded-lg p-2 pr-2 text-gray-900 focus:ring-red-500 focus:border-red-500 appearance-none"
+                                />
+                                <FaCalendarAlt className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                            </div>
+                        </div>
+                        <div className="flex flex-col">
+                            <p className="text-lg font-semibold text-gray-900 mb-2">Ngày kết thúc</p>
+                            <div className="relative">
+                                <input
+                                    type="date"
+                                    value={room.endDate || ''}
+                                    readOnly
+                                    className="border border-gray-300 w-[220px] rounded-lg p-2 pr-2 text-gray-900 bg-gray-100 cursor-not-allowed"
+                                />
+                                <FaCalendarAlt className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                            </div>
                         </div>
                     </div>
-                    <div className="flex flex-col">
-                        <p className="text-lg font-semibold text-gray-900 mb-2">
-                            Ngày kết thúc
-                        </p>
-                        <div className="relative">
-                            <input
-                                type="date"
-                                value={room.endDate || ''}
-                                readOnly
-                                className="border border-gray-300 w-[220px] rounded-lg p-2 pr-2 text-gray-900 bg-gray-100 cursor-not-allowed"
-                            />
-                            <FaCalendarAlt className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                        </div>
-                    </div>
-                </div>
+                )}
 
                 <div className="flex justify-between items-center mt-6">
-                    <button
-                        onClick={handleBack}
-                        className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
-                    >
+                    <button onClick={handleBack} className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">
                         Quay lại
                     </button>
                     <div className="flex items-center space-x-4">
                         <p className="text-lg font-bold text-gray-900">
-                            Tổng tiền:{' '}
-                            {room.priorityPrice ? room.priorityPrice.toLocaleString('vi-VN') : '0'} đ
+                            Tổng tiền: {room.priorityPrice ? room.priorityPrice.toLocaleString('vi-VN') : '0'} đ
                         </p>
                         <button
                             onClick={handleSubmit}
@@ -588,39 +627,37 @@ const StepConfirmation = ({
     action,
     confirmTogglePermission,
     closePopup,
+    currentPriorityPackageId,
 }) => {
     const navigate = useNavigate();
 
-    // Local handleSubmit for creating new rooms (used when roomId is not provided)
     const localHandleSubmit = async () => {
-        // Validate inputs
-        if (invalidImages.some(invalid => invalid)) {
-            showCustomNotification("error", "Vui lòng thay thế các ảnh không phù hợp trước khi tiếp tục.");
+        if (invalidImages.some((invalid) => invalid)) {
+            showCustomNotification('error', 'Vui lòng thay thế các ảnh không phù hợp trước khi tiếp tục.');
             return;
         }
         if (existingImages.length + newFiles.length === 0) {
-            showCustomNotification("error", "Vui lòng chọn ít nhất 1 ảnh!");
+            showCustomNotification('error', 'Vui lòng chọn ít nhất 1 ảnh!');
             return;
         }
         if (!room.title || room.title.length < 3) {
-            showCustomNotification("error", "Tiêu đề phải ít nhất 3 ký tự!");
+            showCustomNotification('error', 'Tiêu đề phải ít nhất 3 ký tự!');
             return;
         }
         if (!room.description || room.description.length < 50) {
-            showCustomNotification("error", "Mô tả phải ít nhất 50 ký tự!");
+            showCustomNotification('error', 'Mô tả phải ít nhất 50 ký tự!');
             return;
         }
         if (!room.categoryRoomId || isNaN(room.categoryRoomId)) {
-            showCustomNotification("error", "Vui lòng chọn loại phòng hợp lệ!");
+            showCustomNotification('error', 'Vui lòng chọn loại phòng hợp lệ!');
             return;
         }
-        if (!room.categoryPriorityPackageRoomId || !room.startDate || !room.endDate || !room.priorityPrice) {
-            showCustomNotification("error", "Vui lòng chọn gói ưu tiên và ngày bắt đầu hợp lệ!");
+        if (room.categoryPriorityPackageRoomId !== 0 && (!room.startDate || !room.endDate || !room.priorityPrice)) {
+            showCustomNotification('error', 'Vui lòng chọn gói ưu tiên và ngày bắt đầu hợp lệ!');
             return;
         }
 
-        // Validate user authentication
-        console.log('User object:', user);
+        // console.log('User object:', user);
         if (!user || !user.userId || !user.token) {
             console.error('Authentication failed:', { user });
             showCustomNotification('error', 'Bạn cần đăng nhập để thực hiện hành động này!');
@@ -628,31 +665,30 @@ const StepConfirmation = ({
             return;
         }
 
-        setRoom(prev => ({ ...prev, loading: true }));
+        setRoom((prev) => ({ ...prev, loading: true }));
         try {
-            // Check Balance
-            console.log('Checking balance:', { UserId: user.userId, Amount: room.priorityPrice });
-            const checkBalanceData = { UserId: user.userId, Amount: room.priorityPrice };
-            const balanceResponse = await BookingManagementService.checkBalance(checkBalanceData, user.token);
-            console.log('Balance response:', balanceResponse);
+            if (room.priorityPrice > 0) {
+                // console.log('Checking balance:', { UserId: user.userId, Amount: room.priorityPrice });
+                const checkBalanceData = { UserId: user.userId, Amount: room.priorityPrice };
+                const balanceResponse = await BookingManagementService.checkBalance(checkBalanceData, user.token);
+                // console.log('Balance response:', balanceResponse);
 
-            const isBalanceSufficient =
-                (typeof balanceResponse === 'string' && balanceResponse === 'Bạn đủ tiền.') ||
-                (typeof balanceResponse === 'object' && balanceResponse.isSuccess);
+                const isBalanceSufficient =
+                    (typeof balanceResponse === 'string' && balanceResponse === 'Bạn đủ tiền.') ||
+                    (typeof balanceResponse === 'object' && balanceResponse.isSuccess);
 
-            if (!isBalanceSufficient) {
-                showCustomNotification('error', 'Bạn không đủ tiền để thực hiện giao dịch này!');
-                navigate('/Moneys');
-                return;
+                if (!isBalanceSufficient) {
+                    showCustomNotification('error', 'Bạn không đủ tiền để thực hiện giao dịch này!');
+                    navigate('/Moneys');
+                    return;
+                }
+
+                // console.log('Updating balance:', { UserId: user.userId, Amount: -room.priorityPrice });
+                const updateBalanceData = { UserId: user.userId, Amount: -room.priorityPrice };
+                await BookingManagementService.updateBalance(updateBalanceData, user.token);
             }
 
-            // Update Balance
-            console.log('Updating balance:', { UserId: user.userId, Amount: -room.priorityPrice });
-            const updateBalanceData = { UserId: user.userId, Amount: -room.priorityPrice };
-            await BookingManagementService.updateBalance(updateBalanceData, user.token);
-
-            // Upload Images
-            console.log('Uploading images:', newFiles);
+            // console.log('Uploading images:', newFiles);
             const uploadedImageUrls = await Promise.all(
                 newFiles.map(async (file) => {
                     const formData = new FormData();
@@ -663,7 +699,6 @@ const StepConfirmation = ({
             );
             const finalImageUrls = [...existingImages, ...uploadedImageUrls];
 
-            // Prepare Room Data
             const roomData = {
                 title: room.title,
                 description: room.description,
@@ -690,44 +725,44 @@ const StepConfirmation = ({
                 quanLy: Number(room.quanLy),
                 chiPhiKhac: Number(room.chiPhiKhac),
                 authorization: Number(room.authorization || 0),
-                startDate: room.startDate,
-                endDate: room.endDate,
-                priorityPrice: room.priorityPrice,
-                categoryPriorityPackageRoomId: room.categoryPriorityPackageRoomId,
+                startDate: room.startDate || null,
+                endDate: room.endDate || null,
+                priorityPrice: room.priorityPrice || 0,
+                categoryPriorityPackageRoomId: room.categoryPriorityPackageRoomId || 0,
             };
 
-            // Create Room
-            console.log('Creating room:', roomData);
+            // console.log('Creating room:', roomData);
             const roomResponse = await RoomLandlordService.addRoom(roomData, user.token);
             const newRoomId = roomResponse.roomId;
 
-            // Create Priority Room
-            const priorityRoomData = {
-                roomId: newRoomId,
-                categoryPriorityPackageRoomId: room.categoryPriorityPackageRoomId,
-                startDate: room.startDate,
-                endDate: room.endDate,
-                priorityPrice: room.priorityPrice,
-                userId: user.userId,
-                status: 1,
-            };
-            console.log('Creating priority room:', priorityRoomData);
-            await PriorityRoomService.createPriorityRoom(priorityRoomData, user.token);
+            if (room.categoryPriorityPackageRoomId !== 0) {
+                const priorityRoomData = {
+                    roomId: newRoomId,
+                    categoryPriorityPackageRoomId: room.categoryPriorityPackageRoomId,
+                    startDate: room.startDate,
+                    endDate: room.endDate,
+                    priorityPrice: room.priorityPrice,
+                    userId: user.userId,
+                    status: 1,
+                };
+                // console.log('Creating priority room:', priorityRoomData);
+                await PriorityRoomService.createPriorityRoom(priorityRoomData, user.token);
+            }
 
-            showCustomNotification("success", "Tạo phòng và priority room thành công!");
+            showCustomNotification('success', 'Tạo phòng và priority room thành công!');
             navigate('/Room');
         } catch (error) {
             console.error('Submit error:', error);
             const apiMessage = error?.response?.data?.message || error.message;
-            if (error?.response?.status === 401 || apiMessage.includes("Unauthorized")) {
-                showCustomNotification("error", "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!");
+            if (error?.response?.status === 401 || apiMessage.includes('Unauthorized')) {
+                showCustomNotification('error', 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!');
                 localStorage.removeItem('authToken');
                 navigate('/Logins');
             } else {
-                showCustomNotification("error", apiMessage || "Không thể tạo phòng hoặc priority room!");
+                showCustomNotification('error', apiMessage || 'Không thể tạo phòng hoặc priority room!');
             }
         } finally {
-            setRoom(prev => ({ ...prev, loading: false }));
+            setRoom((prev) => ({ ...prev, loading: false }));
         }
     };
 
@@ -774,22 +809,17 @@ const StepConfirmation = ({
                     handleSubmit={roomId ? handleSubmit : localHandleSubmit}
                     roomId={roomId}
                     user={user}
+                    currentPriorityPackageId={currentPriorityPackageId}
                 />
             )}
             {step < 3 && (
                 <div className="flex justify-between mt-8">
                     {step > 1 && (
-                        <button
-                            onClick={handleBack}
-                            className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
-                        >
+                        <button onClick={handleBack} className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">
                             Quay lại
                         </button>
                     )}
-                    <button
-                        onClick={handleNext}
-                        className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-                    >
+                    <button onClick={handleNext} className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
                         Tiếp tục
                     </button>
                 </div>
@@ -799,11 +829,7 @@ const StepConfirmation = ({
                     className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
                     onClick={() => setPreviewImage(null)}
                 >
-                    <img
-                        src={previewImage}
-                        alt="Enlarged Preview"
-                        className="max-w-[75%] max-h-[85%] object-cover rounded-lg"
-                    />
+                    <img src={previewImage} alt="Enlarged Preview" className="max-w-[75%] max-h-[85%] object-cover rounded-lg" />
                 </div>
             )}
             {showPopup && (
@@ -824,7 +850,8 @@ const StepConfirmation = ({
                             </button>
                             <button
                                 onClick={confirmTogglePermission}
-                                className={`px-4 py-2 rounded text-white ${action === 'lock' ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'}`}
+                                className={`px-4 py-2 rounded text-white ${action === 'lock' ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'
+                                    }`}
                             >
                                 Xác nhận
                             </button>

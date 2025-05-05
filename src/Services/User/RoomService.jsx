@@ -23,6 +23,9 @@ const RoomService = {
     // Thêm API mới để lấy thông tin hợp đồng của phòng
     getRoomContract: (roomId) =>
         axios.get(`${API_URL}/${roomId}/contract`).then((res) => res.data),
+
+    getRoomsByBuilding: (userId) =>
+        axios.get(`${API_URL}/group-room-by-building/${userId}`).then((res) => res.data),
 };
 
 export default RoomService;

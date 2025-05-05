@@ -197,22 +197,22 @@ const OtherService = {
         const ws = new WebSocket(`${WS_URL}?userId=${userId}`);
 
         ws.onopen = () => {
-            console.log("WebSocket connected for SavedPostList");
+            // console.log("WebSocket connected for SavedPostList");
             if (onOpen) onOpen();
         };
 
         ws.onmessage = (event) => {
-            console.log("WebSocket message received for SavedPostList:", event.data);
+            // console.log("WebSocket message received for SavedPostList:", event.data);
             if (onMessage) onMessage(event);
         };
 
         ws.onclose = () => {
-            console.log("WebSocket disconnected for SavedPostList");
+            // console.log("WebSocket disconnected for SavedPostList");
             if (onClose) onClose();
         };
 
         ws.onerror = (error) => {
-            console.error("WebSocket error for SavedPostList:", error);
+            // console.error("WebSocket error for SavedPostList:", error);
             if (onError) onError(error);
         };
 

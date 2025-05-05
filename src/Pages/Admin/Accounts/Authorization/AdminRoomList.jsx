@@ -7,10 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import Loading from '../../../../Components/Loading';
 import { FaMapMarkerAlt, FaCheckCircle, FaHourglassHalf, FaTimesCircle, FaEdit } from 'react-icons/fa';
 import { FaChartArea } from 'react-icons/fa6';
-import Footer from '../../../../Components/Layout/Footer';
 import AdminManageRoomService from '../../../../Services/Admin/AdminManageRoomService';
-import BookingManagementService from '../../../../Services/Landlord/BookingManagementService';
-import ContractService from '../../../../Services/Landlord/ContractService';
 import UserService from '../../../../Services/User/UserService';
 import { useAuth } from '../../../../Context/AuthProvider';
 import { format } from 'date-fns';
@@ -24,8 +21,8 @@ const Item = styled(Paper)(({ theme }) => ({
     color: theme.palette.text.secondary,
     cursor: 'pointer',
     transition: 'transform 0.2s',
-    width: '250px',
-    height: '350px',
+    width: '270px',
+    height: '380px',
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'space-between',
@@ -37,7 +34,6 @@ const Item = styled(Paper)(({ theme }) => ({
     }),
 }));
 
-// Hàm hiển thị overlay dựa trên status
 const getStatusOverlay = (status) => {
     switch (status) {
         case 1:
@@ -73,13 +69,12 @@ const getStatusOverlay = (status) => {
     }
 };
 
-// Hàm chuyển status -> tên
 const getStatusName = (status) => {
     switch (status) {
         case 1:
             return 'trống';
         case 2:
-            return 'chờ giao dịch';
+            return 'Đang chờ giao dịch';
         case 3:
             return 'được thuê';
         case 4:
@@ -89,7 +84,6 @@ const getStatusName = (status) => {
     }
 };
 
-// Hàm xác định status cho card dựa trên room + booking
 const determineDisplayStatus = (room, booking) => {
     if (!booking) {
         return 1; // Không có booking -> Còn trống
@@ -100,16 +94,15 @@ const determineDisplayStatus = (room, booking) => {
     if (rentalStatus === 1 && roomStatus === 1) {
         return 2; // Đang chờ giao dịch
     }
-    if (rentalStatus === 1 && roomStatus === 2 && contractStatus === 4) {
-        return 4; // Chờ Người dùng xác nhận
+    if (rentalStatus === 1 && roomStatus === 2) {
+        return contractStatus === 4 ? 4 : 2; // Chờ người dùng xác nhận hoặc Đang chờ giao dịch
     }
-    if (rentalStatus === 1 && roomStatus === 3 && contractStatus === 1) {
-        return 3; // Đang cho thuê
+    if (rentalStatus === 1 && roomStatus === 3) {
+        return contractStatus === 1 ? 3 : 2; // Đã được thuê hoặc Đang chờ giao dịch
     }
     return 1;
 };
 
-// Thứ tự sắp xếp: status 2 -> 4 -> 3 -> 1
 const sortOrder = { 2: 1, 4: 2, 3: 3, 1: 4 };
 
 const AdminRoomList = () => {
@@ -119,23 +112,21 @@ const AdminRoomList = () => {
     const [activeStatus, setActiveStatus] = useState(null);
     const { user } = useAuth();
 
-    // Lấy danh sách tất cả phòng được ủy quyền
     const fetchAllAuthorizedRooms = async () => {
         setLoading(true);
         try {
             if (!user?.token || !user?.userId) throw new Error('Missing auth');
-            // Get rooms with status=3 contracts
-            const roomsData = await AdminManageRoomService.getAuthorizedRooms();
-            // Get booking list for landlord
-            const bookingsData = await BookingManagementService.getRentalListOfLandlord(
-                user.userId,
-                user.token
-            );
+            const roomResponse = await AdminManageRoomService.getAuthorizedRooms(user.token);
+            console.log('GetAuthorizedRooms response:', roomResponse);
+
+            const rooms = Array.isArray(roomResponse.rooms) ? roomResponse.rooms : [];
+            const rentals = Array.isArray(roomResponse.rentals) ? roomResponse.rentals : [];
+
             const newCards = [];
 
-            for (const room of roomsData) {
-                // Lấy thông tin chủ phòng
+            for (const room of rooms) {
                 let ownerName = 'N/A';
+                let renterName = 'N/A';
                 try {
                     const ownerData = await UserService.getUserById(room.userId, user.token);
                     ownerName = ownerData?.name || 'N/A';
@@ -143,9 +134,10 @@ const AdminRoomList = () => {
                     console.error(`Lỗi khi lấy thông tin chủ phòng ${room.userId}:`, error);
                 }
 
-                const validBookings = (bookingsData || []).filter(
-                    bk => bk.roomId === room.roomId && bk.rentalStatus === 1
+                const validBookings = rentals.filter(
+                    (bk) => bk.roomId === room.roomId && bk.rentalStatus === 1
                 );
+
                 if (validBookings.length === 0) {
                     newCards.push({
                         roomId: room.roomId,
@@ -154,14 +146,22 @@ const AdminRoomList = () => {
                         locationDetail: room.locationDetail || 'Chưa xác định',
                         acreage: room.acreage || 0,
                         price: room.price || 0,
-                        createdDate: room.createdDate || room.CreatedDate,
+                        createdDate: room.createdDate || new Date(),
                         status: 1,
                         booking: null,
                         isPermission: room.isPermission ?? 1,
                         ownerName,
+                        renterName
                     });
                 } else {
-                    validBookings.forEach(bk => {
+                    for (const bk of validBookings) {
+                        try {
+                            const renterData = await UserService.getUserById(bk.renterID, user.token);
+                            renterName = renterData?.name || bk.renterName || 'N/A';
+                        } catch (error) {
+                            console.error(`Lỗi khi lấy thông tin người thuê ${bk.renterID}:`, error);
+                        }
+
                         const displayStatus = determineDisplayStatus(room, bk);
                         newCards.push({
                             roomId: room.roomId,
@@ -170,16 +170,17 @@ const AdminRoomList = () => {
                             locationDetail: room.locationDetail || 'Chưa xác định',
                             acreage: room.acreage || 0,
                             price: room.price || 0,
-                            createdDate: room.createdDate || room.CreatedDate,
+                            createdDate: room.createdDate || new Date(),
                             status: displayStatus,
-                            booking: bk,
+                            booking: { ...bk, renterName },
                             isPermission: room.isPermission ?? 1,
                             ownerName,
+                            renterName
                         });
-                    });
+                    }
                 }
             }
-            // Sort by status priority and createdDate desc
+
             newCards.sort((a, b) => {
                 const pa = sortOrder[a.status] || 5;
                 const pb = sortOrder[b.status] || 5;
@@ -196,7 +197,6 @@ const AdminRoomList = () => {
         }
     };
 
-    // Lọc phòng theo trạng thái
     const fetchCardsByStatus = async (status) => {
         setLoading(true);
         try {
@@ -204,36 +204,17 @@ const AdminRoomList = () => {
                 throw new Error('Không có token hoặc userId');
             }
 
-            const contractsData = await ContractService.getAllAuthorizationContracts(user.token);
-            if (!Array.isArray(contractsData)) {
-                throw new Error('Dữ liệu hợp đồng không phải là mảng');
-            }
+            const roomResponse = await AdminManageRoomService.getAuthorizedRooms(user.token);
+            console.log('GetAuthorizedRooms response (filter):', roomResponse);
 
-            const allRoomIds = new Set();
-            contractsData.forEach(contract => {
-                const roomIds = contract.roomList && contract.roomList.trim() !== ''
-                    ? contract.roomList.split(',').map(id => parseInt(id)).filter(id => !isNaN(id))
-                    : [];
-                roomIds.forEach(id => allRoomIds.add(id));
-            });
-            const roomIds = Array.from(allRoomIds);
+            const rooms = Array.isArray(roomResponse.rooms) ? roomResponse.rooms : [];
+            const rentals = Array.isArray(roomResponse.rentals) ? roomResponse.rentals : [];
 
-            if (roomIds.length === 0) {
-                setCards([]);
-                return;
-            }
-
-            const roomResponse = await AdminManageRoomService.getRooms();
-            const rentalResponse = await BookingManagementService.getRentalListOfLandlord(user.userId, user.token);
-            const roomsData = roomResponse.rooms || [];
-            const bookingsData = rentalResponse || [];
             const filteredCards = [];
 
-            const authorizedRooms = roomsData.filter(room => roomIds.includes(room.roomId));
-
-            for (const room of authorizedRooms) {
-                // Lấy thông tin chủ phòng
+            for (const room of rooms) {
                 let ownerName = 'N/A';
+                let renterName = 'N/A';
                 try {
                     const ownerData = await UserService.getUserById(room.userId, user.token);
                     ownerName = ownerData?.name || 'N/A';
@@ -241,8 +222,9 @@ const AdminRoomList = () => {
                     console.error(`Lỗi khi lấy thông tin chủ phòng ${room.userId}:`, error);
                 }
 
-                const roomBookings = bookingsData.filter((bk) => bk.roomId === room.roomId);
-                const validBookings = roomBookings.filter((bk) => bk.rentalStatus === 1);
+                const validBookings = rentals.filter(
+                    (bk) => bk.roomId === room.roomId && bk.rentalStatus === 1
+                );
 
                 if (validBookings.length === 0) {
                     if (status === 1) {
@@ -253,15 +235,23 @@ const AdminRoomList = () => {
                             locationDetail: room.locationDetail || 'Chưa xác định',
                             acreage: room.acreage || 0,
                             price: room.price || 0,
-                            createdDate: room.createdDate || room.CreatedDate,
+                            createdDate: room.createdDate || new Date(),
                             status: 1,
                             booking: null,
-                            isPermission: room.isPermission !== undefined ? room.isPermission : 1,
+                            isPermission: room.isPermission ?? 1,
                             ownerName,
+                            renterName
                         });
                     }
                 } else {
-                    validBookings.forEach((bk) => {
+                    for (const bk of validBookings) {
+                        try {
+                            const renterData = await UserService.getUserById(bk.renterID, user.token);
+                            renterName = renterData?.name || bk.renterName || 'N/A';
+                        } catch (error) {
+                            console.error(`Lỗi khi lấy thông tin người thuê ${bk.renterID}:`, error);
+                        }
+
                         const displayStatus = determineDisplayStatus(room, bk);
                         if (displayStatus === status) {
                             filteredCards.push({
@@ -271,14 +261,15 @@ const AdminRoomList = () => {
                                 locationDetail: room.locationDetail || 'Chưa xác định',
                                 acreage: room.acreage || 0,
                                 price: room.price || 0,
-                                createdDate: room.createdDate || room.CreatedDate,
+                                createdDate: room.createdDate || new Date(),
                                 status: displayStatus,
-                                booking: bk,
-                                isPermission: room.isPermission !== undefined ? room.isPermission : 1,
+                                booking: { ...bk, renterName },
+                                isPermission: room.isPermission ?? 1,
                                 ownerName,
+                                renterName
                             });
                         }
-                    });
+                    }
                 }
             }
 
@@ -390,16 +381,14 @@ const AdminRoomList = () => {
                                     <Item
                                         onClick={() =>
                                             navigate(
-                                                `/admin/rooms/contract/${card.roomId}/${card.booking ? card.booking.rentalId : 'null'
-                                                }`
+                                                `/admin/rooms/contract/${card.roomId}/${card.booking ? card.booking.rentalId : 'null'}`
                                             )
                                         }
                                     >
                                         <div className="flex flex-col h-full dark:bg-gray-800 dark:text-white">
                                             <div className="relative">
                                                 <img
-                                                    className={`rounded-t-lg shadow-md overflow-hidden w-full h-48 object-cover ${card.isPermission === 0 ? 'opacity-30' : ''
-                                                        }`}
+                                                    className={`rounded-t-lg shadow-md overflow-hidden w-full h-48 object-cover ${card.isPermission === 0 ? 'opacity-30' : ''}`}
                                                     alt={card.title || 'Image of a room'}
                                                     src={firstImage}
                                                 />
