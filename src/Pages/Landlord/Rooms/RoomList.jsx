@@ -12,6 +12,7 @@ import Footer from '../../../Components/Layout/Footer';
 import RoomLandlordService from '../../../Services/Landlord/RoomLandlordService';
 import BookingManagementService from '../../../Services/Landlord/BookingManagementService';
 import UserService from '../../../Services/User/UserService';
+import ContractService from '../../../Services/Landlord/ContractService';
 import { useAuth } from '../../../Context/AuthProvider';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
@@ -175,6 +176,7 @@ const RoomList = () => {
     const [adminData, setAdminData] = useState(null);
     const [priorityPackages, setPriorityPackages] = useState([]);
     const [cppRooms, setCppRooms] = useState([]);
+    const [authorizedRooms, setAuthorizedRooms] = useState([]);
 
     const fetchAdminData = async () => {
         try {
@@ -191,6 +193,22 @@ const RoomList = () => {
                 partyBName: 'Admin',
                 partyBAddress: 'Đà Nẵng',
             });
+        }
+    };
+
+    // Fetch dữ liệu hợp đồng ủy quyền
+    const fetchAuthorizedRooms = async () => {
+        try {
+            const response = await ContractService.getAllAuthorizationContracts(user.token);
+            // Xử lý roomList từ chuỗi phân tách bằng dấu phẩy
+            const authorizedRoomIds = response
+                .filter(contract => contract.status === 3) // Chỉ lấy hợp đồng có status = 3 (đang hiệu lực)
+                .flatMap(contract => contract.roomList.split(',').map(id => parseInt(id.trim(), 10)))
+                .filter(id => !isNaN(id)); // Loại bỏ các ID không hợp lệ
+            setAuthorizedRooms(authorizedRoomIds);
+        } catch (error) {
+            console.error('Lỗi khi lấy danh sách hợp đồng ủy quyền:', error.message, error.stack);
+            setAuthorizedRooms([]);
         }
     };
 
@@ -354,7 +372,9 @@ const RoomList = () => {
         if (selectedRooms.length === cards.length) {
             setSelectedRooms([]);
         } else {
-            const allRoomIds = cards.map((card) => card.roomId);
+            const allRoomIds = cards
+                .filter((card) => !authorizedRooms.includes(card.roomId))
+                .map((card) => card.roomId);
             setSelectedRooms(allRoomIds);
         }
     };
@@ -370,11 +390,14 @@ const RoomList = () => {
     };
 
     // Xử lý sau khi ủy quyền thành công
-    const handleAuthorizationSuccess = () => {
+    const handleAuthorizationSuccess = async () => {
         setSelectedRooms([]);
         setIsAuthorizing(false);
         setAdminData(null);
-        fetchAllCards();
+        setShowModal(false);
+        await fetchAllCards();
+        await fetchAuthorizedRooms();
+        showCustomNotification('success', 'Ủy quyền phòng thành công!');
     };
 
     // Xử lý kích hoạt chế độ ủy quyền
@@ -387,6 +410,7 @@ const RoomList = () => {
         if (user?.token && user?.userId) {
             fetchAllCards();
             fetchPriorityData();
+            fetchAuthorizedRooms();
         } else {
             setLoading(false);
         }
@@ -490,6 +514,7 @@ const RoomList = () => {
                             if (!Array.isArray(images)) images = [images];
                             const firstImage = images[0] || 'https://via.placeholder.com/250x350';
                             const priorityInfo = getPriorityInfo(card.roomId, priorityPackages, cppRooms);
+                            const isAuthorized = authorizedRooms.includes(card.roomId);
 
                             return (
                                 <Grid key={`${card.roomId}-${card.booking ? card.booking.rentalId : 'null'}`} item xs={12} sm={6} md={4}>
@@ -514,7 +539,7 @@ const RoomList = () => {
                                                     </div>
                                                 )}
                                                 {card.isPermission !== 0 && getStatusOverlay(card.status)}
-                                                {isAuthorizing && (
+                                                {isAuthorizing && !isAuthorized && (
                                                     <div
                                                         className="absolute top-2 right-1 z-10"
                                                         onClick={(e) => e.stopPropagation()}

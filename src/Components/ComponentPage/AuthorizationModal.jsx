@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { styled } from '@mui/material/styles';
 import { Modal, Box, Typography, TextField, Button, Grid } from '@mui/material';
 import ContractService from '../../Services/Landlord/ContractService';
+import BookingManagementService from '../../Services/Landlord/BookingManagementService';
 import Loading from '../Loading';
 import UserService from '../../Services/User/UserService';
 
@@ -34,8 +35,8 @@ const FullScreenLoadingOverlay = styled(Box)({
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.8)', // Nền mờ để làm nổi bật loading
-    zIndex: 1300, // Đảm bảo lớp phủ ở trên tất cả nội dung, kể cả modal (MUI Modal mặc định có zIndex 1300)
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    zIndex: 1300,
 });
 
 const WarningMessage = ({ message }) => (
@@ -46,14 +47,13 @@ const WarningMessage = ({ message }) => (
 
 const AuthorizationModal = ({ open, onClose, user, selectedRooms, adminData, onSuccess }) => {
     const [contractDetails, setContractDetails] = useState({
-        // certificationLocation: '',
         partyAName: '',
         partyABirthDate: '',
         partyAIDNumber: '',
         partyAIDIssueDate: '',
         partyAIDIssuePlace: 'CỤC CẢNH SÁT QUẢN LÝ HÀNH CHÍNH VỀ TRẬT TỰ XÃ HỘI',
         partyAAddress: '',
-        partyBId: '1', // Giả sử ID cố định, có thể thay đổi nếu cần
+        partyBId: '1',
         partyBName: 'Nguyễn Đình Mạnh Hùng',
         partyBAddress: 'Phường Phong An, thị xã Phong Điền, Thừa Thiên Huế',
         partyBBirthDate: '2003-08-02',
@@ -129,8 +129,16 @@ const AuthorizationModal = ({ open, onClose, user, selectedRooms, adminData, onS
     };
 
     const validateInputs = () => {
+        const currentDate = new Date().toISOString().split('T')[0]; // Lấy ngày hiện tại định dạng YYYY-MM-DD
+        if (contractDetails.startDate < currentDate) {
+            return 'Ngày bắt đầu không được là ngày trong quá khứ.';
+        }
+
+        if (contractDetails.effectiveDate < currentDate) {
+            return 'Ngày hiệu lực không được là ngày trong quá khứ.';
+        }
+
         const requiredFields = [
-            // { field: 'certificationLocation', label: 'Địa điểm chứng thực' },
             { field: 'partyAName', label: 'Tên bên A' },
             { field: 'partyABirthDate', label: 'Ngày sinh bên A' },
             { field: 'partyAIDNumber', label: 'Số CMND/CCCD bên A' },
@@ -194,6 +202,46 @@ const AuthorizationModal = ({ open, onClose, user, selectedRooms, adminData, onS
         return null;
     };
 
+    const handleCheckAndUpdateBalance = async () => {
+        try {
+            const duration = parseInt(contractDetails.duration, 10);
+            const roomCount = Array.isArray(selectedRooms) ? selectedRooms.length : 0;
+            const authorizationFee = 10000 * roomCount * duration;
+            const balanceData = {
+                userId: parseInt(user.userId, 10),
+                amount: authorizationFee,
+            };
+
+            console.log('Gửi checkBalance:', balanceData);
+            const balanceResponse = await BookingManagementService.checkBalance(balanceData, user.token);
+            console.log('Phản hồi checkBalance:', balanceResponse);
+
+            if (balanceResponse.includes("không đủ")) {
+                const confirm = window.confirm('Bạn không đủ số dư để thực hiện ủy quyền. Nhấn OK để nạp tiền, Cancel để hủy.');
+                if (confirm) {
+                    window.location.href = '/Moneys';
+                }
+                return false;
+            } else if (balanceResponse.includes("đủ tiền")) {
+                const updateData = {
+                    userId: parseInt(user.userId, 10),
+                    adminId: parseInt(adminData.partyBId, 10),
+                    amount: -authorizationFee, // Trừ tiền
+                };
+                console.log('Gửi updateBalance:', updateData);
+                await BookingManagementService.updateBalance(updateData, user.token);
+                console.log('Cập nhật số dư thành công');
+                return true;
+            } else {
+                throw new Error('Phản hồi từ checkBalance không rõ ràng');
+            }
+        } catch (error) {
+            console.error('Lỗi khi xử lý số dư:', error.message, error.stack, error.response?.data);
+            setWarning('Có lỗi xảy ra khi xử lý số dư. Vui lòng thử lại.');
+            return false;
+        }
+    };
+
     const handleAuthorize = async () => {
         try {
             const validationError = validateInputs();
@@ -202,8 +250,14 @@ const AuthorizationModal = ({ open, onClose, user, selectedRooms, adminData, onS
                 return;
             }
 
+            const balanceSuccess = await handleCheckAndUpdateBalance();
+            if (!balanceSuccess) {
+                return;
+            }
+
             const duration = parseInt(contractDetails.duration, 10);
-            const fee = 10000 * (Array.isArray(selectedRooms) ? selectedRooms.length : 0) * duration;
+            const roomCount = Array.isArray(selectedRooms) ? selectedRooms.length : 0;
+            const fee = 10000 * roomCount * duration;
 
             const payload = {
                 contractNumber: `${Date.now()}`,
@@ -229,7 +283,7 @@ const AuthorizationModal = ({ open, onClose, user, selectedRooms, adminData, onS
                 effectiveDate: contractDetails.effectiveDate,
                 partyASignature: '',
                 partyBSignature: '',
-                selectedRoom: selectedRooms // Gửi mảng roomId
+                selectedRoom: selectedRooms
             };
 
             setIsLoading(true);
@@ -246,9 +300,6 @@ const AuthorizationModal = ({ open, onClose, user, selectedRooms, adminData, onS
                 partyBId: '1',
                 partyBName: 'Nguyễn Đình Mạnh Hùng',
                 partyBAddress: 'Phường Phong An, thị xã Phong Điền, Thừa Thiên Huế',
-                partyBBirthDate: '2003-08-02',
-                partyBIDNumber: '046203004566',
-                partyBIDIssueDate: '2022-08-23',
                 partyBBirthDate: '2003-08-02',
                 partyBIDNumber: '046203004566',
                 partyBIDIssueDate: '2022-08-23',
@@ -345,21 +396,11 @@ const AuthorizationModal = ({ open, onClose, user, selectedRooms, adminData, onS
                                 size="small"
                                 required
                             />
-
                         </Grid>
                         <Grid item xs={12} md={4}>
                             <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 'medium' }}>
                                 Thông tin hợp đồng
                             </Typography>
-                            {/* <TextField
-                                label="Địa điểm chứng thực"
-                                fullWidth
-                                margin="dense"
-                                value={contractDetails.certificationLocation}
-                                onChange={(e) => handleContractDetailChange('certificationLocation', e.target.value)}
-                                size="small"
-                                required
-                            /> */}
                             <TextField
                                 label="Phạm vi ủy quyền"
                                 fullWidth
