@@ -6,6 +6,7 @@ import CategoryRoomService from "../../../Services/User/CategoryRoomService";
 import BuildingServices from "../../../Services/User/BuildingService";
 import BookingManagementService from "../../../Services/Landlord/BookingManagementService";
 import UserRentRoomService from "../../../Services/User/UserRentRoomService";
+import MonthlyPaymentService from "../../../Services/Landlord/MonthlyPaymentService";
 import Loading from "../../../Components/Loading";
 import SidebarUser from "../../../Components/Layout/SidebarUser";
 import { FaPlus, FaTimes } from "react-icons/fa";
@@ -17,7 +18,6 @@ const RoomRentalConfirmation = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
 
-    // State declarations
     const [categoryRooms, setCategoryRooms] = useState([]);
     const [buildings, setBuildings] = useState([]);
     const [roomData, setRoomData] = useState(null);
@@ -33,6 +33,15 @@ const RoomRentalConfirmation = () => {
         endDate: "",
         contractFile: [],
     });
+    const [paymentFormData, setPaymentFormData] = useState({
+        dien: "",
+        nuoc: "",
+        internet: "",
+        rac: "",
+        guiXe: "",
+        quanLy: "",
+        chiPhiKhac: "",
+    });
     const [errors, setErrors] = useState({});
     const [isLoading, setIsLoading] = useState(false);
     const [newFiles, setNewFiles] = useState([]);
@@ -40,15 +49,42 @@ const RoomRentalConfirmation = () => {
     const [previewImage, setPreviewImage] = useState(null);
     const [contractStatus, setContractStatus] = useState(null);
     const [successMessage, setSuccessMessage] = useState("");
+    const [isPaymentRequestCreated, setIsPaymentRequestCreated] = useState(false);
 
-    // Set current date
+    // Đơn giá thực tế (sử dụng từ roomData nếu có, nếu không để người dùng nhập)
+    const UNIT_PRICES = {
+        dien: roomData?.dien || null,
+        nuoc: roomData?.nuoc || null,
+        internet: roomData?.internet || null,
+        rac: roomData?.rac || null,
+        guiXe: roomData?.guiXe || null,
+        quanLy: roomData?.quanLy || null,
+        chiPhiKhac: roomData?.chiPhiKhac || null,
+    };
+
+    // Tính tổng chi phí
+    const calculateTotalPayment = () => {
+        const dienCost = UNIT_PRICES.dien
+            ? (parseInt(paymentFormData.dien) || 0) * UNIT_PRICES.dien
+            : parseInt(paymentFormData.dien) || 0;
+        const nuocCost = UNIT_PRICES.nuoc
+            ? (parseInt(paymentFormData.nuoc) || 0) * UNIT_PRICES.nuoc
+            : parseInt(paymentFormData.nuoc) || 0;
+        const internetCost = UNIT_PRICES.internet || parseInt(paymentFormData.internet) || 0;
+        const racCost = UNIT_PRICES.rac || parseInt(paymentFormData.rac) || 0;
+        const guiXeCost = UNIT_PRICES.guiXe || parseInt(paymentFormData.guiXe) || 0;
+        const quanLyCost = UNIT_PRICES.quanLy || parseInt(paymentFormData.quanLy) || 0;
+        const chiPhiKhacCost = UNIT_PRICES.chiPhiKhac || parseInt(paymentFormData.chiPhiKhac) || 0;
+
+        return dienCost + nuocCost + internetCost + racCost + guiXeCost + quanLyCost + chiPhiKhacCost;
+    };
+
     useEffect(() => {
         const now = new Date();
         const isoDate = now.toISOString().split("T")[0];
         setToday(isoDate);
     }, []);
 
-    // Fetch all data from API
     useEffect(() => {
         const fetchAllData = async () => {
             try {
@@ -75,7 +111,6 @@ const RoomRentalConfirmation = () => {
                     setOccupantRental(foundBooking);
                     setContractStatus(foundBooking.contractStatus ?? null);
 
-                    // Process rental dates
                     const rentDateRaw = foundBooking.rentDate;
                     const monthForRent = foundBooking.monthForRent;
                     let formattedRentDate;
@@ -126,11 +161,24 @@ const RoomRentalConfirmation = () => {
                             endDate: calculatedEndDate || prev.endDate,
                         }));
                     }
+
+                    const currentDate = new Date();
+                    const paymentDueDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+                    if (currentDate < paymentDueDate) paymentDueDate.setMonth(paymentDueDate.getMonth() - 1);
+
+                    const insiderTradings = await MonthlyPaymentService.getInsiderTradingsByRoomId(roomId);
+                    const hasPendingPayment = insiderTradings.some((it) =>
+                        it.Type === "MonthlyPayment" &&
+                        it.CreatedDate.startsWith(paymentDueDate.toISOString().split("T")[0].slice(0, 7)) &&
+                        it.Status === 0
+                    );
+                    setIsPaymentRequestCreated(hasPendingPayment);
                 } else {
                     setOccupantRental(null);
                     setContractStatus(null);
                     setMinStartDate(today);
                     setCalculatedEndDate(today);
+                    setIsPaymentRequestCreated(false);
                 }
             } catch (error) {
                 console.error("Error fetching data:", error);
@@ -143,21 +191,18 @@ const RoomRentalConfirmation = () => {
         fetchAllData();
     }, [roomId, rentalId, today, user]);
 
-    // Set default room price
     useEffect(() => {
         if (roomData && typeof roomData.price === "number") {
             setFormData((prev) => ({ ...prev, price: roomData.price.toString() }));
         }
     }, [roomData]);
 
-    // Update end date from calculatedEndDate
     useEffect(() => {
         if (calculatedEndDate) {
             setFormData((prev) => ({ ...prev, endDate: calculatedEndDate }));
         }
     }, [calculatedEndDate]);
 
-    // Helper functions
     const getCategoryName = (categoryRoomId) => {
         if (!categoryRoomId) return "Không có";
         const found = categoryRooms.find((c) => c.categoryRoomId === categoryRoomId);
@@ -184,8 +229,6 @@ const RoomRentalConfirmation = () => {
         const price = parseFloat(formData.price);
 
         if (isNaN(price) || price <= 0) newErrors.price = "Giá phải là số dương";
-        // if (!formData.deposit || parseFloat(formData.deposit) < 0)
-        //     newErrors.deposit = "Số tiền gửi phải lớn hơn 0";
         if (!formData.startDate) newErrors.startDate = "Vui lòng chọn ngày bắt đầu";
         if (!formData.endDate) newErrors.endDate = "Vui lòng chọn ngày kết thúc";
         if (
@@ -208,7 +251,28 @@ const RoomRentalConfirmation = () => {
         return Object.keys(newErrors).length === 0;
     };
 
-    // Event handlers
+    const validatePaymentForm = () => {
+        const newErrors = {};
+
+        const fields = ["dien", "nuoc", "internet", "rac", "guiXe", "quanLy", "chiPhiKhac"];
+        fields.forEach((field) => {
+            const value = paymentFormData[field];
+            // Kiểm tra nếu trường trống hoặc không được điền
+            if (value === "" || value === undefined || value === null) {
+                newErrors[field] = "Trường này không được để trống";
+            } else {
+                const numericValue = parseInt(value);
+                // Kiểm tra nếu giá trị không phải là số hoặc âm
+                if (isNaN(numericValue) || numericValue < 0) {
+                    newErrors[field] = "Giá trị phải là số không âm";
+                }
+            }
+        });
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         if (name === "price") {
@@ -217,6 +281,15 @@ const RoomRentalConfirmation = () => {
         } else {
             setFormData((prev) => ({ ...prev, [name]: value }));
         }
+    };
+
+    const handlePaymentInputChange = (e) => {
+        const { name, value } = e.target;
+        const numericValue = value.replace(/[^0-9]/g, "") || "";
+        setPaymentFormData((prev) => ({
+            ...prev,
+            [name]: numericValue,
+        }));
     };
 
     const handleFileChange = (e) => {
@@ -299,8 +372,8 @@ const RoomRentalConfirmation = () => {
     const handleConfirmRental = async () => {
         try {
             const rentalIdLocal = occupantRental?.rentalId;
-            const roomPrice = roomData?.price || 0;
-            const landlordId = roomData?.landlordId;
+            const roomPrice = roomData?.Price || 0;
+            const landlordId = roomData?.UserId;
 
             const checkBalanceData = { UserId: user.userId, Amount: roomPrice };
             const balanceResponse = await BookingManagementService.checkBalance(checkBalanceData, user.token);
@@ -353,7 +426,6 @@ const RoomRentalConfirmation = () => {
         }
     };
 
-
     const handleCancelRequest = async () => {
         const result = await Swal.fire({
             title: "Hủy Yêu cầu thuê phòng?",
@@ -397,6 +469,86 @@ const RoomRentalConfirmation = () => {
                     confirmButtonText: "Đồng ý",
                 });
             }
+        }
+    };
+
+    const handleRequestPayment = async (e) => {
+        e.preventDefault();
+        if (!validatePaymentForm()) return;
+        setIsLoading(true);
+
+        try {
+            const token = user?.token;
+            if (!token) throw new Error("Bạn chưa đăng nhập. Vui lòng đăng nhập lại.");
+            if (user.role !== "Landlord") throw new Error("Chỉ Landlord mới có thể tạo yêu cầu thanh toán.");
+
+            const currentDate = new Date();
+            const paymentDueDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+            if (currentDate < paymentDueDate) paymentDueDate.setMonth(paymentDueDate.getMonth() - 1);
+
+            const insiderTradings = await MonthlyPaymentService.getInsiderTradingsByRoomId(roomId);
+            const hasPendingPayment = insiderTradings.some((it) =>
+                it.Type === "MonthlyPayment" &&
+                it.CreatedDate.startsWith(paymentDueDate.toISOString().split("T")[0].slice(0, 7)) &&
+                it.Status === 0
+            );
+
+            if (hasPendingPayment) {
+                throw new Error("Đã có yêu cầu thanh toán cho tháng này.");
+            }
+
+            const paymentData = {
+                Dien: paymentFormData.dien ? parseInt(paymentFormData.dien) : 0,
+                Nuoc: paymentFormData.nuoc ? parseInt(paymentFormData.nuoc) : 0,
+                Internet: paymentFormData.internet ? parseInt(paymentFormData.internet) : 0,
+                Rac: paymentFormData.rac ? parseInt(paymentFormData.rac) : 0,
+                GuiXe: paymentFormData.guiXe ? parseInt(paymentFormData.guiXe) : 0,
+                QuanLy: paymentFormData.quanLy ? parseInt(paymentFormData.quanLy) : 0,
+                ChiPhiKhac: paymentFormData.chiPhiKhac ? parseInt(paymentFormData.chiPhiKhac) : 0,
+            };
+
+            const response = await MonthlyPaymentService.requestMonthlyPayment(roomId, paymentData);
+            setIsPaymentRequestCreated(true);
+            Swal.fire({
+                title: "Thành công!",
+                text: response.Message || "Yêu cầu thanh toán đã được tạo thành công!",
+                icon: "success",
+                confirmButtonText: "Đồng ý",
+            });
+        } catch (error) {
+            console.error("Lỗi tạo yêu cầu thanh toán:", error.message);
+            Swal.fire({
+                title: "Lỗi",
+                text: error.message || "Không thể tạo yêu cầu thanh toán. Vui lòng kiểm tra lại.",
+                icon: "error",
+                confirmButtonText: "Đồng ý",
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleUpdatePaymentStatus = async (insiderTradingId, status) => {
+        try {
+            const token = user?.token;
+            if (!token) throw new Error("Bạn chưa đăng nhập. Vui lòng đăng nhập lại.");
+            if (user.role !== "Landlord" && user.role !== "Renter") throw new Error("Bạn không có quyền cập nhật trạng thái.");
+
+            const response = await MonthlyPaymentService.updateInsiderTradingStatus(insiderTradingId, status);
+            Swal.fire({
+                title: "Thành công!",
+                text: response.Message || "Trạng thái giao dịch đã được cập nhật!",
+                icon: "success",
+                confirmButtonText: "Đồng ý",
+            });
+        } catch (error) {
+            console.error("Lỗi cập nhật trạng thái:", error.message);
+            Swal.fire({
+                title: "Lỗi",
+                text: error.message || "Không thể cập nhật trạng thái. Vui lòng kiểm tra lại.",
+                icon: "error",
+                confirmButtonText: "Đồng ý",
+            });
         }
     };
 
@@ -479,7 +631,6 @@ const RoomRentalConfirmation = () => {
                                             </div>
                                         </div>
                                     </div>
-
                                 ) : (
                                     <p>Phòng này chưa có yêu cầu thuê nào.</p>
                                 )}
@@ -489,145 +640,338 @@ const RoomRentalConfirmation = () => {
 
                     {occupantRental && getRoomStatus() === "Phòng này đang cho thuê" ? (
                         <div className="bg-white shadow-xl rounded-lg overflow-hidden p-6">
-                            <p className="text-lg text-gray-700 font-semibold">Phòng này đang cho thuê</p>
-                        </div>
-                    ) :
-                        getRoomStatus() === "Chờ Người thuê xác nhận" ? (
-                            <div className="bg-white shadow-xl rounded-lg overflow-hidden p-6">
-                                <p className="text-lg text-gray-700 font-semibold">Phòng này đang chờ người thuê xác nhận</p>
+                            <div className="flex justify-between items-center mb-4">
+                                <h2 className="text-xl font-bold">Thanh toán hàng tháng</h2>
                             </div>
-                        ) : (
-                            occupantRental && (
-                                <div className="bg-white shadow-xl rounded-lg overflow-hidden p-6">
-                                    <h2 className="text-xl font-bold mb-4">Xác nhận đơn Thuê</h2>
-                                    <form onSubmit={handleSubmit} className="space-y-6">
-                                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700">Giá(đ)</label>
-                                                <input
-                                                    type="text"
-                                                    name="price"
-                                                    readOnly
-                                                    value={formData.price ? Number(formData.price).toLocaleString("vi-VN") : ""}
-                                                    onChange={handleInputChange}
-                                                    className={`mt-1 block w-full rounded-md border ${errors.price ? "border-red-500" : "border-gray-300"
-                                                        } px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-red-500`}
-                                                    placeholder="Nhập giá phòng"
-                                                />
-                                                {errors.price && <p className="mt-1 text-sm text-red-500">{errors.price}</p>}
-                                            </div>
-                                            {/* <div>
-                                                <label className="block text-sm font-medium text-gray-700">Số tiền gửi</label>
-                                                <input
-                                                    type="text"
-                                                    name="deposit"
-                                                    value={formData.deposit ? Number(formData.deposit).toLocaleString("vi-VN") : ""}
-                                                    onChange={handleInputChange}
-                                                    className={`mt-1 block w-full rounded-md border ${errors.deposit ? "border-red-500" : "border-gray-300"
-                                                        } px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-red-500`}
-                                                    placeholder="Nhập số tiền gửi"
-                                                />
-                                                {errors.deposit && <p className="mt-1 text-sm text-red-500">{errors.deposit}</p>}
-                                            </div> */}
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700">Ngày bắt đầu</label>
-                                                <input
-                                                    type="date"
-                                                    name="startDate"
-                                                    value={formData.startDate}
-                                                    onChange={handleInputChange}
-                                                    min={minStartDate}
-                                                    className={`mt-1 block w-full rounded-md border ${errors.startDate ? "border-red-500" : "border-gray-300"
-                                                        } px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-red-500`}
-                                                />
-                                                {errors.startDate && <p className="mt-1 text-sm text-red-500">{errors.startDate}</p>}
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700">Ngày kết thúc</label>
-                                                <input
-                                                    type="date"
-                                                    name="endDate"
-                                                    value={formData.endDate}
-                                                    onChange={handleInputChange}
-                                                    min={formData.startDate || minStartDate}
-                                                    className={`mt-1 block w-full rounded-md border ${errors.endDate ? "border-red-500" : "border-gray-300"
-                                                        } px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-red-500`}
-                                                />
-                                                {errors.endDate && <p className="mt-1 text-sm text-red-500">{errors.endDate}</p>}
-                                            </div>
+                            <form onSubmit={handleRequestPayment} className="space-y-6">
+                                <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">
+                                            {UNIT_PRICES.dien ? `Điện (kWh) - ${UNIT_PRICES.dien.toLocaleString("vi-VN")} đ/kWh` : "Điện (đ)"}
+                                            {!UNIT_PRICES.dien && (
+                                                <span className="text-red-500 ml-2">Chưa có giá</span>
+                                            )}
+                                        </label>
+                                        <div className="flex items-center space-x-2">
+                                            <input
+                                                type="number"
+                                                name="dien"
+                                                value={paymentFormData.dien}
+                                                onChange={handlePaymentInputChange}
+                                                className={`mt-1 block w-full rounded-md border ${errors.dien ? "border-red-500" : "border-gray-300"} px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-red-500`}
+                                                placeholder={UNIT_PRICES.dien ? "Nhập số lượng" : "Nhập giá"}
+                                                required
+                                            />
+                                        </div>
+                                        Tạm tính: {paymentFormData.dien && (
+                                            <span className="text-base text-gray-800">
+                                                {(UNIT_PRICES.dien
+                                                    ? (parseInt(paymentFormData.dien) * UNIT_PRICES.dien)
+                                                    : parseInt(paymentFormData.dien)).toLocaleString("vi-VN")} đ
+                                            </span>
+                                        )}
+                                        {errors.dien && <p className="mt-1 text-sm text-red-500">{errors.dien}</p>}
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">
+                                            {UNIT_PRICES.nuoc ? `Nước (m³) - ${UNIT_PRICES.nuoc.toLocaleString("vi-VN")} đ/m³` : "Nước (đ)"}
+                                            {!UNIT_PRICES.nuoc && (
+                                                <span className="text-red-500 ml-2">Chưa có giá</span>
+                                            )}
+                                        </label>
+                                        <div className="flex items-center space-x-2">
+                                            <input
+                                                type="number"
+                                                name="nuoc"
+                                                value={paymentFormData.nuoc}
+                                                onChange={handlePaymentInputChange}
+                                                className={`mt-1 block w-full rounded-md border ${errors.nuoc ? "border-red-500" : "border-gray-300"} px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-red-500`}
+                                                placeholder={UNIT_PRICES.nuoc ? "Nhập số lượng" : "Nhập giá"}
+                                                required
+                                            />
+                                        </div>
+                                        Tạm tính: {paymentFormData.nuoc && (
+                                            <span className="text-base text-gray-800">
+                                                {(UNIT_PRICES.nuoc
+                                                    ? (parseInt(paymentFormData.nuoc) * UNIT_PRICES.nuoc)
+                                                    : parseInt(paymentFormData.nuoc)).toLocaleString("vi-VN")} đ
+                                            </span>
+                                        )}
+                                        {errors.nuoc && <p className="mt-1 text-sm text-red-500">{errors.nuoc}</p>}
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">
+                                            {UNIT_PRICES.internet ? `Internet (tháng) - ${UNIT_PRICES.internet.toLocaleString("vi-VN")} đ/tháng` : "Internet (đ)"}
+                                            {!UNIT_PRICES.internet && (
+                                                <span className="text-red-500 ml-2">Chưa có giá</span>
+                                            )}
+                                        </label>
+                                        <div className="flex items-center space-x-2">
+                                            <input
+                                                type="number"
+                                                name="internet"
+                                                value={paymentFormData.internet}
+                                                onChange={handlePaymentInputChange}
+                                                className={`mt-1 block w-full rounded-md border ${errors.internet ? "border-red-500" : "border-gray-300"} px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-red-500`}
+                                                placeholder={UNIT_PRICES.internet ? "Nhập số tháng" : "Nhập giá"}
+                                                required
+                                            />
+                                        </div>
+                                        Tạm tính: {paymentFormData.internet && (
+                                            <span className="text-base text-gray-800">
+                                                {(UNIT_PRICES.internet
+                                                    ? (parseInt(paymentFormData.internet) * UNIT_PRICES.internet)
+                                                    : parseInt(paymentFormData.internet)).toLocaleString("vi-VN")} đ/tháng
+                                            </span>
+                                        )}
+                                        {errors.internet && <p className="mt-1 text-sm text-red-500">{errors.internet}</p>}
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">
+                                            {UNIT_PRICES.rac ? `Rác (tháng) - ${UNIT_PRICES.rac.toLocaleString("vi-VN")} đ/tháng` : "Rác (đ)"}
+                                            {!UNIT_PRICES.rac && (
+                                                <span className="text-red-500 ml-2">Chưa có giá</span>
+                                            )}
+                                        </label>
+                                        <div className="flex items-center space-x-2">
+                                            <input
+                                                type="number"
+                                                name="rac"
+                                                value={paymentFormData.rac}
+                                                onChange={handlePaymentInputChange}
+                                                className={`mt-1 block w-full rounded-md border ${errors.rac ? "border-red-500" : "border-gray-300"} px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-red-500`}
+                                                placeholder={UNIT_PRICES.rac ? "Nhập số tháng" : "Nhập giá"}
+                                                required
+                                            />
+                                        </div>
+                                        Tạm tính: {paymentFormData.rac && (
+                                            <span className="text-base text-gray-800">
+                                                {(UNIT_PRICES.rac
+                                                    ? (parseInt(paymentFormData.rac) * UNIT_PRICES.rac)
+                                                    : parseInt(paymentFormData.rac)).toLocaleString("vi-VN")} đ/tháng
+                                            </span>
+                                        )}
+                                        {errors.rac && <p className="mt-1 text-sm text-red-500">{errors.rac}</p>}
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">
+                                            {UNIT_PRICES.guiXe ? `Gửi xe (tháng) - ${UNIT_PRICES.guiXe.toLocaleString("vi-VN")} đ/tháng` : "Gửi xe (đ)"}
+                                            {!UNIT_PRICES.guiXe && (
+                                                <span className="text-red-500 ml-2">Chưa có giá</span>
+                                            )}
+                                        </label>
+                                        <div className="flex items-center space-x-2">
+                                            <input
+                                                type="number"
+                                                name="guiXe"
+                                                value={paymentFormData.guiXe}
+                                                onChange={handlePaymentInputChange}
+                                                className={`mt-1 block w-full rounded-md border ${errors.guiXe ? "border-red-500" : "border-gray-300"} px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-red-500`}
+                                                placeholder={UNIT_PRICES.guiXe ? "Nhập số tháng" : "Nhập giá"}
+                                                required
+                                            />
+                                        </div>
+                                        Tạm tính: {paymentFormData.guiXe && (
+                                            <span className="text-base text-gray-800">
+                                                {(UNIT_PRICES.guiXe
+                                                    ? (parseInt(paymentFormData.guiXe) * UNIT_PRICES.guiXe)
+                                                    : parseInt(paymentFormData.guiXe)).toLocaleString("vi-VN")} đ/tháng
+                                            </span>
+                                        )}
+                                        {errors.guiXe && <p className="mt-1 text-sm text-red-500">{errors.guiXe}</p>}
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">
+                                            {UNIT_PRICES.quanLy ? `Quản lý (tháng) - ${UNIT_PRICES.quanLy.toLocaleString("vi-VN")} đ/tháng` : "Quản lý (đ)"}
+                                            {!UNIT_PRICES.quanLy && (
+                                                <span className="text-red-500 ml-2">Chưa có giá</span>
+                                            )}
+                                        </label>
+                                        <div className="flex items-center space-x-2">
+                                            <input
+                                                type="number"
+                                                name="quanLy"
+                                                value={paymentFormData.quanLy}
+                                                onChange={handlePaymentInputChange}
+                                                className={`mt-1 block w-full rounded-md border ${errors.quanLy ? "border-red-500" : "border-gray-300"} px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-red-500`}
+                                                placeholder={UNIT_PRICES.quanLy ? "Nhập số tháng" : "Nhập giá"}
+                                                required
+                                            />
+                                        </div>
+                                        Tạm tính: {paymentFormData.quanLy && (
+                                            <span className="text-base text-gray-800">
+                                                {(UNIT_PRICES.quanLy
+                                                    ? (parseInt(paymentFormData.quanLy) * UNIT_PRICES.quanLy)
+                                                    : parseInt(paymentFormData.quanLy)).toLocaleString("vi-VN")} đ/tháng
+                                            </span>
+                                        )}
+                                        {errors.quanLy && <p className="mt-1 text-sm text-red-500">{errors.quanLy}</p>}
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">
+                                            {UNIT_PRICES.chiPhiKhac ? `Chi phí khác (tháng) - ${UNIT_PRICES.chiPhiKhac.toLocaleString("vi-VN")} đ/tháng` : "Chi phí khác (đ)"}
+                                            {!UNIT_PRICES.chiPhiKhac && (
+                                                <span className="text-red-500 ml-2">Chưa có giá</span>
+                                            )}
+                                        </label>
+                                        <div className="flex items-center space-x-2">
+                                            <input
+                                                type="number"
+                                                name="chiPhiKhac"
+                                                value={paymentFormData.chiPhiKhac}
+                                                onChange={handlePaymentInputChange}
+                                                className={`mt-1 block w-full rounded-md border ${errors.chiPhiKhac ? "border-red-500" : "border-gray-300"} px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-red-500`}
+                                                placeholder={UNIT_PRICES.chiPhiKhac ? "Nhập số tháng" : "Nhập giá"}
+                                                required
+                                            />
+                                        </div>
+                                        Tạm tính: {paymentFormData.chiPhiKhac && (
+                                            <span className="text-base text-gray-800">
+                                                {(UNIT_PRICES.chiPhiKhac
+                                                    ? (parseInt(paymentFormData.chiPhiKhac) * UNIT_PRICES.chiPhiKhac)
+                                                    : parseInt(paymentFormData.chiPhiKhac)).toLocaleString("vi-VN")} đ/tháng
+                                            </span>
+                                        )}
+                                        {errors.chiPhiKhac && <p className="mt-1 text-sm text-red-500">{errors.chiPhiKhac}</p>}
+                                    </div>
+                                </div>
+                                <div className="flex justify-between items-center mt-4">
+                                    <p className="text-lg font-semibold">
+                                        Tổng chi phí: {" "}
+                                        <span className="text-red-500">
+                                            {calculateTotalPayment().toLocaleString("vi-VN")} đ
+                                        </span>
+                                    </p>
+                                    <button
+                                        type="submit"
+                                        disabled={isLoading || isPaymentRequestCreated}
+                                        className={`px-4 py-2 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-red-500 ${isLoading || isPaymentRequestCreated ? "bg-gray-400 cursor-not-allowed" : "bg-red-500 hover:bg-red-400"}`}
+                                    >
+                                        {isLoading ? "Đang xử lý..." : isPaymentRequestCreated ? "Yêu cầu đã được tạo" : "Tạo yêu cầu thanh toán"}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    ) : getRoomStatus() === "Chờ Người thuê xác nhận" ? (
+                        <div className="bg-white shadow-xl rounded-lg overflow-hidden p-6">
+                            <p className="text-lg text-gray-700 font-semibold">Phòng này đang chờ người thuê xác nhận</p>
+                        </div>
+                    ) : (
+                        occupantRental && (
+                            <div className="bg-white shadow-xl rounded-lg overflow-hidden p-6">
+                                <h2 className="text-xl font-bold mb-4">Xác nhận đơn Thuê</h2>
+                                <form onSubmit={handleSubmit} className="space-y-6">
+                                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700">Giá(đ)</label>
+                                            <input
+                                                type="text"
+                                                name="price"
+                                                readOnly
+                                                value={formData.price ? Number(formData.price).toLocaleString("vi-VN") : ""}
+                                                onChange={handleInputChange}
+                                                className={`mt-1 block w-full rounded-md border ${errors.price ? "border-red-500" : "border-gray-300"} px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-red-500`}
+                                                placeholder="Nhập giá phòng"
+                                            />
+                                            {errors.price && <p className="mt-1 text-sm text-red-500">{errors.price}</p>}
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700">Ảnh hợp đồng</label>
-                                            <div className="border border-gray-300 rounded-lg p-6 bg-white shadow-sm w-full text-center">
-                                                <div className="flex items-center justify-center">
-                                                    <label className="cursor-pointer bg-gray-200 p-3 rounded-lg flex items-center gap-2">
-                                                        <FaPlus className="text-blue-600" />
-                                                        <span className="text-gray-700 font-semibold">Thêm Ảnh</span>
-                                                        <input
-                                                            type="file"
-                                                            multiple
-                                                            onChange={handleFileChange}
-                                                            accept=".jpeg,.png,.gif"
-                                                            className="hidden"
-                                                        />
-                                                    </label>
-                                                </div>
-                                                <p className="text-gray-500 text-sm mb-3 font-medium text-center mt-2">
-                                                    Định dạng: JPEG, PNG, GIF - Tối đa 5MB
-                                                </p>
-                                                {newPreviews.length > 0 && (
-                                                    <div className="mt-3">
-                                                        <p className="font-semibold text-gray-700">Ảnh đã chọn:</p>
-                                                        <div className="grid grid-cols-3 gap-3 mt-2">
-                                                            {newPreviews.map((url, index) => (
-                                                                <div
-                                                                    key={index}
-                                                                    className="relative border p-2 rounded-lg shadow-sm"
-                                                                >
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => handleRemoveFile(index)}
-                                                                        className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
-                                                                    >
-                                                                        <FaTimes size={14} />
-                                                                    </button>
-                                                                    <img
-                                                                        src={url}
-                                                                        alt={`Contract ${index}`}
-                                                                        className="w-full h-20 object-cover rounded-md cursor-pointer"
-                                                                        onClick={() => setPreviewImage(url)}
-                                                                    />
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                )}
+                                            <label className="block text-sm font-medium text-gray-700">Ngày bắt đầu</label>
+                                            <input
+                                                type="date"
+                                                name="startDate"
+                                                value={formData.startDate}
+                                                onChange={handleInputChange}
+                                                min={minStartDate}
+                                                className={`mt-1 block w-full rounded-md border ${errors.startDate ? "border-red-500" : "border-gray-300"} px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-red-500`}
+                                            />
+                                            {errors.startDate && <p className="mt-1 text-sm text-red-500">{errors.startDate}</p>}
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700">Ngày kết thúc</label>
+                                            <input
+                                                type="date"
+                                                name="endDate"
+                                                value={formData.endDate}
+                                                onChange={handleInputChange}
+                                                min={formData.startDate || minStartDate}
+                                                className={`mt-1 block w-full rounded-md border ${errors.endDate ? "border-red-500" : "border-gray-300"} px-3 py-2 focus:border-red-500 focus:outline-none focus:ring-red-500`}
+                                            />
+                                            {errors.endDate && <p className="mt-1 text-sm text-red-500">{errors.endDate}</p>}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Ảnh hợp đồng</label>
+                                        <div className="border border-gray-300 rounded-lg p-6 bg-white shadow-sm w-full text-center">
+                                            <div className="flex items-center justify-center">
+                                                <label className="cursor-pointer bg-gray-200 p-3 rounded-lg flex items-center gap-2">
+                                                    <FaPlus className="text-blue-600" />
+                                                    <span className="text-gray-700 font-semibold">Thêm Ảnh</span>
+                                                    <input
+                                                        type="file"
+                                                        multiple
+                                                        onChange={handleFileChange}
+                                                        accept=".jpeg,.png,.gif"
+                                                        className="hidden"
+                                                    />
+                                                </label>
                                             </div>
-                                            {errors.contractFile && (
-                                                <p className="mt-1 text-sm text-red-500">{errors.contractFile}</p>
+                                            <p className="text-gray-500 text-sm mb-3 font-medium text-center mt-2">
+                                                Định dạng: JPEG, PNG, GIF - Tối đa 5MB
+                                            </p>
+                                            {newPreviews.length > 0 && (
+                                                <div className="mt-3">
+                                                    <p className="font-semibold text-gray-700">Ảnh đã chọn:</p>
+                                                    <div className="grid grid-cols-3 gap-3 mt-2">
+                                                        {newPreviews.map((url, index) => (
+                                                            <div
+                                                                key={index}
+                                                                className="relative border p-2 rounded-lg shadow-sm"
+                                                            >
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => handleRemoveFile(index)}
+                                                                    className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
+                                                                >
+                                                                    <FaTimes size={14} />
+                                                                </button>
+                                                                <img
+                                                                    src={url}
+                                                                    alt={`Contract ${index}`}
+                                                                    className="w-full h-20 object-cover rounded-md cursor-pointer"
+                                                                    onClick={() => setPreviewImage(url)}
+                                                                />
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
                                             )}
                                         </div>
-                                        <div className="flex justify-end space-x-4">
-                                            <button
-                                                type="button"
-                                                onClick={handleCancelRequest}
-                                                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500"
-                                                disabled={isLoading}
-                                            >
-                                                Hủy Yêu cầu
-                                            </button>
-                                            <button
-                                                type="submit"
-                                                disabled={isLoading}
-                                                className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-400 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50"
-                                            >
-                                                {isLoading ? "Đang xử lý..." : "Xác nhận Yêu cầu"}
-                                            </button>
-                                        </div>
-                                    </form>
-                                </div>
-                            )
-                        )}
+                                        {errors.contractFile && (
+                                            <p className="mt-1 text-sm text-red-500">{errors.contractFile}</p>
+                                        )}
+                                    </div>
+                                    <div className="flex justify-end space-x-4">
+                                        <button
+                                            type="button"
+                                            onClick={handleCancelRequest}
+                                            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500"
+                                            disabled={isLoading}
+                                        >
+                                            Hủy Yêu cầu
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            disabled={isLoading}
+                                            className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-400 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50"
+                                        >
+                                            {isLoading ? "Đang xử lý..." : "Xác nhận Yêu cầu"}
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        )
+                    )}
                 </div>
             </div>
             {previewImage && (

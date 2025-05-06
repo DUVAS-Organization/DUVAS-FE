@@ -5,6 +5,8 @@ import UserService from '../../../Services/User/UserService';
 import RoomService from '../../../Services/User/RoomService';
 import CPPRoomsService from '../../../Services/Admin/CPPRoomsService';
 import { showCustomNotification } from '../../../Components/Notification';
+import CPPServicePostsService from '../../../Services/Admin/CPPServicePostsService';
+import ServicePost from '../../../Services/Admin/ServicePost';
 
 const ServicePackagesList = () => {
     const [priorityServicePosts, setPriorityServicePosts] = useState([]);
@@ -20,9 +22,9 @@ const ServicePackagesList = () => {
             const enrichedServicePosts = await Promise.all(
                 servicePosts.map(async (servicePost) => {
                     const user = await UserService.getUserById(servicePost.userId).catch(() => ({ name: 'Unknown' }));
-                    const roomDetails = await RoomService.getRoomById(servicePost.roomId).catch(() => ({ title: 'Unknown' }));
-                    const category = await CPPRoomsService.getCPPRoomById(servicePost.categoryPriorityPackageRoomId).catch(() => ({
-                        categoryPriorityPackageRoomValue: 'Unknown',
+                    const servicePostDetails = await ServicePost.getServicePostById(servicePost.servicePostId).catch(() => ({ title: 'Unknown' }));
+                    const category = await CPPServicePostsService.getCategoryPriorityPackageServicePostById(servicePost.categoryPriorityPackageServicePostId).catch(() => ({
+                        categoryPriorityPackageServicePostValue: 'Unknown',
                     }));
 
                     const currentDate = new Date();
@@ -40,8 +42,8 @@ const ServicePackagesList = () => {
                     return {
                         priorityPackageServicePostId: servicePost.priorityPackageServicePostId,
                         userName: user.name,
-                        roomTitle: roomDetails.title,
-                        categoryPriorityPackageRoomValue: category.categoryPriorityPackageRoomValue,
+                        servicePostTitle: servicePostDetails.title,
+                        categoryPriorityPackageServicePostValue: category.categoryPriorityPackageServicePostValue,
                         startDate: servicePost.startDate,
                         endDate: servicePost.endDate,
                         price: servicePost.price,
@@ -86,8 +88,8 @@ const ServicePackagesList = () => {
                                 <tr key={priorityServicePost.priorityPackageServicePostId} className="hover:bg-gray-200 border-collapse border border-gray-300">
                                     <td className="py-2 px-4 text-gray-700 border-b w-12">{index + 1}</td>
                                     <td className="py-2 px-4 text-gray-700 border-b min-w-[150px]">{priorityServicePost.userName}</td>
-                                    <td className="py-2 px-4 text-gray-700 border-b min-w-[300px]">{priorityServicePost.roomTitle}</td>
-                                    <td className="py-2 px-4 text-gray-700 border-b min-w-[150px]">{priorityServicePost.categoryPriorityPackageRoomValue} ngày</td>
+                                    <td className="py-2 px-4 text-gray-700 border-b min-w-[300px]">{priorityServicePost.servicePostTitle}</td>
+                                    <td className="py-2 px-4 text-gray-700 border-b min-w-[150px]">{priorityServicePost.categoryPriorityPackageServicePostValue} ngày</td>
                                     <td className="py-2 px-4 text-gray-700 border-b min-w-[120px]">{new Date(priorityServicePost.startDate).toLocaleDateString('vi-VN')}</td>
                                     <td className="py-2 px-4 text-gray-700 border-b min-w-[120px]">{new Date(priorityServicePost.endDate).toLocaleDateString('vi-VN')}</td>
                                     <td className="py-2 px-4 text-gray-700 border-b min-w-[120px]">

@@ -15,6 +15,7 @@ import UserService from "../../Services/User/UserService";
 import NotificationService from "../../Services/User/NotificationService";
 import { parse, format, differenceInSeconds, differenceInMinutes, differenceInHours } from "date-fns";
 import { useAuth } from "../../Context/AuthProvider";
+import { getUserProfile } from "../../Services/User/UserProfileService";
 
 // Static data remains unchanged
 const barData = [
@@ -535,46 +536,63 @@ const Dashboard = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [pieData, setPieData] = useState([]);
     const [recentActivity, setRecentActivity] = useState([]);
-    const [userMoney, setUserMoney] = useState(0);
+    const [userProfile, setUserProfile] = useState(null);
     const { user } = useAuth();
     const userId = user?.userId ? parseInt(user.userId) : null;
     const [userRole, setUserRole] = useState("User");
+    const navigate = useNavigate();
 
     const toggleDarkMode = () => setDarkMode(!darkMode);
     const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
-    // Fetch user data including money
+    // Fetch user profile including money
     useEffect(() => {
-        const fetchUserData = async () => {
+        const fetchUserProfile = async () => {
+            if (!userId) {
+                console.error('No user ID found from useAuth');
+                setUserProfile({
+                    money: 0,
+                    role: "User"
+                });
+                setUserRole("User");
+                return;
+            }
             try {
-                if (!userId) {
-                    console.error('No user ID found from useAuth');
-                    setUserMoney(0);
-                    setUserRole("User");
-                    return;
-                }
-                console.log('Fetching user data for userId:', userId);
-                const userData = await UserService.getUserById(userId);
-                console.log('User data fetched:', userData);
-                setUserMoney(userData.money || 0);
+                console.log('Fetching user profile for userId:', userId);
+                const profileData = await getUserProfile(userId);
+                setUserProfile({
+                    userName: profileData.userName || user.username,
+                    name: profileData.name || '',
+                    profilePicture: profileData.profilePicture || 'https://www.gravatar.com/avatar/?d=mp',
+                    money: profileData.money || 0,
+                    encryptedMoney: profileData.encryptedMoney,
+                    moneyIV: profileData.moneyIV
+                });
                 // Determine user role
-                if (userData.roleAdmin === 1) {
+                if (profileData.roleAdmin === 1) {
                     setUserRole("Admin");
-                } else if (userData.roleLandlord === 1) {
+                } else if (profileData.roleLandlord === 1) {
                     setUserRole("Landlord");
-                } else if (userData.roleService === 1) {
+                } else if (profileData.roleService === 1) {
                     setUserRole("Service");
                 } else {
                     setUserRole("User");
                 }
             } catch (error) {
-                console.error('Error fetching user data:', error.response?.data || error.message);
-                setUserMoney(0);
+                console.error('Error fetching user profile:', error.response?.data || error.message);
+                setUserProfile({
+                    userName: user.username || '',
+                    name: '',
+                    profilePicture: 'https://www.gravatar.com/avatar/?d=mp',
+                    money: 0,
+                    encryptedMoney: null,
+                    moneyIV: null
+                });
                 setUserRole("User");
             }
         };
-        fetchUserData();
-    }, [userId]);
+        fetchUserProfile();
+    }, [userId, user]);
 
     useEffect(() => {
         const fetchUserRoles = async () => {
@@ -740,7 +758,7 @@ const Dashboard = () => {
                     </div>
                     <div className="flex items-center space-x-4">
                         <span className="text-sm font-medium bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent">
-                            {formatAmount(userMoney)} đ
+                            {userProfile?.money?.toLocaleString('vi-VN') || '0'} đ
                         </span>
                         <Notifications userId={userId} userRole={userRole} />
                         <button onClick={toggleDarkMode} className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">

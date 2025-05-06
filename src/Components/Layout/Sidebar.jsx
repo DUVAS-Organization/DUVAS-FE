@@ -253,7 +253,7 @@ const Sidebar = () => {
                     </div>
 
                     {dropdownStates.priorityPackage && (
-                        <ul className="pl-8 mt-2 space-y-2">
+                        <ul className="pl-8">
                             <li>
                                 <NavLink
                                     to="/Admin/RoomPackages"

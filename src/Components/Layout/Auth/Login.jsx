@@ -34,7 +34,7 @@ const LoginPage = () => {
                 const userRole = decodedToken["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"];
 
                 if (userRole === 'Admin') {
-                    window.location.href = "/Admin/Accounts";
+                    window.location.href = "/Admin/Dashboard";
                 } else {
                     window.location.href = "/";
                 }
