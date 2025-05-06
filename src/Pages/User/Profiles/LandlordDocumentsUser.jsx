@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import UpRoleService from '../../../Services/User/UpRoleService';
 import UserService from '../../../Services/User/UserService';
@@ -9,11 +9,24 @@ const LandlordDocumentsUser = () => {
     const [license, setLicense] = useState(null);
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [imageLoading, setImageLoading] = useState({
+        front: false,
+        back: false,
+        business: false,
+    });
     const [error, setError] = useState(null);
     const [previewImage, setPreviewImage] = useState(null);
     const { landlordLicenseId } = useParams();
     const navigate = useNavigate();
     const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+
+    // State để lưu URL blob của ảnh
+    const [frontImageBlobUrl, setFrontImageBlobUrl] = useState(null);
+    const [backImageBlobUrl, setBackImageBlobUrl] = useState(null);
+    const [businessLicenseBlobUrl, setBusinessLicenseBlobUrl] = useState(null);
+
+    // Ref để theo dõi blob URLs
+    const blobUrlsRef = useRef({});
 
     useEffect(() => {
         const fetchData = async () => {
@@ -24,6 +37,29 @@ const LandlordDocumentsUser = () => {
                 const userData = await UserService.getUserById(licenseData.userId, token);
                 setUser(userData);
 
+                // Tải ảnh dưới dạng blob với fallback
+                if (licenseData.anhCCCDMatTruoc) {
+                    setImageLoading(prev => ({ ...prev, front: true }));
+                    const blobUrl = await fetchImageAsBlob(licenseData.anhCCCDMatTruoc, 'CCCD mặt trước');
+                    blobUrlsRef.current.front = blobUrl || licenseData.anhCCCDMatTruoc; // Fallback về URL gốc nếu blob thất bại
+                    setFrontImageBlobUrl(blobUrlsRef.current.front);
+                    setImageLoading(prev => ({ ...prev, front: false }));
+                }
+                if (licenseData.anhCCCDMatSau) {
+                    setImageLoading(prev => ({ ...prev, back: true }));
+                    const blobUrl = await fetchImageAsBlob(licenseData.anhCCCDMatSau, 'CCCD mặt sau');
+                    blobUrlsRef.current.back = blobUrl || licenseData.anhCCCDMatSau;
+                    setBackImageBlobUrl(blobUrlsRef.current.back);
+                    setImageLoading(prev => ({ ...prev, back: false }));
+                }
+                if (licenseData.giayPhepKinhDoanh) {
+                    setImageLoading(prev => ({ ...prev, business: true }));
+                    const blobUrl = await fetchImageAsBlob(licenseData.giayPhepKinhDoanh, 'Giấy phép kinh doanh');
+                    blobUrlsRef.current.business = blobUrl || licenseData.giayPhepKinhDoanh;
+                    setBusinessLicenseBlobUrl(blobUrlsRef.current.business);
+                    setImageLoading(prev => ({ ...prev, business: false }));
+                }
+
                 setLoading(false);
             } catch (err) {
                 console.error('❌ Lỗi khi lấy dữ liệu:', err);
@@ -32,11 +68,61 @@ const LandlordDocumentsUser = () => {
             }
         };
 
-        fetchData();
+        if (landlordLicenseId && token) {
+            fetchData();
+        } else {
+            setError('Thiếu thông tin xác thực hoặc ID giấy phép');
+            setLoading(false);
+        }
     }, [landlordLicenseId, token]);
 
+    // Hàm tải ảnh từ URL dưới dạng blob
+    const fetchImageAsBlob = async (url, imageType) => {
+        if (!url) {
+            console.warn(`URL ảnh ${imageType} không hợp lệ`);
+            return null;
+        }
+        try {
+            const response = await fetch(url, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            if (!response.ok) {
+                if (response.status === 401) {
+                    console.error('Token không hợp lệ hoặc hết hạn');
+                    localStorage.removeItem('token');
+                    navigate('/login');
+                }
+                throw new Error(`Không thể tải ảnh ${imageType}: ${response.statusText}`);
+            }
+            const blob = await response.blob();
+            if (blob.size === 0) {
+                throw new Error(`Dữ liệu ảnh ${imageType} rỗng`);
+            }
+            return URL.createObjectURL(blob);
+        } catch (error) {
+            console.error(`Lỗi khi tải ảnh ${imageType} dưới dạng blob:`, error);
+            return null; // Trả về null để dùng URL gốc làm fallback
+        }
+    };
+
+    // Giải phóng bộ nhớ blob URL khi component unmount
+    useEffect(() => {
+        return () => {
+            Object.values(blobUrlsRef.current).forEach(url => {
+                if (url && url.startsWith('blob:')) { // Chỉ thu hồi blob URL, không thu hồi URL gốc
+                    // console.log('Revoking blob URL:', url);
+                    URL.revokeObjectURL(url);
+                }
+            });
+        };
+    }, []);
+
     const openPreview = (imageUrl) => {
-        setPreviewImage(imageUrl);
+        if (imageUrl) {
+            setPreviewImage(imageUrl);
+        }
     };
 
     const closePreview = () => {
@@ -61,22 +147,22 @@ const LandlordDocumentsUser = () => {
             <div className="p-6 ml-56 max-w-6xl mx-auto">
                 <h1 className="font-bold text-3xl mb-6 text-red-600">Thông tin giấy tờ Landlord</h1>
                 <div className="bg-white p-6 rounded-lg shadow-md border border-gray-300 dark:bg-gray-800 dark:text-white">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 ">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         <div className='flex gap-2'>
                             <p className="font-semibold">ID giấy phép:</p>
-                            <p>{license.landlordLicenseId}</p>
+                            <p>{license?.landlordLicenseId || 'Không có'}</p>
                         </div>
                         <div className='flex gap-2'>
                             <p className="font-semibold">Chủ giấy phép:</p>
-                            <p>{user?.name || license.name || 'Không có'}</p>
+                            <p>{user?.name || license?.name || 'Không có'}</p>
                         </div>
                         <div className='flex gap-2'>
                             <p className="font-semibold">Số CCCD:</p>
-                            <p>{license.cccd || 'Không có'}</p>
+                            <p>{license?.cccd || 'Không có'}</p>
                         </div>
                         <div className='flex gap-2'>
                             <p className="font-semibold">Giới tính:</p>
-                            <p>{license.sex || 'Không có'}</p>
+                            <p>{license?.sex || 'Không có'}</p>
                         </div>
                         <div className="flex gap-2 items-start">
                             <span className="font-semibold whitespace-nowrap">Địa chỉ:</span>
@@ -85,7 +171,7 @@ const LandlordDocumentsUser = () => {
                         <div className='flex gap-2'>
                             <p className="font-semibold">Ngày sinh:</p>
                             <p>
-                                {license.dateOfBirth
+                                {license?.dateOfBirth
                                     ? new Date(license.dateOfBirth).toLocaleDateString('vi-VN')
                                     : 'Không có'}
                             </p>
@@ -93,16 +179,18 @@ const LandlordDocumentsUser = () => {
                     </div>
 
                     <div className="mt-6">
-                        <h2 className="font-semibold text-xl mb-4">Hình ảnh giấy tờ: </h2>
+                        <h2 className="font-semibold text-xl mb-4">Hình ảnh giấy tờ:</h2>
                         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-2 gap-4">
                             <div>
                                 <p className="font-semibold">CCCD mặt trước:</p>
-                                {license.anhCCCDMatTruoc ? (
+                                {imageLoading.front ? (
+                                    <p className="text-gray-500">Đang tải...</p>
+                                ) : frontImageBlobUrl ? (
                                     <img
-                                        src={license.anhCCCDMatTruoc}
+                                        src={frontImageBlobUrl}
                                         alt="CCCD mặt trước"
                                         className="w-full h-auto rounded-lg shadow-sm cursor-pointer hover:opacity-80"
-                                        onClick={() => openPreview(license.anhCCCDMatTruoc)}
+                                        onClick={() => openPreview(frontImageBlobUrl)}
                                     />
                                 ) : (
                                     <p>Không có</p>
@@ -110,12 +198,14 @@ const LandlordDocumentsUser = () => {
                             </div>
                             <div>
                                 <p className="font-semibold">CCCD mặt sau:</p>
-                                {license.anhCCCDMatSau ? (
+                                {imageLoading.back ? (
+                                    <p className="text-gray-500">Đang tải...</p>
+                                ) : backImageBlobUrl ? (
                                     <img
-                                        src={license.anhCCCDMatSau}
+                                        src={backImageBlobUrl}
                                         alt="CCCD mặt sau"
                                         className="w-full h-auto rounded-lg shadow-sm cursor-pointer hover:opacity-80"
-                                        onClick={() => openPreview(license.anhCCCDMatSau)}
+                                        onClick={() => openPreview(backImageBlobUrl)}
                                     />
                                 ) : (
                                     <p>Không có</p>
@@ -123,12 +213,14 @@ const LandlordDocumentsUser = () => {
                             </div>
                             <div>
                                 <p className="font-semibold">Giấy phép kinh doanh:</p>
-                                {license.giayPhepKinhDoanh ? (
+                                {imageLoading.business ? (
+                                    <p className="text-gray-500">Đang tải...</p>
+                                ) : businessLicenseBlobUrl ? (
                                     <img
-                                        src={license.giayPhepKinhDoanh}
+                                        src={businessLicenseBlobUrl}
                                         alt="Giấy phép kinh doanh"
                                         className="w-full h-auto rounded-lg shadow-sm cursor-pointer hover:opacity-80"
-                                        onClick={() => openPreview(license.giayPhepKinhDoanh)}
+                                        onClick={() => openPreview(businessLicenseBlobUrl)}
                                     />
                                 ) : (
                                     <p>Không có</p>
@@ -149,7 +241,7 @@ const LandlordDocumentsUser = () => {
                 {previewImage && (
                     <div
                         className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
-                        onClick={closePreview} // Đóng khi click ngoài
+                        onClick={closePreview}
                     >
                         <div className="relative max-w-4xl max-h-[90vh] p-4 bg-white rounded-lg overflow-auto">
                             <img

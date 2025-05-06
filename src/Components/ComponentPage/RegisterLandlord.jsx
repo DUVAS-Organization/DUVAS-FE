@@ -52,6 +52,12 @@ const RegisterLandlord = ({
     const [selectedImage, setSelectedImage] = useState(null);
     const [showImagePreview, setShowImagePreview] = useState(false);
 
+    // State để lưu URL blob của ảnh từ API
+    const [frontImageBlobUrl, setFrontImageBlobUrl] = useState(null);
+    const [backImageBlobUrl, setBackImageBlobUrl] = useState(null);
+    const [businessLicenseBlobUrl, setBusinessLicenseBlobUrl] = useState(null);
+    const [professionalLicenseBlobUrl, setProfessionalLicenseBlobUrl] = useState(null);
+
     useEffect(() => {
         const fetchCurrentUserById = async () => {
             try {
@@ -66,6 +72,24 @@ const RegisterLandlord = ({
         };
         fetchCurrentUserById();
     }, [userId, token]);
+
+    // Hàm tải ảnh từ URL dưới dạng blob
+    const fetchImageAsBlob = async (url) => {
+        if (!url) return null;
+        try {
+            const response = await fetch(url, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            if (!response.ok) throw new Error("Không thể tải ảnh");
+            const blob = await response.blob();
+            return URL.createObjectURL(blob);
+        } catch (error) {
+            console.error("Lỗi khi tải ảnh dưới dạng blob:", error);
+            return null;
+        }
+    };
 
     // Validate CCCD number
     const validateCccd = (value) => {
@@ -96,16 +120,12 @@ const RegisterLandlord = ({
             setValidatingFront(true);
 
             const result = await OtherService.AICCCD(image);
-            // console.log("AI CCCD Result:", result);
-
-            // Kiểm tra xem result có tồn tại và có dữ liệu hợp lệ không
             const isValid = result && (result.isValid !== undefined ? result.isValid : !!result.cccd);
 
             setFrontImageValid(isValid);
             setValidatingFront(false);
             if (isValid && result) {
                 setFrontIdInfo(result);
-                // Tự động điền thông tin từ result
                 if (result.name) setName(result.name);
                 if (result.sex) setSex(result.sex);
                 if (result.address) setAddress(result.address);
@@ -113,7 +133,6 @@ const RegisterLandlord = ({
                 if (result.dateOfBirth) setdateOfBirth(result.dateOfBirth);
             }
 
-            // Hiển thị thông báo dựa trên kết quả xác thực
             if (isValid) {
                 showCustomNotification("success", "Ảnh CCCD mặt trước hợp lệ.");
             } else {
@@ -132,6 +151,7 @@ const RegisterLandlord = ({
         if (file) {
             setFrontImage(file);
             validateCCCDWithAI(file, true);
+            setFrontImageBlobUrl(URL.createObjectURL(file)); // Hiển thị ảnh cục bộ ban đầu
         }
     };
 
@@ -139,7 +159,23 @@ const RegisterLandlord = ({
         const file = e.target.files[0];
         if (file) {
             setBackImage(file);
-            // Không gọi validateCCCDWithAI cho mặt sau
+            setBackImageBlobUrl(URL.createObjectURL(file)); // Hiển thị ảnh cục bộ ban đầu
+        }
+    };
+
+    const handleBusinessLicenseChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setBusinessLicense(file);
+            setBusinessLicenseBlobUrl(URL.createObjectURL(file));
+        }
+    };
+
+    const handleProfessionalLicenseChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setProfessionalLicense(file);
+            setProfessionalLicenseBlobUrl(URL.createObjectURL(file));
         }
     };
 
@@ -157,7 +193,6 @@ const RegisterLandlord = ({
     };
 
     const handleConfirm = async () => {
-        // Chỉ kiểm tra CCCD mặt trước
         if (!frontImageValid) {
             showCustomNotification("error", "Vui lòng sử dụng ảnh CCCD mặt trước hợp lệ.");
             return;
@@ -171,7 +206,7 @@ const RegisterLandlord = ({
         setIsSubmitting(true);
         try {
             const frontImageUrl = await uploadFile(frontImage);
-            const backImageUrl = backImage ? await uploadFile(backImage) : null; // Vẫn upload nếu có ảnh mặt sau
+            const backImageUrl = backImage ? await uploadFile(backImage) : null;
             const businessLicenseUrl = businessLicense ? await uploadFile(businessLicense) : null;
             const professionalLicenseUrl = selectedNeed === 'Chủ dịch vụ' && professionalLicense
                 ? await uploadFile(professionalLicense)
@@ -196,6 +231,25 @@ const RegisterLandlord = ({
             } else {
                 response = await UpRoleService.createLandlordLicense(payload, token);
             }
+
+            // Tải ảnh từ URL trong response dưới dạng blob
+            if (response.anhCCCDMatTruocUrl) {
+                const blobUrl = await fetchImageAsBlob(response.anhCCCDMatTruocUrl);
+                setFrontImageBlobUrl(blobUrl);
+            }
+            if (response.anhCCCDMatSauUrl) {
+                const blobUrl = await fetchImageAsBlob(response.anhCCCDMatSauUrl);
+                setBackImageBlobUrl(blobUrl);
+            }
+            if (response.giayPhepKinhDoanh) {
+                const blobUrl = await fetchImageAsBlob(response.giayPhepKinhDoanh);
+                setBusinessLicenseBlobUrl(blobUrl);
+            }
+            if (response.giayPhepChuyenMon) {
+                const blobUrl = await fetchImageAsBlob(response.giayPhepChuyenMon);
+                setProfessionalLicenseBlobUrl(blobUrl);
+            }
+
             showCustomNotification("success", "Đăng ký thành công!");
             setShowConfirm(false);
         } catch (error) {
@@ -209,6 +263,7 @@ const RegisterLandlord = ({
             setIsSubmitting(false);
         }
     };
+
     const formatDate = (dateStr) => {
         if (!dateStr) return '';
         const date = new Date(dateStr);
@@ -217,6 +272,7 @@ const RegisterLandlord = ({
         const yyyy = date.getFullYear();
         return `${dd}/${mm}/${yyyy}`;
     };
+
     return (
         <div className='select-none'>
             <h1 className='text-xl font-medium mb-1'>Đăng ký thành chủ</h1>
@@ -277,13 +333,13 @@ const RegisterLandlord = ({
                     </label>
                     <div
                         className="w-full h-40 border dark:bg-gray-800 border-gray-300 rounded-lg flex items-center justify-center bg-gray-50 cursor-pointer"
-                        onClick={() => frontImage && setPreviewImage(URL.createObjectURL(frontImage))}
+                        onClick={() => frontImageBlobUrl && setPreviewImage(frontImageBlobUrl)}
                     >
-                        {frontImage ? (
+                        {frontImageBlobUrl ? (
                             <img
-                                src={URL.createObjectURL(frontImage)}
+                                src={frontImageBlobUrl}
                                 alt="Front CCCD"
-                                className="object-cover h-full w-full rounded-lg "
+                                className="object-cover h-full w-full rounded-lg"
                             />
                         ) : (
                             <span className="text-gray-500 text-sm dark:text-white">Chưa có ảnh</span>
@@ -315,18 +371,18 @@ const RegisterLandlord = ({
                     )}
                 </div>
 
-                {/* Back ID - Giữ nguyên giao diện nhưng không xác thực */}
+                {/* Back ID */}
                 <div className="flex flex-col items-center">
                     <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-white">
                         Ảnh CCCD mặt sau:
                     </label>
                     <div
                         className="w-full h-40 dark:bg-gray-800 border border-gray-300 rounded-lg flex items-center justify-center bg-gray-50 cursor-pointer"
-                        onClick={() => backImage && setPreviewImage(URL.createObjectURL(backImage))}
+                        onClick={() => backImageBlobUrl && setPreviewImage(backImageBlobUrl)}
                     >
-                        {backImage ? (
+                        {backImageBlobUrl ? (
                             <img
-                                src={URL.createObjectURL(backImage)}
+                                src={backImageBlobUrl}
                                 alt="Back CCCD"
                                 className="object-cover h-full w-full rounded-lg"
                             />
@@ -367,12 +423,11 @@ const RegisterLandlord = ({
                     placeholder="Nhập số CCCD"
                     value={cccdNumber || ""}
                     onChange={handleCccdChange}
-                    className={`w-full p-3 border rounded-lg ${cccdError ? 'border-red-500 dark:bg-gray-800 dark:text-white' : 'border-gray-300 dark:bg-gray-800 dark:text-white'
-                        }`}
+                    className={`w-full p-3 border rounded-lg ${cccdError ? 'border-red-500 dark:bg-gray-800 dark:text-white' : 'border-gray-300 dark:bg-gray-800 dark:text-white'}`}
                     maxLength={12}
                     disabled={isSubmitting}
                 />
-                {cccdError && <p className="mt-1 text-sm text-red-500 ">{cccdError}</p>}
+                {cccdError && <p className="mt-1 text-sm text-red-500">{cccdError}</p>}
             </div>
 
             {/* Legal Documents */}
@@ -383,11 +438,11 @@ const RegisterLandlord = ({
                     <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-white">Giấy phép kinh doanh:</label>
                     <div
                         className="w-full h-40 dark:bg-gray-800 border border-gray-300 rounded-lg flex items-center justify-center bg-gray-50 cursor-pointer"
-                        onClick={() => businessLicense && setPreviewImage(URL.createObjectURL(businessLicense))}
+                        onClick={() => businessLicenseBlobUrl && setPreviewImage(businessLicenseBlobUrl)}
                     >
-                        {businessLicense ? (
+                        {businessLicenseBlobUrl ? (
                             <img
-                                src={URL.createObjectURL(businessLicense)}
+                                src={businessLicenseBlobUrl}
                                 alt="Giấy phép kinh doanh"
                                 className="object-cover h-full w-full rounded-lg"
                             />
@@ -406,7 +461,7 @@ const RegisterLandlord = ({
                     <input
                         type="file"
                         ref={businessLicenseInputRef}
-                        onChange={(e) => setBusinessLicense(e.target.files[0])}
+                        onChange={handleBusinessLicenseChange}
                         className="hidden"
                         accept="image/*"
                         disabled={isSubmitting}
@@ -419,11 +474,11 @@ const RegisterLandlord = ({
                         <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-white">Giấy phép chuyên môn:</label>
                         <div
                             className="w-full h-40 dark:bg-gray-800 border border-gray-300 rounded-lg flex items-center justify-center bg-gray-50 cursor-pointer"
-                            onClick={() => professionalLicense && setPreviewImage(URL.createObjectURL(professionalLicense))}
+                            onClick={() => professionalLicenseBlobUrl && setPreviewImage(professionalLicenseBlobUrl)}
                         >
-                            {professionalLicense ? (
+                            {professionalLicenseBlobUrl ? (
                                 <img
-                                    src={URL.createObjectURL(professionalLicense)}
+                                    src={professionalLicenseBlobUrl}
                                     alt="Giấy phép chuyên môn"
                                     className="object-cover h-full w-full rounded-lg"
                                 />
@@ -442,7 +497,7 @@ const RegisterLandlord = ({
                         <input
                             type="file"
                             ref={professionalLicenseInputRef}
-                            onChange={(e) => setProfessionalLicense(e.target.files[0])}
+                            onChange={handleProfessionalLicenseChange}
                             className="hidden"
                             accept="image/*"
                             disabled={isSubmitting}
@@ -512,13 +567,13 @@ const RegisterLandlord = ({
                             <div className="flex space-x-4 mb-4 dark:text-white">
                                 <div className="flex-1">
                                     <p><strong>Ảnh CCCD mặt trước:</strong></p>
-                                    {frontImage ? (
+                                    {frontImageBlobUrl ? (
                                         <img
-                                            src={URL.createObjectURL(frontImage)}
+                                            src={frontImageBlobUrl}
                                             alt="Ảnh CCCD mặt trước"
                                             className="w-full h-auto max-h-20 object-contain rounded-lg cursor-pointer"
                                             onClick={() => {
-                                                setSelectedImage(URL.createObjectURL(frontImage));
+                                                setSelectedImage(frontImageBlobUrl);
                                                 setShowImagePreview(true);
                                             }}
                                         />
@@ -529,13 +584,13 @@ const RegisterLandlord = ({
 
                                 <div className="flex-1">
                                     <p><strong>Ảnh CCCD mặt sau:</strong></p>
-                                    {backImage ? (
+                                    {backImageBlobUrl ? (
                                         <img
-                                            src={URL.createObjectURL(backImage)}
+                                            src={backImageBlobUrl}
                                             alt="Ảnh CCCD mặt sau"
                                             className="w-full h-auto max-h-20 object-contain rounded-lg cursor-pointer"
                                             onClick={() => {
-                                                setSelectedImage(URL.createObjectURL(backImage));
+                                                setSelectedImage(backImageBlobUrl);
                                                 setShowImagePreview(true);
                                             }}
                                         />
@@ -549,13 +604,13 @@ const RegisterLandlord = ({
                             <div className="flex space-x-4 mb-4">
                                 <div className="flex-1">
                                     <p><strong>Giấy phép kinh doanh:</strong></p>
-                                    {businessLicense ? (
+                                    {businessLicenseBlobUrl ? (
                                         <img
-                                            src={URL.createObjectURL(businessLicense)}
+                                            src={businessLicenseBlobUrl}
                                             alt="Giấy phép kinh doanh"
                                             className="w-full h-auto max-h-20 object-contain rounded-lg cursor-pointer"
                                             onClick={() => {
-                                                setSelectedImage(URL.createObjectURL(businessLicense));
+                                                setSelectedImage(businessLicenseBlobUrl);
                                                 setShowImagePreview(true);
                                             }}
                                         />
@@ -567,13 +622,13 @@ const RegisterLandlord = ({
                                 {selectedNeed === 'Chủ dịch vụ' && (
                                     <div className="flex-1">
                                         <p><strong>Giấy phép chuyên môn:</strong></p>
-                                        {professionalLicense ? (
+                                        {professionalLicenseBlobUrl ? (
                                             <img
-                                                src={URL.createObjectURL(professionalLicense)}
+                                                src={professionalLicenseBlobUrl}
                                                 alt="Giấy phép chuyên môn"
                                                 className="w-full h-auto max-h-20 object-contain rounded-lg cursor-pointer"
                                                 onClick={() => {
-                                                    setSelectedImage(URL.createObjectURL(professionalLicense));
+                                                    setSelectedImage(professionalLicenseBlobUrl);
                                                     setShowImagePreview(true);
                                                 }}
                                             />

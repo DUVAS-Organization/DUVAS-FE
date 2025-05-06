@@ -192,6 +192,49 @@ const OtherService = {
             throw error; // Throw lỗi để xử lý ở component gọi hàm này
         }
     },
+    checkPendingReport: (roomId, token) => {
+        return axios.get(`${API_URL}/Report/has-pending-report/${roomId}`, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+        });
+    },
+    // NEW: Fetch reports for landlord
+    getLandlordReports: async (token) => {
+        if (!token) {
+            throw new Error('No authentication token provided.');
+        }
+        try {
+            const response = await axios.get(`${API_URL}/Report/landlord-reports`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching landlord reports:', error.response?.data || error.message);
+            throw error;
+        }
+    },
+    getMyReports: async (token) => {
+        if (!token) {
+            throw new Error('No authentication token provided.');
+        }
+        try {
+            const response = await axios.get(`${API_URL}/Report/my-reports`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching user reports:', error.response?.data || error.message);
+            throw error;
+        }
+    },
     // Kết nối WebSocket
     connectWebSocket(userId, { onMessage, onOpen, onClose, onError }) {
         const ws = new WebSocket(`${WS_URL}?userId=${userId}`);
