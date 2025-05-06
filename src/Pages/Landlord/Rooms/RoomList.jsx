@@ -43,7 +43,8 @@ const Item = styled(Paper)(({ theme }) => ({
 }));
 
 // Hàm hiển thị overlay (góc trên trái) dựa trên status
-const getStatusOverlay = (status) => {
+const getStatusOverlay = (status, isPermission) => {
+    const showLockedText = isPermission === 0 && [2, 3, 4].includes(status);
     switch (status) {
         case 1:
             return (
@@ -56,21 +57,27 @@ const getStatusOverlay = (status) => {
             return (
                 <div className="absolute top-2 left-2 bg-white bg-opacity-80 px-2 py-1 rounded flex items-center">
                     <FaHourglassHalf className="text-yellow-500 mr-1" />
-                    <span className="text-yellow-500 font-bold text-sm">Đang chờ giao dịch</span>
+                    <span className="text-yellow-500 font-bold text-sm">
+                        Đang chờ giao dịch {showLockedText && <span className="text-red-700"> - Đã bị khóa</span>}
+                    </span>
                 </div>
             );
         case 3:
             return (
                 <div className="absolute top-2 left-2 bg-white bg-opacity-80 px-2 py-1 rounded flex items-center">
                     <FaTimesCircle className="text-red-500 mr-1" />
-                    <span className="text-red-500 font-bold text-sm">Đã được thuê</span>
+                    <span className="text-red-500 font-bold text-sm">
+                        Đã được thuê {showLockedText && <span className="text-red-700"> - Đã bị khóa</span>}
+                    </span>
                 </div>
             );
         case 4:
             return (
                 <div className="absolute top-2 left-2 bg-white bg-opacity-80 px-2 py-1 rounded flex items-center">
                     <FaHourglassHalf className="text-orange-500 mr-1" />
-                    <span className="text-orange-500 font-bold text-sm">Chờ Người dùng xác nhận</span>
+                    <span className="text-orange-500 font-bold text-sm">
+                        Chờ Người dùng xác nhận {showLockedText && <span className="text-red-700"> - Đã bị khóa</span>}
+                    </span>
                 </div>
             );
         default:
@@ -522,7 +529,7 @@ const RoomList = () => {
                                         <div className="flex flex-col h-full dark:bg-gray-800 dark:text-white">
                                             <div className="relative">
                                                 <img
-                                                    className={`rounded-t-lg shadow-md overflow-hidden w-full h-48 object-cover ${card.isPermission === 0 ? 'opacity-30' : ''}`}
+                                                    className={`rounded-t-lg shadow-md overflow-hidden w-full h-48 object-cover ${card.isPermission === 0 || card.isPermission === 2 ? 'opacity-30' : ''}`}
                                                     alt={card.title || 'Image of a room'}
                                                     src={firstImage}
                                                 />
@@ -538,7 +545,19 @@ const RoomList = () => {
                                                         </div>
                                                     </div>
                                                 )}
-                                                {card.isPermission !== 0 && getStatusOverlay(card.status)}
+                                                {card.isPermission === 2 && (
+                                                    <div className="absolute inset-0 flex items-center justify-center">
+                                                        <div className="relative w-full h-full">
+                                                            <div className="absolute top-0 left-0 w-full h-full bg-transparent flex items-center justify-center">
+                                                                <span className="text-red-700 text-2xl font-bold transform -rotate-45">
+                                                                    Admin khóa
+                                                                </span>
+                                                            </div>
+                                                            <div className="absolute top-1/2 left-1/2 w-36 h-36 rounded-full border-8 border-red-700 transform -rotate-45 -translate-x-1/2 -translate-y-1/2"></div>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                {card.isPermission !== 0 && card.isPermission !== 2 && getStatusOverlay(card.status, card.isPermission)}
                                                 {isAuthorizing && !isAuthorized && (
                                                     <div
                                                         className="absolute top-2 right-1 z-10"
@@ -555,7 +574,7 @@ const RoomList = () => {
                                                         />
                                                     </div>
                                                 )}
-                                                {!isAuthorizing && card.status === 1 && (
+                                                {!isAuthorizing && card.status === 1 && card.isPermission !== 0 && card.isPermission !== 2 && (
                                                     <div
                                                         className="absolute top-2 right-0 bg-white bg-opacity-70 px-2 py-1 rounded cursor-pointer hover:bg-opacity-100"
                                                         onClick={(e) => {
