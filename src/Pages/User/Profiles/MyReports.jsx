@@ -126,7 +126,7 @@ const MyReports = () => {
                                 <thead className="bg-gray-50 dark:bg-gray-700">
                                     <tr>
                                         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                            STT
+                                            #
                                         </th>
                                         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                             Nội dung
@@ -163,8 +163,8 @@ const MyReports = () => {
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                                                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${report.status === 0
-                                                            ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
-                                                            : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                                        ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
+                                                        : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
                                                         }`}>
                                                         {report.status === 0 ? 'Chưa xử lý' : 'Đã xử lý'}
                                                     </span>
