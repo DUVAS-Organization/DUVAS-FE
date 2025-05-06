@@ -9,6 +9,7 @@ import PriorityRoomService from '../../../Services/Admin/PriorityRoomService';
 import NotificationService from '../../../Services/User/NotificationService';
 import CPPRoomsService from '../../../Services/Admin/CPPRoomsService';
 import { useAuth } from '../../../Context/AuthProvider';
+import { getUserProfile } from '../../../Services/User/UserProfileService';
 
 // Helper functions
 const parseCreatedDate = (dateStr) => {
@@ -44,17 +45,6 @@ const formatRelativeTime = (dateStr) => {
     return isFuture ? `trong ${diffInDays} ngày` : `${diffInDays} ngày trước`;
 };
 
-const formatAmount = (amount) => {
-    if (!amount) return '0';
-    const amountStr = amount.toString();
-    if (amountStr.includes(',')) {
-        const [integerPart, decimalPart] = amountStr.split(',');
-        const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-        return decimalPart ? `${formattedInteger},${decimalPart}` : formattedInteger;
-    }
-    return amountStr.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-};
-
 const Overview = () => {
     const { user } = useAuth();
     const userId = user?.userId;
@@ -76,13 +66,14 @@ const Overview = () => {
             }
 
             try {
-                // Lấy thông tin người dùng và số dư
+                // Fetch user profile with money handling similar to Navbar.jsx
+                const profileData = await getUserProfile(userId);
+                setMoney({
+                    main: profileData.money || 0,
+                    promotion: 0,
+                });
                 const userData = await UserService.getUserById(userId);
                 if (userData) {
-                    setMoney({
-                        main: userData.money || 0,
-                        promotion: 0,
-                    });
                     setRole(
                         userData.roleLandlord === 1 || userData.isLandlord
                             ? 'Landlord'
@@ -92,11 +83,10 @@ const Overview = () => {
                     );
                 } else {
                     console.error('User data not found');
-                    setMoney({ main: 0, promotion: 0 });
                     setRole(null);
                 }
 
-                // Lấy số tin đăng
+                // Fetch room count
                 const rooms = await RoomServices.getRooms();
                 if (Array.isArray(rooms)) {
                     const userRooms = rooms.filter(room => Number(room.userId) === userId);
@@ -106,7 +96,7 @@ const Overview = () => {
                     setRoomCount(0);
                 }
 
-                // Lấy số tin ưu tiên và chi tiết tin ưu tiên
+                // Fetch priority rooms and details
                 const priorityRoomsData = await PriorityRoomService.getPriorityRoomByUserId(userId);
                 let priorityRoomsArray = [];
                 if (Array.isArray(priorityRoomsData)) {
@@ -119,7 +109,7 @@ const Overview = () => {
                 }
                 setPriorityRoomCount(priorityRoomsArray.length);
 
-                // Lấy chi tiết cho từng tin ưu tiên
+                // Fetch details for each priority room
                 const token = localStorage.getItem('authToken');
                 if (!token) {
                     console.error('No auth token found');
@@ -144,7 +134,7 @@ const Overview = () => {
                             categoryValue: cppRoom?.categoryPriorityPackageRoomValue || 'Không xác định',
                             startDate: formatRelativeTime(room.startDate),
                             endDate: formatRelativeTime(room.endDate),
-                            price: formatAmount(room.price),
+                            price: (room.price || 0).toLocaleString('vi-VN'),
                             rawStartDate: room.startDate,
                             rawEndDate: room.endDate,
                         };
@@ -157,7 +147,7 @@ const Overview = () => {
                             categoryValue: 'Không xác định',
                             startDate: 'Không rõ thời gian',
                             endDate: 'Không rõ thời gian',
-                            price: formatAmount(room.price || 0),
+                            price: (room.price || 0).toLocaleString('vi-VN'),
                             rawStartDate: room.startDate,
                             rawEndDate: room.endDate,
                         };
@@ -172,7 +162,7 @@ const Overview = () => {
                 });
                 setPriorityRooms(formattedPriorityRooms);
 
-                // Lấy thông báo tất cả
+                // Fetch all notifications
                 const userNotifications = await NotificationService.getNotificationsByUser(userId, token);
                 if (Array.isArray(userNotifications)) {
                     const filteredNotifications = userNotifications.filter(
@@ -218,7 +208,7 @@ const Overview = () => {
                     setNotifications([]);
                 }
 
-                // Lấy thông báo chưa đọc
+                // Fetch unread notifications
                 const unreadNotificationsData = await NotificationService.getNotificationUnreadByUser(userId, token);
                 if (Array.isArray(unreadNotificationsData)) {
                     const filteredUnreadNotifications = unreadNotificationsData.filter(
@@ -322,7 +312,7 @@ const Overview = () => {
                                 <h2 className="text-lg font-semibold mb-2">Số dư tài khoản</h2>
                                 <div className="flex justify-between mb-2">
                                     <span>TK Chính</span>
-                                    <span className="text-red-500 font-semibold">{formatAmount(money.main.toString())} đ</span>
+                                    <span className="text-red-500 font-semibold">{money.main.toLocaleString('vi-VN')} đ</span>
                                 </div>
                             </div>
                             <div className="flex">
@@ -439,4 +429,4 @@ const Overview = () => {
     );
 };
 
-export default Overview;
+export default Overview;    

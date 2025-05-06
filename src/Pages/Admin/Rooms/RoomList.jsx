@@ -280,12 +280,12 @@ const RoomList = () => {
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                const action = room.isPermission === 0 ? 'unlock' : 'lock';
+                                                const action = room.isPermission === 0 || room.isPermission === 2 ? 'unlock' : 'lock';
                                                 openPopup(action, room.roomId, room.status);
                                             }}
-                                            className={`py-1 rounded text-sm ${room.isPermission === 0 ? 'text-green-500 font-semibold' : 'text-red-500 font-semibold'} hover:underline`}
+                                            className={`py-1 rounded text-sm ${room.isPermission === 0 || room.isPermission === 2 ? 'text-green-500 font-semibold' : 'text-red-500 font-semibold'} hover:underline`}
                                         >
-                                            {room.isPermission === 0 ? "Mở khóa" : "Khóa"}
+                                            {room.isPermission === 0 || room.isPermission === 2 ? "Mở khóa" : "Khóa"}
                                         </button>
                                     </td>
                                 </tr>
