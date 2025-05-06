@@ -46,6 +46,7 @@ const WarningMessage = ({ message }) => (
 );
 
 const AuthorizationModal = ({ open, onClose, user, selectedRooms, adminData, onSuccess }) => {
+    const currentDate = new Date().toISOString().split('T')[0]; // Lấy ngày hiện tại định dạng YYYY-MM-DD
     const [contractDetails, setContractDetails] = useState({
         partyAName: '',
         partyABirthDate: '',
@@ -61,7 +62,7 @@ const AuthorizationModal = ({ open, onClose, user, selectedRooms, adminData, onS
         partyBIDIssueDate: '2022-08-23',
         partyBIDIssuePlace: 'CỤC CẢNH SÁT QUẢN LÝ HÀNH CHÍNH VỀ TRẬT TỰ XÃ HỘI',
         scopeOfAuthorization: Array.isArray(selectedRooms) ? `${selectedRooms.length} phòng` : '0 phòng',
-        startDate: '',
+        startDate: currentDate, // Đặt ngày bắt đầu là ngày hiện tại
         duration: '',
         effectiveDate: '',
     });
@@ -130,10 +131,6 @@ const AuthorizationModal = ({ open, onClose, user, selectedRooms, adminData, onS
 
     const validateInputs = () => {
         const currentDate = new Date().toISOString().split('T')[0]; // Lấy ngày hiện tại định dạng YYYY-MM-DD
-        if (contractDetails.startDate < currentDate) {
-            return 'Ngày bắt đầu không được là ngày trong quá khứ.';
-        }
-
         if (contractDetails.effectiveDate < currentDate) {
             return 'Ngày hiệu lực không được là ngày trong quá khứ.';
         }
@@ -151,7 +148,6 @@ const AuthorizationModal = ({ open, onClose, user, selectedRooms, adminData, onS
             { field: 'partyBIDNumber', label: 'Số CMND/CCCD bên B' },
             { field: 'partyBIDIssueDate', label: 'Ngày cấp CMND/CCCD bên B' },
             { field: 'partyBIDIssuePlace', label: 'Nơi cấp CMND/CCCD bên B' },
-            { field: 'startDate', label: 'Ngày bắt đầu' },
             { field: 'duration', label: 'Thời hạn ủy quyền' },
             { field: 'effectiveDate', label: 'Ngày hiệu lực' },
         ];
@@ -170,7 +166,6 @@ const AuthorizationModal = ({ open, onClose, user, selectedRooms, adminData, onS
         const dateFields = [
             { field: 'partyABirthDate', label: 'Ngày sinh bên A' },
             { field: 'partyAIDIssueDate', label: 'Ngày cấp CMND/CCCD bên A' },
-            { field: 'startDate', label: 'Ngày bắt đầu' },
             { field: 'effectiveDate', label: 'Ngày hiệu lực' },
             { field: 'partyBBirthDate', label: 'Ngày sinh bên B' },
             { field: 'partyBIDIssueDate', label: 'Ngày cấp CMND/CCCD bên B' },
@@ -223,14 +218,26 @@ const AuthorizationModal = ({ open, onClose, user, selectedRooms, adminData, onS
                 }
                 return false;
             } else if (balanceResponse.includes("đủ tiền")) {
-                const updateData = {
+                // Trừ tiền của user
+                const userUpdateData = {
                     userId: parseInt(user.userId, 10),
                     adminId: parseInt(adminData.partyBId, 10),
                     amount: -authorizationFee, // Trừ tiền
                 };
-                console.log('Gửi updateBalance:', updateData);
-                await BookingManagementService.updateBalance(updateData, user.token);
-                console.log('Cập nhật số dư thành công');
+                console.log('Gửi updateBalance cho user:', userUpdateData);
+                await BookingManagementService.updateBalance(userUpdateData, user.token);
+                console.log('Cập nhật số dư user thành công');
+
+                // Cộng tiền cho admin
+                const adminUpdateData = {
+                    userId: parseInt(adminData.partyBId, 10),
+                    adminId: parseInt(adminData.partyBId, 10),
+                    amount: authorizationFee, // Cộng tiền
+                };
+                console.log('Gửi updateBalance cho admin:', adminUpdateData);
+                await BookingManagementService.updateBalance(adminUpdateData, user.token);
+                console.log('Cập nhật số dư admin thành công');
+
                 return true;
             } else {
                 throw new Error('Phản hồi từ checkBalance không rõ ràng');
@@ -305,7 +312,7 @@ const AuthorizationModal = ({ open, onClose, user, selectedRooms, adminData, onS
                 partyBIDIssueDate: '2022-08-23',
                 partyBIDIssuePlace: 'CỤC CẢNH SÁT QUẢN LÝ HÀNH CHÍNH VỀ TRẬT TỰ XÃ HỘI',
                 scopeOfAuthorization: Array.isArray(selectedRooms) ? `${selectedRooms.length} phòng` : '0 phòng',
-                startDate: '',
+                startDate: currentDate,
                 duration: '',
                 effectiveDate: '',
             });
@@ -420,13 +427,13 @@ const AuthorizationModal = ({ open, onClose, user, selectedRooms, adminData, onS
                                 InputProps={{ readOnly: true }}
                             />
                             <TextField
-                                label="Ngày bắt đầu"
+                                label="Ngày hiệu lực"
                                 fullWidth
                                 margin="dense"
                                 type="date"
                                 InputLabelProps={{ shrink: true }}
-                                value={contractDetails.startDate}
-                                onChange={(e) => handleContractDetailChange('startDate', e.target.value)}
+                                value={contractDetails.effectiveDate}
+                                onChange={(e) => handleContractDetailChange('effectiveDate', e.target.value)}
                                 size="small"
                                 required
                             />
@@ -458,17 +465,6 @@ const AuthorizationModal = ({ open, onClose, user, selectedRooms, adminData, onS
                                     },
                                 }}
                                 InputProps={{ readOnly: true }}
-                            />
-                            <TextField
-                                label="Ngày hiệu lực"
-                                fullWidth
-                                margin="dense"
-                                type="date"
-                                InputLabelProps={{ shrink: true }}
-                                value={contractDetails.effectiveDate}
-                                onChange={(e) => handleContractDetailChange('effectiveDate', e.target.value)}
-                                size="small"
-                                required
                             />
                         </Grid>
                         <Grid item xs={12} md={4}>

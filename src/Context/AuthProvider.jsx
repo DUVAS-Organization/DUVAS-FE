@@ -62,7 +62,7 @@ export const AuthProvider = ({ children }) => {
     if (newUser.role === 'User') {
       navigate('/');
     } else if (newUser.role === 'Admin') {
-      navigate('/Admin/Accounts');
+      navigate('/Admin/Dashboard');
     }
     else if (newUser.role === 'Landlord') {
       navigate('/');
