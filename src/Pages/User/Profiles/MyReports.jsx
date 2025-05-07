@@ -6,6 +6,7 @@ import { showCustomNotification } from '../../../Components/Notification';
 import Loading from '../../../Components/Loading';
 import Layout from '../../../Components/Layout/Layout';
 import Footer from '../../../Components/Layout/Footer';
+import { FaArrowCircleLeft, FaArrowCircleRight } from 'react-icons/fa';
 
 const MyReports = () => {
     const { user } = useAuth();
@@ -125,19 +126,19 @@ const MyReports = () => {
                             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                                 <thead className="bg-gray-50 dark:bg-gray-700">
                                     <tr>
-                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                            STT
+                                        <th scope="col" className="px-6 py-3 text-left text-base font-medium text-gray-900 dark:text-gray-300  tracking-wider">
+                                            #
                                         </th>
-                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        <th scope="col" className="px-6 py-3 text-left text-base font-medium text-gray-900 dark:text-gray-300  tracking-wider">
                                             Nội dung
                                         </th>
-                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        <th scope="col" className="px-6 py-3 text-left text-base font-medium text-gray-900 dark:text-gray-300  tracking-wider">
                                             Ngày tạo
                                         </th>
-                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        <th scope="col" className="px-6 py-3 text-left text-base font-medium text-gray-900 dark:text-gray-300  tracking-wider">
                                             Trạng thái
                                         </th>
-                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        <th scope="col" className="px-6 py-3 text-left text-base font-medium text-gray-900 dark:text-gray-300  tracking-wider">
                                             Hình ảnh
                                         </th>
                                     </tr>
@@ -147,11 +148,11 @@ const MyReports = () => {
                                         const images = report.image ? parseImage(report.image) : [];
                                         return (
                                             <tr key={report.localId} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                                                     {report.localId}
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-normal text-sm text-gray-500 dark:text-gray-300 max-w-xs">
-                                                    <div className="font-medium">{report.reportContent}</div>
+                                                <td className="px-6 py-4 w-[700px] whitespace-normal text-sm text-gray-800 dark:text-gray-300 max-w-xs">
+                                                    <div>{report.reportContent}</div>
                                                     {report.feedback && (
                                                         <div className="mt-1 text-xs text-gray-400">
                                                             <span className="font-semibold">Phản hồi:</span> {report.feedback}
@@ -169,7 +170,7 @@ const MyReports = () => {
                                                         {report.status === 0 ? "Chưa xử lý" : "Đã xử lý"}
                                                     </span>
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                                                <td className="px-6 py-4 w-[500px] whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
                                                     {images.length > 0 && (
                                                         <div className="flex flex-wrap gap-1">
                                                             {images.map((img, index) => (
@@ -181,7 +182,7 @@ const MyReports = () => {
                                                                             : `${process.env.REACT_APP_API_BASE_URL}${img}`
                                                                     }
                                                                     alt={`Báo cáo ${report.localId}`}
-                                                                    className="w-10 h-10 object-cover rounded border border-gray-200 cursor-pointer hover:opacity-80"
+                                                                    className="w-20 h-20 object-cover rounded border border-gray-200 cursor-pointer hover:opacity-80"
                                                                     onClick={() => openImageModal(images)}
                                                                     onError={(e) => {
                                                                         e.target.src = "/placeholder-image.jpg";
@@ -230,15 +231,15 @@ const MyReports = () => {
                                 <>
                                     <button
                                         onClick={prevImage}
-                                        className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70"
+                                        className="absolute text-4xl left-4 top-1/2 transform -translate-y-1/2  bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70"
                                     >
-                                        &larr;
+                                        <FaArrowCircleLeft />
                                     </button>
                                     <button
                                         onClick={nextImage}
-                                        className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70"
+                                        className="absolute text-4xl right-4 top-1/2 transform -translate-y-1/2  bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70"
                                     >
-                                        &rarr;
+                                        <FaArrowCircleRight />
                                     </button>
                                     <div className="absolute bottom-4 left-0 right-0 text-center text-white">
                                         {currentImageIndex + 1} / {currentImages.length}
