@@ -204,7 +204,7 @@ const Counts = () => {
         { title: "Tổng tòa nhà", value: buildingCount.toString(), icon: FiHome, color: "green", link: "/Admin/Buildings" },
         { title: "Tổng phòng", value: roomCount.toString(), icon: FiList, color: "purple", link: "/Admin/Rooms" },
         { title: "Dịch vụ đang hoạt động", value: postCount.toString(), icon: FiTool, color: "orange", link: "/Admin/ServicePosts" },
-        { title: "Báo cáo đang chờ", value: reportCount.toString(), icon: FaRegBell, color: "red", link: "/Admin/Reports" }
+        { title: "Báo cáo phòng", value: reportCount.toString(), icon: FaRegBell, color: "red", link: "/Admin/Reports" }
     ];
 
     return (

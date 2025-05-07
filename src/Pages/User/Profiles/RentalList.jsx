@@ -199,7 +199,7 @@ export default function RentalList() {
                 setImages([]);
             }
         } catch (error) {
-            showCustomNotification("error", "Có lỗi xảy ra khi gửi báo cáo!");
+            showCustomNotification("error", "Bạn đã có báo cáo phòng này!");
         } finally {
             setLoading(false);
         }
@@ -847,7 +847,7 @@ export default function RentalList() {
                                 ))}
                             </div>
                         )}
-                        <div className="flex justify-between mt-6 sticky bottom-0 bg-white pt-4">
+                        <div className="flex justify-between mt-6 bottom-0 bg-white pt-4">
                             <button
                                 onClick={() => setShowReportPopup(false)}
                                 className="bg-gray-300 text-black px-6 py-2 rounded-lg hover:bg-gray-400 transition disabled:opacity-50 disabled:cursor-not-allowed"

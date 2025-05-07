@@ -29,6 +29,7 @@ const ReportList = () => {
     const [actionReportId, setActionReportId] = useState(null);
     const [actionType, setActionType] = useState(null);
     const [showConfirmPopup, setShowConfirmPopup] = useState(false);
+    const [showActionPopup, setShowActionPopup] = useState(false);
 
     useEffect(() => {
         if (!user || user.role !== 'Admin') {
@@ -137,7 +138,7 @@ const ReportList = () => {
     };
 
     const handleImageError = (reportId, index) => {
-        setImageErrors((prev) => ({ ...prev, [`${reportId}_${index}`]: true }));
+        setImageErrors((prev) => ({ ...prev, [`${reports.reportId}_${index}`]: true }));
     };
 
     const totalPages = Math.ceil(pagination.total / pagination.pageSize);
@@ -146,8 +147,16 @@ const ReportList = () => {
 
     const handleAction = async (reportId, type) => {
         setActionReportId(reportId);
-        setActionType(type);
-        setShowConfirmPopup(true);
+        if (type === 'reject') {
+            setActionType('reject');
+            setShowConfirmPopup(true);
+        } else if (type === 'confirm') {
+            setShowActionPopup(true);
+        } else if (type === 'lockRoom' || type === 'lockAccount') {
+            setActionType(type);
+            setShowActionPopup(false);
+            setShowConfirmPopup(true);
+        }
     };
 
     const confirmAction = async () => {
@@ -191,6 +200,7 @@ const ReportList = () => {
 
     const cancelAction = () => {
         setShowConfirmPopup(false);
+        setShowActionPopup(false);
         setActionReportId(null);
         setActionType(null);
     };
@@ -240,13 +250,13 @@ const ReportList = () => {
                         <table className="min-w-full bg-white border rounded-lg shadow-md">
                             <thead>
                                 <tr className="bg-gray-200 border-b border-gray-300">
-                                    <th className="py-2 px-3 text-center text-sm font-semibold text-gray-700">#</th>
-                                    <th className="py-2 px-3 text-left text-sm font-semibold text-gray-700">Người báo cáo</th>
-                                    <th className="py-2 px-3 text-left text-sm font-semibold text-gray-700">Phòng</th>
-                                    <th className="py-2 px-3 text-left text-sm font-semibold text-gray-700">Nội dung</th>
-                                    <th className="py-2 px-3 text-center text-sm font-semibold text-gray-700">Hình ảnh</th>
-                                    <th className="py-2 px-3 text-center text-sm font-semibold text-gray-700">Trạng thái</th>
-                                    <th className="py-2 px-3 text-center text-sm font-semibold text-gray-700 max-w-[200px]">Hành động</th>
+                                    <th className="py-2 px-3 text-center text-base font-semibold text-gray-700">#</th>
+                                    <th className="py-2 px-3 text-left text-base font-semibold text-gray-700 max-w-[80px]">Người báo cáo</th>
+                                    <th className="py-2 px-3 text-left text-base font-semibold text-gray-700">Phòng</th>
+                                    <th className="py-2 px-3 text-left text-base font-semibold text-gray-700">Nội dung</th>
+                                    <th className="py-2 px-3 text-center text-base font-semibold text-gray-700 max-w-[450px]">Hình ảnh</th>
+                                    <th className="py-2 px-3 text-center text-base font-semibold text-gray-700 max-w-[70px]">Trạng thái</th>
+                                    <th className="py-2 px-3 text-center text-base font-semibold text-gray-700 w-[185px]">Hành động</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -254,24 +264,24 @@ const ReportList = () => {
                                     const images = parseImage(report.image);
                                     return (
                                         <tr key={report.reportId} className="border-b border-gray-300 hover:bg-gray-50">
-                                            <td className="py-2 px-3 text-center text-sm text-gray-600">
+                                            <td className="py-2 px-3 text-center text-base text-gray-600">
                                                 {index + 1}
                                             </td>
-                                            <td className="py-2 px-3 text-left text-sm text-gray-600">
+                                            <td className="py-2 px-3 text-left text-base text-gray-600 max-w-[80px]">
                                                 {userNames[report.userId] || 'Đang tải...'}
                                             </td>
-                                            <td className="py-2 px-3 text-left text-sm text-gray-600 break-words max-w-[150px]">
+                                            <td className="py-2 px-3 text-left text-base text-gray-600 break-words max-w-[150px]">
                                                 {report.roomId ? roomTitles[report.roomId] || 'Đang tải...' : 'N/A'}
                                             </td>
-                                            <td className="py-2 px-3 text-left text-sm text-gray-600 break-words max-w-[200px]">
+                                            <td className="py-2 px-3 text-left text-base text-gray-600 break-words max-w-[200px]">
                                                 {report.reportContent}
                                             </td>
-                                            <td className="py-2 px-3 text-center text-sm text-gray-600 max-w-[350px]">
+                                            <td className="py-2 px-3 text-center text-base text-gray-600 max-w-[450px]">
                                                 <div className="flex flex-wrap justify-start gap-2">
                                                     {images.map((img, index) => {
                                                         const fullUrl = formatImageUrl(img);
                                                         return imageErrors[`${report.reportId}_${index}`] ? (
-                                                            <span key={index} className="text-red-500 text-sm">No Image</span>
+                                                            <span key={index} className="text-red-500 text-base">No Image</span>
                                                         ) : (
                                                             <img
                                                                 key={index}
@@ -288,32 +298,25 @@ const ReportList = () => {
                                                     })}
                                                 </div>
                                             </td>
-                                            <td className="py-2 px-3 text-center text-sm text-gray-600 max-w-[200px]">
+                                            <td className="py-2 px-3 text-center text-base font-semibold text-gray-600 max-w-[70px]">
                                                 {report.status === 0 || report.status === null ? 'Chưa xử lý' : 'Đã xử lý'}
                                             </td>
-                                            <td className="py-2 px-3 text-center text-sm text-gray-600 max-w-[200px]">
+                                            <td className="py-2 px-3 text-center text-base text-gray-600 w-[185px]">
                                                 {(report.status === 0 || report.status === null) && (
                                                     <div className="space-x-2">
                                                         <button
+                                                            onClick={() => handleAction(report.reportId, 'confirm')}
+                                                            className="text-blue-500 hover:underline hover:font-medium px-2 py-1 rounded text-base transition"
+                                                            disabled={showConfirmPopup || showActionPopup}
+                                                        >
+                                                            Xác nhận
+                                                        </button>
+                                                        <button
                                                             onClick={() => handleAction(report.reportId, 'reject')}
-                                                            className="text-red-500 underline underline-offset-2 hover:text-red-700"
-                                                            disabled={showConfirmPopup}
+                                                            className="text-red-500 hover:underline hover:font-medium px-2 py-1 rounded text-base transition"
+                                                            disabled={showConfirmPopup || showActionPopup}
                                                         >
                                                             Từ chối
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleAction(report.reportId, 'lockRoom')}
-                                                            className="text-blue-500 underline underline-offset-2 hover:text-blue-700"
-                                                            disabled={showConfirmPopup}
-                                                        >
-                                                            Khóa phòng
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleAction(report.reportId, 'lockAccount')}
-                                                            className="text-blue-500 underline underline-offset-2 hover:text-blue-700"
-                                                            disabled={showConfirmPopup}
-                                                        >
-                                                            Khóa tài khoản
                                                         </button>
                                                     </div>
                                                 )}
@@ -331,7 +334,7 @@ const ReportList = () => {
                             const images = parseImage(report.image);
                             return (
                                 <div key={report.reportId} className="bg-white border border-gray-200 rounded-lg shadow-md p-4">
-                                    <div className="grid grid-cols-1 gap-2 text-sm">
+                                    <div className="grid grid-cols-1 gap-2 text-base">
                                         <div>
                                             <span className="font-semibold text-gray-700">ID Báo cáo:</span> {report.reportId}
                                         </div>
@@ -350,7 +353,7 @@ const ReportList = () => {
                                                 {images.map((img, index) => {
                                                     const fullUrl = formatImageUrl(img);
                                                     return imageErrors[`${report.reportId}_${index}`] ? (
-                                                        <span key={index} className="text-red-500 text-sm">Không có</span>
+                                                        <span key={index} className="text-red-500 text-base">Không có</span>
                                                     ) : (
                                                         <img
                                                             key={index}
@@ -373,25 +376,18 @@ const ReportList = () => {
                                         {(report.status === 0 || report.status === null) && (
                                             <div className="mt-2 space-x-2">
                                                 <button
+                                                    onClick={() => handleAction(report.reportId, 'confirm')}
+                                                    className="text-blue-500 hover:underline px-2 py-1 rounded text-base transition"
+                                                    disabled={showConfirmPopup || showActionPopup}
+                                                >
+                                                    Xác nhận
+                                                </button>
+                                                <button
                                                     onClick={() => handleAction(report.reportId, 'reject')}
-                                                    className="text-red-500 underline underline-offset-2 hover:text-red-700"
-                                                    disabled={showConfirmPopup}
+                                                    className="text-red-500 hover:underline px-2 py-1 rounded text-base transition"
+                                                    disabled={showConfirmPopup || showActionPopup}
                                                 >
                                                     Từ chối
-                                                </button>
-                                                <button
-                                                    onClick={() => handleAction(report.reportId, 'lockRoom')}
-                                                    className="text-blue-500 underline underline-offset-2 hover:text-blue-700"
-                                                    disabled={showConfirmPopup}
-                                                >
-                                                    Khóa phòng
-                                                </button>
-                                                <button
-                                                    onClick={() => handleAction(report.reportId, 'lockAccount')}
-                                                    className="text-blue-500 underline underline-offset-2 hover:text-blue-700"
-                                                    disabled={showConfirmPopup}
-                                                >
-                                                    Khóa tài khoản
                                                 </button>
                                             </div>
                                         )}
@@ -460,25 +456,56 @@ const ReportList = () => {
                 </div>
             )}
 
-            {showConfirmPopup && (
+            {showActionPopup && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white p-6 rounded-lg shadow-lg w-96 dark:bg-gray-800">
-                        <h3 className="text-lg font-bold mb-4 text-gray-800 dark:text-white">
-                            Xác nhận hành động
+                    <div className="bg-white p-6 rounded-lg shadow-lg w-[430px] dark:bg-gray-800">
+                        <h3 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">
+                            Xử lý báo cáo:
                         </h3>
-                        <p className="mb-4 text-gray-700 dark:text-white">
-                            Bạn có chắc chắn muốn {actionType === 'reject' ? 'từ chối' : actionType === 'lockRoom' ? 'khóa phòng' : 'khóa tài khoản'} có báo cáo #{actionReportId}?
-                        </p>
-                        <div className="flex justify-end space-x-4">
+                        <p className='text-xl font-normal text-gray-600'>Vui lòng chọn một trong các hành động sau:</p>
+                        <div className="flex justify-end space-x-2 mt-2">
+                            <button
+                                onClick={() => handleAction(actionReportId, 'lockRoom')}
+                                className="text-blue-500 hover:bg-gray-300 px-2 py-1 rounded text-xl transition"
+                            >
+                                Khóa Phòng
+                            </button>
+                            <button
+                                onClick={() => handleAction(actionReportId, 'lockAccount')}
+                                className="text-blue-500 hover:bg-gray-300 px-2 py-1 rounded text-xl transition"
+                            >
+                                Khóa Tài khoản
+                            </button>
                             <button
                                 onClick={cancelAction}
-                                className="bg-gray-300 text-black px-4 py-2 rounded-lg hover:bg-gray-400 transition dark:text-white"
+                                className="text-red-500 hover:bg-red-400 hover:text-white px-2 py-1 rounded text-xl transition"
+                            >
+                                Hủy
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showConfirmPopup && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white p-6 rounded-lg shadow-lg w-[430px] dark:bg-gray-800">
+                        <h3 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">
+                            Xác nhận hành động
+                        </h3>
+                        <p className="mb-4 text-gray-700 dark:text-white text-xl">
+                            Bạn có chắc chắn muốn {actionType === 'reject' ? 'từ chối' : actionType === 'lockRoom' ? 'khóa phòng' : 'khóa tài khoản'} có báo cáo này?
+                        </p>
+                        <div className="flex justify-end space-x-2">
+                            <button
+                                onClick={cancelAction}
+                                className="bg-gray-300 text-black px-3 py-1 rounded text-xl hover:bg-gray-400 transition dark:text-white"
                             >
                                 Không
                             </button>
                             <button
                                 onClick={confirmAction}
-                                className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition dark:text-white"
+                                className="bg-red-500 text-white px-3 py-1 rounded text-xl hover:bg-red-600 transition dark:text-white"
                             >
                                 Có
                             </button>

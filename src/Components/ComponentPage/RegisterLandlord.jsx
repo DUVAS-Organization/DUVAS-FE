@@ -249,7 +249,7 @@ const RegisterLandlord = ({
                 const blobUrl = await fetchImageAsBlob(response.giayPhepChuyenMon);
                 setProfessionalLicenseBlobUrl(blobUrl);
             }
-
+            window.location.reload();
             showCustomNotification("success", "Đăng ký thành công!");
             setShowConfirm(false);
         } catch (error) {
