@@ -21,7 +21,7 @@ const AppContent = () => {
         </Routes>
       </Layout>
       {/* Chỉ hiển thị AdminChatWidget nếu user không có role Admin */}
-      {user?.role !== "Admin" && <AdminChatWidget />}
+      {user && user?.role !== "Admin" && <AdminChatWidget />}
     </>
   );
 };

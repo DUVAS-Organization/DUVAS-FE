@@ -80,6 +80,8 @@ import CPPServicePostList from '../Pages/Admin/PriorityPackage/CPPServicePostLis
 import CPPServicePostForm from '../Pages/Admin/PriorityPackage/CPPServicePostForm';
 import ServicePackagesList from '../Pages/Admin/PriorityPackage/ServicePackagesList';
 import RoomPackagesList from '../Pages/Admin/PriorityPackage/RoomPackagesList';
+import MyReports from '../Pages/User/Profiles/MyReports';
+import LandlordReports from '../Pages/Landlord/Reports/LandlordReports';
 
 const RoutesConfig = () => {
     const { user } = useAuth();
@@ -127,7 +129,10 @@ const RoutesConfig = () => {
                 path="/RentalList"
                 element={user ? <RentalList /> : <Navigate to="/" />}
             />
-
+            <Route
+                path="/my-reports"
+                element={user ? <MyReports /> : <Navigate to="/" />}
+            />
             <Route
                 path="/"
                 element={user && user.role === "User" ? <Home /> : <Navigate to="/" />}
@@ -354,6 +359,10 @@ const RoutesConfig = () => {
 
             {/* Routes dành cho Landlord */}
             {/* Rooms */}
+            <Route
+                path="/Landlord/Reports"
+                element={user && user.role === "Landlord" ? <LandlordReports /> : <Navigate to="/" />}
+            />
             <Route
                 path="/Room/Create"
                 element={user && user.role === "Landlord" ? <RoomsFormLandlord /> : <Navigate to="/" />}

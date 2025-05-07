@@ -6,7 +6,8 @@ import { showCustomNotification } from '../../../Components/Notification';
 import UserService from '../../../Services/User/UserService';
 import RoomService from '../../../Services/User/RoomService';
 import Loading from '../../../Components/Loading';
-import Counts from '../../../Components/Counts'
+import Counts from '../../../Components/Counts';
+import ReportAdminService from '../../../Services/Admin/ReportAdminService';
 
 const ReportList = () => {
     const { user } = useAuth();
@@ -24,10 +25,12 @@ const ReportList = () => {
     const [userNames, setUserNames] = useState({});
     const [roomTitles, setRoomTitles] = useState({});
     const [searchTerm, setSearchTerm] = useState('');
-    // Lưu lỗi ảnh dưới dạng đối tượng với key là `${reportId}_${index}`
     const [imageErrors, setImageErrors] = useState({});
+    const [actionReportId, setActionReportId] = useState(null);
+    const [actionType, setActionType] = useState(null);
+    const [showConfirmPopup, setShowConfirmPopup] = useState(false);
+    const [showActionPopup, setShowActionPopup] = useState(false);
 
-    // Kiểm tra quyền Admin
     useEffect(() => {
         if (!user || user.role !== 'Admin') {
             showCustomNotification('error', 'Bạn không có quyền truy cập trang này.');
@@ -35,7 +38,6 @@ const ReportList = () => {
         }
     }, [user, navigate]);
 
-    // Hàm parseImage: nếu dữ liệu image là chuỗi JSON chứa mảng thì parse, nếu không thì wrap thành mảng
     const parseImage = (image) => {
         let images;
         try {
@@ -47,13 +49,11 @@ const ReportList = () => {
         return images;
     };
 
-    // Hàm chuyển đổi URL: thêm baseUrl nếu cần
     const formatImageUrl = (url) => {
         const baseUrl = process.env.REACT_APP_API_BASE_URL || 'https://your-api.com';
         return url.startsWith('http') ? url : `${baseUrl}${url}`;
     };
 
-    // Lấy dữ liệu báo cáo, user và room
     useEffect(() => {
         const fetchReports = async () => {
             if (!user?.token) return;
@@ -117,7 +117,6 @@ const ReportList = () => {
         }
     }, [user?.token, user?.role, navigate]);
 
-    // Xử lý tìm kiếm
     useEffect(() => {
         const filtered = reports.filter((report) => {
             const userName = userNames[report.userId]?.toLowerCase() || '';
@@ -134,19 +133,77 @@ const ReportList = () => {
         }));
     }, [searchTerm, reports, userNames, roomTitles]);
 
-    // Xử lý thay đổi trang
     const handlePageChange = (newPage) => {
         setPagination((prev) => ({ ...prev, page: newPage }));
     };
 
-    // Xử lý lỗi ảnh, sử dụng key riêng cho mỗi ảnh theo reportId và index
     const handleImageError = (reportId, index) => {
-        setImageErrors((prev) => ({ ...prev, [`${reportId}_${index}`]: true }));
+        setImageErrors((prev) => ({ ...prev, [`${reports.reportId}_${index}`]: true }));
     };
 
     const totalPages = Math.ceil(pagination.total / pagination.pageSize);
     const startIndex = (pagination.page - 1) * pagination.pageSize;
     const paginatedReports = filteredReports.slice(startIndex, startIndex + pagination.pageSize);
+
+    const handleAction = async (reportId, type) => {
+        setActionReportId(reportId);
+        if (type === 'reject') {
+            setActionType('reject');
+            setShowConfirmPopup(true);
+        } else if (type === 'confirm') {
+            setShowActionPopup(true);
+        } else if (type === 'lockRoom' || type === 'lockAccount') {
+            setActionType(type);
+            setShowActionPopup(false);
+            setShowConfirmPopup(true);
+        }
+    };
+
+    const confirmAction = async () => {
+        if (!actionReportId || !actionType) return;
+
+        try {
+            setShowConfirmPopup(false);
+            let result;
+            switch (actionType) {
+                case 'reject':
+                    result = await ReportAdminService.rejectReport(actionReportId);
+                    showCustomNotification('success', 'Báo cáo đã được từ chối.');
+                    break;
+                case 'lockRoom':
+                    result = await ReportAdminService.lockRoom(actionReportId);
+                    showCustomNotification('success', 'Phòng đã bị khóa.');
+                    break;
+                case 'lockAccount':
+                    result = await ReportAdminService.lockAccount(actionReportId);
+                    showCustomNotification('success', 'Tài khoản đã bị khóa.');
+                    break;
+                default:
+                    return;
+            }
+
+            // Refresh reports after successful action
+            const updatedReports = await OtherService.getAllReports(user.token);
+            setReports(Array.isArray(updatedReports) ? updatedReports : updatedReports.reports);
+            setFilteredReports(Array.isArray(updatedReports) ? updatedReports : updatedReports.reports);
+            setPagination((prev) => ({
+                ...prev,
+                total: Array.isArray(updatedReports) ? updatedReports.length : updatedReports.reports.length,
+            }));
+        } catch (error) {
+            showCustomNotification('error', error.message);
+        } finally {
+            setActionReportId(null);
+            setActionType(null);
+        }
+    };
+
+    const cancelAction = () => {
+        setShowConfirmPopup(false);
+        setShowActionPopup(false);
+        setActionReportId(null);
+        setActionType(null);
+    };
 
     if (loading) {
         return (
@@ -190,41 +247,41 @@ const ReportList = () => {
                 <div className="overflow-x-auto">
                     {/* Hiển thị cho desktop */}
                     <div className="hidden md:block">
-                        <table className="min-w-full bg-white border  rounded-lg shadow-md">
+                        <table className="min-w-full bg-white border rounded-lg shadow-md">
                             <thead>
                                 <tr className="bg-gray-200 border-b border-gray-300">
-                                    <th className="py-2 px-3 text-center text-sm font-semibold text-gray-700">ID</th>
-                                    <th className="py-2 px-3 text-left text-sm font-semibold text-gray-700">Người báo cáo</th>
-                                    <th className="py-2 px-3 text-left text-sm font-semibold text-gray-700">Phòng</th>
-                                    <th className="py-2 px-3 text-left text-sm font-semibold text-gray-700">Nội dung</th>
-                                    <th className="py-2 px-3 text-center text-sm font-semibold text-gray-700">Hình ảnh</th>
-                                    <th className="py-2 px-3 text-center text-sm font-semibold text-gray-700">Trạng thái</th>
+                                    <th className="py-2 px-3 text-center text-base font-semibold text-gray-700">#</th>
+                                    <th className="py-2 px-3 text-left text-base font-semibold text-gray-700 max-w-[80px]">Người báo cáo</th>
+                                    <th className="py-2 px-3 text-left text-base font-semibold text-gray-700">Phòng</th>
+                                    <th className="py-2 px-3 text-left text-base font-semibold text-gray-700">Nội dung</th>
+                                    <th className="py-2 px-3 text-center text-base font-semibold text-gray-700 max-w-[450px]">Hình ảnh</th>
+                                    <th className="py-2 px-3 text-center text-base font-semibold text-gray-700 max-w-[70px]">Trạng thái</th>
+                                    <th className="py-2 px-3 text-center text-base font-semibold text-gray-700 w-[185px]">Hành động</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {paginatedReports.map((report) => {
-                                    // Lấy mảng ảnh
+                                {paginatedReports.map((report, index) => {
                                     const images = parseImage(report.image);
                                     return (
                                         <tr key={report.reportId} className="border-b border-gray-300 hover:bg-gray-50">
-                                            <td className="py-2 px-3 text-center text-sm text-gray-600">
-                                                {report.reportId}
+                                            <td className="py-2 px-3 text-center text-base text-gray-600">
+                                                {index + 1}
                                             </td>
-                                            <td className="py-2 px-3 text-left text-sm text-gray-600">
+                                            <td className="py-2 px-3 text-left text-base text-gray-600 max-w-[80px]">
                                                 {userNames[report.userId] || 'Đang tải...'}
                                             </td>
-                                            <td className="py-2 px-3 text-left text-sm text-gray-600 break-words max-w-[150px]">
+                                            <td className="py-2 px-3 text-left text-base text-gray-600 break-words max-w-[150px]">
                                                 {report.roomId ? roomTitles[report.roomId] || 'Đang tải...' : 'N/A'}
                                             </td>
-                                            <td className="py-2 px-3 text-left text-sm text-gray-600 break-words max-w-[200px]">
+                                            <td className="py-2 px-3 text-left text-base text-gray-600 break-words max-w-[200px]">
                                                 {report.reportContent}
                                             </td>
-                                            <td className="py-2 px-3 text-center text-sm text-gray-600  max-w-[350px]">
+                                            <td className="py-2 px-3 text-center text-base text-gray-600 max-w-[450px]">
                                                 <div className="flex flex-wrap justify-start gap-2">
                                                     {images.map((img, index) => {
                                                         const fullUrl = formatImageUrl(img);
                                                         return imageErrors[`${report.reportId}_${index}`] ? (
-                                                            <span key={index} className="text-red-500 text-sm">No Image</span>
+                                                            <span key={index} className="text-red-500 text-base">No Image</span>
                                                         ) : (
                                                             <img
                                                                 key={index}
@@ -241,8 +298,28 @@ const ReportList = () => {
                                                     })}
                                                 </div>
                                             </td>
-                                            <td className="py-2 px-3 text-center text-sm text-gray-600 max-w-[200px]">
+                                            <td className="py-2 px-3 text-center text-base font-semibold text-gray-600 max-w-[70px]">
                                                 {report.status === 0 || report.status === null ? 'Chưa xử lý' : 'Đã xử lý'}
+                                            </td>
+                                            <td className="py-2 px-3 text-center text-base text-gray-600 w-[185px]">
+                                                {(report.status === 0 || report.status === null) && (
+                                                    <div className="space-x-2">
+                                                        <button
+                                                            onClick={() => handleAction(report.reportId, 'confirm')}
+                                                            className="text-blue-500 hover:underline hover:font-medium px-2 py-1 rounded text-base transition"
+                                                            disabled={showConfirmPopup || showActionPopup}
+                                                        >
+                                                            Xác nhận
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleAction(report.reportId, 'reject')}
+                                                            className="text-red-500 hover:underline hover:font-medium px-2 py-1 rounded text-base transition"
+                                                            disabled={showConfirmPopup || showActionPopup}
+                                                        >
+                                                            Từ chối
+                                                        </button>
+                                                    </div>
+                                                )}
                                             </td>
                                         </tr>
                                     );
@@ -257,7 +334,7 @@ const ReportList = () => {
                             const images = parseImage(report.image);
                             return (
                                 <div key={report.reportId} className="bg-white border border-gray-200 rounded-lg shadow-md p-4">
-                                    <div className="grid grid-cols-1 gap-2 text-sm">
+                                    <div className="grid grid-cols-1 gap-2 text-base">
                                         <div>
                                             <span className="font-semibold text-gray-700">ID Báo cáo:</span> {report.reportId}
                                         </div>
@@ -276,7 +353,7 @@ const ReportList = () => {
                                                 {images.map((img, index) => {
                                                     const fullUrl = formatImageUrl(img);
                                                     return imageErrors[`${report.reportId}_${index}`] ? (
-                                                        <span key={index} className="text-red-500 text-sm">Không có</span>
+                                                        <span key={index} className="text-red-500 text-base">Không có</span>
                                                     ) : (
                                                         <img
                                                             key={index}
@@ -296,6 +373,24 @@ const ReportList = () => {
                                         <div>
                                             <span className="font-semibold text-gray-700">Trạng thái:</span> {report.status === 0 || report.status === null ? 'Chưa xử lý' : 'Đã xử lý'}
                                         </div>
+                                        {(report.status === 0 || report.status === null) && (
+                                            <div className="mt-2 space-x-2">
+                                                <button
+                                                    onClick={() => handleAction(report.reportId, 'confirm')}
+                                                    className="text-blue-500 hover:underline px-2 py-1 rounded text-base transition"
+                                                    disabled={showConfirmPopup || showActionPopup}
+                                                >
+                                                    Xác nhận
+                                                </button>
+                                                <button
+                                                    onClick={() => handleAction(report.reportId, 'reject')}
+                                                    className="text-red-500 hover:underline px-2 py-1 rounded text-base transition"
+                                                    disabled={showConfirmPopup || showActionPopup}
+                                                >
+                                                    Từ chối
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             );
@@ -357,6 +452,64 @@ const ReportList = () => {
                                 e.target.parentNode.appendChild(errorText);
                             }}
                         />
+                    </div>
+                </div>
+            )}
+
+            {showActionPopup && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white p-6 rounded-lg shadow-lg w-[430px] dark:bg-gray-800">
+                        <h3 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">
+                            Xử lý báo cáo:
+                        </h3>
+                        <p className='text-xl font-normal text-gray-600'>Vui lòng chọn một trong các hành động sau:</p>
+                        <div className="flex justify-end space-x-2 mt-2">
+                            <button
+                                onClick={() => handleAction(actionReportId, 'lockRoom')}
+                                className="text-blue-500 hover:bg-gray-300 px-2 py-1 rounded text-xl transition"
+                            >
+                                Khóa Phòng
+                            </button>
+                            <button
+                                onClick={() => handleAction(actionReportId, 'lockAccount')}
+                                className="text-blue-500 hover:bg-gray-300 px-2 py-1 rounded text-xl transition"
+                            >
+                                Khóa Tài khoản
+                            </button>
+                            <button
+                                onClick={cancelAction}
+                                className="text-red-500 hover:bg-red-400 hover:text-white px-2 py-1 rounded text-xl transition"
+                            >
+                                Hủy
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showConfirmPopup && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white p-6 rounded-lg shadow-lg w-[430px] dark:bg-gray-800">
+                        <h3 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">
+                            Xác nhận hành động
+                        </h3>
+                        <p className="mb-4 text-gray-700 dark:text-white text-xl">
+                            Bạn có chắc chắn muốn {actionType === 'reject' ? 'từ chối' : actionType === 'lockRoom' ? 'khóa phòng' : 'khóa tài khoản'} có báo cáo này?
+                        </p>
+                        <div className="flex justify-end space-x-2">
+                            <button
+                                onClick={cancelAction}
+                                className="bg-gray-300 text-black px-3 py-1 rounded text-xl hover:bg-gray-400 transition dark:text-white"
+                            >
+                                Không
+                            </button>
+                            <button
+                                onClick={confirmAction}
+                                className="bg-red-500 text-white px-3 py-1 rounded text-xl hover:bg-red-600 transition dark:text-white"
+                            >
+                                Có
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

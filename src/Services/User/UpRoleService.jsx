@@ -19,7 +19,6 @@ const UpRoleService = {
             const response = await axios.post(`${API_BASE_URL}/Create-LandlordLicence`, data, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            console.log('📌 Tạo giấy phép chủ nhà thành công:', response.data);
             return response.data;
         } catch (error) {
             console.error('❌ Lỗi khi tạo giấy phép chủ nhà:', error.response?.data || error.message);
@@ -56,7 +55,6 @@ const UpRoleService = {
             const response = await axios.get(`${API_BASE_URL}/${landlordLicenseId}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            console.log('📌 Lấy thông tin giấy phép chủ nhà:', response.data);
             return response.data;
         } catch (error) {
             console.error('❌ Lỗi khi lấy thông tin giấy phép chủ nhà:', error.response?.data || error.message);
@@ -75,7 +73,6 @@ const UpRoleService = {
             await axios.put(`${API_BASE_URL}/${id}`, data, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            console.log('✅ Cập nhật giấy phép chủ nhà thành công');
         } catch (error) {
             console.error('❌ Lỗi khi cập nhật giấy phép chủ nhà:', error.response?.data || error.message);
             throw error;

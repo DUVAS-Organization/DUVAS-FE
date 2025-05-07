@@ -12,7 +12,9 @@ const AuthorizationList = () => {
     const [userMap, setUserMap] = useState({});
     const [error, setError] = useState(null);
     const [contractPage, setContractPage] = useState(1);
-    const [confirmedContracts, setConfirmedContracts] = useState(new Set()); // Lưu trạng thái xác nhận tạm thời
+    const [confirmedContracts, setConfirmedContracts] = useState(new Set());
+    const [showRejectPopup, setShowRejectPopup] = useState(false);
+    const [contractToReject, setContractToReject] = useState(null);
     const rowsPerPage = 5;
 
     const { user } = useAuth();
@@ -75,10 +77,10 @@ const AuthorizationList = () => {
 
     const getStatus = status => {
         switch (parseInt(status, 10)) {
-            case 0: return 'Bị hủy';
+            case 0: return 'Bị từ chối';
             case 1: return 'Đang hoạt động';
-            case 2: return 'Đang chờ admin duyệt';
-            case 3: return 'Admin đã duyệt';
+            case 2: return 'Đang chờ duyệt';
+            case 3: return 'Đã duyệt';
             case 4: return 'Hết hạn';
             default: return 'Chưa rõ';
         }
@@ -123,11 +125,38 @@ const AuthorizationList = () => {
             alert(`Đã xảy ra lỗi: ${error.message || 'Vui lòng thử lại.'}`);
         } finally {
             setLoading(false);
+            setShowRejectPopup(false);
+            setContractToReject(null);
         }
     };
 
     const handleConfirm = (contractId) => {
         setConfirmedContracts(prev => new Set(prev).add(contractId));
+    };
+
+    const handleCancelConfirm = (contractId) => {
+        setConfirmedContracts(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(contractId);
+            return newSet;
+        });
+    };
+
+    const handleReject = (contractId, roomIds) => {
+        const contract = contracts.find(c => c.id === contractId);
+        setContractToReject({ contractId, roomIds, contractNumber: contract.contractNumber });
+        setShowRejectPopup(true);
+    };
+
+    const confirmReject = () => {
+        if (contractToReject) {
+            handleAction(contractToReject.contractId, contractToReject.roomIds, 0, 0);
+        }
+    };
+
+    const cancelReject = () => {
+        setShowRejectPopup(false);
+        setContractToReject(null);
     };
 
     const handleViewDetails = (contractId) => {
@@ -190,7 +219,6 @@ const AuthorizationList = () => {
                                                 className="text-blue-500 hover:underline"
                                             >
                                                 {c.contractNumber || '-'}
-
                                             </button>
                                         </td>
                                         <td className="px-4 py-2 text-sm text-gray-700">{formatDate(c.createdAt)}</td>
@@ -220,24 +248,26 @@ const AuthorizationList = () => {
                                         <td className="px-4 py-2 text-sm space-x-4">
                                             {c.status === 0 || c.status === 1 || c.status === 3 || c.status === 4 ? (
                                                 <>
-                                                    {/* <button disabled className="text-gray-400 cursor-not-allowed">
-                                                        Xác nhận
-                                                    </button>
-                                                    <button disabled className="text-gray-400 cursor-not-allowed">
-                                                        Từ chối
-                                                    </button> */}
                                                     <button disabled className="text-gray-400 cursor-not-allowed">
                                                         Hoàn thành
                                                     </button>
                                                 </>
                                             ) : c.status === 2 ? (
                                                 confirmedContracts.has(c.id) ? (
-                                                    <button
-                                                        onClick={() => handleAction(c.id, c.roomIds, 3, 3)}
-                                                        className="text-green-600 hover:text-green-800 underline font-medium"
-                                                    >
-                                                        Hoàn thành
-                                                    </button>
+                                                    <>
+                                                        <button
+                                                            onClick={() => handleAction(c.id, c.roomIds, 3, 3)}
+                                                            className="text-green-600 hover:text-green-800 underline font-medium"
+                                                        >
+                                                            Hoàn thành
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleCancelConfirm(c.id)}
+                                                            className="text-gray-500 hover:text-gray-700 underline font-medium"
+                                                        >
+                                                            Hủy
+                                                        </button>
+                                                    </>
                                                 ) : (
                                                     <>
                                                         <button
@@ -247,7 +277,7 @@ const AuthorizationList = () => {
                                                             Xác nhận
                                                         </button>
                                                         <button
-                                                            onClick={() => handleAction(c.id, c.roomIds, 0, 0)}
+                                                            onClick={() => handleReject(c.id, c.roomIds)}
                                                             className="text-red-500 hover:text-red-700 underline font-medium"
                                                         >
                                                             Từ chối
@@ -273,6 +303,33 @@ const AuthorizationList = () => {
                         className="flex justify-center mb-8"
                     />
                 </>
+            )}
+
+            {showRejectPopup && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white p-6 rounded-lg shadow-lg w-[530px] dark:bg-gray-800">
+                        <h3 className="text-lg font-bold mb-4 text-gray-800 dark:text-white">
+                            Xác nhận từ chối
+                        </h3>
+                        <p className="mb-4 text-gray-800 text-lg dark:text-white flex">
+                            Bạn có chắc chắn từ chối hợp đồng có số&nbsp;<span className='font-bold'>{contractToReject?.contractNumber}</span>&nbsp;?
+                        </p>
+                        <div className="flex justify-end space-x-4">
+                            <button
+                                onClick={cancelReject}
+                                className="bg-gray-300 text-black px-4 py-2 rounded-lg hover:bg-gray-400 transition dark:text-white"
+                            >
+                                Không
+                            </button>
+                            <button
+                                onClick={confirmReject}
+                                className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition dark:text-white"
+                            >
+                                Có
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

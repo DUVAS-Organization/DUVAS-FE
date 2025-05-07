@@ -168,7 +168,14 @@ const WithdrawPage = () => {
                                                 <td className="p-3 border">{new Date(transaction.createdAt).toLocaleString()}</td>
                                                 <td className="p-3 border">{new Date(transaction.updatedAt).toLocaleString()}</td>
                                                 <td className="p-3 border text-center">
-                                                    <span className={`px-2 py-1 rounded text-white ${transaction.status === "Pending" ? "bg-yellow-500" : transaction.status === "Rejected" ? "bg-red-500" : "bg-green-500"}`}>
+                                                    <span
+                                                        className={`inline-block px-3 py-1 rounded-full text-white text-sm font-medium ${transaction.status === "Pending"
+                                                            ? "bg-yellow-500"
+                                                            : transaction.status === "Rejected"
+                                                                ? "bg-red-500"
+                                                                : "bg-green-500"
+                                                            }`}
+                                                    >
                                                         {transaction.status === "Pending"
                                                             ? "Đang xử lý"
                                                             : transaction.status === "Rejected"

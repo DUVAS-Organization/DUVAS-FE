@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import UpRoleService from '../../../Services/User/UpRoleService';
 import UserService from '../../../Services/User/UserService';
@@ -9,11 +9,26 @@ const ServiceDocumentsUser = () => {
     const [license, setLicense] = useState(null);
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [imageLoading, setImageLoading] = useState({
+        front: false,
+        back: false,
+        business: false,
+        professional: false,
+    });
     const [error, setError] = useState(null);
     const [previewImage, setPreviewImage] = useState(null);
-    const { serviceLicenseId } = useParams(); // Sử dụng serviceLicenseId thay vì userId
+    const { serviceLicenseId } = useParams();
     const navigate = useNavigate();
     const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+
+    // State để lưu URL blob của ảnh
+    const [frontImageBlobUrl, setFrontImageBlobUrl] = useState(null);
+    const [backImageBlobUrl, setBackImageBlobUrl] = useState(null);
+    const [businessLicenseBlobUrl, setBusinessLicenseBlobUrl] = useState(null);
+    const [professionalLicenseBlobUrl, setProfessionalLicenseBlobUrl] = useState(null);
+
+    // Ref để theo dõi blob URLs
+    const blobUrlsRef = useRef({});
 
     useEffect(() => {
         const fetchData = async () => {
@@ -24,6 +39,36 @@ const ServiceDocumentsUser = () => {
                 const userData = await UserService.getUserById(licenseData.userId, token);
                 setUser(userData);
 
+                // Tải ảnh dưới dạng blob với fallback
+                if (licenseData.anhCCCDMatTruoc) {
+                    setImageLoading(prev => ({ ...prev, front: true }));
+                    const blobUrl = await fetchImageAsBlob(licenseData.anhCCCDMatTruoc, 'CCCD mặt trước');
+                    blobUrlsRef.current.front = blobUrl || licenseData.anhCCCDMatTruoc; // Fallback về URL gốc
+                    setFrontImageBlobUrl(blobUrlsRef.current.front);
+                    setImageLoading(prev => ({ ...prev, front: false }));
+                }
+                if (licenseData.anhCCCDMatSau) {
+                    setImageLoading(prev => ({ ...prev, back: true }));
+                    const blobUrl = await fetchImageAsBlob(licenseData.anhCCCDMatSau, 'CCCD mặt sau');
+                    blobUrlsRef.current.back = blobUrl || licenseData.anhCCCDMatSau;
+                    setBackImageBlobUrl(blobUrlsRef.current.back);
+                    setImageLoading(prev => ({ ...prev, back: false }));
+                }
+                if (licenseData.giayPhepKinhDoanh) {
+                    setImageLoading(prev => ({ ...prev, business: true }));
+                    const blobUrl = await fetchImageAsBlob(licenseData.giayPhepKinhDoanh, 'Giấy phép kinh doanh');
+                    blobUrlsRef.current.business = blobUrl || licenseData.giayPhepKinhDoanh;
+                    setBusinessLicenseBlobUrl(blobUrlsRef.current.business);
+                    setImageLoading(prev => ({ ...prev, business: false }));
+                }
+                if (licenseData.giayPhepChuyenMon) {
+                    setImageLoading(prev => ({ ...prev, professional: true }));
+                    const blobUrl = await fetchImageAsBlob(licenseData.giayPhepChuyenMon, 'Giấy phép chuyên môn');
+                    blobUrlsRef.current.professional = blobUrl || licenseData.giayPhepChuyenMon;
+                    setProfessionalLicenseBlobUrl(blobUrlsRef.current.professional);
+                    setImageLoading(prev => ({ ...prev, professional: false }));
+                }
+
                 setLoading(false);
             } catch (err) {
                 console.error('❌ Lỗi khi lấy dữ liệu:', err);
@@ -32,11 +77,58 @@ const ServiceDocumentsUser = () => {
             }
         };
 
-        fetchData();
+        if (serviceLicenseId && token) {
+            fetchData();
+        } else {
+            setError('Thiếu thông tin xác thực hoặc ID giấy phép');
+            setLoading(false);
+        }
     }, [serviceLicenseId, token]);
 
+    // Hàm tải ảnh từ URL dưới dạng blob
+    const fetchImageAsBlob = async (url, imageType) => {
+        if (!url) {
+            return null;
+        }
+        try {
+            const response = await fetch(url, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            if (!response.ok) {
+                if (response.status === 401) {
+                    localStorage.removeItem('authToken');
+                    navigate('/Logins');
+                }
+                throw new Error(`Không thể tải ảnh ${imageType}: ${response.statusText}`);
+            }
+            const blob = await response.blob();
+            if (blob.size === 0) {
+                throw new Error(`Dữ liệu ảnh ${imageType} rỗng`);
+            }
+            return URL.createObjectURL(blob);
+        } catch (error) {
+            console.error(`Lỗi khi tải ảnh ${imageType} dưới dạng blob:`, error);
+            return null; // Trả về null để dùng URL gốc làm fallback
+        }
+    };
+
+    // Giải phóng bộ nhớ blob URL khi component unmount
+    useEffect(() => {
+        return () => {
+            Object.values(blobUrlsRef.current).forEach(url => {
+                if (url && url.startsWith('blob:')) { // Chỉ thu hồi blob URL
+                    URL.revokeObjectURL(url);
+                }
+            });
+        };
+    }, []);
+
     const openPreview = (imageUrl) => {
-        setPreviewImage(imageUrl);
+        if (imageUrl) {
+            setPreviewImage(imageUrl);
+        }
     };
 
     const closePreview = () => {
@@ -66,28 +158,22 @@ const ServiceDocumentsUser = () => {
                             <span className="font-semibold whitespace-nowrap">ID giấy phép:</span>
                             <span>{license?.serviceLicenseId || 'Không có'}</span>
                         </div>
-
                         <div className="flex gap-2 items-start">
                             <span className="font-semibold whitespace-nowrap">Chủ giấy phép:</span>
                             <span>{user?.name || license?.name || 'Không có'}</span>
                         </div>
-
                         <div className="flex gap-2 items-start">
                             <span className="font-semibold whitespace-nowrap">Số CCCD:</span>
                             <span>{license?.cccd || 'Không có'}</span>
                         </div>
-
                         <div className="flex gap-2 items-start">
                             <span className="font-semibold whitespace-nowrap">Giới tính:</span>
                             <span>{license?.sex || 'Không có'}</span>
                         </div>
-
                         <div className="flex gap-2 items-start">
                             <span className="font-semibold whitespace-nowrap">Địa chỉ:</span>
                             <span className="break-words">{license?.address || 'Không có'}</span>
                         </div>
-
-                        {/* Nếu muốn thêm ngày sinh */}
                         <div className="flex gap-2 items-start">
                             <span className="font-semibold whitespace-nowrap">Ngày sinh:</span>
                             <span>
@@ -98,18 +184,19 @@ const ServiceDocumentsUser = () => {
                         </div>
                     </div>
 
-
                     <div className="mt-6">
-                        <h2 className="font-semibold text-xl mb-4">Hình ảnh giấy tờ: </h2>
+                        <h2 className="font-semibold text-xl mb-4">Hình ảnh giấy tờ:</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
                             <div>
                                 <p className="font-semibold">CCCD mặt trước:</p>
-                                {license?.anhCCCDMatTruoc ? (
+                                {imageLoading.front ? (
+                                    <p className="text-gray-500">Đang tải...</p>
+                                ) : frontImageBlobUrl ? (
                                     <img
-                                        src={license.anhCCCDMatTruoc}
+                                        src={frontImageBlobUrl}
                                         alt="CCCD mặt trước"
                                         className="w-full h-auto rounded-lg shadow-sm cursor-pointer hover:opacity-80"
-                                        onClick={() => openPreview(license.anhCCCDMatTruoc)}
+                                        onClick={() => openPreview(frontImageBlobUrl)}
                                     />
                                 ) : (
                                     <p>Không có</p>
@@ -117,12 +204,14 @@ const ServiceDocumentsUser = () => {
                             </div>
                             <div>
                                 <p className="font-semibold">CCCD mặt sau:</p>
-                                {license?.anhCCCDMatSau ? (
+                                {imageLoading.back ? (
+                                    <p className="text-gray-500">Đang tải...</p>
+                                ) : backImageBlobUrl ? (
                                     <img
-                                        src={license.anhCCCDMatSau}
+                                        src={backImageBlobUrl}
                                         alt="CCCD mặt sau"
                                         className="w-full h-auto rounded-lg shadow-sm cursor-pointer hover:opacity-80"
-                                        onClick={() => openPreview(license.anhCCCDMatSau)}
+                                        onClick={() => openPreview(backImageBlobUrl)}
                                     />
                                 ) : (
                                     <p>Không có</p>
@@ -130,12 +219,14 @@ const ServiceDocumentsUser = () => {
                             </div>
                             <div>
                                 <p className="font-semibold">Giấy phép kinh doanh:</p>
-                                {license?.giayPhepKinhDoanh ? (
+                                {imageLoading.business ? (
+                                    <p className="text-gray-500">Đang tải...</p>
+                                ) : businessLicenseBlobUrl ? (
                                     <img
-                                        src={license.giayPhepKinhDoanh}
+                                        src={businessLicenseBlobUrl}
                                         alt="Giấy phép kinh doanh"
                                         className="w-full h-auto rounded-lg shadow-sm cursor-pointer hover:opacity-80"
-                                        onClick={() => openPreview(license.giayPhepKinhDoanh)}
+                                        onClick={() => openPreview(businessLicenseBlobUrl)}
                                     />
                                 ) : (
                                     <p>Không có</p>
@@ -143,12 +234,14 @@ const ServiceDocumentsUser = () => {
                             </div>
                             <div>
                                 <p className="font-semibold">Giấy phép chuyên môn:</p>
-                                {license?.giayPhepChuyenMon ? (
+                                {imageLoading.professional ? (
+                                    <p className="text-gray-500">Đang tải...</p>
+                                ) : professionalLicenseBlobUrl ? (
                                     <img
-                                        src={license.giayPhepChuyenMon}
+                                        src={professionalLicenseBlobUrl}
                                         alt="Giấy phép chuyên môn"
                                         className="w-full h-auto rounded-lg shadow-sm cursor-pointer hover:opacity-80"
-                                        onClick={() => openPreview(license.giayPhepChuyenMon)}
+                                        onClick={() => openPreview(professionalLicenseBlobUrl)}
                                     />
                                 ) : (
                                     <p>Không có</p>
@@ -168,7 +261,7 @@ const ServiceDocumentsUser = () => {
                 {previewImage && (
                     <div
                         className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
-                        onClick={closePreview} // Đóng khi click ngoài
+                        onClick={closePreview}
                     >
                         <div className="relative max-w-4xl max-h-[90vh] p-4 bg-white rounded-lg overflow-auto">
                             <img

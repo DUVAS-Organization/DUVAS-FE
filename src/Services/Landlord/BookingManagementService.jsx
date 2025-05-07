@@ -211,6 +211,21 @@ const BookingManagementService = {
             );
         }
     },
+    getMyInsiderTrading: async (token) => {
+        try {
+            const response = await axios.get(
+                `${API_URL}/my-insider-trading`,
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                }
+            );
+            return response.data;
+        } catch (error) {
+            throw new Error(
+                error.response?.data?.message || "Không thể lấy danh sách giao dịch nội bộ của người dùng"
+            );
+        }
+    },
 };
 
 export default BookingManagementService;

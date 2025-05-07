@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import Loading from "../../../Components/Loading";
 import OtherService from "../../../Services/User/OtherService";
 import UserService from '../../../Services/User/UserService';
+import MonthlyPaymentService from "../../../Services/Landlord/MonthlyPaymentService";
 import { showCustomNotification } from "../../../Components/Notification";
 
 export default function RentalList() {
@@ -42,6 +43,10 @@ export default function RentalList() {
         const savedReviews = localStorage.getItem('reviewedRooms');
         return savedReviews ? JSON.parse(savedReviews) : [];
     });
+
+    const [pendingPayments, setPendingPayments] = useState([]);
+    const [showPaymentConfirmPopup, setShowPaymentConfirmPopup] = useState(false);
+    const [selectedPayment, setSelectedPayment] = useState(null);
 
     useEffect(() => {
         const fetchRentals = async () => {
@@ -84,7 +89,6 @@ export default function RentalList() {
                 setRentingRooms(rentingRoomsArr);
                 setRentedRooms(rentedRoomsArr);
                 setCancelledRooms(cancelledRoomsArr);
-
             } catch (error) {
                 console.error("❌ [FE] Error fetching rental list:", error);
             } finally {
@@ -94,6 +98,86 @@ export default function RentalList() {
 
         fetchRentals();
     }, [user?.userId, user?.token]);
+
+    useEffect(() => {
+        const fetchPendingPayments = async () => {
+            if (selectedRoom && rentingRooms.some(r => r.rentalId === selectedRoom.rentalList.rentalId)) {
+                try {
+                    const insiderTradings = await MonthlyPaymentService.getInsiderTradingsByRoomId(selectedRoom.rentalList.roomId);
+                    const pending = insiderTradings.filter(
+                        (it) => it.type === "MonthlyPayment"
+                    );
+                    // Sắp xếp: ưu tiên chưa thanh toán lên đầu, sau đó theo ngày tạo tăng dần
+                    const sortedPending = pending.sort((a, b) => {
+                        if (a.status === b.status) {
+                            return new Date(a.createdDate) - new Date(b.createdDate);
+                        }
+                        return a.status === 0 ? -1 : 1;
+                    });
+                    setPendingPayments(sortedPending);
+                } catch (error) {
+                    console.error("❌ [FE] Error fetching insider tradings:", error);
+                }
+            } else {
+                setPendingPayments([]);
+            }
+        };
+
+        fetchPendingPayments();
+    }, [selectedRoom, rentingRooms]);
+
+    const handlePayment = async () => {
+        if (!selectedPayment) return;
+
+        try {
+            setLoading(true);
+
+            // Kiểm tra số dư của người dùng
+            const checkBalanceData = { UserId: user.userId, Amount: selectedPayment.money };
+            const balanceResponse = await BookingManagementService.checkBalance(checkBalanceData, user.token);
+
+            if (balanceResponse !== "Bạn đủ tiền.") {
+                showCustomNotification("warning", "Bạn không đủ tiền. Vui lòng nạp thêm tiền để tiếp tục.");
+                setShowPaymentConfirmPopup(false);
+                return;
+            }
+
+            // Trừ tiền từ người dùng
+            const updateBalanceDataUser = { UserId: user.userId, Amount: -selectedPayment.money };
+            await BookingManagementService.updateBalance(updateBalanceDataUser, user.token);
+
+            // Cộng tiền cho chủ phòng (landlordId từ selectedRoom)
+            const landlordId = selectedRoom.room.landlordId;
+            const updateBalanceDataLandlord = { UserId: landlordId, Amount: selectedPayment.money };
+            await BookingManagementService.updateBalance(updateBalanceDataLandlord, user.token);
+
+            // Cập nhật trạng thái InsiderTrading
+            await MonthlyPaymentService.updateInsiderTradingStatus(selectedPayment.insiderTradingId, 1);
+
+            // Cập nhật state để disable nút "Thanh toán"
+            setPendingPayments((prev) =>
+                prev.map((payment) =>
+                    payment.insiderTradingId === selectedPayment.insiderTradingId
+                        ? { ...payment, status: 1 }
+                        : payment
+                ).sort((a, b) => {
+                    if (a.status === b.status) {
+                        return new Date(a.createdDate) - new Date(b.createdDate);
+                    }
+                    return a.status === 0 ? -1 : 1;
+                })
+            );
+
+            showCustomNotification("success", "Thanh toán thành công!");
+            setShowPaymentConfirmPopup(false);
+        } catch (error) {
+            console.error("❌ [FE] Error processing payment:", error);
+            showCustomNotification("error", "Có lỗi xảy ra khi thanh toán. Vui lòng thử lại.");
+            setShowPaymentConfirmPopup(false);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const addReport = async () => {
         if (!reportContent.trim()) {
@@ -115,7 +199,7 @@ export default function RentalList() {
                 setImages([]);
             }
         } catch (error) {
-            showCustomNotification("error", "Có lỗi xảy ra khi gửi báo cáo!");
+            showCustomNotification("error", "Bạn đã có báo cáo phòng này!");
         } finally {
             setLoading(false);
         }
@@ -487,12 +571,54 @@ export default function RentalList() {
                                     </div>
                                 )}
                                 {selectedRoom.contract?.status === 1 && (
-                                    <button
-                                        onClick={() => { setShowReportPopup(true); setRoomId(selectedRoom.room.roomId); }}
-                                        className="text-red-500 px-3 py-2 rounded-md text-base font-medium border border-red-400 hover:bg-red-500 hover:text-white transition-colors duration-150"
-                                    >
-                                        Báo cáo!
-                                    </button>
+                                    <div>
+                                        <button
+                                            onClick={() => { setShowReportPopup(true); setRoomId(selectedRoom.room.roomId); }}
+                                            className="text-red-500 px-3 py-2 rounded-md text-base font-medium border border-red-400 hover:bg-red-500 hover:text-white transition-colors duration-150"
+                                        >
+                                            Báo cáo!
+                                        </button>
+                                        {pendingPayments.length > 0 && (
+                                            <div className="mt-6">
+                                                <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-3">Yêu cầu thanh toán</h3>
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                    {pendingPayments.map(payment => (
+                                                        <div key={payment.insiderTradingId} className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4 shadow-sm">
+                                                            <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                                                                Số tiền: {payment.money.toLocaleString("vi-VN", { style: "currency", currency: "VND" })}
+                                                            </p>
+                                                            <p className="text-sm text-gray-600 dark:text-gray-300">
+                                                                Ghi chú: Thanh toán tiền Điện, Nước, Gửi xe, Rác, Internet
+                                                            </p>
+                                                            <p className="text-sm text-gray-600 dark:text-gray-300">
+                                                                Ngày tạo: {payment.createdDate}
+                                                            </p>
+                                                            <p className="text-sm text-gray-600 dark:text-gray-300">
+                                                                Ngày hết hạn: {selectedRoom.rentalList?.rentDate && selectedRoom.rentalList?.monthForRent ? (() => {
+                                                                    const startDate = new Date(selectedRoom.rentalList.rentDate);
+                                                                    const endDate = new Date(startDate.setMonth(startDate.getMonth() + selectedRoom.rentalList.monthForRent));
+                                                                    return endDate.toLocaleDateString();
+                                                                })() : "Chưa cập nhật"}
+                                                            </p>
+                                                            <button
+                                                                onClick={() => {
+                                                                    setSelectedPayment(payment);
+                                                                    setShowPaymentConfirmPopup(true);
+                                                                }}
+                                                                disabled={payment.status === 1 || loading}
+                                                                className={`mt-2 px-4 py-2 rounded-lg text-white transition ${payment.status === 1
+                                                                    ? "bg-gray-400 cursor-not-allowed"
+                                                                    : "bg-green-600 hover:bg-green-700"
+                                                                    }`}
+                                                            >
+                                                                {payment.status === 1 ? "Đã thanh toán" : "Thanh toán"}
+                                                            </button>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
                                 )}
                             </motion.div>
                         ) : (
@@ -506,13 +632,11 @@ export default function RentalList() {
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
                     <div className="bg-white p-6 rounded-lg shadow-lg w-[500px]">
                         <h3 className="text-lg font-bold mb-4">Xác nhận thuê phòng</h3>
-
                         <ul className="list-disc list-inside text-gray-800 mb-3 space-y-1">
                             <li>Sau khi nhấn "Xác nhận" sẽ hoàn tất quá trình thuê phòng.</li>
                             <li>Phòng sẽ được đánh dấu là “Đang thuê” và bạn sẽ không thể hoàn tác.</li>
                             <li>Vui lòng kiểm tra kỹ thông tin hợp đồng trước khi tiếp tục.</li>
                         </ul>
-                        {/* <p className="mb-4">Bạn có chắc chắn muốn xác nhận thuê phòng này?</p> */}
                         <div className="flex justify-between">
                             <button onClick={() => { setShowConfirmPopup(false); }}
                                 className="bg-gray-300 text-black px-6 py-2 rounded-lg hover:bg-gray-400 transition">Hủy</button>
@@ -558,6 +682,36 @@ export default function RentalList() {
                 </div>
             )}
 
+            {showPaymentConfirmPopup && selectedPayment && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                    <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+                        <h3 className="text-lg font-bold mb-4">Xác nhận thanh toán</h3>
+                        <p className="mb-2">
+                            Bạn có chắc chắn muốn thanh toán{" "}
+                            <span className="font-semibold">
+                                {selectedPayment.money.toLocaleString("vi-VN", { style: "currency", currency: "VND" })}
+                            </span>{" "}
+                            cho yêu cầu này không?
+                        </p>
+                        <p className="text-sm text-gray-600 mb-4"> Ghi chú: Thanh toán tiền Điện, Nước, Gửi xe, Rác, Internet</p>
+                        <div className="flex justify-between">
+                            <button
+                                onClick={() => setShowPaymentConfirmPopup(false)}
+                                className="bg-gray-300 text-black px-6 py-2 rounded-lg hover:bg-gray-400 transition"
+                            >
+                                Hủy
+                            </button>
+                            <button
+                                onClick={handlePayment}
+                                className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition"
+                            >
+                                Xác nhận
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {showReviewModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white p-6 rounded-lg shadow-xl max-w-[500px] max-h-[800px] overflow-y-auto relative">
@@ -566,9 +720,7 @@ export default function RentalList() {
                                 <Loading />
                             </div>
                         )}
-
                         <h3 className="text-xl font-bold mb-4">Đánh Giá Phòng</h3>
-
                         <div className="flex mb-4">
                             {[...Array(5)].map((_, index) => {
                                 const starValue = index + 1;
@@ -584,7 +736,6 @@ export default function RentalList() {
                             })}
                         </div>
                         <p className="text-sm text-gray-500 mb-4">Vui lòng chọn số sao (bắt buộc)</p>
-
                         <textarea
                             className="w-full border rounded-lg p-2 mb-4"
                             rows="3"
@@ -592,7 +743,6 @@ export default function RentalList() {
                             value={comment}
                             onChange={(e) => setComment(e.target.value)}
                         ></textarea>
-
                         <label className="block mb-2 font-medium text-gray-700">Hình ảnh (không bắt buộc):</label>
                         <div className="relative border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-green-400 transition">
                             <input
@@ -607,7 +757,6 @@ export default function RentalList() {
                             </p>
                             <p className="text-sm text-gray-400 mt-1">.jpg, .png, .gif</p>
                         </div>
-
                         {previewImages.length > 0 && (
                             <div className="mt-4 grid grid-cols-3 gap-3 max-h-64 overflow-y-auto">
                                 {previewImages.map((img, index) => (
@@ -627,7 +776,6 @@ export default function RentalList() {
                                 ))}
                             </div>
                         )}
-
                         <div className="flex justify-between mt-6 sticky bottom-0 bg-white pt-4">
                             <button
                                 onClick={() => setShowReviewModal(false)}
@@ -655,10 +803,8 @@ export default function RentalList() {
                                 <Loading />
                             </div>
                         )}
-
                         <h3 className="text-lg font-bold mb-4">Báo cáo</h3>
                         <p className="mb-4 text-gray-600">Báo cáo về những gì bạn gặp trong quá trình thuê phòng.</p>
-
                         <label className="block mb-2 font-medium text-gray-700">Nội dung (bắt buộc):</label>
                         <textarea
                             className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-300 transition"
@@ -667,7 +813,6 @@ export default function RentalList() {
                             value={reportContent}
                             onChange={(e) => setReportContent(e.target.value)}
                         ></textarea>
-
                         <label className="block mt-4 mb-2 font-medium text-gray-700">Hình ảnh (không bắt buộc):</label>
                         <div className="relative border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-blue-400 transition">
                             <input
@@ -682,7 +827,6 @@ export default function RentalList() {
                             </p>
                             <p className="text-sm text-gray-400 mt-1">Hỗ trợ nhiều ảnh</p>
                         </div>
-
                         {images.length > 0 && (
                             <div className="mt-4 grid grid-cols-3 gap-3 max-h-64 overflow-y-auto">
                                 {images.map((img, index) => (
@@ -703,8 +847,7 @@ export default function RentalList() {
                                 ))}
                             </div>
                         )}
-
-                        <div className="flex justify-between mt-6 sticky bottom-0 bg-white pt-4">
+                        <div className="flex justify-between mt-6 bottom-0 bg-white pt-4">
                             <button
                                 onClick={() => setShowReportPopup(false)}
                                 className="bg-gray-300 text-black px-6 py-2 rounded-lg hover:bg-gray-400 transition disabled:opacity-50 disabled:cursor-not-allowed"
