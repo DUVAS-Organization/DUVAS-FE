@@ -126,7 +126,7 @@ const MyReports = () => {
                                 <thead className="bg-gray-50 dark:bg-gray-700">
                                     <tr>
                                         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                            #
+                                            STT
                                         </th>
                                         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                             Nội dung
@@ -162,11 +162,11 @@ const MyReports = () => {
                                                     {formatDateTime(report.createdTime)}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${report.status === 0
-                                                        ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
-                                                        : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                                                        }`}>
-                                                        {report.status === 0 ? 'Chưa xử lý' : 'Đã xử lý'}
+                                                    <span
+                                                        className={`inline-block px-3 py-1 rounded-full text-white text-sm font-medium ${report.status === 0 ? "bg-yellow-500" : "bg-green-500"
+                                                            }`}
+                                                    >
+                                                        {report.status === 0 ? "Chưa xử lý" : "Đã xử lý"}
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
@@ -176,7 +176,7 @@ const MyReports = () => {
                                                                 <img
                                                                     key={index}
                                                                     src={
-                                                                        img.startsWith('http')
+                                                                        img.startsWith("http")
                                                                             ? img
                                                                             : `${process.env.REACT_APP_API_BASE_URL}${img}`
                                                                     }
@@ -184,7 +184,7 @@ const MyReports = () => {
                                                                     className="w-10 h-10 object-cover rounded border border-gray-200 cursor-pointer hover:opacity-80"
                                                                     onClick={() => openImageModal(images)}
                                                                     onError={(e) => {
-                                                                        e.target.src = '/placeholder-image.jpg';
+                                                                        e.target.src = "/placeholder-image.jpg";
                                                                     }}
                                                                 />
                                                             ))}

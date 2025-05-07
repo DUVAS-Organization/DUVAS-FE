@@ -13,6 +13,7 @@ import OtherService from "../../Services/User/OtherService";
 import AdminWithdrawRequestService from "../../Services/Admin/WithdrawManagementService";
 import UserService from "../../Services/User/UserService";
 import NotificationService from "../../Services/User/NotificationService";
+import TransactionService from "../../Services/Admin/TransactionService";
 import { parse, format, differenceInSeconds, differenceInMinutes, differenceInHours } from "date-fns";
 import { useAuth } from "../../Context/AuthProvider";
 import { getUserProfile } from "../../Services/User/UserProfileService";
@@ -157,7 +158,7 @@ const Counts = () => {
     const [buildingCount, setBuildingCount] = useState(0);
     const [roomCount, setRoomCount] = useState(0);
     const [reportCount, setReportCount] = useState(0);
-    const [withdrawCount, setWithdrawCount] = useState(0);
+    const [totalRevenue, setTotalRevenue] = useState(0);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -183,8 +184,13 @@ const Counts = () => {
                     setReportCount(0);
                 }
 
-                const withdraws = await AdminWithdrawRequestService.getWithdrawRequests();
-                setWithdrawCount(withdraws.length);
+                // Chỉ đếm các yêu cầu rút tiền có trạng thái "Pending"
+                const deposits = await TransactionService.getAllDeposits();
+                const withdrawals = await TransactionService.getAllWithdrawals();
+                const totalDeposits = deposits.reduce((sum, txn) => sum + txn.amount, 0);
+                const totalWithdrawals = Math.abs(withdrawals.reduce((sum, txn) => sum - txn.amount, 0));
+                const revenue = totalDeposits - totalWithdrawals;
+                setTotalRevenue(revenue);
             } catch (error) {
                 console.error('Error fetching data:', error);
             }
@@ -193,12 +199,12 @@ const Counts = () => {
     }, []);
 
     const kpiData = [
+        { title: "Tổng doanh thu", value: formatAmount(totalRevenue) + " đ", icon: FiDollarSign, color: "yellow", link: "/Admin/Withdraws" },
         { title: "Tổng người dùng", value: accountCount.toString(), icon: FiUsers, color: "blue", link: "/Admin/Accounts" },
         { title: "Tổng tòa nhà", value: buildingCount.toString(), icon: FiHome, color: "green", link: "/Admin/Buildings" },
         { title: "Tổng phòng", value: roomCount.toString(), icon: FiList, color: "purple", link: "/Admin/Rooms" },
         { title: "Dịch vụ đang hoạt động", value: postCount.toString(), icon: FiTool, color: "orange", link: "/Admin/ServicePosts" },
-        { title: "Báo cáo đang chờ", value: reportCount.toString(), icon: FaRegBell, color: "red", link: "/Admin/Reports" },
-        { title: "Yêu cầu rút tiền", value: withdrawCount.toString(), icon: FiDollarSign, color: "yellow", link: "/Admin/Withdraws" }
+        { title: "Báo cáo đang chờ", value: reportCount.toString(), icon: FaRegBell, color: "red", link: "/Admin/Reports" }
     ];
 
     return (
@@ -530,6 +536,47 @@ const Notifications = ({ userId, userRole }) => {
     );
 };
 
+// Hàm xử lý dữ liệu giao dịch để tạo dữ liệu cho biểu đồ
+const processTransactionData = (deposits, withdrawals) => {
+    const monthlyData = {};
+    const months = ["Th1", "Th2", "Th3", "Th4", "Th5", "Th6"]; // 6 tháng gần nhất
+
+    // Khởi tạo dữ liệu cho từng tháng
+    months.forEach((month) => {
+        monthlyData[month] = { month, deposits: 0, withdrawals: 0, revenue: 0 };
+    });
+
+    // Xử lý deposits
+    deposits.forEach((txn) => {
+        const date = new Date(txn.createdAt);
+        const monthIndex = date.getMonth(); // Lấy tháng (0-11)
+        const monthKey = `Th${monthIndex + 1}`; // Chuyển thành Th1, Th2, ...
+        if (monthlyData[monthKey]) {
+            monthlyData[monthKey].deposits += txn.amount;
+        }
+    });
+
+    // Xử lý withdrawals
+    withdrawals.forEach((txn) => {
+        const date = new Date(txn.createdAt);
+        const monthIndex = date.getMonth(); // Lấy tháng (0-11)
+        const monthKey = `Th${monthIndex + 1}`; // Chuyển thành Th1, Th2, ...
+        if (monthlyData[monthKey]) {
+            monthlyData[monthKey].withdrawals -= txn.amount; // Số âm
+        }
+    });
+
+    // Tính doanh thu (revenue = deposits - |withdrawals|)
+    months.forEach((month) => {
+        if (monthlyData[month]) {
+            monthlyData[month].revenue = monthlyData[month].deposits - Math.abs(monthlyData[month].withdrawals);
+        }
+    });
+
+    // Chuyển dữ liệu thành mảng cho biểu đồ
+    return Object.values(monthlyData);
+};
+
 const Dashboard = () => {
     const [darkMode, setDarkMode] = useState(false);
     const [activeSection, setActiveSection] = useState("dashboard");
@@ -541,6 +588,9 @@ const Dashboard = () => {
     const userId = user?.userId ? parseInt(user.userId) : null;
     const [userRole, setUserRole] = useState("User");
     const navigate = useNavigate();
+
+    // Thêm state để lưu dữ liệu giao dịch cho biểu đồ
+    const [transactionChartData, setTransactionChartData] = useState([]);
 
     const toggleDarkMode = () => setDarkMode(!darkMode);
     const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
@@ -726,8 +776,22 @@ const Dashboard = () => {
             }
         };
 
+        // Thêm hàm fetch dữ liệu giao dịch
+        const fetchTransactionData = async () => {
+            try {
+                const deposits = await TransactionService.getAllDeposits();
+                const withdrawals = await TransactionService.getAllWithdrawals();
+                const chartData = processTransactionData(deposits, withdrawals);
+                setTransactionChartData(chartData);
+            } catch (error) {
+                console.error('Error fetching transaction data:', error);
+                setTransactionChartData([]);
+            }
+        };
+
         fetchUserRoles();
         fetchRecentActivity();
+        fetchTransactionData(); // Gọi hàm fetch dữ liệu giao dịch
     }, []);
 
     return (
@@ -782,15 +846,18 @@ const Dashboard = () => {
                                         <Tooltip />
                                     </PieChart>
                                 </div>
+                                {/* Biểu đồ giao dịch nạp/rút tiền với cột doanh thu */}
                                 <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md p-6 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700">
-                                    <h3 className="text-xl font-semibold mb-6">Tăng trưởng phòng/dịch vụ hàng tháng</h3>
-                                    <BarChart className="mx-auto" width={400} height={300} data={barData}>
+                                    <h3 className="text-xl font-semibold mb-6">Giao dịch nạp/rút tiền hàng tháng</h3>
+                                    <BarChart className="mx-auto" width={570} height={300} data={transactionChartData}>
                                         <CartesianGrid strokeDasharray="3 3" />
                                         <XAxis dataKey="month" />
-                                        <YAxis />
-                                        <Tooltip />
+                                        <YAxis tickFormatter={(value) => `${value.toLocaleString('vi-VN')}`} />
+                                        <Tooltip formatter={(value) => `${value.toLocaleString('vi-VN')} VNĐ`} />
                                         <Legend />
-                                        <Bar dataKey="occupancy" fill="#4299e1" />
+                                        <Bar dataKey="deposits" name="Nạp tiền" fill="#34c38f" />
+                                        <Bar dataKey="withdrawals" name="Rút tiền" fill="#f46a6a" />
+                                        <Bar dataKey="revenue" name="Doanh thu" fill="#ffbb28" />
                                     </BarChart>
                                 </div>
                             </div>

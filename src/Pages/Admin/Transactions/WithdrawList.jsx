@@ -11,6 +11,7 @@ import Icon from "../../../Components/Icon";
 import AdminWithdrawRequestService from "../../../Services/Admin/WithdrawManagementService";
 import { showCustomNotification } from "../../../Components/Notification";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa6";
+import Modal from 'react-modal';
 
 const AdminTransaction = () => {
     const [transactions, setTransactions] = useState([]);
@@ -36,18 +37,16 @@ const AdminTransaction = () => {
     const getTransactions = () => {
         AdminWithdrawRequestService.getWithdrawRequests(searchTerm)
             .then(data => {
+                console.log('Fetched transactions:', data); // Log để kiểm tra dữ liệu
                 setTransactions(data);
             })
-            .catch(error => console.error('Error fetching transactions'));
+            .catch(error => console.error('Error fetching transactions:', error));
     };
 
     // Tính toán dữ liệu hiển thị
     const sortedTransactions = [...transactions]
         .filter(transaction => (filterStatus ? transaction.status === filterStatus : true))
-        .sort((a, b) => isSortedAscending
-            ? new Date(a) - new Date(b)
-            : new Date(b) - new Date(a)
-        );
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)); // Mới nhất lên đầu
 
     // Phân trang
     const indexOfLastItem = currentPage * itemsPerPage;
@@ -60,11 +59,15 @@ const AdminTransaction = () => {
     const getPaymentLink = async (withdrawId) => {
         try {
             const result = await AdminWithdrawRequestService.getWithdrawRequestPaymentLinkById(withdrawId);
+            console.log('Payment link result:', result); // Log để kiểm tra
             if (result?.qrCode) {
                 setQrCode(result.qrCode);
                 setIsModalOpen(true);
+            } else {
+                showCustomNotification("error", "Không nhận được mã QR!");
             }
         } catch (error) {
+            console.error('Error getting payment link:', error);
             showCustomNotification("error", "Lỗi khi nhận thông tin thanh toán!");
         }
     };
@@ -89,17 +92,21 @@ const AdminTransaction = () => {
                 setRejectReason('');
             }
         } catch (error) {
-            console.log("Error update status", error);
+            console.error("Error updating status:", error);
             showCustomNotification("error", "Lỗi khi từ chối yêu cầu thanh toán!");
         }
     };
 
     const handleDeposit = async () => {
-        if (!qrCode) return;
+        if (!qrCode) {
+            console.warn('No QR code available');
+            return;
+        }
 
         try {
             let params = new URLSearchParams(new URL(qrCode).search);
             const addInfo = params.get("addInfo");
+            console.log('addInfo extracted:', addInfo); // Log để kiểm tra
 
             if (!addInfo) {
                 await new Promise(resolve => setTimeout(resolve, 1000));
@@ -110,39 +117,50 @@ const AdminTransaction = () => {
 
             let status = false;
             let retries = 0;
-            const maxRetries = 10;
-            await new Promise(resolve => setTimeout(resolve, 20000));
+            const maxRetries = 30; // Tăng lên 30 để kéo dài thời gian polling
             while (!status && retries < maxRetries) {
                 try {
+                    const startTime = Date.now();
                     const response = await UserService.checkTransactionStatus(addInfo);
+                    console.log(`Polling attempt ${retries + 1}:`, {
+                        response,
+                        timeTaken: `${Date.now() - startTime}ms`
+                    }); // Log chi tiết phản hồi API
                     status = response?.data?.isPaid || false;
 
                     if (!status) {
                         retries++;
+                        await new Promise(resolve => setTimeout(resolve, 1000)); // Chờ 1 giây
                     }
                 } catch (error) {
-                    console.error("Error checking transaction status:", error);
+                    console.error(`Polling error at attempt ${retries + 1}:`, error);
                     showCustomNotification("error", "Lỗi không kiểm tra được trạng thái thanh toán!");
                     break;
                 }
             }
 
             if (status) {
+                console.log('Transaction confirmed successfully');
                 showCustomNotification("success", "Giao dịch đã được xác nhận!");
-                setIsModalOpen(false);
-                getTransactions();
+                setTimeout(() => {
+                    setIsModalOpen(false);
+                    getTransactions(); // Làm mới danh sách sau 0.5 giây
+                }, 500);
             } else {
-                console.warn("Payment not confirmed within timeout.");
+                console.warn(`Polling stopped after ${maxRetries} attempts`);
                 showCustomNotification("warning", "Giao dịch quá thời hạn!");
+                setIsModalOpen(false);
             }
         } catch (error) {
             console.error("Error parsing QR Code URL:", error);
             showCustomNotification("error", "Lỗi không xử lý được QR code!");
+            setIsModalOpen(false);
         }
     };
 
     useEffect(() => {
         if (qrCode) {
+            console.log('Starting polling for QR code:', qrCode);
             handleDeposit();
         }
     }, [qrCode]);
@@ -158,83 +176,98 @@ const AdminTransaction = () => {
     };
 
     return (
-        <div className="p-6">
+        <div className="container mx-auto px-4 py-6">
             <Counts />
-            <div className='font-bold text-6xl ml-3 my-8 text-blue-500'>
-                <h1>Danh Sách Rút Tiền</h1>
+            <div className="flex flex-col sm:flex-row justify-between items-center mb-6 my-8">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-blue-500 mb-4 sm:mb-0">
+                    Danh Sách Rút Tiền
+                </h1>
             </div>
-            <div className="flex items-center mb-6">
-                <button onClick={handleSortByDate} className="border-2 border-gray-500 flex items-center p-2 rounded-xl">
-                    <FiFilter className="mr-2 text-xl" />
-                    <p className="font-bold text-xl">Thời Gian</p>
-                </button>
-                <button className="border-2 border-gray-500 flex items-center p-2 rounded-xl ml-8"
-                    onClick={() => {
-                        setFilterStatus("Pending");
-                        setCurrentPage(1);
-                    }}>
-                    <FaUnlock className="mr-2 text-xl" />
-                    <p className="font-bold text-xl">Đang Chờ</p>
-                </button>
-                <button className="border-2 border-gray-500 flex items-center p-2 rounded-xl ml-8"
-                    onClick={() => {
-                        setFilterStatus("Rejected");
-                        setCurrentPage(1);
-                    }}>
-                    <FaUnlock className="mr-2 text-xl" />
-                    <p className="font-bold text-xl">Đã Từ Chối</p>
-                </button>
-                <button className="border-2 border-gray-500 flex items-center p-2 rounded-xl ml-8"
-                    onClick={() => {
-                        setFilterStatus("Approved");
-                        setCurrentPage(1);
-                    }}>
-                    <FaLock className="mr-2 text-xl" />
-                    <p className="font-bold text-xl">Thành Công</p>
-                </button>
-                <button className="border-2 border-gray-500 flex items-center p-2 rounded-xl ml-8 bg-gray-300 hover:bg-gray-400"
-                    onClick={resetFilters}>
-                    <FaRedo className="mr-2 text-xl" />
-                    <p className="font-bold text-xl">Tất Cả</p>
-                </button>
 
-                <div className="relative w-1/3 mx-2 ml-auto">
+            <div className="flex flex-col sm:flex-row items-center justify-between mb-4">
+                {/* Các nút lọc trạng thái */}
+                <div className="flex flex-wrap gap-2 mb-4 sm:mb-0">
+                    <button
+                        onClick={() => {
+                            setFilterStatus("Pending");
+                            setCurrentPage(1);
+                        }}
+                        className="flex items-center border bg-white border-gray-400 rounded-md px-3 py-2 hover:bg-gray-100 transition"
+                    >
+                        <FaUnlock className="mr-2 text-lg" />
+                        <span className="font-medium text-sm">Đang Chờ</span>
+                    </button>
+                    <button
+                        onClick={() => {
+                            setFilterStatus("Rejected");
+                            setCurrentPage(1);
+                        }}
+                        className="flex items-center border bg-white border-gray-400 rounded-md px-3 py-2 hover:bg-gray-100 transition"
+                    >
+                        <FaUnlock className="mr-2 text-lg" />
+                        <span className="font-medium text-sm">Đã Từ Chối</span>
+                    </button>
+                    <button
+                        onClick={() => {
+                            setFilterStatus("Approved");
+                            setCurrentPage(1);
+                        }}
+                        className="flex items-center border bg-white border-gray-400 rounded-md px-3 py-2 hover:bg-gray-100 transition"
+                    >
+                        <FaLock className="mr-2 text-lg" />
+                        <span className="font-medium text-sm">Thành Công</span>
+                    </button>
+                    <button
+                        onClick={resetFilters}
+                        className="flex items-center border bg-gray-200 border-gray-400 rounded-md px-3 py-2 hover:bg-gray-300 transition"
+                    >
+                        <FaRedo className="mr-2 text-lg" />
+                        <span className="font-medium text-sm">Tất Cả</span>
+                    </button>
+                </div>
+
+                {/* Ô tìm kiếm */}
+                <div className="relative w-full sm:w-1/3">
                     <input
-                        className="border w-full h-11 border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
                         type="text"
-                        placeholder="  Tìm số tài khoản"
+                        placeholder="Tìm số tài khoản..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full border border-gray-300 rounded-md pl-3 pr-10 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
                     />
-                    <Icon className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500" name="search" />
+                    <Icon name="search" className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
                 </div>
             </div>
-            <div className="overflow-x-auto">
-                <table className="min-w-full bg-white border border-gray-300 shadow-md rounded-lg">
-                    <thead className="bg-gray-200">
+
+            <div className="shadow rounded-lg border border-gray-200 overflow-hidden">
+                <table className="min-w-full table-fixed bg-white">
+                    <thead className="bg-gray-50">
                         <tr>
-                            <th className="p-3 border">STT</th>
-                            <th className="p-3 border">Số Tiền</th>
-                            <th className="p-3 border">Số Tài Khoản</th>
-                            <th className="p-3 border">Lý Do</th>
-                            <th className="p-3 border">Ngày Tạo Đơn</th>
-                            <th className="p-3 border">Ngày Cập Nhật Đơn</th>
-                            <th className="p-3 border">Trạng Thái</th>
-                            <th className="p-3 border">Link QR</th>
+                            <th className="w-[5%] px-2 py-2 text-center text-sm font-medium text-gray-600">STT</th>
+                            <th className="w-[15%] px-2 py-2 text-center text-sm font-medium text-gray-600">Số Tiền</th>
+                            <th className="w-[15%] px-2 py-2 text-center text-sm font-medium text-gray-600">Số Tài Khoản</th>
+                            <th className="w-[15%] px-2 py-2 text-center text-sm font-medium text-gray-600">Lý Do</th>
+                            <th className="w-[15%] px-2 py-2 text-center text-sm font-medium text-gray-600">Ngày Tạo Đơn</th>
+                            <th className="w-[15%] px-2 py-2 text-center text-sm font-medium text-gray-600">Ngày Cập Nhật Đơn</th>
+                            <th className="w-[10%] px-2 py-2 text-center text-sm font-medium text-gray-600">Trạng Thái</th>
+                            <th className="w-[10%] px-2 py-2 text-center text-sm font-medium text-gray-600">Hành Động</th>
                         </tr>
                     </thead>
                     <tbody>
                         {currentItems.length > 0 ? (
                             currentItems.map((transaction, index) => (
-                                <tr key={transaction.id} className="hover:bg-gray-100">
-                                    <td className="p-3 border text-center">{indexOfFirstItem + index + 1}</td>
-                                    <td className="p-3 border text-center">{transaction.amount}</td>
-                                    <td className="p-3 border text-center">{transaction.accountNumber || "N/A"}</td>
-                                    <td className="p-3 border text-center">{transaction.reason || "Không"}</td>
-                                    <td className="p-3 border text-center">{new Date(transaction.createdAt).toLocaleString()}</td>
-                                    <td className="p-3 border text-center">{new Date(transaction.updatedAt).toLocaleString()}</td>
-                                    <td className="p-3 border text-center">
-                                        <span className={`px-2 py-1 rounded text-white ${transaction.status === "Pending" ? "bg-yellow-500" : transaction.status === "Rejected" ? "bg-red-500" : "bg-green-500"}`}>
+                                <tr key={transaction.id} className="border-t border-gray-200 hover:bg-gray-100">
+                                    <td className="px-2 py-2 text-center text-sm text-gray-700">{indexOfFirstItem + index + 1}</td>
+                                    <td className="px-2 py-2 text-center text-sm text-gray-700">{transaction.amount}</td>
+                                    <td className="px-2 py-2 text-center text-sm text-gray-700">{transaction.accountNumber || "N/A"}</td>
+                                    <td className="px-2 py-2 text-center text-sm text-gray-700">{transaction.reason || "Không"}</td>
+                                    <td className="px-2 py-2 text-center text-sm text-gray-700">{new Date(transaction.createdAt).toLocaleString()}</td>
+                                    <td className="px-2 py-2 text-center text-sm text-gray-700">{new Date(transaction.updatedAt).toLocaleString()}</td>
+                                    <td className="px-2 py-2 text-center text-sm">
+                                        <span className={`inline-block px-3 py-1 rounded-full text-white text-sm font-medium ${transaction.status === "Pending" ? "bg-yellow-500" :
+                                            transaction.status === "Rejected" ? "bg-red-500" :
+                                                "bg-green-500"
+                                            }`}>
                                             {transaction.status === "Pending"
                                                 ? "Đang xử lý"
                                                 : transaction.status === "Rejected"
@@ -242,29 +275,33 @@ const AdminTransaction = () => {
                                                     : "Đã Xử Lý"}
                                         </span>
                                     </td>
-                                    <td className="p-3 border text-center flex justify-evenly">
-                                        <button
-                                            className={`px-2 py-1 rounded text-white bg-green-500 ${transaction.status !== "Pending" ? "opacity-50 cursor-not-allowed" : ""
-                                                }`}
-                                            disabled={transaction.status !== "Pending"}
-                                            onClick={() => getPaymentLink(transaction.id)}
-                                        >
-                                            Chuyển Tiền
-                                        </button>
-                                        <button
-                                            className={`px-2 py-1 rounded text-white bg-red-500 ${transaction.status !== "Pending" ? "opacity-50 cursor-not-allowed" : ""
-                                                }`}
-                                            disabled={transaction.status !== "Pending"}
-                                            onClick={() => rejectPayment(transaction.id)}>
-                                            Từ Chối
-                                        </button>
+                                    <td className="px-2 py-2 text-center">
+                                        <div className="flex justify-center items-center gap-2 text-sm whitespace-nowrap">
+                                            <button
+                                                className={`text-blue-600 hover:underline ${transaction.status !== "Pending" ? "opacity-50 cursor-not-allowed" : ""
+                                                    }`}
+                                                disabled={transaction.status !== "Pending"}
+                                                onClick={() => getPaymentLink(transaction.id)}
+                                            >
+                                                Chuyển Tiền
+                                            </button>
+                                            <span className="text-gray-300">|</span>
+                                            <button
+                                                className={`text-blue-600 hover:underline ${transaction.status !== "Pending" ? "opacity-50 cursor-not-allowed" : ""
+                                                    }`}
+                                                disabled={transaction.status !== "Pending"}
+                                                onClick={() => rejectPayment(transaction.id)}
+                                            >
+                                                Từ Chối
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))
                         ) : (
                             <tr>
-                                <td colSpan="8" className="p-4 text-center text-gray-500">
-                                    No transactions available.
+                                <td colSpan="8" className="px-4 py-4 text-center text-gray-500 text-sm">
+                                    Không tìm thấy kết quả
                                 </td>
                             </tr>
                         )}
@@ -272,11 +309,11 @@ const AdminTransaction = () => {
                 </table>
 
                 {/* Phân trang */}
-                <div className="flex justify-center mt-4">
+                <div className="flex justify-center mt-4 p-4">
                     <button
                         onClick={() => paginate(currentPage - 1)}
                         disabled={currentPage === 1}
-                        className="px-4 py-2 bg-blue-400 text-gray-600 rounded disabled:bg-gray-300"
+                        className="px  px-4 py-2 bg-blue-400 text-white rounded disabled:bg-gray-300"
                     >
                         <FaChevronLeft className="text-xl" />
                     </button>
@@ -285,7 +322,8 @@ const AdminTransaction = () => {
                         <button
                             key={i + 1}
                             onClick={() => paginate(i + 1)}
-                            className={`px-4 py-2 mx-1 ${currentPage === i + 1 ? "bg-blue-500 text-white" : "bg-blue-400 text-white"} rounded`}
+                            className={`px-4 py-2 mx-1 ${currentPage === i + 1 ? "bg-blue-500 text-white" : "bg-blue-400 text-white"
+                                } rounded`}
                         >
                             {i + 1}
                         </button>
@@ -294,53 +332,66 @@ const AdminTransaction = () => {
                     <button
                         onClick={() => paginate(currentPage + 1)}
                         disabled={currentPage === totalPages}
-                        className="px-4 py-2 bg-blue-400 text-gray-600 rounded disabled:bg-gray-300"
+                        className="px-4 py-2 bg-blue-400 text-white rounded disabled:bg-gray-300"
                     >
                         <FaChevronRight className="text-xl" />
                     </button>
                 </div>
-
-                {isModalOpen && (
-                    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                        <div className="bg-white p-4 rounded-lg shadow-lg text-center">
-                            <h2 className="text-xl font-bold mb-2">Mã QR Chuyển Tiền</h2>
-                            <img src={qrCode} alt="QR Code" className="mx-auto max-h-[600px]" />
-                            <button className="mt-4 px-4 py-2 bg-red-500 text-white rounded" onClick={() => setIsModalOpen(false)}>
-                                Đóng
-                            </button>
-                        </div>
-                    </div>
-                )}
-                {isRejectModalOpen && (
-                    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                        <div className="bg-white p-6 rounded-lg shadow-lg w-1/3">
-                            <h2 className="text-xl font-bold mb-4">Từ Chối Yêu Cầu</h2>
-                            <textarea
-                                className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
-                                rows="4"
-                                placeholder="Nhập lý do từ chối..."
-                                value={rejectReason}
-                                onChange={(e) => setRejectReason(e.target.value)}
-                            />
-                            <div className="mt-4 flex justify-end">
-                                <button
-                                    className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg mr-2 hover:bg-gray-400"
-                                    onClick={() => setIsRejectModalOpen(false)}
-                                >
-                                    Hủy
-                                </button>
-                                <button
-                                    className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
-                                    onClick={handleRejectConfirm}
-                                >
-                                    Xác Nhận
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
             </div>
+
+            {/* Modal QR Code */}
+            <Modal
+                isOpen={isModalOpen}
+                onRequestClose={() => setIsModalOpen(false)}
+                contentLabel="Mã QR Chuyển Tiền"
+                className="w-11/12 sm:w-1/2 mx-auto my-6 p-6 bg-white rounded-lg shadow-lg outline-none"
+                overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+            >
+                <h1 className="text-xl font-bold text-blue-600 mb-4">Mã QR Chuyển Tiền</h1>
+                <img src={qrCode} alt="QR Code" className="mx-auto max-h-[500px] mb-6" />
+                <div className="flex justify-center">
+                    <button
+                        onClick={() => setIsModalOpen(false)}
+                        className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition"
+                    >
+                        Đóng
+                    </button>
+                </div>
+            </Modal>
+
+            {/* Modal Từ Chối */}
+            <Modal
+                isOpen={isRejectModalOpen}
+                onRequestClose={() => setIsRejectModalOpen(false)}
+                contentLabel="Từ Chối Yêu Cầu"
+                className="w-11/12 sm:w-1/3 mx-auto my-6 p-6 bg-white rounded-lg shadow-lg outline-none"
+                overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+            >
+                <h1 className="text-xl font-bold text-red-600 mb-4">Từ Chối Yêu Cầu</h1>
+                <textarea
+                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-300 mb-4"
+                    rows="4"
+                    placeholder="Nhập lý do từ chối..."
+                    value={rejectReason}
+                    onChange={(e) => setRejectReason(e.target.value)}
+                />
+                <div className="flex justify-end">
+                    <button
+                        className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition mr-3"
+                        onClick={() => setIsRejectModalOpen(false)}
+                    >
+                        Hủy
+                    </button>
+                    <button
+                        className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition"
+                        onClick={handleRejectConfirm}
+                    >
+                        Xác Nhận
+                    </button>
+                </div>
+            </Modal>
         </div>
     );
 };
+
 export default AdminTransaction;
