@@ -138,7 +138,7 @@ const ReportList = () => {
     };
 
     const handleImageError = (reportId, index) => {
-        setImageErrors((prev) => ({ ...prev, [`${reports.reportId}_${index}`]: true }));
+        setImageErrors((prev) => ({ ...prev, [`${reportId}_${index}`]: true }));
     };
 
     const totalPages = Math.ceil(pagination.total / pagination.pageSize);
@@ -298,8 +298,13 @@ const ReportList = () => {
                                                     })}
                                                 </div>
                                             </td>
-                                            <td className="py-2 px-3 text-center text-base font-semibold text-gray-600 max-w-[70px]">
-                                                {report.status === 0 || report.status === null ? 'Chưa xử lý' : 'Đã xử lý'}
+                                            <td className="py-2 px-3 text-center max-w-[70px]">
+                                                <span
+                                                    className={`inline-block px-3 py-1 rounded-full text-sm font-medium text-white ${report.status === 0 || report.status === null ? 'bg-yellow-500' : 'bg-green-500'
+                                                        }`}
+                                                >
+                                                    {report.status === 0 || report.status === null ? 'Chưa xử lý' : 'Đã xử lý'}
+                                                </span>
                                             </td>
                                             <td className="py-2 px-3 text-center text-base text-gray-600 w-[185px]">
                                                 {(report.status === 0 || report.status === null) && (
@@ -371,7 +376,13 @@ const ReportList = () => {
                                             </div>
                                         </div>
                                         <div>
-                                            <span className="font-semibold text-gray-700">Trạng thái:</span> {report.status === 0 || report.status === null ? 'Chưa xử lý' : 'Đã xử lý'}
+                                            <span className="font-semibold text-gray-700">Trạng thái:</span>{' '}
+                                            <span
+                                                className={`inline-block px-3 py-1 rounded-full text-sm font-medium text-white ${report.status === 0 || report.status === null ? 'bg-yellow-500' : 'bg-green-500'
+                                                    }`}
+                                            >
+                                                {report.status === 0 || report.status === null ? 'Chưa xử lý' : 'Đã xử lý'}
+                                            </span>
                                         </div>
                                         {(report.status === 0 || report.status === null) && (
                                             <div className="mt-2 space-x-2">

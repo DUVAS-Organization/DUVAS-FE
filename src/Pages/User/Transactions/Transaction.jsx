@@ -129,7 +129,7 @@ const Transaction = () => {
         <Layout showNavbar={false} showSidebar={true}>
             <div className="max-w-6xl mx-auto p-4 dark:bg-gray-800 dark:text-white">
                 <div className="bg-white p-6 rounded-lg shadow-md dark:bg-gray-800 dark:text-white mb-8">
-                    <h1 className="text-2xl font-bold mb-5 border-b-2 pb-2 border-gray-700">Lịch sử giao dịch</h1>
+                    <h1 className="text-2xl font-bold mb-5 border-b-2 pb-2 border-gray-700">Lịch sử nạp rút</h1>
                     <div className="flex justify-center">
                         <div className="overflow-x-auto min-w-[80%]">
                             <table className="min-w-full bg-white border border-gray-300 shadow-md rounded-lg dark:bg-gray-800 dark:text-white">
@@ -219,7 +219,7 @@ const Transaction = () => {
                 </div>
 
                 <div className="bg-white p-6 rounded-lg shadow-md dark:bg-gray-800 dark:text-white">
-                    <h1 className="text-2xl font-bold mb-5 border-b-2 pb-2 border-gray-700">Lịch sử giao dịch nội bộ</h1>
+                    <h1 className="text-2xl font-bold mb-5 border-b-2 pb-2 border-gray-700">Lịch sử giao dịch</h1>
                     <div className="flex justify-center">
                         <div className="overflow-x-auto min-w-[80%]">
                             <table className="min-w-full bg-white border border-gray-300 shadow-md rounded-lg dark:bg-gray-800 dark:text-white">

@@ -574,7 +574,7 @@ const RoomList = () => {
                                                         />
                                                     </div>
                                                 )}
-                                                {!isAuthorizing && card.status === 1 && card.isPermission !== 0 && card.isPermission !== 2 && (
+                                                {!isAuthorizing && card.status === 1 && card.isPermission !== 2 && (
                                                     <div
                                                         className="absolute top-2 right-0 bg-white bg-opacity-70 px-2 py-1 rounded cursor-pointer hover:bg-opacity-100"
                                                         onClick={(e) => {

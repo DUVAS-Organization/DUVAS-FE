@@ -204,7 +204,7 @@ const AuthorizationList = () => {
                                     <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 border-b w-40">Bên A</th>
                                     <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 border-b w-40">Bên B</th>
                                     <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 border-b w-40">Người tạo</th>
-                                    <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 border-b w-32">Trạng thái</th>
+                                    <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 border-b w-40">Trạng thái</th>
                                     <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 border-b w-28">File PDF</th>
                                     <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 border-b w-48">Hành Động</th>
                                 </tr>
@@ -231,7 +231,20 @@ const AuthorizationList = () => {
                                         <td className="px-4 py-2 text-sm text-gray-700 truncate">
                                             {userMap[c.createdById] || 'Không xác định'}
                                         </td>
-                                        <td className="px-4 py-2 text-sm text-gray-700">{getStatus(c.status)}</td>
+                                        <td className="px-4 py-2">
+                                            <span
+                                                className={`inline-block px-3 py-1 rounded-full text-sm font-medium text-white ${c.status === 0
+                                                    ? 'bg-red-500'
+                                                    : c.status === 1 || c.status === 3
+                                                        ? 'bg-green-500'
+                                                        : c.status === 2
+                                                            ? 'bg-yellow-500'
+                                                            : 'bg-gray-500'
+                                                    }`}
+                                            >
+                                                {getStatus(c.status)}
+                                            </span>
+                                        </td>
                                         <td className="px-4 py-2 text-sm">
                                             {c.pdfUrl ? (
                                                 <NavLink
@@ -312,7 +325,7 @@ const AuthorizationList = () => {
                             Xác nhận từ chối
                         </h3>
                         <p className="mb-4 text-gray-800 text-lg dark:text-white flex">
-                            Bạn có chắc chắn từ chối hợp đồng có số&nbsp;<span className='font-bold'>{contractToReject?.contractNumber}</span>&nbsp;?
+                            Bạn có chắc chắn từ chối hợp đồng có số <span className='font-bold'>{contractToReject?.contractNumber}</span> ?
                         </p>
                         <div className="flex justify-end space-x-4">
                             <button

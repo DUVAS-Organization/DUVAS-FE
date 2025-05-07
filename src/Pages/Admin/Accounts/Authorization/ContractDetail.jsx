@@ -84,7 +84,19 @@ const ContractDetail = () => {
                     <p><strong>Bên A:</strong> {userMap[contract.partyAId] || contract.partyAId}</p>
                     <p><strong>Bên B:</strong> {userMap[contract.partyBId] || contract.partyBId}</p>
                     <p><strong>Người tạo:</strong> {userMap[contract.createdById] || contract.createdById}</p>
-                    <p><strong>Trạng thái:</strong> {contract.status === 0 ? 'Bị hủy' : contract.status === 3 ? 'Admin đã duyệt' : 'Chưa rõ'}</p>
+                    <p>
+                        <strong>Trạng thái:</strong>{' '}
+                        <span
+                            className={`inline-block px-3 py-1 rounded-full text-sm font-medium text-white ${contract.status === 0
+                                ? 'bg-red-500'
+                                : contract.status === 3
+                                    ? 'bg-green-500'
+                                    : 'bg-gray-500'
+                                }`}
+                        >
+                            {contract.status === 0 ? 'Bị hủy' : contract.status === 3 ? 'Admin đã duyệt' : 'Chưa rõ'}
+                        </span>
+                    </p>
                     <p><strong>File PDF:</strong> <a href={contract.pdfUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">Tải PDF</a></p>
                 </div>
             )}
@@ -106,13 +118,24 @@ const ContractDetail = () => {
                             {rooms.map((room, idx) => (
                                 <tr key={room.id || idx} className="border-b hover:bg-gray-50">
                                     <td className="px-4 py-2 text-sm text-gray-700">{room.roomId}</td>
-                                    <td className="px-4 py-2 text-sm text-gray-700 ">{room.title || '-'}</td>
+                                    <td className="px-4 py-2 text-sm text-gray-700">{room.title || '-'}</td>
                                     <td className="px-4 py-2 text-sm text-gray-700">{room.locationDetail || '-'}</td>
                                     <td className="px-4 py-2 text-sm text-gray-700 whitespace-nowrap">{room.price ? room.price.toLocaleString('vi-VN') : '-'}</td>
-                                    <td className="px-4 py-2 text-sm text-gray-700 whitespace-nowrap">
-                                        {room.status === 1 ? 'Đang trống' :
-                                            room.status === 2 ? 'Pending' :
-                                                room.status === 3 ? 'Đang được thuê' : 'Chưa rõ'}
+                                    <td className="px-4 py-2 whitespace-nowrap">
+                                        <span
+                                            className={`inline-block px-3 py-1 rounded-full text-sm font-medium text-white ${room.status === 1
+                                                ? 'bg-green-500'
+                                                : room.status === 2
+                                                    ? 'bg-yellow-500'
+                                                    : room.status === 3
+                                                        ? 'bg-red-500'
+                                                        : 'bg-gray-500'
+                                                }`}
+                                        >
+                                            {room.status === 1 ? 'Đang trống' :
+                                                room.status === 2 ? 'Pending' :
+                                                    room.status === 3 ? 'Đang được thuê' : 'Chưa rõ'}
+                                        </span>
                                     </td>
                                     {/* <td className="px-4 py-2 text-sm text-gray-700">
                                         <button
