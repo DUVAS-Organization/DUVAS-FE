@@ -1,5 +1,4 @@
 name: Azure Static Web Apps CI/CD
-
 on:
   push:
     branches:
@@ -8,7 +7,6 @@ on:
     types: [opened, synchronize, reopened, closed]
     branches:
       - circleci-project-setup
-
 jobs:
   build_and_deploy_job:
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
@@ -22,22 +20,23 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '20' # Sử dụng Node.js 20 để tránh lỗi EBADENGINE
+          node-version: '20'
+          cache: 'npm'
+      - name: Install Dependencies
+        run: npm install
       - name: Build And Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_BLUE_FIELD_0C1CAA000 }}
-          repo_token: ${{ secrets.GITHUB_TOKEN }} # Dùng cho tích hợp GitHub (như comment PR)
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
-          ###### Repository/Build Configurations ######
-          app_location: "/" # Đường dẫn mã nguồn ứng dụng
-          api_location: "" # Đường dẫn mã nguồn API (nếu có) - để trống nếu không dùng
-          output_location: "build" # Thư mục chứa nội dung build
-          ###### End of Repository/Build Configurations ######
+          app_location: "/"
+          api_location: ""
+          output_location: "build"
         env:
-          CI: false # Bỏ qua các cảnh báo ESLint bằng cách đặt CI=false
-
+          CI: false
+          NODE_VERSION: '20'
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
     runs-on: ubuntu-latest
