@@ -795,9 +795,9 @@ const Dashboard = () => {
     }, []);
 
     return (
-        <div className={`${darkMode ? "dark bg-gradient-to-br from-gray-900 to-gray-800 text-white" : "bg-gradient-to-br from-blue-50 to-indigo-50"}`}>
+        <div className={`${darkMode ? "dark bg-gradient-to-br from-gray-900 to-gray-800 text-white" : "bg-white"}`}>
             {/* Header */}
-            <header className="fixed top-0 z-50 h-16 bg-white dark:bg-gray-800/80 backdrop-blur-md shadow-lg w-[81%] ml-[35px]">
+            <header className="fixed top-0 z-50 h-16 bg-white dark:bg-gray-800/80 backdrop-blur-md shadow-lg w-[80%]">
                 <div className="flex justify-between items-center max-w-7xl mx-auto h-full px-4">
                     <div className="flex items-center space-x-4">
                         <button onClick={toggleSidebar} className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
@@ -808,7 +808,7 @@ const Dashboard = () => {
                                 <button onClick={() => setActiveSection("dashboard")} className={`flex items-center p-2 rounded-lg ${activeSection === "dashboard" ? "bg-blue-600 text-white" : "hover:bg-gray-200 dark:hover:bg-gray-700"}`}>
                                     <FiHome className="mr-2" /> Trang tổng quan
                                 </button>
-                                <button onClick={() => setActiveSection("properties")} className={`flex items-center p-2 rounded-lg ${activeSection === "properties" ? "bg-blue-600 text-white" : "hover:bg-gray-200 dark:hover:bg-gray-700"}`}>
+                                {/* <button onClick={() => setActiveSection("properties")} className={`flex items-center p-2 rounded-lg ${activeSection === "properties" ? "bg-blue-600 text-white" : "hover:bg-gray-200 dark:hover:bg-gray-700"}`}>
                                     <FiList className="mr-2" /> Bất động sản
                                 </button>
                                 <button onClick={() => setActiveSection("tenants")} className={`flex items-center p-2 rounded-lg ${activeSection === "tenants" ? "bg-blue-600 text-white" : "hover:bg-gray-200 dark:hover:bg-gray-700"}`}>
@@ -816,18 +816,18 @@ const Dashboard = () => {
                                 </button>
                                 <button onClick={() => setActiveSection("maintenance")} className={`flex items-center p-2 rounded-lg ${activeSection === "maintenance" ? "bg-blue-600 text-white" : "hover:bg-gray-200 dark:hover:bg-gray-700"}`}>
                                     <FiTool className="mr-2" /> Bảo trì
-                                </button>
+                                </button> */}
                             </nav>
                         )}
                     </div>
                     <div className="flex items-center space-x-4">
-                        <span className="text-sm font-medium bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent">
+                        <span className="text-lg font-medium  text-blue-900">
                             {userProfile?.money?.toLocaleString('vi-VN') || '0'} đ
                         </span>
                         <Notifications userId={userId} userRole={userRole} />
-                        <button onClick={toggleDarkMode} className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                        {/* <button onClick={toggleDarkMode} className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
                             <FiMoon className="text-xl" />
-                        </button>
+                        </button> */}
                     </div>
                 </div>
             </header>

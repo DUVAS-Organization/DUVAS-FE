@@ -255,8 +255,19 @@ const RoomList = () => {
                                     <td className="py-3 px-4 text-gray-600">{room.categoryName}</td>
                                     <td className="py-3 px-4 text-gray-600">{room.price.toLocaleString('vi-VN')} đ</td>
                                     <td className="py-3 px-4 text-gray-600 truncate max-w-[200px]">{room.locationDetail}</td>
-                                    <td className="py-3 px-4 text-gray-600">
-                                        {room.status === 1 ? "Trống" : room.status === 2 ? "Chờ giao dịch" : room.status === 3 ? "Đã thuê" : "Không xác định"}
+                                    <td className="py-3 px-4">
+                                        <span
+                                            className={`px-3 py-1 text-white rounded-full text-sm font-medium ${room.status === 1
+                                                ? 'bg-green-500'
+                                                : room.status === 2
+                                                    ? 'bg-yellow-500'
+                                                    : room.status === 3
+                                                        ? 'bg-red-500'
+                                                        : 'bg-gray-500'
+                                                }`}
+                                        >
+                                            {room.status === 1 ? 'Trống' : room.status === 2 ? 'Chờ giao dịch' : room.status === 3 ? 'Đã thuê' : 'Không xác định'}
+                                        </span>
                                     </td>
                                     <td className="py-3 px-4 text-center space-x-2">
                                         <button

@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Layout from '../../../Components/Layout/Layout';
-import { FaRegNewspaper } from "react-icons/fa";
+import { FaBuilding, FaDoorOpen, FaDoorClosed, FaHourglassHalf, FaLock, FaList, FaFileContract, FaMoneyBillWave } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import Footer from '../../../Components/Layout/Footer';
 import RoomServices from '../../../Services/Admin/RoomServices';
@@ -10,6 +10,7 @@ import NotificationService from '../../../Services/User/NotificationService';
 import CPPRoomsService from '../../../Services/Admin/CPPRoomsService';
 import { useAuth } from '../../../Context/AuthProvider';
 import { getUserProfile } from '../../../Services/User/UserProfileService';
+import OverviewService from '../../../Services/Landlord/OverviewService';
 
 // Helper functions
 const parseCreatedDate = (dateStr) => {
@@ -57,6 +58,17 @@ const Overview = () => {
     const [priorityRooms, setPriorityRooms] = useState([]);
     const [priorityFilter, setPriorityFilter] = useState('all');
     const [role, setRole] = useState(null);
+    const [overviewData, setOverviewData] = useState({
+        totalRooms: 0,
+        rentedRooms: 0,
+        availableRooms: 0,
+        pendingRooms: 0,
+        lockedRooms: 0,
+        totalRentalLists: 0,
+        completedContracts: 0,
+        totalInsiderTradingAmount: 0,
+    });
+    const canvasRef = useRef(null);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -66,12 +78,14 @@ const Overview = () => {
             }
 
             try {
-                // Fetch user profile with money handling similar to Navbar.jsx
+                // Fetch user profile
                 const profileData = await getUserProfile(userId);
                 setMoney({
                     main: profileData.money || 0,
                     promotion: 0,
                 });
+
+                // Fetch user role
                 const userData = await UserService.getUserById(userId);
                 if (userData) {
                     setRole(
@@ -90,13 +104,13 @@ const Overview = () => {
                 const rooms = await RoomServices.getRooms();
                 if (Array.isArray(rooms)) {
                     const userRooms = rooms.filter(room => Number(room.userId) === userId);
-                    setRoomCount(rooms.length);
+                    setRoomCount(userRooms.length);
                 } else {
                     console.error('Invalid rooms data format:', rooms);
                     setRoomCount(0);
                 }
 
-                // Fetch priority rooms and details
+                // Fetch priority rooms
                 const priorityRoomsData = await PriorityRoomService.getPriorityRoomByUserId(userId);
                 let priorityRoomsArray = [];
                 if (Array.isArray(priorityRoomsData)) {
@@ -109,16 +123,41 @@ const Overview = () => {
                 }
                 setPriorityRoomCount(priorityRoomsArray.length);
 
-                // Fetch details for each priority room
+                // Fetch landlord overview data
                 const token = localStorage.getItem('authToken');
                 if (!token) {
                     console.error('No auth token found');
                     setPriorityRooms([]);
                     setNotifications([]);
                     setUnreadNotifications([]);
+                    setOverviewData({
+                        totalRooms: 0,
+                        rentedRooms: 0,
+                        availableRooms: 0,
+                        pendingRooms: 0,
+                        lockedRooms: 0,
+                        totalRentalLists: 0,
+                        completedContracts: 0,
+                        totalInsiderTradingAmount: 0,
+                    });
                     return;
                 }
 
+                const overviewService = OverviewService();
+                const overview = await overviewService.getLandlordOverview(userId, token);
+                console.log('Overview data from API:', overview); // Debug log
+                setOverviewData({
+                    totalRooms: overview.totalRooms || 0,
+                    rentedRooms: overview.rentedRooms || 0,
+                    availableRooms: overview.availableRooms || 0,
+                    pendingRooms: overview.pendingRooms || 0,
+                    lockedRooms: overview.lockedRooms || 0,
+                    totalRentalLists: overview.totalRentalLists || 0,
+                    completedContracts: overview.completedContracts || 0,
+                    totalInsiderTradingAmount: overview.totalInsiderTradingAmount || 0,
+                });
+
+                // Fetch details for each priority room
                 const priorityRoomPromises = priorityRoomsArray.map(async (room) => {
                     try {
                         const [user, roomDetails, cppRoom] = await Promise.all([
@@ -261,11 +300,89 @@ const Overview = () => {
                 setNotifications([]);
                 setUnreadNotifications([]);
                 setPriorityRooms([]);
+                setOverviewData({
+                    totalRooms: 0,
+                    rentedRooms: 0,
+                    availableRooms: 0,
+                    pendingRooms: 0,
+                    lockedRooms: 0,
+                    totalRentalLists: 0,
+                    completedContracts: 0,
+                    totalInsiderTradingAmount: 0,
+                });
             }
         };
 
         fetchData();
     }, [userId]);
+
+    // Draw bar chart using Canvas
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        const data = [
+            { label: 'Tổng số phòng', value: overviewData.totalRooms, color: '#3b82f6' },
+            { label: 'Phòng đang thuê', value: overviewData.rentedRooms, color: '#22c55e' },
+            { label: 'Phòng trống', value: overviewData.availableRooms, color: '#f97316' },
+            { label: 'Phòng chờ duyệt', value: overviewData.pendingRooms, color: '#eab308' },
+            { label: 'Phòng bị khóa', value: overviewData.lockedRooms, color: '#ef4444' },
+        ];
+
+        // Calculate dimensions
+        const width = canvas.width;
+        const height = canvas.height;
+        const padding = 40;
+        const chartHeight = height - padding * 2;
+        const chartWidth = width - padding * 2;
+        const barWidth = chartWidth / data.length / 2;
+        const maxValue = Math.max(...data.map(d => d.value), 10); // Ensure non-zero max
+
+        // Clear canvas
+        ctx.clearRect(0, 0, width, height);
+
+        // Draw axes
+        ctx.beginPath();
+        ctx.moveTo(padding, padding);
+        ctx.lineTo(padding, height - padding);
+        ctx.lineTo(width - padding, height - padding);
+        ctx.strokeStyle = '#000';
+        ctx.stroke();
+
+        // Draw Y-axis labels
+        ctx.fillStyle = '#000';
+        ctx.font = '12px Arial';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        for (let i = 0; i <= 5; i++) {
+            const yValue = (maxValue / 5) * i;
+            const yPos = height - padding - (chartHeight * i) / 5;
+            ctx.fillText(Math.round(yValue), padding - 10, yPos);
+        }
+
+        // Draw bars and X-axis labels
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        data.forEach((item, index) => {
+            const barHeight = (item.value / maxValue) * chartHeight;
+            const x = padding + index * (barWidth * 2) + barWidth / 2;
+            const y = height - padding - barHeight;
+
+            // Draw bar
+            ctx.fillStyle = item.color;
+            ctx.fillRect(x, y, barWidth, barHeight);
+
+            // Draw label
+            ctx.fillStyle = '#000';
+            ctx.fillText(item.label, x + barWidth / 2, height - padding + 10);
+        });
+
+        // Draw title
+        ctx.textAlign = 'center';
+        ctx.font = '16px Arial';
+        ctx.fillText('', width / 2, padding / 2);
+    }, [overviewData]);
 
     const postLink = role === 'Landlord' ? '/Room/Create' : role === 'Service' ? '/ServiceOwner/ServicePosts/Create' : '#';
 
@@ -286,56 +403,75 @@ const Overview = () => {
                 </div>
 
                 <div className="mb-6">
-                    <h2 className="text-xl font-semibold mb-2">Tổng quan tài khoản</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="bg-white p-4 rounded-lg shadow dark:bg-gray-800 dark:text-white h-36 w-full flex flex-col justify-between">
+                    <h2 className="text-xl font-semibold mb-4">Tổng quan Landlord</h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div className="bg-white p-4 rounded-lg shadow dark:bg-gray-800 dark:text-white flex items-center space-x-4">
+                            <FaMoneyBillWave className="text-3xl text-green-600" />
                             <div>
-                                <div className="flex items-center mb-2 font-semibold">
-                                    <FaRegNewspaper className="text-2xl mr-2" />
-                                    <span className="font-semibold text-xl">Tin đăng</span>
-                                </div>
-                                <p className="text-2xl font-bold">{roomCount} tin</p>
-                                <p className="text-gray-500">Đang hiển thị ({priorityRoomCount} tin ưu tiên)</p>
-                            </div>
-                            <div className="flex">
-                                <Link
-                                    to={postLink}
-                                    className={`text-red-600 font-medium underline underline-offset-2 ${!role ? 'opacity-50 pointer-events-none' : ''}`}
-                                >
-                                    Đăng tin
-                                </Link>
+                                <p className="text-gray-500 dark:text-gray-400">Tổng doanh thu</p>
+                                <p className="text-2xl font-bold">
+                                    {typeof overviewData.totalInsiderTradingAmount === 'number'
+                                        ? overviewData.totalInsiderTradingAmount.toLocaleString('vi-VN')
+                                        : '0'} đ
+                                </p>
                             </div>
                         </div>
+                        <div className="bg-white p-4 rounded-lg shadow dark:bg-gray-800 dark:text-white flex items-center space-x-4">
+                            <FaBuilding className="text-3xl text-blue-500" />
+                            <div>
+                                <p className="text-gray-500 dark:text-gray-400">Tổng số phòng</p>
+                                <p className="text-2xl font-bold">{overviewData.totalRooms}</p>
+                            </div>
+                        </div>
+                        <div className="bg-white p-4 rounded-lg shadow dark:bg-gray-800 dark:text-white flex items-center space-x-4">
+                            <FaDoorOpen className="text-3xl text-green-500" />
+                            <div>
+                                <p className="text-gray-500 dark:text-gray-400">Phòng đang thuê</p>
+                                <p className="text-2xl font-bold">{overviewData.rentedRooms}</p>
+                            </div>
+                        </div>
+                        <div className="bg-white p-4 rounded-lg shadow dark:bg-gray-800 dark:text-white flex items-center space-x-4">
+                            <FaDoorClosed className="text-3xl text-orange-500" />
+                            <div>
+                                <p className="text-gray-500 dark:text-gray-400">Phòng trống</p>
+                                <p className="text-2xl font-bold">{overviewData.availableRooms}</p>
+                            </div>
+                        </div>
+                        <div className="bg-white p-4 rounded-lg shadow dark:bg-gray-800 dark:text-white flex items-center space-x-4">
+                            <FaHourglassHalf className="text-3xl text-yellow-500" />
+                            <div>
+                                <p className="text-gray-500 dark:text-gray-400">Phòng chờ giao dịch</p>
+                                <p className="text-2xl font-bold">{overviewData.pendingRooms}</p>
+                            </div>
+                        </div>
+                        <div className="bg-white p-4 rounded-lg shadow dark:bg-gray-800 dark:text-white flex items-center space-x-4">
+                            <FaLock className="text-3xl text-red-500" />
+                            <div>
+                                <p className="text-gray-500 dark:text-gray-400">Phòng bị khóa</p>
+                                <p className="text-2xl font-bold">{overviewData.lockedRooms}</p>
+                            </div>
+                        </div>
+                        <div className="bg-white p-4 rounded-lg shadow dark:bg-gray-800 dark:text-white flex items-center space-x-4">
+                            <FaList className="text-3xl text-purple-500" />
+                            <div>
+                                <p className="text-gray-500 dark:text-gray-400">Yêu cầu thuê</p>
+                                <p className="text-2xl font-bold">{overviewData.totalRentalLists}</p>
+                            </div>
+                        </div>
+                        <div className="bg-white p-4 rounded-lg shadow dark:bg-gray-800 dark:text-white flex items-center space-x-4">
+                            <FaFileContract className="text-3xl text-teal-500" />
+                            <div>
+                                <p className="text-gray-500 dark:text-gray-400">Hợp đồng hoàn thành</p>
+                                <p className="text-2xl font-bold">{overviewData.completedContracts}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                        <div className="bg-white p-4 rounded-lg shadow dark:bg-gray-800 dark:text-white h-36 w-full flex flex-col justify-between">
-                            <div>
-                                <h2 className="text-lg font-semibold mb-2">Số dư tài khoản</h2>
-                                <div className="flex justify-between mb-2">
-                                    <span>TK Chính</span>
-                                    <span className="text-red-500 font-semibold">{money.main.toLocaleString('vi-VN')} đ</span>
-                                </div>
-                            </div>
-                            <div className="flex">
-                                <Link
-                                    to="/Moneys"
-                                    className="text-red-600 font-medium underline underline-offset-2"
-                                >
-                                    Nạp tiền
-                                </Link>
-                            </div>
-                        </div>
-
-                        <div className="bg-white p-4 rounded-lg shadow dark:bg-gray-800 dark:text-white h-36 w-full flex flex-col justify-between">
-                            <div>
-                                <div className="flex items-center mb-2 font-semibold">
-                                    <FaRegNewspaper className="text-2xl mr-2" />
-                                    <span className="font-semibold text-xl">Tin ưu tiên</span>
-                                </div>
-                                <p className="text-2xl font-bold">{priorityRoomCount} tin</p>
-                                <p className="text-gray-500">Đang được ưu tiên hiển thị</p>
-                            </div>
-                            <div className="flex"></div>
-                        </div>
+                <div className="mb-6">
+                    <h2 className="text-xl font-semibold mb-4">Thống kê phòng</h2>
+                    <div className="bg-white p-6 rounded-lg shadow dark:bg-gray-800">
+                        <canvas ref={canvasRef} width="600" height="400"></canvas>
                     </div>
                 </div>
 
@@ -429,4 +565,4 @@ const Overview = () => {
     );
 };
 
-export default Overview;    
+export default Overview;

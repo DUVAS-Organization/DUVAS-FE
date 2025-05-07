@@ -65,7 +65,12 @@ const getStatusOverlay = (status) => {
                 </div>
             );
         default:
-            return null;
+            return (
+                <div className="absolute top-2 left-2 bg-white bg-opacity-80 px-2 py-1 rounded flex items-center">
+                    <FaTimesCircle className="text-gray-500 mr-1" />
+                    <span className="text-gray-500 font-bold text-sm">Không xác định</span>
+                </div>
+            );
     }
 };
 
@@ -315,7 +320,7 @@ const AdminRoomList = () => {
 
     return (
         <div>
-            <Box className="max-w-7xl mx-auto ml-5 dark:bg-gray-800 dark:text-white" sx={{ flexGrow: 1 }}>
+            <Box className="max-w-7xl min-h-screen mx-auto ml-5 bg-gray-100 dark:bg-gray-800 dark:text-white" sx={{ flexGrow: 1 }}>
                 <h1 className="text-3xl font-bold my-4 text-blue-600">
                     Danh sách tất cả phòng được ủy quyền
                 </h1>
@@ -388,24 +393,24 @@ const AdminRoomList = () => {
                                         <div className="flex flex-col h-full dark:bg-gray-800 dark:text-white">
                                             <div className="relative">
                                                 <img
-                                                    className={`rounded-t-lg shadow-md overflow-hidden w-full h-48 object-cover ${card.isPermission === 0 ? 'opacity-30' : ''}`}
+                                                    className={`rounded-t-lg shadow-md overflow-hidden w-full h-48 object-cover ${card.isPermission === 0 || card.isPermission === 2 ? 'opacity-30' : ''}`}
                                                     alt={card.title || 'Image of a room'}
                                                     src={firstImage}
                                                 />
-                                                {card.isPermission === 0 && (
+                                                {(card.isPermission === 0 || card.isPermission === 2) && (
                                                     <div className="absolute inset-0 flex items-center justify-center">
                                                         <div className="relative w-full h-full">
                                                             <div className="absolute top-0 left-0 w-full h-full bg-transparent flex items-center justify-center">
                                                                 <span className="text-red-700 text-2xl font-bold transform -rotate-45">
-                                                                    Đã bị khóa
+                                                                    {card.isPermission === 0 ? 'Đã bị khóa' : 'Admin khóa'}
                                                                 </span>
                                                             </div>
                                                             <div className="absolute top-1/2 left-1/2 w-36 h-36 rounded-full border-8 border-red-700 transform -rotate-45 -translate-x-1/2 -translate-y-1/2"></div>
                                                         </div>
                                                     </div>
                                                 )}
-                                                {card.isPermission !== 0 && getStatusOverlay(card.status)}
-                                                {card.status === 1 && (
+                                                {card.isPermission !== 0 && card.isPermission !== 2 && getStatusOverlay(card.status)}
+                                                {(card.isPermission === 2 || card.isPermission === 0) && (
                                                     <div
                                                         className="absolute top-2 right-0 bg-white bg-opacity-70 px-2 py-1 rounded cursor-pointer hover:bg-opacity-100"
                                                         onClick={(e) => {
@@ -414,7 +419,7 @@ const AdminRoomList = () => {
                                                         }}
                                                         title="Chỉnh sửa phòng"
                                                     >
-                                                        <FaEdit className="text-red-500 text-2xl" />
+                                                        <FaEdit className="text-blue-500 text-2xl" />
                                                     </div>
                                                 )}
                                             </div>
@@ -441,16 +446,16 @@ const AdminRoomList = () => {
                                                         ? `${card.price.toLocaleString('vi-VN')} đ/tháng`
                                                         : 'Thỏa thuận'}
                                                 </p>
-                                                <p className="text-gray-600 font-medium text-sm mt-1 dark:text-white flex">
+                                                <p className="text-gray-600 font-semibold text-sm mt-1 dark:text-white flex">
                                                     Chủ phòng:{' '}
-                                                    <p className="text-gray-600 dark:text-white">
+                                                    <p className="text-gray-600 dark:text-white font-medium">
                                                         {card.ownerName || 'N/A'}
                                                     </p>
                                                 </p>
                                                 <p>
                                                     {card.booking && (
                                                         <div>
-                                                            <p className="font-semibold">
+                                                            <p className="font-medium">
                                                                 Người đặt: {card.booking.renterName || 'N/A'}
                                                             </p>
                                                             <p>
@@ -477,4 +482,4 @@ const AdminRoomList = () => {
     );
 };
 
-export default AdminRoomList;
+export default AdminRoomList;   

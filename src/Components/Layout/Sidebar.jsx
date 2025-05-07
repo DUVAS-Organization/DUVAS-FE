@@ -51,7 +51,7 @@ const Sidebar = () => {
     //     document.getElementById("root").classList.toggle("short");
     // }
     return (
-        <div className="w-56 text-black h-screen fixed border-r-2 flex flex-col overflow-y-auto ">
+        <div className="w-56 text-black h-screen fixed border-r-2 flex flex-col overflow-y-auto bg-white">
             <div className="flex-shrink-0">
                 <img
                     src={logoAdmin}
