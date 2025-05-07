@@ -240,7 +240,7 @@ const ReportList = () => {
                         <table className="min-w-full bg-white border rounded-lg shadow-md">
                             <thead>
                                 <tr className="bg-gray-200 border-b border-gray-300">
-                                    <th className="py-2 px-3 text-center text-sm font-semibold text-gray-700">ID</th>
+                                    <th className="py-2 px-3 text-center text-sm font-semibold text-gray-700">#</th>
                                     <th className="py-2 px-3 text-left text-sm font-semibold text-gray-700">Người báo cáo</th>
                                     <th className="py-2 px-3 text-left text-sm font-semibold text-gray-700">Phòng</th>
                                     <th className="py-2 px-3 text-left text-sm font-semibold text-gray-700">Nội dung</th>
@@ -250,12 +250,12 @@ const ReportList = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {paginatedReports.map((report) => {
+                                {paginatedReports.map((report, index) => {
                                     const images = parseImage(report.image);
                                     return (
                                         <tr key={report.reportId} className="border-b border-gray-300 hover:bg-gray-50">
                                             <td className="py-2 px-3 text-center text-sm text-gray-600">
-                                                {report.reportId}
+                                                {index + 1}
                                             </td>
                                             <td className="py-2 px-3 text-left text-sm text-gray-600">
                                                 {userNames[report.userId] || 'Đang tải...'}

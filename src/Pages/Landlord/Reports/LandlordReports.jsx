@@ -153,7 +153,7 @@ const LandlordReports = () => {
                                 <thead className="bg-gray-50 dark:bg-gray-700">
                                     <tr>
                                         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                            #
+                                            STT
                                         </th>
                                         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                             Phòng
@@ -178,7 +178,7 @@ const LandlordReports = () => {
                                                     {report.localId}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-normal text-sm text-gray-500 dark:text-gray-300 max-w-xs">
-                                                    <div className="font-medium line-clamp-5"> {/* Giới hạn 2 dòng */}
+                                                    <div className="font-medium line-clamp-5">
                                                         {report.roomTitle || "Không có tiêu đề"}
                                                     </div>
                                                 </td>
@@ -191,11 +191,11 @@ const LandlordReports = () => {
                                                     )}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${report.status === 0
-                                                        ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
-                                                        : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                                                        }`}>
-                                                        {report.status === 0 ? 'Chưa xử lý' : 'Đã xử lý'}
+                                                    <span
+                                                        className={`inline-block px-3 py-1 rounded-full text-white text-sm font-medium ${report.status === 0 ? "bg-yellow-500" : "bg-green-500"
+                                                            }`}
+                                                    >
+                                                        {report.status === 0 ? "Chưa xử lý" : "Đã xử lý"}
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
@@ -204,12 +204,12 @@ const LandlordReports = () => {
                                                             {images.map((img, index) => (
                                                                 <img
                                                                     key={index}
-                                                                    src={img.startsWith('http') ? img : `${process.env.REACT_APP_API_BASE_URL}${img}`}
+                                                                    src={img.startsWith("http") ? img : `${process.env.REACT_APP_API_BASE_URL}${img}`}
                                                                     alt={`Báo cáo ${report.localId}`}
                                                                     className="w-10 h-10 object-cover rounded border border-gray-200 cursor-pointer hover:opacity-80"
                                                                     onClick={() => openImageModal(images)}
                                                                     onError={(e) => {
-                                                                        e.target.src = '/placeholder-image.jpg';
+                                                                        e.target.src = "/placeholder-image.jpg";
                                                                     }}
                                                                 />
                                                             ))}

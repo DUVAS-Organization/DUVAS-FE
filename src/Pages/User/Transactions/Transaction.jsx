@@ -85,11 +85,11 @@ const Transaction = () => {
     const formatInsiderStatus = (status) => {
         switch (status) {
             case 1:
-                return <span className="px-2 py-1 rounded text-white bg-green-500 whitespace-nowrap">Đã xử lý</span>;
+                return <span className="px-2 py-1 rounded-full text-white bg-green-500 whitespace-nowrap">Đã xử lý</span>;
             case 2:
-                return <span className="px-2 py-1 rounded text-white bg-yellow-500 whitespace-nowrap">Đang chờ</span>;
+                return <span className="px-2 py-1 rounded-full text-white bg-yellow-500 whitespace-nowrap">Đang xử lý</span>;
             default:
-                return <span className="px-2 py-1 rounded text-white bg-red-500 whitespace-nowrap">Đã hủy</span>;
+                return <span className="px-2 py-1 rounded-full text-white bg-red-500 whitespace-nowrap">Đã hủy</span>;
         }
     };
 
@@ -160,7 +160,22 @@ const Transaction = () => {
                                                 </td>
                                                 <td className="p-3 border text-center">{transaction.bankName}</td>
                                                 <td className="p-3 border text-center">{transaction.description || "N/A"}</td>
-                                                <td className="p-3 border text-center">{formatBankStatus(transaction.status)}</td>
+                                                <td className="p-3 border text-center">
+                                                    <span
+                                                        className={`inline-block px-3 py-1 rounded-full text-white text-sm font-medium ${transaction.status === "Pending"
+                                                            ? "bg-yellow-500"
+                                                            : transaction.status === "Canceled"
+                                                                ? "bg-red-500"
+                                                                : "bg-green-500"
+                                                            }`}
+                                                    >
+                                                        {transaction.status === "Pending"
+                                                            ? "Đang xử lý"
+                                                            : transaction.status === "Canceled"
+                                                                ? "Đã Từ Chối"
+                                                                : "Đã Xử Lý"}
+                                                    </span>
+                                                </td>
                                             </tr>
                                         ))
                                     ) : (

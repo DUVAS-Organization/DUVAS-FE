@@ -13,7 +13,7 @@ const BankAccount = () => {
     const [isEnteringOtp, setIsEnteringOtp] = useState(false);
     const [otp, setOtp] = useState('');
     const [userBankAccounts, setUserBankAccounts] = useState([]);
-    const [changingBankAccount, setChangingBankAccount] = useState(null); // Track account being activated
+    const [changingBankAccount, setChangingBankAccount] = useState(null);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -34,17 +34,15 @@ const BankAccount = () => {
 
     const handleAddBank = async () => {
         try {
-            // Kiểm tra xem accountNumber và bankCode đã tồn tại chưa
             const isDuplicate = userBankAccounts.some(
                 acc => acc.accountNumber === accountNumber && acc.bankCode === selectedBankCode
             );
 
             if (isDuplicate) {
                 showCustomNotification("error", "Có lỗi xảy ra! Vui lòng kiểm tra lại thông tin");
-                return; // Dừng hàm nếu tài khoản đã tồn tại
+                return;
             }
 
-            // Nếu không trùng, thêm tài khoản mới
             let data = { accountNumber, accountName, bankCode: selectedBankCode };
             let resp = await UserService.addNewBank(data, otp);
             setUserBankAccounts(prev => [...prev, resp.data]);
@@ -57,17 +55,15 @@ const BankAccount = () => {
     };
 
     const genOtp = async () => {
-        // Kiểm tra xem accountNumber và bankCode đã tồn tại chưa
         const isDuplicate = userBankAccounts.some(
             acc => acc.accountNumber === accountNumber && acc.bankCode === selectedBankCode
         );
 
         if (isDuplicate) {
             showCustomNotification("error", "Tài khoản đã có sẵn!");
-            return; // Dừng hàm nếu tài khoản đã tồn tại
+            return;
         }
 
-        // Nếu không trùng, gửi OTP
         UserService.genOtp();
         setIsEnteringOtp(true);
         showCustomNotification("success", "OTP đã được gửi qua email!");
@@ -75,14 +71,12 @@ const BankAccount = () => {
 
     const handleChangeStatus = async (accountId, currentStatus) => {
         if (currentStatus === "Active") {
-            // Directly deactivate
             await UserService.updateBankAccountStatus(accountId, false);
             setUserBankAccounts(prev =>
                 prev.map(acc => acc.id === accountId ? { ...acc, status: "Inactive" } : acc)
             );
             showCustomNotification("success", "Cập nhật thông tin thành công!");
         } else {
-            // Activate → Require OTP
             setChangingBankAccount(accountId);
             UserService.genOtp();
             setIsEnteringOtp(true);
@@ -185,7 +179,7 @@ const BankAccount = () => {
                                 <table className="w-full border border-gray-300 shadow-md rounded-lg dark:bg-gray-800 dark:text-white">
                                     <thead className="bg-gray-100 dark:bg-gray-800 dark:text-white">
                                         <tr>
-                                            <th className="px-4 py-2 border">STT</th> {/* Thêm cột STT */}
+                                            <th className="px-4 py-2 border">STT</th>
                                             <th className="px-4 py-2 border">Số tài khoản</th>
                                             <th className="px-4 py-2 border">Tên tài khoản</th>
                                             <th className="px-4 py-2 border">Ngân hàng</th>
@@ -196,19 +190,19 @@ const BankAccount = () => {
                                     <tbody>
                                         {userBankAccounts.map((account, index) => (
                                             <tr key={account.id} className="text-center hover:bg-gray-50 dark:hover:text-black">
-                                                <td className="px-4 py-2 border text-center">{index + 1}</td> {/* Hiển thị STT */}
+                                                <td className="px-4 py-2 border text-center">{index + 1}</td>
                                                 <td className="px-4 py-2 border">{account.accountNumber}</td>
                                                 <td className="px-4 py-2 border">{account.accountName}</td>
                                                 <td className="px-4 py-2 border uppercase">{account.bankCode}</td>
                                                 <td className={`px-4 py-2 border font-semibold ${account.status === "Active" ? "text-green-600" : "text-red-600"}`}>
-                                                    {account.status}
+                                                    {account.status === "Active" ? "Đang hoạt động" : "Đang khóa"}
                                                 </td>
                                                 <td className="px-4 py-2 border">
                                                     <button
                                                         onClick={() => handleChangeStatus(account.id, account.status)}
-                                                        className="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-white rounded"
+                                                        className="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-white rounded-full"
                                                     >
-                                                        {account.status === "Active" ? "Deactivate" : "Activate"}
+                                                        {account.status === "Active" ? "Khóa" : "Mở khóa"}
                                                     </button>
                                                 </td>
                                             </tr>
