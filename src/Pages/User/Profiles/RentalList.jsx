@@ -255,14 +255,13 @@ export default function RentalList() {
             await BookingManagementService.updateBalance(updateBalanceData, user.token);
 
             const insiderTradingData = {
-                Remitter: user.userId,
+                Remnitter: user.userId,
                 Receiver: landlordId,
                 Money: roomPrice
             };
             const insiderTradingResponse = await BookingManagementService.firstMonthInsiderTrading(insiderTradingData, user.token);
-
             const actionDate = new Date().toISOString();
-            const insiderTradingId = insiderTradingResponse.InsiderTradingId || 0;
+            const insiderTradingId = insiderTradingResponse.insiderTradingId || 0;
             await BookingManagementService.scheduleAction(actionDate, landlordId, roomPrice, insiderTradingId, user.token);
 
             await UserRentRoomService.confirmRental(rentalId, user.token);
