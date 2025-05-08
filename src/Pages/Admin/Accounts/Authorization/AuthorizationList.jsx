@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ContractService from '../../../../Services/Landlord/ContractService';
 import UserService from '../../../../Services/User/UserService';
+import BookingManagementService from '../../../../Services/Landlord/BookingManagementService';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../../Context/AuthProvider';
 import Pagination from '@mui/material/Pagination';
@@ -130,8 +131,72 @@ const AuthorizationList = () => {
         }
     };
 
-    const handleConfirm = (contractId) => {
-        setConfirmedContracts(prev => new Set(prev).add(contractId));
+    const handleConfirm = async (contractId) => {
+        let contract = null;
+        try {
+            setLoading(true);
+            contract = contracts.find(c => c.id === contractId);
+            if (!contract) {
+                throw new Error('Không tìm thấy hợp đồng.');
+            }
+            if (!contract.partyAId || contract.partyAId <= 0) {
+                throw new Error('ID của Bên A (chủ phòng) không hợp lệ.');
+            }
+
+            // Lấy adminId từ API hoặc context (giả sử Admin là partyBId)
+            const adminId = contract.partyBId; // Điều chỉnh nếu cần lấy từ API khác
+
+            // Tính phí ủy quyền
+            const roomCount = contract.roomIds.length;
+            const duration = contract.duration ? parseInt(contract.duration, 10) : 1;
+            const authorizationFee = 10000 * roomCount * duration;
+
+            // Kiểm tra số dư Admin
+            const adminBalanceData = {
+                userId: adminId,
+                amount: authorizationFee,
+            };
+            const balanceResponse = await BookingManagementService.checkBalance(adminBalanceData, token);
+            if (balanceResponse.includes("không đủ")) {
+                throw new Error('Admin không đủ số dư để thực hiện giao dịch.');
+            }
+
+            // Trừ tiền Admin
+            const adminUpdateData = {
+                userId: adminId,
+                adminId: adminId,
+                amount: -authorizationFee, // Trừ tiền
+            };
+            console.log('Gửi updateBalance cho Admin:', adminUpdateData);
+            await BookingManagementService.updateBalance(adminUpdateData, token);
+            console.log('Cập nhật số dư Admin thành công');
+
+            // Cộng tiền cho partyAId
+            const partyAUpdateData = {
+                userId: contract.partyAId,
+                adminId: adminId,
+                amount: authorizationFee, // Cộng tiền
+            };
+            console.log('Gửi updateBalance cho partyAId:', partyAUpdateData);
+            await BookingManagementService.updateBalance(partyAUpdateData, token);
+            console.log('Cập nhật số dư partyAId thành công');
+
+            // Gửi email
+            const response = await ContractService.sendEmailToLandlord(contract.partyAId, contractId);
+            setConfirmedContracts(prev => new Set(prev).add(contractId));
+            alert(response.Message || response.message || 'Email đã được gửi thành công đến chủ phòng.');
+        } catch (error) {
+            const errorMessage = error.response?.data?.Message || error.response?.data?.message || error.message || 'Lỗi không xác định khi xử lý xác nhận.';
+            console.error('Lỗi khi xử lý xác nhận:', {
+                message: errorMessage,
+                response: error.response?.data,
+                contractId,
+                partyAId: contract?.partyAId,
+            });
+            alert(`Đã xảy ra lỗi: ${errorMessage}`);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleCancelConfirm = (contractId) => {
@@ -325,7 +390,7 @@ const AuthorizationList = () => {
                             Xác nhận từ chối
                         </h3>
                         <p className="mb-4 text-gray-800 text-lg dark:text-white flex">
-                            Bạn có chắc chắn từ chối hợp đồng có số <span className='font-bold'>{contractToReject?.contractNumber}</span> ?
+                            Bạn có chắc chắn từ chối hợp đồng có số <span className='font-bold'>{contractToReject?.contractNumber}</span> ?
                         </p>
                         <div className="flex justify-end space-x-4">
                             <button

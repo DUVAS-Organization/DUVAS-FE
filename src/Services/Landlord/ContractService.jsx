@@ -125,6 +125,47 @@ const ContractService = {
             throw error.response?.data || { message: 'Error updating contracts status' };
         }
     },
+    sendEmailToLandlord: async (userId, contractId) => {
+        try {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                throw new Error('Không tìm thấy token xác thực.');
+            }
+            if (!userId || !contractId || userId <= 0 || contractId <= 0) {
+                throw new Error('userId hoặc contractId không hợp lệ.');
+            }
+
+            const url = `${API_URL}/send-email-to-landlord?userId=${userId}&contractId=${contractId}`;
+            console.log('Gửi yêu cầu gửi email - URL:', url);
+            console.log('Gửi yêu cầu gửi email - Headers:', {
+                Authorization: `Bearer ${token}`,
+                'Accept': 'application/json',
+            });
+
+            const response = await axios.post(
+                url,
+                null,  // Không gửi body
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        'Accept': 'application/json',
+                    },
+                }
+            );
+            console.log('Phản hồi từ server:', response.data);
+            return response.data;
+        } catch (error) {
+            const errorMessage = error.response?.data?.Message || error.response?.data?.message || error.message || 'Lỗi không xác định khi gửi email đến chủ phòng.';
+            console.error('Lỗi khi gửi email đến chủ phòng:', {
+                message: errorMessage,
+                response: error.response?.data,
+                status: error.response?.status,
+                userId,
+                contractId,
+            });
+            throw new Error(errorMessage);
+        }
+    },
     getSignedPdfUrl: (contractId) =>
         axios.get(`${API_URL}/signed-url/${contractId}`).then(res => res.data),
 };

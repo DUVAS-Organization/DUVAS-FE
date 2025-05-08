@@ -74,21 +74,6 @@ const getStatusOverlay = (status) => {
     }
 };
 
-const getStatusName = (status) => {
-    switch (status) {
-        case 1:
-            return 'trống';
-        case 2:
-            return 'Đang chờ giao dịch';
-        case 3:
-            return 'được thuê';
-        case 4:
-            return 'chờ xác nhận';
-        default:
-            return 'không xác định';
-    }
-};
-
 const determineDisplayStatus = (room, booking) => {
     if (!booking) {
         return 1; // Không có booking -> Còn trống
@@ -108,11 +93,9 @@ const determineDisplayStatus = (room, booking) => {
     return 1;
 };
 
-const sortOrder = { 2: 1, 4: 2, 3: 3, 1: 4 };
-
 const AdminRoomList = () => {
     const navigate = useNavigate();
-    const [cards, setCards] = useState([]);
+    const [groupedCards, setGroupedCards] = useState({});
     const [loading, setLoading] = useState(true);
     const [activeStatus, setActiveStatus] = useState(null);
     const { user } = useAuth();
@@ -186,17 +169,19 @@ const AdminRoomList = () => {
                 }
             }
 
-            newCards.sort((a, b) => {
-                const pa = sortOrder[a.status] || 5;
-                const pb = sortOrder[b.status] || 5;
-                if (pa !== pb) return pa - pb;
-                return new Date(b.createdDate) - new Date(a.createdDate);
-            });
+            // Nhóm phòng theo chủ phòng
+            const grouped = newCards.reduce((acc, card) => {
+                if (!acc[card.ownerName]) {
+                    acc[card.ownerName] = [];
+                }
+                acc[card.ownerName].push(card);
+                return acc;
+            }, {});
 
-            setCards(newCards);
+            setGroupedCards(grouped);
         } catch (error) {
             console.error('Error fetching authorized rooms:', error);
-            setCards([]);
+            setGroupedCards({});
         } finally {
             setLoading(false);
         }
@@ -215,7 +200,7 @@ const AdminRoomList = () => {
             const rooms = Array.isArray(roomResponse.rooms) ? roomResponse.rooms : [];
             const rentals = Array.isArray(roomResponse.rentals) ? roomResponse.rentals : [];
 
-            const filteredCards = [];
+            const newCards = [];
 
             for (const room of rooms) {
                 let ownerName = 'N/A';
@@ -233,7 +218,7 @@ const AdminRoomList = () => {
 
                 if (validBookings.length === 0) {
                     if (status === 1) {
-                        filteredCards.push({
+                        newCards.push({
                             roomId: room.roomId,
                             title: room.title || `Phòng ${room.roomId}`,
                             image: room.image || '[]',
@@ -259,7 +244,7 @@ const AdminRoomList = () => {
 
                         const displayStatus = determineDisplayStatus(room, bk);
                         if (displayStatus === status) {
-                            filteredCards.push({
+                            newCards.push({
                                 roomId: room.roomId,
                                 title: room.title || `Phòng ${room.roomId}`,
                                 image: room.image || '[]',
@@ -278,16 +263,19 @@ const AdminRoomList = () => {
                 }
             }
 
-            filteredCards.sort((a, b) => {
-                const dateA = new Date(a.createdDate || 0);
-                const dateB = new Date(b.createdDate || 0);
-                return dateB - dateA;
-            });
+            // Nhóm phòng theo chủ phòng
+            const grouped = newCards.reduce((acc, card) => {
+                if (!acc[card.ownerName]) {
+                    acc[card.ownerName] = [];
+                }
+                acc[card.ownerName].push(card);
+                return acc;
+            }, {});
 
-            setCards(filteredCards);
+            setGroupedCards(grouped);
         } catch (error) {
             console.error(`Lỗi khi lấy phòng với status ${status}:`, error.message, error.stack);
-            setCards([]);
+            setGroupedCards({});
         } finally {
             setLoading(false);
         }
@@ -356,130 +344,127 @@ const AdminRoomList = () => {
                         Phòng đang cho thuê
                     </button>
                 </div>
-                {cards.length === 0 ? (
-                    <p className="text-black font-semibold text-center dark:text-white">
-                        {activeStatus === null
-                            ? 'Không có phòng nào được ủy quyền.'
-                            : `Không có phòng nào đang ${getStatusName(activeStatus)}.`}
-                    </p>
-                ) : (
-                    <Grid container spacing={8} className="mt-4">
-                        {cards.map((card) => {
-                            let images;
-                            try {
-                                images = JSON.parse(card.image || '[]');
-                            } catch (error) {
-                                console.error(`Lỗi parse image phòng ${card.roomId}:`, error.message);
-                                images = card.image ? [card.image] : [];
-                            }
-                            if (!Array.isArray(images)) images = [images];
-                            const firstImage = images[0] || 'https://via.placeholder.com/250x350';
+                {Object.entries(groupedCards).map(([ownerName, rooms]) => (
+                    <div key={ownerName} className="mb-8">
+                        <h2 className="text-2xl font-semibold mb-4">Chủ phòng: {ownerName}</h2>
+                        <Grid container spacing={8}>
+                            {rooms.map((card) => {
+                                let images;
+                                try {
+                                    images = JSON.parse(card.image || '[]');
+                                } catch (error) {
+                                    console.error(`Lỗi parse image phòng ${card.roomId}:`, error.message);
+                                    images = card.image ? [card.image] : [];
+                                }
+                                if (!Array.isArray(images)) images = [images];
+                                const firstImage = images[0] || 'https://via.placeholder.com/250x350';
 
-                            return (
-                                <Grid
-                                    key={`${card.roomId}-${card.booking ? card.booking.rentalId : 'null'}`}
-                                    item
-                                    xs={12}
-                                    sm={6}
-                                    md={4}
-                                >
-                                    <Item
-                                        onClick={() =>
-                                            navigate(
-                                                `/admin/rooms/contract/${card.roomId}/${card.booking ? card.booking.rentalId : 'null'}`
-                                            )
-                                        }
+                                return (
+                                    <Grid
+                                        key={`${card.roomId}-${card.booking ? card.booking.rentalId : 'null'}`}
+                                        item
+                                        xs={12}
+                                        sm={6}
+                                        md={4}
                                     >
-                                        <div className="flex flex-col h-full dark:bg-gray-800 dark:text-white">
-                                            <div className="relative">
-                                                <img
-                                                    className={`rounded-t-lg shadow-md overflow-hidden w-full h-48 object-cover ${card.isPermission === 0 || card.isPermission === 2 ? 'opacity-30' : ''}`}
-                                                    alt={card.title || 'Image of a room'}
-                                                    src={firstImage}
-                                                />
-                                                {(card.isPermission === 0 || card.isPermission === 2) && (
-                                                    <div className="absolute inset-0 flex items-center justify-center">
-                                                        <div className="relative w-full h-full">
-                                                            <div className="absolute top-0 left-0 w-full h-full bg-transparent flex items-center justify-center">
-                                                                <span className="text-red-700 text-2xl font-bold transform -rotate-45">
-                                                                    {card.isPermission === 0 ? 'Đã bị khóa' : 'Admin khóa'}
-                                                                </span>
+                                        <Item
+                                            onClick={() =>
+                                                navigate(
+                                                    `/admin/rooms/contract/${card.roomId}/${card.booking ? card.booking.rentalId : 'null'}`
+                                                )
+                                            }
+                                        >
+                                            <div className="flex flex-col h-full dark:bg-gray-800 dark:text-white">
+                                                <div className="relative">
+                                                    <img
+                                                        className={`rounded-t-lg shadow-md overflow-hidden w-full h-48 object-cover ${card.isPermission === 0 || card.isPermission === 2 ? 'opacity-30' : ''}`}
+                                                        alt={card.title || 'Image of a room'}
+                                                        src={firstImage}
+                                                    />
+                                                    {(card.isPermission === 0 || card.isPermission === 2) && (
+                                                        <div className="absolute inset-0 flex items-center justify-center">
+                                                            <div className="relative w-full h-full">
+                                                                <div className="absolute top-0 left-0 w-full h-full bg-transparent flex items-center justify-center">
+                                                                    <span className="text-red-700 text-2xl font-bold transform -rotate-45">
+                                                                        {card.isPermission === 0 ? 'Đã bị khóa' : 'Admin khóa'}
+                                                                    </span>
+                                                                </div>
+                                                                <div className="absolute top-1/2 left-1/2 w-36 h-36 rounded-full border-8 border-red-700 transform -rotate-45 -translate-x-1/2 -translate-y-1/2"></div>
                                                             </div>
-                                                            <div className="absolute top-1/2 left-1/2 w-36 h-36 rounded-full border-8 border-red-700 transform -rotate-45 -translate-x-1/2 -translate-y-1/2"></div>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                                {card.isPermission !== 0 && card.isPermission !== 2 && getStatusOverlay(card.status)}
-                                                {(card.isPermission === 2 || card.isPermission === 0) && (
-                                                    <div
-                                                        className="absolute top-2 right-0 bg-white bg-opacity-70 px-2 py-1 rounded cursor-pointer hover:bg-opacity-100"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            navigate(`/Admin/edit/${card.roomId}`);
-                                                        }}
-                                                        title="Chỉnh sửa phòng"
-                                                    >
-                                                        <FaEdit className="text-blue-500 text-2xl" />
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <div className="flex flex-col flex-grow p-2 justify-between max-h-[355px]">
-                                                <p className="text-black text-base font-semibold truncate max-w-[250px] dark:text-white">
-                                                    {card.title}
-                                                </p>
-                                                <p className="text-gray-600 flex items-center mt-1 text-sm truncate max-w-[250px] dark:text-white">
-                                                    <FaMapMarkerAlt className="absolute" />
-                                                    <span className="ml-5">
-                                                        {card.locationDetail || 'Vị trí không xác định'}
-                                                    </span>
-                                                </p>
-                                                <p className="text-gray-600 text-sm mt-1 flex items-center dark:text-white">
-                                                    <FaChartArea className="mr-1" />
-                                                    Diện tích:{' '}
-                                                    <span className="text-gray-800 dark:text-white">
-                                                        {card.acreage || 'N/A'}
-                                                    </span>{' '}
-                                                    m²
-                                                </p>
-                                                <p className="text-red-500 font-medium text-base mt-1">
-                                                    {card.price
-                                                        ? `${card.price.toLocaleString('vi-VN')} đ/tháng`
-                                                        : 'Thỏa thuận'}
-                                                </p>
-                                                <p className="text-gray-600 font-semibold text-sm mt-1 dark:text-white flex">
-                                                    Chủ phòng:{' '}
-                                                    <p className="text-gray-600 dark:text-white font-medium">
-                                                        {card.ownerName || 'N/A'}
-                                                    </p>
-                                                </p>
-                                                <p>
-                                                    {card.booking && (
-                                                        <div>
-                                                            <p className="font-medium">
-                                                                Người đặt: {card.booking.renterName || 'N/A'}
-                                                            </p>
-                                                            <p>
-                                                                Ngày đặt:{' '}
-                                                                {format(
-                                                                    new Date(card.booking.createdDate),
-                                                                    'dd-MM-yyyy HH:mm:ss',
-                                                                    { locale: vi }
-                                                                )}
-                                                            </p>
                                                         </div>
                                                     )}
-                                                </p>
+                                                    {card.isPermission !== 0 && card.isPermission !== 2 && getStatusOverlay(card.status)}
+                                                    {(card.isPermission === 2 || card.isPermission === 0 || card.status === 1) && (
+                                                        <div
+                                                            className="absolute top-2 right-0 bg-white bg-opacity-70 px-2 py-1 rounded cursor-pointer hover:bg-opacity-100"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                navigate(`/Admin/edit/${card.roomId}`);
+                                                            }}
+                                                            title="Chỉnh sửa phòng"
+                                                        >
+                                                            <FaEdit className="text-blue-500 text-2xl" />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="flex flex-col flex-grow p-2 justify-between max-h-[355px]">
+                                                    <p className="text-black text-base font-semibold truncate max-w-[250px] dark:text-white">
+                                                        {card.title}
+                                                    </p>
+                                                    <p className="text-gray-600 flex items-center mt-1 text-sm truncate max-w-[250px] dark:text-white">
+                                                        <FaMapMarkerAlt className="absolute" />
+                                                        <span className="ml-5">
+                                                            {card.locationDetail || 'Vị trí không xác định'}
+                                                        </span>
+                                                    </p>
+                                                    <p className="text-gray-600 text-sm mt-1 flex items-center dark:text-white">
+                                                        <FaChartArea className="mr-1" />
+                                                        Diện tích:{' '}
+                                                        <span className="text-gray-800 dark:text-white">
+                                                            {card.acreage || 'N/A'}
+                                                        </span>{' '}
+                                                        m²
+                                                    </p>
+                                                    <p className="text-red-500 font-medium text-base mt-1">
+                                                        {card.price
+                                                            ? `${card.price.toLocaleString('vi-VN')} đ/tháng`
+                                                            : 'Thỏa thuận'}
+                                                    </p>
+                                                    <p className="text-gray-600 font-semibold text-sm mt-1 dark:text-white flex">
+                                                        Chủ phòng:{' '}
+                                                        <p className="text-gray-600 dark:text-white font-medium">
+                                                            {card.ownerName || 'N/A'}
+                                                        </p>
+                                                    </p>
+                                                    <p>
+                                                        {card.booking && (
+                                                            <div>
+                                                                <p className="font-medium">
+                                                                    Người đặt: {card.booking.renterName || 'N/A'}
+                                                                </p>
+                                                                <p>
+                                                                    Ngày đặt:{' '}
+                                                                    {format(
+                                                                        new Date(card.booking.createdDate),
+                                                                        'dd-MM-yyyy HH:mm:ss',
+                                                                        { locale: vi }
+                                                                    )}
+                                                                </p>
+                                                            </div>
+                                                        )}
+                                                    </p>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </Item>
-                                </Grid>
-                            );
-                        })}
-                    </Grid>
-                )}
+                                        </Item>
+                                    </Grid>
+                                );
+                            })}
+                        </Grid>
+                    </div>
+                ))}
             </Box>
         </div>
     );
 };
 
-export default AdminRoomList;   
+export default AdminRoomList;
