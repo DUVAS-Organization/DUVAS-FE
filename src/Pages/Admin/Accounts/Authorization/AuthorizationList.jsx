@@ -16,7 +16,7 @@ const AuthorizationList = () => {
     const [confirmedContracts, setConfirmedContracts] = useState(new Set());
     const [showRejectPopup, setShowRejectPopup] = useState(false);
     const [contractToReject, setContractToReject] = useState(null);
-    const rowsPerPage = 5;
+    const rowsPerPage = 10;
 
     const { user } = useAuth();
     const token = localStorage.getItem('authToken');
@@ -266,9 +266,9 @@ const AuthorizationList = () => {
                                     <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 border-b w-12">#</th>
                                     <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 border-b w-32">Số hợp đồng</th>
                                     <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 border-b w-28">Ngày tạo</th>
-                                    <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 border-b w-40">Bên A</th>
-                                    <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 border-b w-40">Bên B</th>
-                                    <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 border-b w-40">Người tạo</th>
+                                    <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 border-b w-40">Bên A (Chủ phòng)</th>
+                                    <th className="px-4 py-2 text-center text-sm font-medium text-gray-700 border-b w-40">Bên B (Admin)</th>
+                                    {/* <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 border-b w-40">Người tạo</th> */}
                                     <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 border-b w-40">Trạng thái</th>
                                     <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 border-b w-28">File PDF</th>
                                     <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 border-b w-48">Hành Động</th>
@@ -290,12 +290,12 @@ const AuthorizationList = () => {
                                         <td className="px-4 py-2 text-sm text-gray-700 truncate">
                                             {userMap[c.partyAId] || 'Không xác định'}
                                         </td>
-                                        <td className="px-4 py-2 text-sm text-gray-700 truncate">
+                                        <td className="px-4 py-2 text-sm text-center text-gray-700 truncate">
                                             {userMap[c.partyBId] || 'Không xác định'}
                                         </td>
-                                        <td className="px-4 py-2 text-sm text-gray-700 truncate">
+                                        {/* <td className="px-4 py-2 text-sm text-gray-700 truncate">
                                             {userMap[c.createdById] || 'Không xác định'}
-                                        </td>
+                                        </td> */}
                                         <td className="px-4 py-2">
                                             <span
                                                 className={`inline-block px-3 py-1 rounded-full text-sm font-medium text-white ${c.status === 0
