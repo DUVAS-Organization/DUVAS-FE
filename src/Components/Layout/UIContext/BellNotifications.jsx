@@ -7,8 +7,14 @@ import useOutsideClick from "./useOutsideClick";
 import NotificationService from "../../../Services/User/NotificationService";
 import UserService from "../../../Services/User/UserService";
 import { useAuth } from "../../../Context/AuthProvider";
-import { parse, format, differenceInSeconds, differenceInMinutes, differenceInHours } from "date-fns";
+import { parse, format, differenceInSeconds, differenceInMinutes, differenceInHours, addHours } from "date-fns";
 import { useNavigate } from "react-router-dom";
+
+// Hàm format tiền thành định dạng 10.000 đ
+const formatVND = (amount) => {
+    if (isNaN(amount)) return "N/A";
+    return amount.toLocaleString("vi-VN") + " đ";
+};
 
 const BellNotifications = () => {
     const { openDropdown, toggleDropdown } = useUI();
@@ -32,20 +38,23 @@ const BellNotifications = () => {
 
     const formatRelativeTime = (dateString) => {
         try {
+            // Parse the date string
             const parsedDate = parse(dateString, "HH:mm - dd/MM/yyyy", new Date());
+            // Add 5 hours to the parsed date
+            const adjustedDate = addHours(parsedDate, 5);
             const now = new Date();
-            const secondsDiff = differenceInSeconds(now, parsedDate);
-
+            const secondsDiff = differenceInSeconds(now, adjustedDate);
+    console.log(adjustedDate);
             if (secondsDiff < 60) {
                 return "vừa xong";
             } else if (secondsDiff < 3600) {
-                const minutes = differenceInMinutes(now, parsedDate);
+                const minutes = differenceInMinutes(now, adjustedDate);
                 return `${minutes} phút trước`;
             } else if (secondsDiff < 86400) {
-                const hours = differenceInHours(now, parsedDate);
+                const hours = differenceInHours(now, adjustedDate);
                 return `${hours} giờ trước`;
             } else {
-                return format(parsedDate, "dd-MM-yyyy");
+                return format(adjustedDate, "dd-MM-yyyy");
             }
         } catch (err) {
             console.error("Error parsing date:", err);
@@ -78,6 +87,29 @@ const BellNotifications = () => {
                     }
                 }
             }
+        } else if (item.type === "TransactionPaid") {
+            // Trích xuất số tiền từ message (khớp với số nguyên hoặc số thập phân)
+            const amountMatch = item.message.match(/(\d+[,.]?\d*)/);
+            if (amountMatch) {
+                const rawAmount = amountMatch[0];
+                // Chuyển thành số, loại bỏ dấu chấm/phẩy và các ký tự không phải số
+                let amount = parseFloat(rawAmount.replace(/[^0-9]/g, ""));
+                // Nếu số tiền lớn hơn 100 lần (do lỗi backend), chia cho 100
+                if (amount > 100000) {
+                    amount = amount / 100;
+                }
+                const formattedAmount = formatVND(amount);
+                message = item.message.replace(rawAmount, formattedAmount);
+                // console.log(
+                //     "TransactionPaid Message:", item.message,
+                //     "Raw Amount:", rawAmount,
+                //     "Extracted Amount:", amount,
+                //     "Formatted:", formattedAmount
+                // );
+            } else {
+                console.error("Failed to extract amount from message:", item.message);
+            }
+            redirectUrl = "/Transaction";
         }
 
         return {
@@ -202,7 +234,6 @@ const BellNotifications = () => {
     };
 
     const handleNotificationClick = async (notification) => {
-        // Đánh dấu thông báo là đã đọc nếu nó chưa đọc
         if (notification.unread) {
             try {
                 await NotificationService.markAsRead(notification.id);
@@ -217,7 +248,6 @@ const BellNotifications = () => {
             }
         }
 
-        // Chuyển hướng nếu có redirectUrl
         if (notification.redirectUrl) {
             navigate(notification.redirectUrl);
         }
