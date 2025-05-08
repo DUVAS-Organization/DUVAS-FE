@@ -47,7 +47,7 @@ const Transaction = () => {
                 setUserNames(nameMap);
             } catch (error) {
                 console.error("Error fetching transactions:", error);
-                showCustomNotification("error", error.message || "Có lỗi xảy ra!");
+                // showCustomNotification("error", error.message || "Có lỗi xảy ra!");
             }
         };
         fetchData();
@@ -232,7 +232,7 @@ const Transaction = () => {
                                         <th className="p-3 border text-center whitespace-nowrap w-24">Số tiền</th>
                                         <th className="p-3 border text-center whitespace-nowrap">Loại</th>
                                         <th className="p-3 border text-center whitespace-nowrap">Ghi chú</th>
-                                        <th className="p-3 border text-center whitespace-nowrap w-32">Trạng thái</th>
+                                        {/* <th className="p-3 border text-center whitespace-nowrap w-32">Trạng thái</th> */}
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -254,7 +254,7 @@ const Transaction = () => {
                                                 <td className="p-3 border text-center">{formatMoney(transaction.money)}</td>
                                                 <td className="p-3 border text-center">{formatType(transaction.type)}</td>
                                                 <td className="p-3 border text-left max-w-xs whitespace-normal break-words">{formatNote(transaction.note)}</td>
-                                                <td className="p-3 border text-center">{formatInsiderStatus(transaction.status)}</td>
+                                                {/* <td className="p-3 border text-center">{formatInsiderStatus(transaction.status)}</td> */}
                                             </tr>
                                         ))
                                     ) : (
