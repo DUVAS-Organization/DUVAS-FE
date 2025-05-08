@@ -83,12 +83,12 @@ const UpLandlord = () => {
     const getStatusColor = (status) => {
         switch (status) {
             case 1:
-                return 'bg-green-100 text-green-800';
+                return 'bg-green-500 text-white';
             case 2:
-                return 'bg-red-100 text-red-800';
+                return 'bg-red-500 text-white';
             case 0:
             default:
-                return 'bg-yellow-100 text-yellow-800';
+                return 'bg-yellow-500 text-white';
         }
     };
 

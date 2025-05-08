@@ -47,7 +47,7 @@ const Transaction = () => {
                 setUserNames(nameMap);
             } catch (error) {
                 console.error("Error fetching transactions:", error);
-                showCustomNotification("error", error.message || "Có lỗi xảy ra!");
+                // showCustomNotification("error", error.message || "Có lỗi xảy ra!");
             }
         };
         fetchData();
@@ -129,7 +129,7 @@ const Transaction = () => {
         <Layout showNavbar={false} showSidebar={true}>
             <div className="max-w-6xl mx-auto p-4 dark:bg-gray-800 dark:text-white">
                 <div className="bg-white p-6 rounded-lg shadow-md dark:bg-gray-800 dark:text-white mb-8">
-                    <h1 className="text-2xl font-bold mb-5 border-b-2 pb-2 border-gray-700">Lịch sử giao dịch</h1>
+                    <h1 className="text-2xl font-bold mb-5 border-b-2 pb-2 border-gray-700">Lịch sử nạp rút</h1>
                     <div className="flex justify-center">
                         <div className="overflow-x-auto min-w-[80%]">
                             <table className="min-w-full bg-white border border-gray-300 shadow-md rounded-lg dark:bg-gray-800 dark:text-white">
@@ -219,7 +219,7 @@ const Transaction = () => {
                 </div>
 
                 <div className="bg-white p-6 rounded-lg shadow-md dark:bg-gray-800 dark:text-white">
-                    <h1 className="text-2xl font-bold mb-5 border-b-2 pb-2 border-gray-700">Lịch sử giao dịch nội bộ</h1>
+                    <h1 className="text-2xl font-bold mb-5 border-b-2 pb-2 border-gray-700">Lịch sử giao dịch</h1>
                     <div className="flex justify-center">
                         <div className="overflow-x-auto min-w-[80%]">
                             <table className="min-w-full bg-white border border-gray-300 shadow-md rounded-lg dark:bg-gray-800 dark:text-white">
@@ -232,7 +232,7 @@ const Transaction = () => {
                                         <th className="p-3 border text-center whitespace-nowrap w-24">Số tiền</th>
                                         <th className="p-3 border text-center whitespace-nowrap">Loại</th>
                                         <th className="p-3 border text-center whitespace-nowrap">Ghi chú</th>
-                                        <th className="p-3 border text-center whitespace-nowrap w-32">Trạng thái</th>
+                                        {/* <th className="p-3 border text-center whitespace-nowrap w-32">Trạng thái</th> */}
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -254,7 +254,7 @@ const Transaction = () => {
                                                 <td className="p-3 border text-center">{formatMoney(transaction.money)}</td>
                                                 <td className="p-3 border text-center">{formatType(transaction.type)}</td>
                                                 <td className="p-3 border text-left max-w-xs whitespace-normal break-words">{formatNote(transaction.note)}</td>
-                                                <td className="p-3 border text-center">{formatInsiderStatus(transaction.status)}</td>
+                                                {/* <td className="p-3 border text-center">{formatInsiderStatus(transaction.status)}</td> */}
                                             </tr>
                                         ))
                                     ) : (

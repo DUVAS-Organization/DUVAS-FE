@@ -222,7 +222,7 @@ const BookingManagementService = {
             return response.data;
         } catch (error) {
             throw new Error(
-                error.response?.data?.message || "Không thể lấy danh sách giao dịch nội bộ của người dùng"
+                error.response?.data?.message
             );
         }
     },
